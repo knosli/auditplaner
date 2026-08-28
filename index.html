@@ -2489,16 +2489,7 @@ function initScratch(wrap, d){
   const canvas = wrap.querySelector('canvas');
   const hint = wrap.querySelector('.scratch-hint');
   const body = wrap.querySelector('.reveal-body');
-
   const storageKey = 'scratchRevealed_' + d.id;
-  const alreadyRevealed = (()=>{ try{ return localStorage.getItem(storageKey) === '1'; }catch(e){ return false; } })();
-
-  if(alreadyRevealed){
-    // Schon früher freigerubbelt — Karte bleibt dauerhaft offen, keine erneute Abdeckung
-    canvas.style.display = 'none';
-    hint.style.opacity = '0';
-    return;
-  }
 
   // size canvas to match rendered body
   const resize = ()=>{
@@ -2633,7 +2624,19 @@ function tick(){
       if(!revealFace.classList.contains('active')){
         revealFace.classList.add('active');
         lockedFace.classList.add('hide');
-        if(!d.noScratch) initScratch(wrap, d);
+        if(!d.noScratch){
+          let alreadyRevealed = false;
+          try{ alreadyRevealed = localStorage.getItem('scratchRevealed_' + d.id) === '1'; }catch(e){}
+          if(alreadyRevealed){
+            // Schon früher freigerubbelt — Canvas/Hinweis komplett aus dem DOM entfernen, nichts kann mehr im Weg sein
+            const canvasEl = wrap.querySelector('canvas');
+            const hintEl = wrap.querySelector('.scratch-hint');
+            if(canvasEl) canvasEl.remove();
+            if(hintEl) hintEl.remove();
+          } else {
+            initScratch(wrap, d);
+          }
+        }
         if(d.isRouteCard) initPhotoScratch('routeScratchWrap');
         if(d.isIntroVideo) setTimeout(loadIntroVideo, 300);
       }
