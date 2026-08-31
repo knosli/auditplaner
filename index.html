@@ -357,7 +357,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
   <div id="presence-bar" style="display:flex;align-items:center;gap:4px;margin-left:4px"></div>
   <button onclick="toggleDark()" class="hb" title="Dark Mode" style="font-size:14px">🌙</button>
   <button onclick="openGuide()" class="hb" title="Anleitung" style="font-size:14px">❓</button>
-  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.23</span>
+  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.25</span>
   <button onclick="doLogout()" class="hb" title="Abmelden" style="font-size:14px" id="logout-btn">⏻</button>
   <button onclick="toggleMobileView()" id="mobile-btn" class="hb" title="Mobile Ansicht" style="font-size:14px">📱</button>
   <div id="more-w" class="admin-only">
@@ -1387,10 +1387,10 @@ function save(){clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setIt
 // Immediate save for critical actions (no debounce)
 function saveNow(){
   clearTimeout(saveT);
-  try{localStorage.setItem('anliker_berat_plan',JSON.stringify(beratPlan));localStorage.setItem(SK,JSON.stringify({data,plans,tlog,auditors,ferien,ghostAudits:window._ghostAudits||[],personAudits,v:4}));}catch(e){}
+  try{localStorage.setItem('anliker_berat_plan',JSON.stringify(beratPlan));localStorage.setItem(SK,JSON.stringify({data,plans,tlog,auditors,ferien,ghostAudits:window._ghostAudits||[],personAudits,v:4}));localStorage.setItem('anliker_pi_collectbox',JSON.stringify(window._piCollectBox||[]));}catch(e){}
   sbPush();
 }
-function load(){try{const r=localStorage.getItem(SK);if(!r)return false;const p=JSON.parse(r);if(p.data)data=p.data;if(p.plans)plans=p.plans;if(p.tlog)tlog=p.tlog;if(p.auditors)auditors=p.auditors;if(p.ferien)ferien=p.ferien;if(p.ghostAudits)window._ghostAudits=p.ghostAudits;if(p.personAudits)personAudits=p.personAudits;return true;}catch(e){return false;}}
+function load(){try{const r=localStorage.getItem(SK);if(!r)return false;const p=JSON.parse(r);if(p.data)data=p.data;if(p.plans)plans=p.plans;if(p.tlog)tlog=p.tlog;if(p.auditors)auditors=p.auditors;if(p.ferien)ferien=p.ferien;if(p.ghostAudits)window._ghostAudits=p.ghostAudits;if(p.personAudits)personAudits=p.personAudits;try{window._piCollectBox=JSON.parse(localStorage.getItem('anliker_pi_collectbox')||'[]');}catch(e){window._piCollectBox=[];}return true;}catch(e){return false;}}
 function showToast(m,d=2500){const t=document.getElementById('toast');t.textContent=m;t.style.display='block';clearTimeout(t._t);t._t=setTimeout(()=>t.style.display='none',d);}
 function dlJSON(obj,fn){const b=new Blob([JSON.stringify(obj,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=fn;a.click();}
 function teamExport(){dlJSON({data,plans,auditors,ferien,ghostAudits:window._ghostAudits||[],personAudits,savedAt:new Date().toISOString(),type:'team'},'anliker_export_'+today()+'.json');showToast('📤 Export erstellt – auf SharePoint!',3000);}
@@ -5049,33 +5049,68 @@ function piCollectUnknown(idx){
   window._piCollectBox=window._piCollectBox||[];
   window._piCollectBox.push({psp:item.psp||'',name:item.name,count:item.count});
   _piPending.buckets.unknown.splice(idx,1);
+  saveNow();
   piRenderPreview();
 }
 function openSammelbox(){
   const box=window._piCollectBox||[];
+  const activeOptions=data.filter(e=>e.active).sort((a,b)=>a.name.localeCompare(b.name)).map(e=>`<option value="${e.id}">${e.name}${e.psp?' ('+e.psp+')':''}</option>`).join('')
+    +(data.some(e=>!e.active)?`<optgroup label="— inaktive Baustellen —">${data.filter(e=>!e.active).sort((a,b)=>a.name.localeCompare(b.name)).map(e=>`<option value="${e.id}">${e.name}${e.psp?' ('+e.psp+')':''} (inaktiv)</option>`).join('')}</optgroup>`:'');
   const list=document.getElementById('sb-list');
   if(list){
     list.innerHTML=box.length?box.map((it,ci)=>`
-      <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--sf2);border-radius:8px;margin-bottom:6px;font-size:12px;color:var(--tx)">
-        <span style="flex:1">${it.psp?it.psp+' · ':''}${it.name} <span style="color:var(--tx3)">(${it.count} Pers.)</span></span>
-        <button onclick="sbCreate(${ci})" style="padding:4px 10px;border-radius:6px;border:1px solid #10B981;background:transparent;color:#10B981;font-size:11px;cursor:pointer">+ Neue Baustelle</button>
-        <button onclick="sbRemove(${ci})" style="padding:4px 10px;border-radius:6px;border:1px solid var(--bd);background:transparent;color:var(--tx2);font-size:11px;cursor:pointer">✕ Entfernen</button>
+      <div style="padding:8px 10px;background:var(--sf2);border-radius:8px;margin-bottom:6px;font-size:12px;color:var(--tx)">
+        <div style="margin-bottom:6px">${it.psp?it.psp+' · ':''}${it.name} <span style="color:var(--tx3)">(${it.count} Pers.)</span></div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+          <select id="sb-sel-${ci}" style="font-size:11px;padding:5px;border-radius:6px;border:1px solid var(--bd);background:var(--sf);color:var(--tx);max-width:220px">
+            <option value="">— Baustelle wählen —</option>${activeOptions}
+          </select>
+          <button onclick="sbAssign(${ci})" style="padding:4px 10px;border-radius:6px;border:none;background:#3B82F6;color:#fff;font-size:11px;cursor:pointer">Zuordnen</button>
+          <button onclick="sbCreate(${ci})" style="padding:4px 10px;border-radius:6px;border:1px solid #10B981;background:transparent;color:#10B981;font-size:11px;cursor:pointer">+ Neue Baustelle</button>
+          <button onclick="sbRemove(${ci})" style="padding:4px 10px;border-radius:6px;border:1px solid var(--bd);background:transparent;color:var(--tx2);font-size:11px;cursor:pointer">✕ Entfernen</button>
+        </div>
       </div>`).join('')
       :'<div style="font-size:12px;color:var(--tx2)">Sammelbox ist leer.</div>';
   }
-  document.getElementById('sb-bg').style.display='flex';
+  document.getElementById('pisb-bg').style.display='flex';
 }
-function sbRemove(ci){(window._piCollectBox||[]).splice(ci,1);openSammelbox();}
+function sbRemove(ci){(window._piCollectBox||[]).splice(ci,1);saveNow();openSammelbox();}
+// Direktes Zuordnen aus der Sammelbox zu einer bestehenden Baustelle - wendet dieselbe
+// Pausieren/Reaktivieren-Logik an wie ein normaler Import, nur ausserhalb des Import-Flows.
+function sbAssign(ci){
+  const it=(window._piCollectBox||[])[ci];
+  const sel=document.getElementById('sb-sel-'+ci);
+  const targetId=sel&&sel.value;
+  if(!it||!targetId)return;
+  const e=data.find(x=>String(x.id)===String(targetId));
+  if(!e)return;
+  if(it.psp){
+    const np=piNormPSP(it.psp);
+    e.pspAliases=e.pspAliases||[];
+    if(!e.pspAliases.includes(np))e.pspAliases.push(np);
+  }else{
+    const nn=piNormName(it.name);
+    e.nameAliases=e.nameAliases||[];
+    if(!e.nameAliases.includes(nn))e.nameAliases.push(nn);
+  }
+  if(it.count===0){if(!e.paused){e.paused=true;e.pauseReason='Import (Sammelbox): kein Personal';e.pauseUntil=null;log('Pausiert ⏸ (Sammelbox)',e.name,'#94A3B8','');}}
+  else if(it.count>REVIEW_MAX){if(e.paused){e.paused=false;e.pauseReason=null;e.pauseUntil=null;log('Reaktiviert ▶ (Sammelbox)',e.name,'#10B981','');}}
+  window._piCollectBox.splice(ci,1);
+  saveNow();renderAll();
+  showToast('✓ Zugeordnet: '+e.name,2000);
+  openSammelbox();
+}
 function sbCreate(ci){
   const it=(window._piCollectBox||[])[ci];
   if(!it)return;
-  document.getElementById('sb-bg').style.display='none';
+  document.getElementById('pisb-bg').style.display='none';
   openAdd();
   const nameEl=document.getElementById('f-name');
   const pspEl=document.getElementById('f-psp');
   if(nameEl)nameEl.value=it.name||'';
   if(pspEl&&it.psp)pspEl.value=it.psp;
   window._piCollectBox.splice(ci,1);
+  saveNow();
 }
 function confirmPersonalImport(){
   if(!_piPending)return;
@@ -5258,9 +5293,19 @@ async function sbPush(){
     persons:JSON.stringify(persons),
     auditorMeta:JSON.stringify(auditorMeta),
     auditorColors:JSON.stringify(auditorColors),
+    piCollectBox:JSON.stringify(window._piCollectBox||[]),
     updated_at:new Date().toISOString()};
-  const result=await sbFetch('audit_state',{method:'POST',body:JSON.stringify(payload),
+  let result=await sbFetch('audit_state',{method:'POST',body:JSON.stringify(payload),
     headers:{'Prefer':'resolution=merge-duplicates'}});
+  if(!result){
+    // Fallback: falls die Spalte "piCollectBox" in Supabase noch nicht existiert (alte Tabelle,
+    // Spalte noch nicht per SQL ergänzt) -> ohne dieses Feld nochmal versuchen, damit der Rest
+    // der Synchronisation nicht komplett blockiert wird.
+    const{piCollectBox,...fallbackPayload}=payload;
+    result=await sbFetch('audit_state',{method:'POST',body:JSON.stringify(fallbackPayload),
+      headers:{'Prefer':'resolution=merge-duplicates'}});
+    if(result)console.warn('sbPush: piCollectBox-Spalte fehlt in Supabase - siehe Admin-Menü "Sammelbox" für Setup-SQL. Restliche Daten wurden trotzdem synchronisiert.');
+  }
   if(result)sbLastSync=Date.now();
   else console.warn('sbPush failed');
 }
@@ -5281,6 +5326,7 @@ async function sbPull(){
     if(p.ferien)ferien=JSON.parse(p.ferien);
     if(p.ghostAudits)window._ghostAudits=JSON.parse(p.ghostAudits);
     if(p.personAudits)personAudits=JSON.parse(p.personAudits);
+    if(p.piCollectBox){try{window._piCollectBox=JSON.parse(p.piCollectBox);}catch(e){}}
     if(p.persons){try{persons=JSON.parse(p.persons);localStorage.setItem('anliker_persons',JSON.stringify(persons));}catch(e){}}
     if(p.beratPlan){try{beratPlan=JSON.parse(p.beratPlan);localStorage.setItem('anliker_berat_plan',JSON.stringify(beratPlan));}catch(e){}}
     if(p.auditorMeta){try{auditorMeta=JSON.parse(p.auditorMeta);localStorage.setItem('anliker_aud_meta',JSON.stringify(auditorMeta));}catch(e){}}
@@ -6121,13 +6167,18 @@ document.addEventListener('DOMContentLoaded',()=>{
   </div>
 </div>
 <!-- SAMMELBOX MODAL: eigenständiger Bereich für zurückgestellte unbekannte Baustellen aus dem Import -->
-<div id="sb-bg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:4000;align-items:center;justify-content:center">
+<div id="pisb-bg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:4000;align-items:center;justify-content:center">
   <div style="background:var(--sf);border-radius:12px;padding:24px;width:600px;max-width:95vw;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)">
     <h3 style="font-size:15px;font-weight:700;color:var(--tx);margin-bottom:8px">📥 Sammelbox</h3>
-    <p style="font-size:12px;color:var(--tx2);margin-bottom:16px">Unbekannte Baustellen, die du beim Personal-Import zurückgestellt hast. Bleibt nur für diese Browser-Sitzung erhalten (kein dauerhafter Speicher).</p>
+    <p style="font-size:12px;color:var(--tx2);margin-bottom:12px">Unbekannte Baustellen, die du beim Personal-Import zurückgestellt hast. Wird über Supabase mit dem Team synchronisiert.</p>
+    <details style="margin-bottom:16px;font-size:11px;color:var(--tx3)">
+      <summary style="cursor:pointer;color:var(--blue)">Einmaliges Setup nötig? (falls Sammelbox nicht synct)</summary>
+      <p style="margin:6px 0">Falls die Sammelbox nicht zwischen Geräten synchronisiert, fehlt eventuell die Spalte in Supabase. Einmalig im Supabase SQL-Editor ausführen:</p>
+      <pre style="background:var(--sf2);padding:8px;border-radius:6px;overflow-x:auto;user-select:all">ALTER TABLE audit_state ADD COLUMN IF NOT EXISTS "piCollectBox" text;</pre>
+    </details>
     <div id="sb-list"></div>
     <div style="display:flex;justify-content:flex-end;margin-top:16px;border-top:1px solid var(--bd);padding-top:12px">
-      <button onclick="document.getElementById('sb-bg').style.display='none'" style="padding:8px 16px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf2);cursor:pointer;font-size:12px;color:var(--tx)">Schliessen</button>
+      <button onclick="document.getElementById('pisb-bg').style.display='none'" style="padding:8px 16px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf2);cursor:pointer;font-size:12px;color:var(--tx)">Schliessen</button>
     </div>
   </div>
 </div>
