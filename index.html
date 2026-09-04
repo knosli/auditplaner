@@ -357,7 +357,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
   <div id="presence-bar" style="display:flex;align-items:center;gap:4px;margin-left:4px"></div>
   <button onclick="toggleDark()" class="hb" title="Dark Mode" style="font-size:14px">🌙</button>
   <button onclick="openGuide()" class="hb" title="Anleitung" style="font-size:14px">❓</button>
-  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.26</span>
+  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.27</span>
   <button onclick="doLogout()" class="hb" title="Abmelden" style="font-size:14px" id="logout-btn">⏻</button>
   <button onclick="toggleMobileView()" id="mobile-btn" class="hb" title="Mobile Ansicht" style="font-size:14px">📱</button>
   <div id="more-w" class="admin-only">
@@ -430,7 +430,8 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
         <div style="font-size:13px;font-weight:700;color:var(--tx)">👤 Personen-Audits</div>
         <button onclick="togglePAPanel()" style="border:none;background:none;cursor:pointer;color:var(--tx3);font-size:16px;line-height:1">✕</button>
       </div>
-      <input type="date" id="pa-panel-date" onchange="renderPAPanel()" style="width:100%;padding:7px 9px;border:1px solid var(--bd);border-radius:8px;background:var(--sf2);color:var(--tx);font-size:12px;margin-bottom:10px">
+      <input type="date" id="pa-panel-date" onchange="renderPAPanel()" style="width:100%;padding:7px 9px;border:1px solid var(--bd);border-radius:8px;background:var(--sf2);color:var(--tx);font-size:12px;margin-bottom:8px">
+      <select id="pa-panel-aud" onchange="renderPAPanel()" style="width:100%;padding:7px 9px;border:1px solid var(--bd);border-radius:8px;background:var(--sf2);color:var(--tx);font-size:12px;margin-bottom:10px"></select>
       <div id="pa-panel-list"></div>
     </div>
     <div id="msrch">
@@ -2940,13 +2941,24 @@ function togglePAPanel(){
   if(opening){
     const dEl=document.getElementById('pa-panel-date');
     if(!dEl.value)dEl.value=today();
+    const audSel=document.getElementById('pa-panel-aud');
+    if(audSel&&!audSel.dataset.filled){
+      audSel.innerHTML=`<option value="__me__">👤 Nur ich (${currentUser||'—'})</option>`+
+        `<option value="">Alle Auditoren</option>`+
+        auditors.map(a=>`<option value="${a}">${a}</option>`).join('');
+      audSel.value='__me__';
+      audSel.dataset.filled='1';
+    }
     renderPAPanel();
   }
 }
 function renderPAPanel(){
   const dEl=document.getElementById('pa-panel-date');
   const ds=dEl.value||today();
-  const list=personAudits.filter(p=>p.planned&&p.date===ds).sort((a,b)=>(a.auditor||'').localeCompare(b.auditor||'')||a.person.localeCompare(b.person));
+  const audSel=document.getElementById('pa-panel-aud');
+  const audFilterVal=audSel?audSel.value:'__me__';
+  const audFilter=audFilterVal==='__me__'?currentUser:(audFilterVal||null);
+  const list=personAudits.filter(p=>p.planned&&p.date===ds&&(!audFilter||p.auditor===audFilter)).sort((a,b)=>(a.auditor||'').localeCompare(b.auditor||'')||a.person.localeCompare(b.person));
   const badge=document.getElementById('pa-panel-badge');
   if(badge)badge.textContent=list.length||'';
   const el=document.getElementById('pa-panel-list');
@@ -5967,7 +5979,10 @@ function exportICSDay_old(){
 function renderAll(){renderMarkers();renderList();updateStats();renderTL();updatePAPanelBadge();if(curView==='cal'){renderCalSB();renderKW();}if(curView==='aud'){renderAuditors();renderFerList();renderPA();}}
 function updatePAPanelBadge(){
   const badge=document.getElementById('pa-panel-badge');
-  const todayList=personAudits.filter(p=>p.planned&&p.date===today());
+  const audSel=document.getElementById('pa-panel-aud');
+  const audFilterVal=audSel&&audSel.dataset.filled?audSel.value:'__me__';
+  const audFilter=audFilterVal==='__me__'?currentUser:(audFilterVal||null);
+  const todayList=personAudits.filter(p=>p.planned&&p.date===today()&&(!audFilter||p.auditor===audFilter));
   if(badge)badge.textContent=todayList.length||'';
   // Pins für heute sind standardmässig sichtbar, auch ohne geöffnetes Panel - ausser der
   // Nutzer hat im Panel bereits ein anderes Datum gewählt, dann bleibt dessen Auswahl massgeblich.
