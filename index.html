@@ -357,7 +357,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
   <div id="presence-bar" style="display:flex;align-items:center;gap:4px;margin-left:4px"></div>
   <button onclick="toggleDark()" class="hb" title="Dark Mode" style="font-size:14px">🌙</button>
   <button onclick="openGuide()" class="hb" title="Anleitung" style="font-size:14px">❓</button>
-  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.28</span>
+  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.30</span>
   <button onclick="doLogout()" class="hb" title="Abmelden" style="font-size:14px" id="logout-btn">⏻</button>
   <button onclick="toggleMobileView()" id="mobile-btn" class="hb" title="Mobile Ansicht" style="font-size:14px">📱</button>
   <div id="more-w" class="admin-only">
@@ -2734,6 +2734,7 @@ function renderPA(){
 function setAuditTarget(v){
   window._auditTarget=Math.max(0,+v||0);
   try{localStorage.setItem('anliker_audit_target',String(window._auditTarget));}catch(e){}
+  saveNow(); // sorgt für Team-weite Synchronisation über Supabase, nicht nur lokal
   renderOverview();
 }
 function initOverviewDefaults(){
@@ -2742,8 +2743,8 @@ function initOverviewDefaults(){
   if(toEl&&!toEl.value){
     const now=new Date();
     const toStr=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
-    const fromD=new Date(now.getFullYear(),now.getMonth()-11,1);
-    const fromStr=fromD.getFullYear()+'-'+String(fromD.getMonth()+1).padStart(2,'0');
+    // Standard: 1. Januar des aktuellen Jahres bis heute (nicht "letzte 12 Monate")
+    const fromStr=now.getFullYear()+'-01';
     toEl.value=toStr;fromEl.value=fromStr;
   }
 }
@@ -5403,17 +5404,18 @@ async function sbPush(){
     auditorMeta:JSON.stringify(auditorMeta),
     auditorColors:JSON.stringify(auditorColors),
     piCollectBox:JSON.stringify(window._piCollectBox||[]),
+    auditTarget:window._auditTarget||0,
     updated_at:new Date().toISOString()};
   let result=await sbFetch('audit_state',{method:'POST',body:JSON.stringify(payload),
     headers:{'Prefer':'resolution=merge-duplicates'}});
   if(!result){
-    // Fallback: falls die Spalte "piCollectBox" in Supabase noch nicht existiert (alte Tabelle,
-    // Spalte noch nicht per SQL ergänzt) -> ohne dieses Feld nochmal versuchen, damit der Rest
-    // der Synchronisation nicht komplett blockiert wird.
-    const{piCollectBox,...fallbackPayload}=payload;
+    // Fallback: falls Spalten in Supabase noch nicht existieren (alte Tabelle, Spalte noch
+    // nicht per SQL ergänzt) -> ohne diese Felder nochmal versuchen, damit der Rest der
+    // Synchronisation nicht komplett blockiert wird.
+    const{piCollectBox,auditTarget,...fallbackPayload}=payload;
     result=await sbFetch('audit_state',{method:'POST',body:JSON.stringify(fallbackPayload),
       headers:{'Prefer':'resolution=merge-duplicates'}});
-    if(result)console.warn('sbPush: piCollectBox-Spalte fehlt in Supabase - siehe Admin-Menü "Sammelbox" für Setup-SQL. Restliche Daten wurden trotzdem synchronisiert.');
+    if(result)console.warn('sbPush: piCollectBox/auditTarget-Spalten fehlen in Supabase - siehe Admin-Menü "Sammelbox" für Setup-SQL. Restliche Daten wurden trotzdem synchronisiert.');
   }
   if(result)sbLastSync=Date.now();
   else console.warn('sbPush failed');
@@ -5436,6 +5438,7 @@ async function sbPull(){
     if(p.ghostAudits)window._ghostAudits=JSON.parse(p.ghostAudits);
     if(p.personAudits)personAudits=JSON.parse(p.personAudits);
     if(p.piCollectBox){try{window._piCollectBox=JSON.parse(p.piCollectBox);}catch(e){}}
+    if(p.auditTarget!==undefined&&p.auditTarget!==null)window._auditTarget=+p.auditTarget;
     if(p.persons){try{persons=JSON.parse(p.persons);localStorage.setItem('anliker_persons',JSON.stringify(persons));}catch(e){}}
     if(p.beratPlan){try{beratPlan=JSON.parse(p.beratPlan);localStorage.setItem('anliker_berat_plan',JSON.stringify(beratPlan));}catch(e){}}
     if(p.auditorMeta){try{auditorMeta=JSON.parse(p.auditorMeta);localStorage.setItem('anliker_aud_meta',JSON.stringify(auditorMeta));}catch(e){}}
@@ -6286,7 +6289,8 @@ document.addEventListener('DOMContentLoaded',()=>{
     <details style="margin-bottom:16px;font-size:11px;color:var(--tx3)">
       <summary style="cursor:pointer;color:var(--blue)">Einmaliges Setup nötig? (falls Sammelbox nicht synct)</summary>
       <p style="margin:6px 0">Falls die Sammelbox nicht zwischen Geräten synchronisiert, fehlt eventuell die Spalte in Supabase. Einmalig im Supabase SQL-Editor ausführen:</p>
-      <pre style="background:var(--sf2);padding:8px;border-radius:6px;overflow-x:auto;user-select:all">ALTER TABLE audit_state ADD COLUMN IF NOT EXISTS "piCollectBox" text;</pre>
+      <pre style="background:var(--sf2);padding:8px;border-radius:6px;overflow-x:auto;user-select:all">ALTER TABLE audit_state ADD COLUMN IF NOT EXISTS "piCollectBox" text;
+ALTER TABLE audit_state ADD COLUMN IF NOT EXISTS "auditTarget" integer;</pre>
     </details>
     <div id="sb-list"></div>
     <div style="display:flex;justify-content:flex-end;margin-top:16px;border-top:1px solid var(--bd);padding-top:12px">
