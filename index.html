@@ -357,7 +357,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
   <div id="presence-bar" style="display:flex;align-items:center;gap:4px;margin-left:4px"></div>
   <button onclick="toggleDark()" class="hb" title="Dark Mode" style="font-size:14px">🌙</button>
   <button onclick="openGuide()" class="hb" title="Anleitung" style="font-size:14px">❓</button>
-  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.27</span>
+  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.28</span>
   <button onclick="doLogout()" class="hb" title="Abmelden" style="font-size:14px" id="logout-btn">⏻</button>
   <button onclick="toggleMobileView()" id="mobile-btn" class="hb" title="Mobile Ansicht" style="font-size:14px">📱</button>
   <div id="more-w" class="admin-only">
@@ -708,6 +708,43 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
   <div style="max-width:1100px;margin:0 auto">
     <div id="aud-tags" style="display:none"></div>
    <!-- Personen-Audits moved to own tab -->
+
+    <!-- GESAMTÜBERSICHT: alle Auditoren, alle Audit-Arten, wählbarer Monatsbereich -->
+    <div class="card" style="margin-bottom:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+        <h3 style="font-size:14px;font-weight:700;color:var(--tx);margin:0">📊 Gesamtübersicht alle Auditoren</h3>
+        <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--tx2)">
+          <span>Von</span>
+          <input type="month" id="ov-from" onchange="renderOverview()" style="padding:4px 6px;border:1px solid var(--bd);border-radius:6px;background:var(--sf2);color:var(--tx);font-size:11px">
+          <span>bis</span>
+          <input type="month" id="ov-to" onchange="renderOverview()" style="padding:4px 6px;border:1px solid var(--bd);border-radius:6px;background:var(--sf2);color:var(--tx);font-size:11px">
+        </div>
+      </div>
+      <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:center">
+        <div id="ov-pie" style="flex-shrink:0"></div>
+        <div style="flex:1;min-width:220px">
+          <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:6px">
+            <span id="ov-total" style="font-size:26px;font-weight:800;color:var(--tx)">0</span>
+            <span style="font-size:12px;color:var(--tx2)">Audits gesamt</span>
+          </div>
+          <div style="height:10px;background:var(--sf2);border-radius:6px;overflow:hidden;margin-bottom:6px">
+            <div id="ov-bar" style="height:100%;background:var(--blue);border-radius:6px;width:0%;transition:width .3s"></div>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--tx2)">
+            <span id="ov-progress-label">0% vom Soll</span>
+            <span class="admin-only" style="display:flex;align-items:center;gap:4px">
+              Soll/Jahr: <input type="number" id="ov-target" min="0" step="1" onchange="setAuditTarget(this.value)" style="width:60px;padding:3px 6px;border:1px solid var(--bd);border-radius:6px;background:var(--sf2);color:var(--tx);font-size:11px">
+            </span>
+          </div>
+          <div style="display:flex;gap:12px;margin-top:10px;font-size:11px">
+            <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#3B82F6;margin-right:4px"></span>Baustellen-Audits: <b id="ov-c-site">0</b></span>
+            <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#F59E0B;margin-right:4px"></span>Personen-Audits: <b id="ov-c-person">0</b></span>
+            <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#8B5CF6;margin-right:4px"></span>Beratungen: <b id="ov-c-berat">0</b></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
       <h3 style="font-size:14px;font-weight:700;color:var(--tx)">Auditor-Karten</h3>
       <div style="display:flex;align-items:center;gap:6px">
@@ -2693,7 +2730,67 @@ function renderPA(){
   </table>`;
 }
 
+// ═══ Gesamtübersicht (alle Auditoren, alle Audit-Arten, wählbarer Monatsbereich) ═══
+function setAuditTarget(v){
+  window._auditTarget=Math.max(0,+v||0);
+  try{localStorage.setItem('anliker_audit_target',String(window._auditTarget));}catch(e){}
+  renderOverview();
+}
+function initOverviewDefaults(){
+  try{window._auditTarget=+localStorage.getItem('anliker_audit_target')||240;}catch(e){window._auditTarget=240;}
+  const toEl=document.getElementById('ov-to'),fromEl=document.getElementById('ov-from');
+  if(toEl&&!toEl.value){
+    const now=new Date();
+    const toStr=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+    const fromD=new Date(now.getFullYear(),now.getMonth()-11,1);
+    const fromStr=fromD.getFullYear()+'-'+String(fromD.getMonth()+1).padStart(2,'0');
+    toEl.value=toStr;fromEl.value=fromStr;
+  }
+}
+function renderOverview(){
+  const targetEl=document.getElementById('ov-target');
+  if(targetEl&&document.activeElement!==targetEl)targetEl.value=window._auditTarget||0;
+  const fromV=document.getElementById('ov-from')?.value; // "YYYY-MM"
+  const toV=document.getElementById('ov-to')?.value;
+  if(!fromV||!toV)return;
+  const inRange=dateStr=>{
+    if(!dateStr)return false;
+    const ym=dateStr.slice(0,7);
+    return ym>=fromV&&ym<=toV;
+  };
+  let siteCount=0,personCount=0,beratCount=0;
+  data.forEach(e=>{
+    siteCount+=(e.auditHistory||[]).filter(h=>inRange(h.date)).length;
+    beratCount+=(e.beratungen||[]).filter(b=>inRange(b.date)).length;
+  });
+  siteCount+=(window._ghostAudits||[]).filter(h=>inRange(h.date)).length;
+  personCount=personAudits.filter(p=>!p.planned&&inRange(p.date)).length;
+  const total=siteCount+personCount+beratCount;
+  document.getElementById('ov-total').textContent=total;
+  document.getElementById('ov-c-site').textContent=siteCount;
+  document.getElementById('ov-c-person').textContent=personCount;
+  document.getElementById('ov-c-berat').textContent=beratCount;
+  // Soll auf den gewählten Zeitraum skalieren (Jahres-Soll ÷ 12 × Anzahl Monate im Bereich)
+  const [fy,fm]=fromV.split('-').map(Number),[ty,tm]=toV.split('-').map(Number);
+  const monthsInRange=Math.max(1,(ty-fy)*12+(tm-fm)+1);
+  const scaledTarget=Math.round((window._auditTarget||0)*monthsInRange/12);
+  const pct=scaledTarget>0?Math.min(100,Math.round(total/scaledTarget*100)):0;
+  document.getElementById('ov-bar').style.width=pct+'%';
+  document.getElementById('ov-bar').style.background=pct>=100?'#10B981':pct>=60?'#3B82F6':'#F59E0B';
+  document.getElementById('ov-progress-label').textContent=scaledTarget>0?`${total} / ${scaledTarget} (${pct}%)`:'Kein Soll gesetzt';
+  // Kuchendiagramm per CSS conic-gradient - kein zusätzliches Chart-Tool nötig für 3 Segmente
+  const pie=document.getElementById('ov-pie');
+  if(total===0){
+    pie.innerHTML=`<div style="width:110px;height:110px;border-radius:50%;background:var(--sf2);display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--tx3);text-align:center">Keine<br>Audits</div>`;
+  }else{
+    const pSite=siteCount/total*360,pPerson=personCount/total*360;
+    const g=`conic-gradient(#3B82F6 0deg ${pSite}deg, #F59E0B ${pSite}deg ${pSite+pPerson}deg, #8B5CF6 ${pSite+pPerson}deg 360deg)`;
+    pie.innerHTML=`<div style="width:110px;height:110px;border-radius:50%;background:${g};box-shadow:0 2px 8px rgba(0,0,0,.1)"></div>`;
+  }
+}
 function renderAuditors(){
+  initOverviewDefaults();
+  renderOverview();
   renderAudTags();
   const depts=getAllDepts();
   document.getElementById('dept-tb').innerHTML=depts.map(d=>{const bs=data.filter(e=>e.dept&&e.dept.includes(d.split(' + ')[0])&&e.active&&!e.paused);const ov=bs.filter(e=>status(e)==='overdue').length,du=bs.filter(e=>['due','soon'].includes(status(e))).length,au=bs.filter(e=>e.lastAudit).length,in2=data.filter(e=>e.dept&&e.dept.includes(d.split(' + ')[0])&&!e.active).length,pa=data.filter(e=>e.dept&&e.dept.includes(d.split(' + ')[0])&&e.paused).length;return`<tr><td><strong>${d}</strong></td><td>${bs.length}</td><td style="color:#10B981;font-weight:500">${au}</td><td style="color:#EF4444;font-weight:500">${ov}</td><td style="color:#F59E0B;font-weight:500">${du}</td><td style="color:#94A3B8;font-weight:500">${pa}</td><td style="color:var(--tx3)">${in2}</td></tr>`;}).join('')||'<tr><td colspan="7" style="padding:10px;color:var(--tx3);text-align:center">Keine Baustellen.</td></tr>';
