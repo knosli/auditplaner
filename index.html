@@ -357,7 +357,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
   <div id="presence-bar" style="display:flex;align-items:center;gap:4px;margin-left:4px"></div>
   <button onclick="toggleDark()" class="hb" title="Dark Mode" style="font-size:14px">🌙</button>
   <button onclick="openGuide()" class="hb" title="Anleitung" style="font-size:14px">❓</button>
-  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.34</span>
+  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.35</span>
   <button onclick="doLogout()" class="hb" title="Abmelden" style="font-size:14px" id="logout-btn">⏻</button>
   <button onclick="toggleMobileView()" id="mobile-btn" class="hb" title="Mobile Ansicht" style="font-size:14px">📱</button>
   <div id="more-w" class="admin-only">
@@ -426,6 +426,10 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
   <div id="mapzone">
     <div id="map"></div>
     <button id="pa-panel-toggle" onclick="togglePAPanel()" title="Personen-Audits des Tages" style="position:absolute;top:14px;right:14px;z-index:500;background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:8px 12px;cursor:pointer;font-size:12px;font-weight:600;color:var(--tx);box-shadow:0 2px 8px rgba(0,0,0,.15);display:flex;align-items:center;gap:6px">👤 Personen-Audits <span id="pa-panel-badge" style="background:var(--blue);color:#fff;border-radius:10px;padding:1px 6px;font-size:10px"></span></button>
+    <button id="dayplan-toggle" onclick="toggleDayPlanMode()" title="Nur meine geplanten Baustellen-Audits eines Tages anzeigen" style="position:absolute;top:60px;right:14px;z-index:500;background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:8px 12px;cursor:pointer;font-size:12px;font-weight:600;color:var(--tx);box-shadow:0 2px 8px rgba(0,0,0,.15);display:flex;align-items:center;gap:6px">📅 Meine Tagesplanung</button>
+    <div id="dayplan-panel" style="display:none;position:absolute;top:106px;right:14px;z-index:500;background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:10px 12px;box-shadow:0 2px 8px rgba(0,0,0,.15)">
+      <input type="date" id="dayplan-date" onchange="renderMarkers()" style="padding:6px 8px;border:1px solid var(--bd);border-radius:8px;background:var(--sf2);color:var(--tx);font-size:12px">
+    </div>
     <div id="pa-panel" style="display:none;position:absolute;top:60px;right:14px;z-index:500;width:300px;max-height:70vh;overflow-y:auto;background:var(--sf);border:1px solid var(--bd);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.2);padding:14px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
         <div style="font-size:13px;font-weight:700;color:var(--tx)">👤 Personen-Audits</div>
@@ -1480,10 +1484,21 @@ function renderMarkers(){
   const q=(document.getElementById('srch')?.value||'').toLowerCase();
   const df=document.getElementById('dsel')?.value||'';
   const sf=document.getElementById('stsel')?.value||'';
+  const dayPlanOn=window._dayPlanMode;
+  const dayPlanDate=document.getElementById('dayplan-date')?.value||today();
   const ms=[];
   const visible=[];
   data.forEach(e=>{
     if(!e.lat||!e.lng)return;
+    // "Meine Tagesplanung": nur Baustellen zeigen, die für den gewählten Tag beim eingeloggten
+    // Nutzer eingeplant sind - überschreibt alle anderen Filter, da es ein bewusst enger
+    // Fokus-Modus ist (nur der eigene Tagesplan, sonst nichts).
+    if(dayPlanOn){
+      const hasPlanToday=plans.some(p=>p.bsId===e.id&&p.date===dayPlanDate&&p.auditor===currentUser);
+      if(!hasPlanToday)return;
+      visible.push(e);
+      return;
+    }
     // Active/inactive logic
     const isInact=!e.active;
     const isPaused=e.paused;
@@ -3103,6 +3118,21 @@ function renderPAPins(list){
   _paPinsLayer.addTo(map);
 }
 
+function toggleDayPlanMode(){
+  window._dayPlanMode=!window._dayPlanMode;
+  const btn=document.getElementById('dayplan-toggle');
+  const panel=document.getElementById('dayplan-panel');
+  const dateEl=document.getElementById('dayplan-date');
+  if(dateEl&&!dateEl.value)dateEl.value=today();
+  if(window._dayPlanMode){
+    btn.style.background='var(--blue)';btn.style.color='#fff';btn.style.borderColor='var(--blue)';
+    panel.style.display='block';
+  }else{
+    btn.style.background='var(--sf)';btn.style.color='var(--tx)';btn.style.borderColor='var(--bd)';
+    panel.style.display='none';
+  }
+  renderMarkers();
+}
 function toggleSidebar(){
   const sb=document.getElementById('sidebar');
   const btn=document.getElementById('sb-toggle');
