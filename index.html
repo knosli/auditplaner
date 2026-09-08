@@ -357,7 +357,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
   <div id="presence-bar" style="display:flex;align-items:center;gap:4px;margin-left:4px"></div>
   <button onclick="toggleDark()" class="hb" title="Dark Mode" style="font-size:14px">🌙</button>
   <button onclick="openGuide()" class="hb" title="Anleitung" style="font-size:14px">❓</button>
-  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.31</span>
+  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.33</span>
   <button onclick="doLogout()" class="hb" title="Abmelden" style="font-size:14px" id="logout-btn">⏻</button>
   <button onclick="toggleMobileView()" id="mobile-btn" class="hb" title="Mobile Ansicht" style="font-size:14px">📱</button>
   <div id="more-w" class="admin-only">
@@ -372,6 +372,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
       <button onclick="openIBImport();toggleMore()"><i class="ti ti-file-upload"></i> IB/ASP Audits importieren</button>
       <button onclick="openPersonalImport();toggleMore()"><i class="ti ti-user-pause"></i> Personal-Import (Pausieren)</button>
       <button onclick="openSammelbox();toggleMore()"><i class="ti ti-inbox"></i> 📥 Sammelbox <span id="sb-count-badge"></span></button>
+      <button onclick="openTempWorkers();toggleMore()"><i class="ti ti-user-question"></i> 👤 Temporäre Mitarbeitende <span id="tw-count-badge"></span></button>
       <div style="height:1px;background:var(--bd);margin:4px 0"></div>
       <button onclick="teamExport();toggleMore()"><i class="ti ti-device-floppy"></i> Notfall-Backup</button>
       <label style="display:flex;align-items:center;gap:6px;padding:7px 12px;cursor:pointer;font-size:12px;color:var(--tx);border-bottom:1px solid var(--bd)"><i class="ti ti-upload"></i> Backup laden<input type="file" accept=".json" onchange="loadJSON(this.files[0])" style="display:none"></label>
@@ -754,7 +755,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
     </div>
     <div class="agrid" id="agrid"></div>
     <div style="height:16px"></div>
-    <div class="card admin-only" id="aud-totals-card">
+    <div class="card" id="aud-totals-card" style="display:none">
       <h3 style="margin-bottom:12px"><i class="ti ti-chart-pie" style="color:var(--blue)"></i> Stellenprozente Führungssystem</h3>
       <div id="aud-totals-content"></div>
     </div>
@@ -1425,10 +1426,10 @@ function save(){clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setIt
 // Immediate save for critical actions (no debounce)
 function saveNow(){
   clearTimeout(saveT);
-  try{localStorage.setItem('anliker_berat_plan',JSON.stringify(beratPlan));localStorage.setItem(SK,JSON.stringify({data,plans,tlog,auditors,ferien,ghostAudits:window._ghostAudits||[],personAudits,v:4}));localStorage.setItem('anliker_pi_collectbox',JSON.stringify(window._piCollectBox||[]));}catch(e){}
+  try{localStorage.setItem('anliker_berat_plan',JSON.stringify(beratPlan));localStorage.setItem(SK,JSON.stringify({data,plans,tlog,auditors,ferien,ghostAudits:window._ghostAudits||[],personAudits,v:4}));localStorage.setItem('anliker_pi_collectbox',JSON.stringify(window._piCollectBox||[]));localStorage.setItem('anliker_temp_workers',JSON.stringify(window._tempWorkers||[]));}catch(e){}
   sbPush();
 }
-function load(){try{const r=localStorage.getItem(SK);if(!r)return false;const p=JSON.parse(r);if(p.data)data=p.data;if(p.plans)plans=p.plans;if(p.tlog)tlog=p.tlog;if(p.auditors)auditors=p.auditors;if(p.ferien)ferien=p.ferien;if(p.ghostAudits)window._ghostAudits=p.ghostAudits;if(p.personAudits)personAudits=p.personAudits;try{window._piCollectBox=JSON.parse(localStorage.getItem('anliker_pi_collectbox')||'[]');}catch(e){window._piCollectBox=[];}return true;}catch(e){return false;}}
+function load(){try{const r=localStorage.getItem(SK);if(!r)return false;const p=JSON.parse(r);if(p.data)data=p.data;if(p.plans)plans=p.plans;if(p.tlog)tlog=p.tlog;if(p.auditors)auditors=p.auditors;if(p.ferien)ferien=p.ferien;if(p.ghostAudits)window._ghostAudits=p.ghostAudits;if(p.personAudits)personAudits=p.personAudits;try{window._piCollectBox=JSON.parse(localStorage.getItem('anliker_pi_collectbox')||'[]');}catch(e){window._piCollectBox=[];}try{window._tempWorkers=JSON.parse(localStorage.getItem('anliker_temp_workers')||'[]');}catch(e){window._tempWorkers=[];}return true;}catch(e){return false;}}
 function showToast(m,d=2500){const t=document.getElementById('toast');t.textContent=m;t.style.display='block';clearTimeout(t._t);t._t=setTimeout(()=>t.style.display='none',d);}
 function dlJSON(obj,fn){const b=new Blob([JSON.stringify(obj,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=fn;a.click();}
 function teamExport(){dlJSON({data,plans,auditors,ferien,ghostAudits:window._ghostAudits||[],personAudits,savedAt:new Date().toISOString(),type:'team'},'anliker_export_'+today()+'.json');showToast('📤 Export erstellt – auf SharePoint!',3000);}
@@ -3278,6 +3279,7 @@ function toggleMore(ev){
   const m=document.getElementById('more-m');
   const badge=document.getElementById('sb-count-badge');
   if(badge){const n=(window._piCollectBox||[]).length;badge.textContent=n?`(${n})`:'';}
+  updateTempWorkersBadge();
   if(m.style.display!=='none'){m.style.display='none';return;}
   // Move menu to body to escape any overflow/z-index stacking context
   if(m.parentElement!==document.body)document.body.appendChild(m);
@@ -4751,6 +4753,13 @@ function updateAdminUI(){
   els.forEach(el=>el.style.display=isAdmin?'':'none');
   const btn=document.getElementById('admin-toggle-btn');
   if(btn){btn.style.display='none';}
+  // Stellenprozente-Karte: für Haupt-/Voll-Admin UND Sekundär-Admin sichtbar (zwei getrennte
+  // Rollen, die sich nicht überschneiden) - deshalb per JS statt einer einzelnen CSS-Klasse.
+  const totalsCard=document.getElementById('aud-totals-card');
+  if(totalsCard){
+    const isSecAdmin=document.body.classList.contains('secondary-admin');
+    totalsCard.style.display=(isAdmin||isSecAdmin)?'':'none';
+  }
 }
 
 // Kürzel → Auditor-Name mapping (reverse)
@@ -5053,7 +5062,7 @@ async function runPersonalImport(file){
         if(e.paused)buckets.reactivate.push(item);else buckets.noop.push(item);
       }
     });
-    _piPending={buckets,targetKW};
+    _piPending={buckets,targetKW,temporaere:Array.isArray(payload.temporaere)?payload.temporaere:[]};
     piRenderPreview();
   }catch(err){
     document.getElementById('pi-error').style.display='block';
@@ -5162,6 +5171,35 @@ function piCollectUnknown(idx){
   saveNow();
   piRenderPreview();
 }
+// ═══ Temporäre Mitarbeitende (aus Personal-Import) ═══
+function openTempWorkers(){
+  const list=window._tempWorkers||[];
+  const tbody=document.getElementById('tw-list');
+  if(tbody){
+    tbody.innerHTML=list.length?list.map(t=>`
+      <tr style="border-bottom:1px solid var(--bd)">
+        <td style="padding:6px 8px;color:var(--tx);font-weight:600">${t.pnr}</td>
+        <td style="padding:6px 8px;color:var(--tx)">${t.name||'—'}</td>
+        <td style="padding:6px 8px;color:var(--tx3)">${t.quelle||''}</td>
+      </tr>`).join('')
+      :`<tr><td colspan="3" style="padding:14px 8px;text-align:center;color:var(--tx3)">Keine temporären Mitarbeitenden importiert.</td></tr>`;
+  }
+  document.getElementById('tw-bg').style.display='flex';
+}
+function updateTempWorkersBadge(){
+  const badge=document.getElementById('tw-count-badge');
+  if(badge){const n=(window._tempWorkers||[]).length;badge.textContent=n?`(${n})`:'';}
+}
+function exportTempWorkersCSV(){
+  const list=window._tempWorkers||[];
+  let csv='Personal-Nr;Name;Einheit\n';
+  list.forEach(t=>{csv+=`${t.pnr};${t.name||''};${t.quelle||''}\n`;});
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='temporaere_mitarbeitende_'+today()+'.csv';
+  a.click();
+}
 function openSammelbox(){
   const box=window._piCollectBox||[];
   const activeOptions=data.filter(e=>e.active).sort((a,b)=>a.name.localeCompare(b.name)).map(e=>`<option value="${e.id}">${e.name}${e.psp?' ('+e.psp+')':''}</option>`).join('')
@@ -5224,7 +5262,7 @@ function sbCreate(ci){
 }
 function confirmPersonalImport(){
   if(!_piPending)return;
-  const{buckets,targetKW}=_piPending;
+  const{buckets,targetKW,temporaere}=_piPending;
   // Personal-Zahl aus der Einsatzliste an der Baustelle festhalten - unabhängig von Häkchen,
   // rein informativ fürs Detail-Panel ("Personal KW X: N"). Baustellen, die NICHT in einer
   // importierten Einsatzliste geführt werden, bleiben unberücksichtigt (kein Eintrag hier).
@@ -5234,6 +5272,17 @@ function confirmPersonalImport(){
     e.lastPersonalCount=it.count;
     e.lastPersonalKW=targetKW;
   });
+  // Temporäre Mitarbeitende: PRO EINHEIT ersetzen, nicht global anhängen. Wenn eine Einheit
+  // (z.B. "Terratech AG") neu importiert wird, fliegen ihre alten Nummern raus und werden durch
+  // die neuen ersetzt - so verschwinden auch Nummern korrekt wieder, wenn die Person nicht mehr
+  // temporär im Einsatz ist. Andere, in diesem Import nicht enthaltene Einheiten bleiben
+  // unangetastet.
+  if(temporaere&&temporaere.length){
+    const quellenInDiesemImport=new Set(temporaere.map(t=>t.quelle));
+    window._tempWorkers=(window._tempWorkers||[]).filter(t=>!quellenInDiesemImport.has(t.quelle));
+    window._tempWorkers.push(...temporaere);
+    window._tempWorkers.sort((a,b)=>a.quelle.localeCompare(b.quelle)||a.pnr.localeCompare(b.pnr));
+  }
   let n=0,aliasesSaved=0;
   const checked=(key,idx)=>{
     const el=document.querySelector(`input[data-key="${key}"][data-idx="${idx}"]`);
@@ -5405,6 +5454,7 @@ async function sbPush(){
     auditorColors:JSON.stringify(auditorColors),
     piCollectBox:JSON.stringify(window._piCollectBox||[]),
     auditTarget:window._auditTarget||0,
+    tempWorkers:JSON.stringify(window._tempWorkers||[]),
     updated_at:new Date().toISOString()};
   let result=await sbFetch('audit_state',{method:'POST',body:JSON.stringify(payload),
     headers:{'Prefer':'resolution=merge-duplicates'}});
@@ -5412,7 +5462,7 @@ async function sbPush(){
     // Fallback: falls Spalten in Supabase noch nicht existieren (alte Tabelle, Spalte noch
     // nicht per SQL ergänzt) -> ohne diese Felder nochmal versuchen, damit der Rest der
     // Synchronisation nicht komplett blockiert wird.
-    const{piCollectBox,auditTarget,...fallbackPayload}=payload;
+    const{piCollectBox,auditTarget,tempWorkers,...fallbackPayload}=payload;
     result=await sbFetch('audit_state',{method:'POST',body:JSON.stringify(fallbackPayload),
       headers:{'Prefer':'resolution=merge-duplicates'}});
     if(result)console.warn('sbPush: piCollectBox/auditTarget-Spalten fehlen in Supabase - siehe Admin-Menü "Sammelbox" für Setup-SQL. Restliche Daten wurden trotzdem synchronisiert.');
@@ -5439,6 +5489,7 @@ async function sbPull(){
     if(p.personAudits)personAudits=JSON.parse(p.personAudits);
     if(p.piCollectBox){try{window._piCollectBox=JSON.parse(p.piCollectBox);}catch(e){}}
     if(p.auditTarget!==undefined&&p.auditTarget!==null)window._auditTarget=+p.auditTarget;
+    if(p.tempWorkers){try{window._tempWorkers=JSON.parse(p.tempWorkers);}catch(e){}}
     if(p.persons){try{persons=JSON.parse(p.persons);localStorage.setItem('anliker_persons',JSON.stringify(persons));}catch(e){}}
     if(p.beratPlan){try{beratPlan=JSON.parse(p.beratPlan);localStorage.setItem('anliker_berat_plan',JSON.stringify(beratPlan));}catch(e){}}
     if(p.auditorMeta){try{auditorMeta=JSON.parse(p.auditorMeta);localStorage.setItem('anliker_aud_meta',JSON.stringify(auditorMeta));}catch(e){}}
@@ -6290,13 +6341,35 @@ document.addEventListener('DOMContentLoaded',()=>{
       <summary style="cursor:pointer;color:var(--blue)">Einmaliges Setup nötig? (falls Sammelbox nicht synct)</summary>
       <p style="margin:6px 0">Falls die Sammelbox nicht zwischen Geräten synchronisiert, fehlt eventuell die Spalte in Supabase. Einmalig im Supabase SQL-Editor ausführen:</p>
       <pre style="background:var(--sf2);padding:8px;border-radius:6px;overflow-x:auto;user-select:all">ALTER TABLE audit_state ADD COLUMN IF NOT EXISTS "piCollectBox" text;
-ALTER TABLE audit_state ADD COLUMN IF NOT EXISTS "auditTarget" integer;</pre>
+ALTER TABLE audit_state ADD COLUMN IF NOT EXISTS "auditTarget" integer;
+ALTER TABLE audit_state ADD COLUMN IF NOT EXISTS "tempWorkers" text;</pre>
     </details>
     <div id="sb-list"></div>
     <div style="display:flex;justify-content:flex-end;margin-top:16px;border-top:1px solid var(--bd);padding-top:12px">
       <button onclick="document.getElementById('pisb-bg').style.display='none'" style="padding:8px 16px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf2);cursor:pointer;font-size:12px;color:var(--tx)">Schliessen</button>
     </div>
   </div>
+</div>
+<!-- TEMPORÄRE MITARBEITENDE: reine Übersicht aus dem Personal-Import, pro Einheit ersetzt statt
+     global angehängt, damit nicht mehr aktive temporäre Nummern auch wieder verschwinden. -->
+<div id="tw-bg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:4000;align-items:center;justify-content:center">
+  <div style="background:var(--sf);border-radius:12px;padding:24px;width:640px;max-width:95vw;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)">
+    <h3 style="font-size:15px;font-weight:700;color:var(--tx);margin-bottom:8px">👤 Temporäre Mitarbeitende</h3>
+    <p style="font-size:12px;color:var(--tx2);margin-bottom:12px">Aus dem letzten Personal-Import pro Einheit. Wird bei jedem neuen Import für die jeweilige Einheit automatisch ersetzt (kein Verlauf, immer aktueller Stand).</p>
+    <table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:14px">
+      <thead><tr style="text-align:left;border-bottom:1px solid var(--bd)">
+        <th style="padding:6px 8px;color:var(--tx2);font-weight:600">Personal-Nr.</th>
+        <th style="padding:6px 8px;color:var(--tx2);font-weight:600">Name</th>
+        <th style="padding:6px 8px;color:var(--tx2);font-weight:600">Einheit</th>
+      </tr></thead>
+      <tbody id="tw-list"></tbody>
+    </table>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;border-top:1px solid var(--bd);padding-top:12px">
+      <button onclick="exportTempWorkersCSV()" style="padding:8px 16px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf2);cursor:pointer;font-size:12px;color:var(--tx)">⬇️ CSV exportieren</button>
+      <button onclick="document.getElementById('tw-bg').style.display='none'" style="padding:8px 16px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf2);cursor:pointer;font-size:12px;color:var(--tx)">Schliessen</button>
+    </div>
+  </div>
+</div>
 </div>
 <!-- IB/ASP IMPORT MODAL -->
 <div id="ib-bg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:4000;align-items:center;justify-content:center">
