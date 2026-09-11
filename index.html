@@ -357,7 +357,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
   <div id="presence-bar" style="display:flex;align-items:center;gap:4px;margin-left:4px"></div>
   <button onclick="toggleDark()" class="hb" title="Dark Mode" style="font-size:14px">🌙</button>
   <button onclick="openGuide()" class="hb" title="Anleitung" style="font-size:14px">❓</button>
-  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.37</span>
+  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.38</span>
   <button onclick="doLogout()" class="hb" title="Abmelden" style="font-size:14px" id="logout-btn">⏻</button>
   <button onclick="toggleMobileView()" id="mobile-btn" class="hb" title="Mobile Ansicht" style="font-size:14px">📱</button>
   <div id="more-w" class="admin-only">
@@ -5123,19 +5123,30 @@ function piRenderPreview(){
   const unknownOptions=data.filter(e=>e.active).sort((a,b)=>a.name.localeCompare(b.name)).map(e=>`<option value="${e.id}">${e.name}${e.psp?' ('+e.psp+')':''}</option>`).join('')
     +(data.some(e=>!e.active)?`<optgroup label="— inaktive Baustellen —">${data.filter(e=>!e.active).sort((a,b)=>a.name.localeCompare(b.name)).map(e=>`<option value="${e.id}">${e.name}${e.psp?' ('+e.psp+')':''} (inaktiv)</option>`).join('')}</optgroup>`:'');
   const collectBoxHtml='';
+  // Mit Personal zuerst (dringlicher zum Zuordnen), 0-Personal-Fälle darunter mit eigener
+  // Trennlinie - macht das Durchgehen der Liste schneller, da die wichtigeren Fälle (echte,
+  // aktive Zuteilungen) zuoberst stehen. Original-Index (i) bleibt erhalten, da die
+  // Zuordnen/Neue-Baustelle/Sammelbox-Buttons direkt in _piPending.buckets.unknown[i] indexieren.
+  const unknownWithPeople=[];const unknownZero=[];
+  buckets.unknown.forEach((it,i)=>(it.count>0?unknownWithPeople:unknownZero).push(i));
+  const renderUnknownItem=i=>{
+    const it=buckets.unknown[i];
+    return`<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--sf2);border-radius:8px;margin-bottom:4px;font-size:12px;color:var(--tx);flex-wrap:wrap">
+      <span style="flex:1;min-width:160px">${it.psp?it.psp+' · ':''}${it.name} <span style="color:var(--tx3)">(${it.count} Pers.)</span></span>
+      <select id="pi-alias-sel-${i}" style="font-size:12px;padding:6px;border-radius:6px;border:1px solid var(--bd);background:var(--sf);color:var(--tx);max-width:280px;flex-shrink:0">
+        <option value="">— Baustelle wählen —</option>${unknownOptions}
+      </select>
+      <button onclick="piResolveUnknown(${i})" style="padding:4px 10px;border-radius:6px;border:none;background:#3B82F6;color:#fff;font-size:11px;cursor:pointer">Zuordnen</button>
+      <button onclick="piCreateFromUnknown(${i})" style="padding:4px 10px;border-radius:6px;border:1px solid #10B981;background:transparent;color:#10B981;font-size:11px;cursor:pointer">+ Neue Baustelle</button>
+      <button onclick="piCollectUnknown(${i})" style="padding:4px 10px;border-radius:6px;border:1px solid var(--bd);background:transparent;color:var(--tx2);font-size:11px;cursor:pointer">📥 Sammelbox</button>
+    </div>`;
+  };
   const unknownGrp=buckets.unknown.length?`<div style="margin-bottom:14px">
       <div style="font-size:12px;font-weight:700;color:#EF4444;margin-bottom:6px">❓ Unbekannt – kein Match gefunden (${buckets.unknown.length})</div>
       <div style="font-size:11px;color:var(--tx3);margin-bottom:6px">Diese PSP/Namen kennt der Planer nicht. Bestehende Baustelle zuordnen (Alias), direkt neu anlegen, oder für später in die Sammelbox legen (Admin-Menü → "📥 Sammelbox").</div>
-      ${buckets.unknown.map((it,i)=>`
-        <div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--sf2);border-radius:8px;margin-bottom:4px;font-size:12px;color:var(--tx);flex-wrap:wrap">
-          <span style="flex:1;min-width:160px">${it.psp?it.psp+' · ':''}${it.name} <span style="color:var(--tx3)">(${it.count} Pers.)</span></span>
-          <select id="pi-alias-sel-${i}" style="font-size:12px;padding:6px;border-radius:6px;border:1px solid var(--bd);background:var(--sf);color:var(--tx);max-width:280px;flex-shrink:0">
-            <option value="">— Baustelle wählen —</option>${unknownOptions}
-          </select>
-          <button onclick="piResolveUnknown(${i})" style="padding:4px 10px;border-radius:6px;border:none;background:#3B82F6;color:#fff;font-size:11px;cursor:pointer">Zuordnen</button>
-          <button onclick="piCreateFromUnknown(${i})" style="padding:4px 10px;border-radius:6px;border:1px solid #10B981;background:transparent;color:#10B981;font-size:11px;cursor:pointer">+ Neue Baustelle</button>
-          <button onclick="piCollectUnknown(${i})" style="padding:4px 10px;border-radius:6px;border:1px solid var(--bd);background:transparent;color:var(--tx2);font-size:11px;cursor:pointer">📥 Sammelbox</button>
-        </div>`).join('')}
+      ${unknownWithPeople.map(renderUnknownItem).join('')}
+      ${unknownZero.length?`<div style="display:flex;align-items:center;gap:8px;margin:10px 0 8px"><div style="flex:1;height:1px;background:var(--bd)"></div><span style="font-size:11px;color:var(--tx3);white-space:nowrap">Baustellen mit 0 Personal</span><div style="flex:1;height:1px;background:var(--bd)"></div></div>`:''}
+      ${unknownZero.map(renderUnknownItem).join('')}
     </div>`:'';
   let html='';
   html+=grp('⏸ Pausieren (0 Personen)','#94A3B8',buckets.pause,'pause',true);
@@ -5252,35 +5263,19 @@ function openSammelbox(){
     +(data.some(e=>!e.active)?`<optgroup label="— inaktive Baustellen —">${data.filter(e=>!e.active).sort((a,b)=>a.name.localeCompare(b.name)).map(e=>`<option value="${e.id}">${e.name}${e.psp?' ('+e.psp+')':''} (inaktiv)</option>`).join('')}</optgroup>`:'');
   const list=document.getElementById('sb-list');
   if(list){
-    if(!box.length){
-      list.innerHTML='<div style="font-size:12px;color:var(--tx2)">Sammelbox ist leer.</div>';
-    }else{
-      // Mit Personal zuerst (dringlicher zum Zuordnen), 0-Personal-Fälle darunter mit
-      // eigener Trennlinie - macht das Durchgehen der Liste schneller, da die wichtigeren
-      // Fälle (echte, aktive Zuteilungen) zuoberst stehen.
-      const withPeople=[];const zeroPeople=[];
-      box.forEach((it,ci)=>(it.count>0?withPeople:zeroPeople).push(ci));
-      const renderItem=ci=>{
-        const it=box[ci];
-        return`<div style="padding:8px 10px;background:var(--sf2);border-radius:8px;margin-bottom:6px;font-size:12px;color:var(--tx)">
-          <div style="margin-bottom:6px">${it.psp?it.psp+' · ':''}${it.name} <span style="color:var(--tx3)">(${it.count} Pers.)</span>${it.quelle?` <span style="color:var(--tx3);font-style:italic">– ${it.quelle}</span>`:''}</div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
-            <select id="sb-sel-${ci}" style="font-size:11px;padding:5px;border-radius:6px;border:1px solid var(--bd);background:var(--sf);color:var(--tx);max-width:220px">
-              <option value="">— Baustelle wählen —</option>${activeOptions}
-            </select>
-            <button onclick="sbAssign(${ci})" style="padding:4px 10px;border-radius:6px;border:none;background:#3B82F6;color:#fff;font-size:11px;cursor:pointer">Zuordnen</button>
-            <button onclick="sbCreate(${ci})" style="padding:4px 10px;border-radius:6px;border:1px solid #10B981;background:transparent;color:#10B981;font-size:11px;cursor:pointer">+ Neue Baustelle</button>
-            <button onclick="sbRemove(${ci})" style="padding:4px 10px;border-radius:6px;border:1px solid var(--bd);background:transparent;color:var(--tx2);font-size:11px;cursor:pointer">✕ Entfernen</button>
-          </div>
-        </div>`;
-      };
-      let html=withPeople.map(renderItem).join('');
-      if(zeroPeople.length){
-        html+=`<div style="display:flex;align-items:center;gap:8px;margin:12px 0 8px"><div style="flex:1;height:1px;background:var(--bd)"></div><span style="font-size:11px;color:var(--tx3);white-space:nowrap">Baustellen mit 0 Personal</span><div style="flex:1;height:1px;background:var(--bd)"></div></div>`;
-        html+=zeroPeople.map(renderItem).join('');
-      }
-      list.innerHTML=html;
-    }
+    list.innerHTML=box.length?box.map((it,ci)=>`
+      <div style="padding:8px 10px;background:var(--sf2);border-radius:8px;margin-bottom:6px;font-size:12px;color:var(--tx)">
+        <div style="margin-bottom:6px">${it.psp?it.psp+' · ':''}${it.name} <span style="color:var(--tx3)">(${it.count} Pers.)</span>${it.quelle?` <span style="color:var(--tx3);font-style:italic">– ${it.quelle}</span>`:''}</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+          <select id="sb-sel-${ci}" style="font-size:11px;padding:5px;border-radius:6px;border:1px solid var(--bd);background:var(--sf);color:var(--tx);max-width:220px">
+            <option value="">— Baustelle wählen —</option>${activeOptions}
+          </select>
+          <button onclick="sbAssign(${ci})" style="padding:4px 10px;border-radius:6px;border:none;background:#3B82F6;color:#fff;font-size:11px;cursor:pointer">Zuordnen</button>
+          <button onclick="sbCreate(${ci})" style="padding:4px 10px;border-radius:6px;border:1px solid #10B981;background:transparent;color:#10B981;font-size:11px;cursor:pointer">+ Neue Baustelle</button>
+          <button onclick="sbRemove(${ci})" style="padding:4px 10px;border-radius:6px;border:1px solid var(--bd);background:transparent;color:var(--tx2);font-size:11px;cursor:pointer">✕ Entfernen</button>
+        </div>
+      </div>`).join('')
+      :'<div style="font-size:12px;color:var(--tx2)">Sammelbox ist leer.</div>';
   }
   document.getElementById('pisb-bg').style.display='flex';
 }
