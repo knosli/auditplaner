@@ -357,7 +357,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
   <div id="presence-bar" style="display:flex;align-items:center;gap:4px;margin-left:4px"></div>
   <button onclick="toggleDark()" class="hb" title="Dark Mode" style="font-size:14px">🌙</button>
   <button onclick="openGuide()" class="hb" title="Anleitung" style="font-size:14px">❓</button>
-  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.35</span>
+  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.36</span>
   <button onclick="doLogout()" class="hb" title="Abmelden" style="font-size:14px" id="logout-btn">⏻</button>
   <button onclick="toggleMobileView()" id="mobile-btn" class="hb" title="Mobile Ansicht" style="font-size:14px">📱</button>
   <div id="more-w" class="admin-only">
@@ -5218,11 +5218,10 @@ function openTempWorkers(){
             <button onclick="copyTempPnr('${t.pnr}',this)" title="Personal-Nr kopieren" style="border:none;background:var(--sf2);border-radius:5px;padding:2px 5px;cursor:pointer;font-size:11px;color:var(--tx2);line-height:1">📋</button>
           </span>
         </td>
-        <td style="padding:6px 8px;color:var(--tx)">${t.name||'—'}</td>
         <td style="padding:6px 8px;color:var(--tx3)">${t.quelle||''}</td>
       </tr>`;
     }).join('')
-      :`<tr><td colspan="3" style="padding:14px 8px;text-align:center;color:var(--tx3)">Keine temporären Mitarbeitenden importiert.</td></tr>`;
+      :`<tr><td colspan="2" style="padding:14px 8px;text-align:center;color:var(--tx3)">Keine temporären Mitarbeitenden importiert.</td></tr>`;
   }
   document.getElementById('tw-bg').style.display='flex';
 }
@@ -5239,8 +5238,8 @@ function updateTempWorkersBadge(){
 }
 function exportTempWorkersCSV(){
   const list=window._tempWorkers||[];
-  let csv='Personal-Nr;Name;Einheit\n';
-  list.forEach(t=>{csv+=`${t.pnr};${t.name||''};${t.quelle||''}\n`;});
+  let csv='Personal-Nr;Einheit\n';
+  list.forEach(t=>{csv+=`${t.pnr};${t.quelle||''}\n`;});
   const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
   const a=document.createElement('a');
   a.href=URL.createObjectURL(blob);
@@ -6402,11 +6401,10 @@ ALTER TABLE audit_state ADD COLUMN IF NOT EXISTS "tempWorkers" text;</pre>
 <div id="tw-bg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:4000;align-items:center;justify-content:center">
   <div style="background:var(--sf);border-radius:12px;padding:24px;width:640px;max-width:95vw;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)">
     <h3 style="font-size:15px;font-weight:700;color:var(--tx);margin-bottom:8px">👤 Temporäre Mitarbeitende</h3>
-    <p style="font-size:12px;color:var(--tx2);margin-bottom:12px">Aus dem letzten Personal-Import pro Einheit. Wird bei jedem neuen Import für die jeweilige Einheit automatisch ersetzt (kein Verlauf, immer aktueller Stand).</p>
+    <p style="font-size:12px;color:var(--tx2);margin-bottom:12px">Aus dem letzten Personal-Import pro Einheit. Wird bei jedem neuen Import für die jeweilige Einheit automatisch ersetzt (kein Verlauf, immer aktueller Stand). Bewusst nur die Personal-Nr, keine Namen (Datenschutz).</p>
     <table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:14px">
       <thead><tr style="text-align:left;border-bottom:1px solid var(--bd)">
         <th style="padding:6px 8px;color:var(--tx2);font-weight:600">Personal-Nr.</th>
-        <th style="padding:6px 8px;color:var(--tx2);font-weight:600">Name</th>
         <th style="padding:6px 8px;color:var(--tx2);font-weight:600">Einheit</th>
       </tr></thead>
       <tbody id="tw-list"></tbody>
