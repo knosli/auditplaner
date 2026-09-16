@@ -357,7 +357,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
   <div id="presence-bar" style="display:flex;align-items:center;gap:4px;margin-left:4px"></div>
   <button onclick="toggleDark()" class="hb" title="Dark Mode" style="font-size:14px">🌙</button>
   <button onclick="openGuide()" class="hb" title="Anleitung" style="font-size:14px">❓</button>
-  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.38</span>
+  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.39</span>
   <button onclick="doLogout()" class="hb" title="Abmelden" style="font-size:14px" id="logout-btn">⏻</button>
   <button onclick="toggleMobileView()" id="mobile-btn" class="hb" title="Mobile Ansicht" style="font-size:14px">📱</button>
   <div id="more-w" class="admin-only">
@@ -3228,7 +3228,15 @@ function openPersonAuditPop(id){
   if(audSel){
     audSel.innerHTML='<option value="">— Auditor wählen —</option>'+auditors.map(a=>`<option value="${a}"${a===p.auditor?' selected':''}>${a}</option>`).join('');
   }
-  document.getElementById('pop-ai').innerHTML=`<label style="font-size:11px;color:var(--tx2);display:block;margin-bottom:3px">Datum Audit:</label><input type="date" id="pop-date" value="${p.date}" style="width:100%;padding:6px 8px;border:1px solid var(--bd);border-radius:6px;background:var(--sf2);color:var(--tx);font-size:12px">`;
+  document.getElementById('pop-ai').innerHTML=`
+    <label style="font-size:11px;color:var(--tx2);display:block;margin-bottom:3px">Datum Audit:</label>
+    <input type="date" id="pop-date" value="${p.date}" style="width:100%;padding:6px 8px;border:1px solid var(--bd);border-radius:6px;background:var(--sf2);color:var(--tx);font-size:12px;margin-bottom:8px">
+    <div style="position:relative">
+      <label style="font-size:11px;color:var(--tx2);display:block;margin-bottom:3px">Adresse <span id="pop-addr-hint" style="font-weight:400;font-size:10px;color:var(--blue)"></span></label>
+      <input type="text" id="pop-addr" value="${(p.addr||'').replace(/"/g,'&quot;')}" placeholder="Strasse Nr, PLZ Ort" oninput="addrAutocomplete(this.value,'pop')" autocomplete="off" style="width:100%;padding:6px 8px;border:1px solid var(--bd);border-radius:6px;background:var(--sf2);color:var(--tx);font-size:12px">
+      <div id="pop-addr-suggestions" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--sf);border:1px solid var(--bd);border-radius:var(--rs);z-index:999;max-height:180px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.15)"></div>
+    </div>`;
+  window._popPendingLat=p.lat||null;window._popPendingLng=p.lng||null;
   document.getElementById('calpop').style.display='block';
   document.getElementById('calpop-bg').style.display='block';
 }
@@ -3245,6 +3253,13 @@ function popAct(action){
     if(selEl&&selEl.value)p.auditor=selEl.value;
     const dateEl=document.getElementById('pop-date');
     const useDate=dateEl?dateEl.value:p.date;
+    // Adresse übernehmen, falls im Popup geändert - unabhängig davon, welche der drei
+    // Aktionen (Zuteilen/Auditiert/Nicht besucht) gewählt wird.
+    const addrEl=document.getElementById('pop-addr');
+    if(addrEl){
+      p.addr=addrEl.value.trim();
+      if(window._popPendingLat!==undefined){p.lat=window._popPendingLat;p.lng=window._popPendingLng;}
+    }
     if(action==='assign'){
       if(!p.auditor){showToast('Bitte Auditor wählen');return;}
       if(useDate){p.date=useDate;p.kw=dateToKW(useDate);}
@@ -6024,6 +6039,7 @@ function selectAddr(label,lat,lng,prefix){
   const hint=document.getElementById(prefix+'-addr-hint');
   if(hint)hint.textContent=lat?`✓ ${lat.toFixed(4)}, ${lng.toFixed(4)}`:'';
   if(prefix==='f'){window._pendingLat=lat||null;window._pendingLng=lng||null;}
+  else if(prefix==='pop'){window._popPendingLat=lat||null;window._popPendingLng=lng||null;}
   else{window._paPendingLat=lat||null;window._paPendingLng=lng||null;}
 }
 
