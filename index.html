@@ -361,7 +361,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
   <div id="presence-bar" style="display:flex;align-items:center;gap:4px;margin-left:4px"></div>
   <button onclick="toggleDark()" class="hb" title="Dark Mode" style="font-size:14px">🌙</button>
   <button onclick="openGuide()" class="hb" title="Anleitung" style="font-size:14px">❓</button>
-  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.47</span>
+  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.49</span>
   <button onclick="doLogout()" class="hb" title="Abmelden" style="font-size:14px" id="logout-btn">⏻</button>
   <button onclick="toggleMobileView()" id="mobile-btn" class="hb" title="Mobile Ansicht" style="font-size:14px">📱</button>
   <div id="more-w" class="admin-only">
@@ -844,8 +844,28 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
     <!-- PANEL: ABTEILUNGEN -->
     <div id="aud-panel-dept" style="display:none">
       <div class="card">
-        <h3>Audits nach Abteilung</h3>
-        <table class="dtbl"><thead><tr><th>Abteilung</th><th>Baustellen</th><th>Auditiert</th><th>Überfällig</th><th>Fällig</th><th>Pausiert</th><th>Inaktiv</th></tr></thead><tbody id="dept-tb"></tbody></table>
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+          <h3 style="margin:0">Audits nach Abteilung</h3>
+          <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--tx2)">
+            <span>Von</span><input type="month" id="dept-from" onchange="renderDeptTable()" style="padding:4px 6px;border:1px solid var(--bd);border-radius:6px;background:var(--sf2);color:var(--tx);font-size:11px">
+            <span>bis</span><input type="month" id="dept-to" onchange="renderDeptTable()" style="padding:4px 6px;border:1px solid var(--bd);border-radius:6px;background:var(--sf2);color:var(--tx);font-size:11px">
+          </div>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="dtbl"><thead><tr>
+            <th>Abteilung</th>
+            <th title="Aktive, nicht pausierte Baustellen (aktueller Stand)">Aktive BS</th>
+            <th title="Durchgeführte Baustellen-Audits im Zeitraum">🏗️ Audits</th>
+            <th title="Durchgeführte Personen-Audits im Zeitraum">👤 Pers.</th>
+            <th title="Durchgeführte Beratungen im Zeitraum">💬 Berat.</th>
+            <th title="Total durchgeführt im Zeitraum">Total</th>
+            <th title="Anteil der aktiven Baustellen mit mind. einem Audit im Zeitraum">Abdeckung</th>
+            <th title="Mitarbeitende laut Admin → Abteilungen verwalten (Jahr des Enddatums)">MA</th>
+            <th title="Total durchgeführte Audits pro 100 Mitarbeitende">pro 100 MA</th>
+            <th title="Aktuell überfällige Baustellen">Überfällig</th>
+          </tr></thead><tbody id="dept-tb"></tbody></table>
+        </div>
+        <div style="font-size:10px;color:var(--tx3);margin-top:8px">Personen-Audits werden über die zugeordnete Baustelle bzw. die Abteilung im Personen-Register zugeteilt. Mitarbeitende pflegen: Admin-Menü → Abteilungen verwalten.</div>
       </div>
     </div>
   </div>
@@ -2241,7 +2261,14 @@ function setStart(){const c=localStorage.getItem('audit_start')||'';const v=prom
 function showToday(){const tod=today();const tp=plans.filter(p=>p.date===tod);if(!tp.length){showToast('Heute keine Planungen',2000);return;}planned.clear();tp.forEach(p=>planned.add(p.bsId));updPB();renderMarkers();renderList();const pts=data.filter(e=>planned.has(e.id)&&e.lat&&e.lng);if(pts.length){const la=pts.map(e=>e.lat),lo=pts.map(e=>e.lng);map.fitBounds([[Math.min(...la)-.04,Math.min(...lo)-.04],[Math.max(...la)+.04,Math.max(...lo)+.04]]);}showToast(`📅 ${tp.length} Baustellen heute`,3000);}
 function showKW(){const kw=dateToKW(today());const ks=kwToDate(kw),ke=kwToDate(kw+1);const wp=plans.filter(p=>p.date>=ks&&p.date<ke);if(!wp.length){showToast('Diese KW keine Planungen',2000);return;}planned.clear();wp.forEach(p=>planned.add(p.bsId));updPB();renderMarkers();renderList();const pts=data.filter(e=>planned.has(e.id)&&e.lat&&e.lng);if(pts.length){const la=pts.map(e=>e.lat),lo=pts.map(e=>e.lng);map.fitBounds([[Math.min(...la)-.04,Math.min(...lo)-.04],[Math.max(...la)+.04,Math.max(...lo)+.04]]);}showToast(`📅 ${wp.length} Baustellen KW ${kw}`,3000);}
 // ═══ SELECTS ═══
-function buildSelects(){const dO='<option value="">—</option>'+ALL_DEPTS.map(d=>`<option>${d}</option>`).join('');document.getElementById('f-dept').innerHTML=dO;buildDF();buildAudSels();}
+function fillFDept(cur){
+  const el=document.getElementById('f-dept');if(!el)return;
+  const opts=getAllDepts();
+  if(cur&&!opts.includes(cur))opts.push(cur); // kombinierte/alte Werte nie verlieren
+  el.innerHTML='<option value="">— Bitte wählen —</option>'+opts.map(d=>`<option value="${d.replace(/"/g,'&quot;')}">${d}</option>`).join('');
+  el.value=cur||'';
+}
+function buildSelects(){fillFDept('');buildDF();buildAudSels();}
 function buildDF(){
   const el=document.getElementById('dsel');if(!el)return;
   const cur=el.value;
@@ -2301,13 +2328,13 @@ function renderAudCodes(){
     return`<div style="display:flex;align-items:center;gap:6px;padding:6px 10px;background:var(--sf2);border-radius:8px;border:1px solid var(--bd)">
       <span style="width:28px;height:28px;border-radius:50%;background:${col};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff">${code}</span>
       <span style="font-size:12px;color:var(--tx)">${a}</span>
-      <input value="${code}" maxlength="3" onchange="setAudCode('${a}',this.value)"
+      <input value="${code}" maxlength="4" onchange="setAudCode('${a}',this.value)"
         style="width:40px;padding:3px 6px;border:1px solid var(--bd);border-radius:5px;font-size:12px;font-weight:700;text-align:center;background:var(--sf);color:var(--tx);text-transform:uppercase">
     </div>`;
   }).join('');
 }
 function setAudCode(name,code){
-  AUD_CODES[name]=code.toUpperCase().slice(0,3);
+  AUD_CODES[name]=code.toUpperCase().slice(0,4);
   saveAudCodes();renderAudCodes();renderAll();
   showToast('✓ Kürzel gespeichert',1500);
 }
@@ -2959,12 +2986,55 @@ function renderOverview(){
     pie.innerHTML=`<div style="width:110px;height:110px;border-radius:50%;background:${g};box-shadow:0 2px 8px rgba(0,0,0,.1)"></div>`;
   }
 }
+function renderDeptTable(){
+  const tb=document.getElementById('dept-tb');if(!tb)return;
+  const fEl=document.getElementById('dept-from'),tEl=document.getElementById('dept-to');
+  const now=new Date();
+  if(fEl&&!fEl.value)fEl.value=now.getFullYear()+'-01';
+  if(tEl&&!tEl.value)tEl.value=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+  const from=fEl.value,to=tEl.value;
+  const inR=ds=>{if(!ds)return false;const ym=ds.slice(0,7);return ym>=from&&ym<=to;};
+  const maYear=to.slice(0,4);
+  const depts=getAllDepts();
+  const personDept=p=>{
+    const bs=p.bs?data.find(e=>e.name===p.bs):null;
+    if(bs&&bs.dept)return deptParts(bs.dept);
+    const per=(typeof persons!=='undefined'?persons:[]).find(x=>((x.nachname||'')+' '+(x.vorname||'')).trim()===(p.person||'').trim());
+    return per&&per.abt?[per.abt]:[];
+  };
+  const tot={bs:0,a:0,p:0,b:0,ma:0,ov:0,cov:0};
+  const rows=depts.map(d=>{
+    const inD=e=>deptParts(e.dept).includes(d);
+    const active=data.filter(e=>inD(e)&&e.active&&!e.paused&&e.type!=='werkhof');
+    const a=data.filter(inD).reduce((s,e)=>s+(e.auditHistory||[]).filter(h=>inR(h.date)).length,0);
+    const b=data.filter(inD).reduce((s,e)=>s+(e.beratungen||[]).filter(x=>inR(x.date)).length,0);
+    const p=personAudits.filter(x=>!x.planned&&inR(x.date)&&personDept(x).includes(d)).length;
+    const covered=active.filter(e=>(e.auditHistory||[]).some(h=>inR(h.date))).length;
+    const cov=active.length?Math.round(covered/active.length*100):null;
+    const ma=deptMA(d,maYear);
+    const total=a+p+b;
+    const per100=ma?(total/ma*100).toFixed(1):null;
+    const ov=active.filter(e=>status(e)==='overdue').length;
+    tot.bs+=active.length;tot.a+=a;tot.p+=p;tot.b+=b;tot.ma+=ma;tot.ov+=ov;tot.cov+=covered;
+    if(!active.length&&!total)return'';
+    const covCol=cov===null?'var(--tx3)':cov>=80?'#10B981':cov>=50?'#F59E0B':'#EF4444';
+    return`<tr><td><strong>${d}</strong></td><td>${active.length}</td><td>${a}</td><td>${p}</td><td>${b}</td>
+      <td style="font-weight:700">${total}</td>
+      <td style="font-weight:600;color:${covCol}">${cov===null?'—':cov+'%'}</td>
+      <td style="color:var(--tx2)">${ma||'—'}</td><td style="font-weight:600">${per100??'—'}</td>
+      <td style="color:${ov?'#EF4444':'var(--tx3)'};font-weight:${ov?600:400}">${ov}</td></tr>`;
+  }).join('');
+  const tAll=tot.a+tot.p+tot.b;
+  const tCov=tot.bs?Math.round(tot.cov/tot.bs*100)+'%':'—';
+  tb.innerHTML=(rows||'<tr><td colspan="10" style="padding:10px;color:var(--tx3);text-align:center">Keine Daten im Zeitraum.</td></tr>')+
+    `<tr style="border-top:2px solid var(--bd);background:var(--sf2)"><td><strong>Total</strong></td><td>${tot.bs}</td><td>${tot.a}</td><td>${tot.p}</td><td>${tot.b}</td><td style="font-weight:800">${tAll}</td><td style="font-weight:700">${tCov}</td><td>${tot.ma||'—'}</td><td style="font-weight:700">${tot.ma?(tAll/tot.ma*100).toFixed(1):'—'}</td><td>${tot.ov}</td></tr>`;
+}
 function renderAuditors(){
   initOverviewDefaults();
   renderOverview();
   renderAudTags();
   const depts=getAllDepts();
-  document.getElementById('dept-tb').innerHTML=depts.map(d=>{const bs=data.filter(e=>e.dept&&e.dept.includes(d.split(' + ')[0])&&e.active&&!e.paused);const ov=bs.filter(e=>status(e)==='overdue').length,du=bs.filter(e=>['due','soon'].includes(status(e))).length,au=bs.filter(e=>e.lastAudit).length,in2=data.filter(e=>e.dept&&e.dept.includes(d.split(' + ')[0])&&!e.active).length,pa=data.filter(e=>e.dept&&e.dept.includes(d.split(' + ')[0])&&e.paused).length;return`<tr><td><strong>${d}</strong></td><td>${bs.length}</td><td style="color:#10B981;font-weight:500">${au}</td><td style="color:#EF4444;font-weight:500">${ov}</td><td style="color:#F59E0B;font-weight:500">${du}</td><td style="color:#94A3B8;font-weight:500">${pa}</td><td style="color:var(--tx3)">${in2}</td></tr>`;}).join('')||'<tr><td colspan="7" style="padding:10px;color:var(--tx3);text-align:center">Keine Baustellen.</td></tr>';
+  renderDeptTable();
   document.getElementById('agrid').innerHTML=auditors.filter(a=>{
     const m=auditorMeta[a]||{};
     return !m.hidden;
@@ -3583,6 +3653,37 @@ function addAudAdmin(){
   renderAudAdminList();
   showToast('✓ Auditor hinzugefügt');
 }
+// Auditor umbenennen: ALLE Verweise mitziehen (Planungen, Audits, Beratungen, Personen-Audits,
+// Ferien, Wunschferien, Ghost-Audits, Log, Farben, Kürzel, Metadaten). Der alte Name wird als
+// Login-Alias gespeichert, damit der Supabase-Login (Anzeigename) weiterhin zugeordnet wird.
+function doRenameAuditor(oldName,newName){
+  newName=(newName||'').trim();
+  if(!newName||newName===oldName)return false;
+  if(auditors.includes(newName)){showToast('Name bereits vorhanden',2500);return false;}
+  let n=0;
+  const fix=o=>{
+    if(!o||typeof o!=='object')return;
+    if(Array.isArray(o)){o.forEach(fix);return;}
+    for(const k of Object.keys(o)){
+      const v=o[k];
+      if(typeof v==='string'&&v===oldName&&(/auditor/i.test(k)||k==='who'||k==='by')){o[k]=newName;n++;}
+      else if(v&&typeof v==='object')fix(v);
+    }
+  };
+  [data,plans,beratPlan,personAudits,ferien,ferienWunsch,window._ghostAudits||[],tlog].forEach(fix);
+  auditors=auditors.map(a=>a===oldName?newName:a);
+  const meta=auditorMeta[oldName]||{};
+  meta.loginAliases=[...new Set([...(meta.loginAliases||[]),oldName])];
+  delete auditorMeta[oldName];auditorMeta[newName]=meta;
+  if(auditorColors[oldName]){auditorColors[newName]=auditorColors[oldName];delete auditorColors[oldName];try{localStorage.setItem('auditorColors',JSON.stringify(auditorColors));}catch(e){}}
+  if(AUD_CODES[oldName]){AUD_CODES[newName]=AUD_CODES[oldName];delete AUD_CODES[oldName];saveAudCodes();}
+  if(currentUser===oldName){currentUser=newName;try{localStorage.setItem(USER_KEY,newName);}catch(e){}}
+  saveAudMeta();
+  buildAudSels();renderAudTags();renderAuditors();renderAll();saveNow();
+  renderAudAdminList();
+  showToast(`✓ Umbenannt: ${oldName} → ${newName} (${n} Einträge angepasst)`,3500);
+  return true;
+}
 function removeAudAdmin(name){
   if(!confirm('Auditor «'+name+'» löschen? Audits bleiben erhalten.'))return;
   auditors=auditors.filter(a=>a!==name);
@@ -3604,11 +3705,13 @@ function saveAudMeta2(name){
   meta.secondaryAdmin=role==='secondary';
   meta.fullAdmin=role==='full';
   const code=document.getElementById('am-code-'+name.replace(/ /g,'_'))?.value||'';
-  if(code){AUD_CODES[name]=code.toUpperCase().slice(0,3);saveAudCodes();}
+  if(code){AUD_CODES[name]=code.toUpperCase().slice(0,4);saveAudCodes();}
   const col=document.getElementById('am-col-'+name.replace(/ /g,'_'))?.value||'';
   if(col){auditorColors[name]=col;localStorage.setItem('auditorColors',JSON.stringify(auditorColors));}
   auditorMeta[name]=meta;
   saveAudMeta();
+  const newName=(document.getElementById('am-name-'+name.replace(/ /g,'_'))?.value||'').trim();
+  if(newName&&newName!==name){doRenameAuditor(name,newName);return;}
   renderAuditors();
   showToast('✓ Gespeichert',1500);
 }
@@ -3622,16 +3725,18 @@ function renderAudAdminList(){
     return`<div style="border:1px solid var(--bd);border-radius:10px;padding:14px;margin-bottom:10px;background:var(--sf2)">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
         <div style="display:flex;align-items:center;gap:8px">
-          <div style="width:32px;height:32px;border-radius:50%;background:${col};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff">${code}</div>
+          <div style="width:32px;height:32px;border-radius:50%;background:${col};display:flex;align-items:center;justify-content:center;font-size:${code.length>3?9:12}px;font-weight:700;color:#fff">${code}</div>
           <span style="font-size:13px;font-weight:600;color:var(--tx)">${a}</span>
         </div>
         <button onclick="removeAudAdmin('${a}')" style="background:none;border:none;cursor:pointer;color:#EF4444;font-size:13px">🗑</button>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px">
+      <div style="display:grid;grid-template-columns:1.4fr 1.2fr .6fr .6fr;gap:8px;margin-bottom:8px">
+        <div><label style="font-size:10px;color:var(--tx2);display:block;margin-bottom:2px">Name</label>
+          <input id="am-name-${id}" value="${a.replace(/"/g,'&quot;')}" style="width:100%;padding:5px 7px;border:1px solid var(--bd);border-radius:5px;background:var(--sf);color:var(--tx);font-size:11px;font-weight:600"></div>
         <div><label style="font-size:10px;color:var(--tx2);display:block;margin-bottom:2px">Stellenbezeichnung</label>
           <input id="am-title-${id}" value="${meta.title||''}" placeholder="z.B. Leitender Auditor" style="width:100%;padding:5px 7px;border:1px solid var(--bd);border-radius:5px;background:var(--sf);color:var(--tx);font-size:11px"></div>
         <div><label style="font-size:10px;color:var(--tx2);display:block;margin-bottom:2px">Kürzel</label>
-          <input id="am-code-${id}" value="${code}" maxlength="3" style="width:100%;padding:5px 7px;border:1px solid var(--bd);border-radius:5px;background:var(--sf);color:var(--tx);font-size:11px;text-transform:uppercase"></div>
+          <input id="am-code-${id}" value="${code}" maxlength="4" style="width:100%;padding:5px 7px;border:1px solid var(--bd);border-radius:5px;background:var(--sf);color:var(--tx);font-size:11px;text-transform:uppercase"></div>
         <div><label style="font-size:10px;color:var(--tx2);display:block;margin-bottom:2px">Farbe</label>
           <input id="am-col-${id}" type="color" value="${col}" style="width:100%;height:30px;border:1px solid var(--bd);border-radius:5px;padding:2px;cursor:pointer;background:var(--sf)"></div>
       </div>
@@ -3675,7 +3780,7 @@ function setPAImportMode(){
   },100);
 }
 function openImport(){editId=null;document.getElementById('m-title').textContent='Excel importieren';document.getElementById('form-s').style.display='none';document.getElementById('imp-s').style.display='block';document.getElementById('json-s').style.display='none';document.getElementById('m-save').style.display='none';document.getElementById('impst').textContent='';document.getElementById('mbg').classList.add('open');}
-function openAdd(){editId=null;window._pendingLat=null;window._pendingLng=null;document.getElementById('m-title').textContent='Neue Baustelle';document.getElementById('form-s').style.display='block';document.getElementById('imp-s').style.display='none';document.getElementById('json-s').style.display='none';document.getElementById('m-save').style.display='';['f-name','f-addr','f-psp','f-sap','f-prv','f-bc','f-note'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});document.getElementById('f-dept').value='';document.getElementById('f-rh').value='28';document.getElementById('f-last').value='';document.getElementById('f-type').value='baustelle';document.getElementById('addr-suggestions').style.display='none';const hint=document.getElementById('f-addr-hint');if(hint)hint.textContent='';document.getElementById('mbg').classList.add('open');}
+function openAdd(){editId=null;window._pendingLat=null;window._pendingLng=null;document.getElementById('m-title').textContent='Neue Baustelle';document.getElementById('form-s').style.display='block';document.getElementById('imp-s').style.display='none';document.getElementById('json-s').style.display='none';document.getElementById('m-save').style.display='';['f-name','f-addr','f-psp','f-sap','f-prv','f-bc','f-note'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});fillFDept('');document.getElementById('f-rh').value='28';document.getElementById('f-last').value='';document.getElementById('f-type').value='baustelle';document.getElementById('addr-suggestions').style.display='none';const hint=document.getElementById('f-addr-hint');if(hint)hint.textContent='';document.getElementById('mbg').classList.add('open');}
 function openEdit(id){
   // Reset manual marker
   const latEl=document.getElementById('f-lat');
@@ -3697,7 +3802,7 @@ function openEdit(id){
   const fsap=document.getElementById('f-sap');if(fsap)fsap.value=e.sap||'';
   document.getElementById('f-prv').value=e.prv||'';
   document.getElementById('f-bc').value=e.bc||'';
-  document.getElementById('f-dept').value=e.dept||'';
+  fillFDept(e.dept||'');
   document.getElementById('f-rh').value=e.rhythm||28;
   document.getElementById('f-last').value=e.lastAudit||'';
   document.getElementById('f-note').value=e.note||'';
@@ -4891,7 +4996,8 @@ async function onAuthSuccess(user){
     return;
   }
   // Set currentUser from display name - match to auditors list
-  const matched=auditors.find(a=>a.toLowerCase()===displayName.toLowerCase())||displayName;
+  const dn=displayName.toLowerCase();
+  const matched=auditors.find(a=>a.toLowerCase()===dn)||auditors.find(a=>((auditorMeta[a]||{}).loginAliases||[]).some(x=>x.toLowerCase()===dn))||displayName;
   currentUser=matched;
   localStorage.setItem(USER_KEY,matched);
   // Set admin if email matches
@@ -5122,23 +5228,51 @@ function addDept(){
   showToast('✓ Abteilung hinzugefügt');
 }
 function removeDept(dept){
-  customDepts=customDepts.filter(d=>d!==dept);
-  saveDepts();renderDeptList();
+  const used=data.filter(e=>deptParts(e.dept).includes(dept)).length;
+  if(used){showToast(`«${dept}» wird von ${used} Baustelle(n) verwendet – umbenennen oder dort ändern, dann löschen`,4500);return;}
+  if(!confirm(`Abteilung «${dept}» löschen?`))return;
+  customDepts=customDepts.filter(d=>d!==dept);delete deptMeta[dept];
+  saveDepts();renderDeptList();buildDF();renderAuditors();
 }
+// Umbenennen zieht alle Baustellen mit; Umbenennen auf einen bestehenden Namen = zusammenführen
+function renameDept(oldD,newD){
+  newD=(newD||'').trim();
+  if(!newD||newD===oldD)return;
+  const exists=getAllDepts().includes(newD);
+  if(exists&&!confirm(`«${newD}» existiert bereits. «${oldD}» damit zusammenführen?`)){renderDeptList();return;}
+  let n=0;
+  data.forEach(e=>{const p=deptParts(e.dept);if(p.includes(oldD)){e.dept=[...new Set(p.map(x=>x===oldD?newD:x))].join(' + ');n++;}});
+  customDepts=[...new Set(customDepts.map(d=>d===oldD?newD:d))].sort();
+  if(deptMeta[oldD]){deptMeta[newD]=Object.assign({},deptMeta[oldD],deptMeta[newD]||{});delete deptMeta[oldD];}
+  saveDepts();buildDF();renderDeptList();renderAll();
+  showToast(`✓ «${oldD}» → «${newD}» (${n} Baustellen angepasst)`,3000);
+}
+function setDeptMA(dept,val){
+  const yr=document.getElementById('dept-ma-year')?.value||String(new Date().getFullYear());
+  deptMeta[dept]=deptMeta[dept]||{};deptMeta[dept].ma=deptMeta[dept].ma||{};
+  const v=parseInt(val);
+  if(isNaN(v)||v<=0)delete deptMeta[dept].ma[yr];else deptMeta[dept].ma[yr]=v;
+  saveDepts();
+}
+function deptMA(dept,yr){return((deptMeta[dept]||{}).ma||{})[String(yr)]||0;}
 function renderDeptList(){
   const el=document.getElementById('dept-list');if(!el)return;
+  const ysel=document.getElementById('dept-ma-year');
+  if(ysel&&!ysel.options.length){const y=new Date().getFullYear();ysel.innerHTML=[y-1,y,y+1].map(v=>`<option${v===y?' selected':''}>${v}</option>`).join('');}
+  const yr=ysel?ysel.value:new Date().getFullYear();
   const all=getAllDepts();
-  const fromData=new Set(data.map(e=>e.dept).filter(Boolean));
   if(!all.length){el.innerHTML='<div style="padding:12px;font-size:12px;color:var(--tx3)">Keine Abteilungen erfasst.</div>';return;}
-  let html='';
-  all.forEach(function(d){
-    const isCustom=customDepts.includes(d);
-    const isFromData=fromData.has(d);
-    const badge=isFromData?'<span style="font-size:10px;color:var(--tx3);margin-left:4px">(aus Baustellen)</span>':'';
-    const delBtn=isCustom?'<button onclick="removeDept(this.dataset.d)" data-d="'+d+'" style="background:none;border:none;cursor:pointer;color:#EF4444;font-size:13px">🗑</button>':'';
-    html+='<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid var(--bd);font-size:13px"><span>'+d+badge+'</span>'+delBtn+'</div>';
-  });
-  el.innerHTML=html;
+  el.innerHTML=`<div style="display:grid;grid-template-columns:1fr 70px 110px 32px;gap:6px;padding:6px 10px;font-size:10px;font-weight:600;color:var(--tx2);border-bottom:1px solid var(--bd);background:var(--sf2)"><span>Abteilung</span><span style="text-align:center">Baustellen</span><span style="text-align:center">Mitarbeitende ${yr}</span><span></span></div>`+
+  all.map(d=>{
+    const used=data.filter(e=>deptParts(e.dept).includes(d)).length;
+    const q=d.replace(/"/g,'&quot;');
+    return`<div style="display:grid;grid-template-columns:1fr 70px 110px 32px;gap:6px;align-items:center;padding:6px 10px;border-bottom:1px solid var(--bd)">
+      <input value="${q}" data-old="${q}" onchange="renameDept(this.dataset.old,this.value)" style="padding:5px 7px;border:1px solid var(--bd);border-radius:5px;background:var(--sf);color:var(--tx);font-size:12px">
+      <span style="text-align:center;font-size:12px;color:var(--tx2)">${used}</span>
+      <input type="number" min="0" value="${deptMA(d,yr)||''}" placeholder="—" data-d="${q}" onchange="setDeptMA(this.dataset.d,this.value)" style="padding:5px 7px;border:1px solid var(--bd);border-radius:5px;background:var(--sf);color:var(--tx);font-size:12px;text-align:center">
+      <button onclick="removeDept(this.dataset.d)" data-d="${q}" title="${used?'In Verwendung – nicht löschbar':'Löschen'}" style="background:none;border:none;cursor:pointer;color:${used?'var(--tx3)':'#EF4444'};font-size:13px">🗑</button>
+    </div>`;
+  }).join('');
 }
 
 // ═══ ADMIN MODE ═══
@@ -5870,10 +6004,14 @@ async function confirmReset(){
 // ═══ SUPABASE LIVE-SYNC ═══
 const SB_URL_KEY='sb_url',SB_KEY_KEY='sb_key';
 // Custom departments
-let customDepts=JSON.parse(localStorage.getItem('anliker_depts')||'[]');
-function saveDepts(){localStorage.setItem('anliker_depts',JSON.stringify(customDepts));}
+// Beim ersten Start die bisher fest hinterlegten Abteilungen übernehmen -> ab jetzt vollständig verwaltbar
+let customDepts=JSON.parse(localStorage.getItem('anliker_depts')||'null')||[...ALL_DEPTS];
+// Zusatzdaten pro Abteilung, z.B. {"Hochbau Luzern":{ma:{"2026":120}}} - Mitarbeitende pro Jahr
+let deptMeta=JSON.parse(localStorage.getItem('anliker_dept_meta')||'{}');
+function saveDepts(){try{localStorage.setItem('anliker_depts',JSON.stringify(customDepts));localStorage.setItem('anliker_dept_meta',JSON.stringify(deptMeta));}catch(e){}if(typeof saveNow==='function')saveNow();}
+function deptParts(s){return(s||'').split(' + ').map(x=>x.trim()).filter(Boolean);}
 function getAllDepts(){
-  const fromData=[...new Set(data.map(e=>e.dept).filter(Boolean))];
+  const fromData=[...new Set(data.flatMap(e=>deptParts(e.dept)))];
   return[...new Set([...fromData,...customDepts])].sort();
 }
 const SB_DEFAULT_URL='https://hepaappbedytamgdrzoo.supabase.co';
@@ -5957,6 +6095,7 @@ async function sbPush(){
     tempWorkers:JSON.stringify(window._tempWorkers||[]),
     ferienWunsch:JSON.stringify(ferienWunsch||[]),
     orsKey:window._orsKey||'',
+    deptMeta:JSON.stringify({customDepts,deptMeta}),
     updated_at:new Date().toISOString()};
   let result=await sbFetch('audit_state',{method:'POST',body:JSON.stringify(payload),
     headers:{'Prefer':'resolution=merge-duplicates'}});
@@ -5964,7 +6103,7 @@ async function sbPush(){
     // Fallback: falls Spalten in Supabase noch nicht existieren (alte Tabelle, Spalte noch
     // nicht per SQL ergänzt) -> ohne diese Felder nochmal versuchen, damit der Rest der
     // Synchronisation nicht komplett blockiert wird.
-    const{piCollectBox,auditTarget,tempWorkers,ferienWunsch,orsKey,...fallbackPayload}=payload;
+    const{piCollectBox,auditTarget,tempWorkers,ferienWunsch,orsKey,deptMeta:_dm,...fallbackPayload}=payload;
     result=await sbFetch('audit_state',{method:'POST',body:JSON.stringify(fallbackPayload),
       headers:{'Prefer':'resolution=merge-duplicates'}});
     if(result)console.warn('sbPush: piCollectBox/auditTarget-Spalten fehlen in Supabase - siehe Admin-Menü "Sammelbox" für Setup-SQL. Restliche Daten wurden trotzdem synchronisiert.');
@@ -5993,6 +6132,7 @@ async function sbPull(){
     if(p.auditTarget!==undefined&&p.auditTarget!==null)window._auditTarget=+p.auditTarget;
     if(p.tempWorkers){try{window._tempWorkers=JSON.parse(p.tempWorkers);}catch(e){}}
     if(p.ferienWunsch){try{ferienWunsch=JSON.parse(p.ferienWunsch);}catch(e){}}
+    if(p.deptMeta){try{const dm=JSON.parse(p.deptMeta);if(Array.isArray(dm.customDepts))customDepts=dm.customDepts;if(dm.deptMeta)deptMeta=dm.deptMeta;localStorage.setItem('anliker_depts',JSON.stringify(customDepts));localStorage.setItem('anliker_dept_meta',JSON.stringify(deptMeta));}catch(e){}}
     if(typeof p.orsKey==='string'){window._orsKey=p.orsKey;try{localStorage.setItem('anliker_ors_key',p.orsKey);}catch(e){}}
     if(p.persons){try{persons=JSON.parse(p.persons);localStorage.setItem('anliker_persons',JSON.stringify(persons));}catch(e){}}
     if(p.beratPlan){try{beratPlan=JSON.parse(p.beratPlan);localStorage.setItem('anliker_berat_plan',JSON.stringify(beratPlan));}catch(e){}}
@@ -6786,14 +6926,18 @@ document.addEventListener('DOMContentLoaded',()=>{
 </div>
 <!-- DEPT MANAGER MODAL -->
 <div id="dept-bg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:4000;align-items:center;justify-content:center">
-  <div style="background:var(--sf);border-radius:12px;padding:24px;width:480px;max-width:95vw;box-shadow:0 20px 60px rgba(0,0,0,.3)">
+  <div style="background:var(--sf);border-radius:12px;padding:24px;width:600px;max-width:95vw;box-shadow:0 20px 60px rgba(0,0,0,.3)">
     <h3 style="font-size:15px;font-weight:700;color:var(--tx);margin-bottom:16px"><i class="ti ti-building" style="color:var(--blue)"></i> Abteilungen verwalten</h3>
     <div style="display:flex;gap:8px;margin-bottom:12px">
       <input id="dept-new" placeholder="Neue Abteilung..." style="flex:1;padding:8px;border:1px solid var(--bd);border-radius:var(--rs);background:var(--sf2);color:var(--tx);font-size:13px" onkeydown="if(event.key==='Enter')addDept()">
       <button onclick="addDept()" style="padding:8px 14px;border-radius:var(--rs);border:none;background:var(--blue);color:#fff;cursor:pointer;font-size:12px;font-weight:600">+ Hinzufügen</button>
     </div>
-    <div id="dept-list" style="max-height:300px;overflow-y:auto;border:1px solid var(--bd);border-radius:var(--rs);margin-bottom:16px"></div>
-    <div style="font-size:11px;color:var(--tx3);margin-bottom:12px">Abteilungen aus Baustellen-Daten werden automatisch hinzugefügt.</div>
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;font-size:11px;color:var(--tx2)">
+      <span>Mitarbeitende für Jahr</span>
+      <select id="dept-ma-year" onchange="renderDeptList()" style="padding:4px 6px;border:1px solid var(--bd);border-radius:6px;background:var(--sf2);color:var(--tx);font-size:11px"></select>
+    </div>
+    <div id="dept-list" style="max-height:380px;overflow-y:auto;border:1px solid var(--bd);border-radius:var(--rs);margin-bottom:12px"></div>
+    <div style="font-size:11px;color:var(--tx3);margin-bottom:12px">Name ändern = umbenennen (alle Baustellen werden mitgezogen). Umbenennen auf einen bestehenden Namen führt zusammen. Löschen nur möglich, wenn keine Baustelle die Abteilung verwendet. Änderungen werden sofort gespeichert.</div>
     <div style="text-align:right">
       <button onclick="document.getElementById('dept-bg').style.display='none'" style="padding:8px 16px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf2);cursor:pointer;font-size:12px;color:var(--tx)">Schliessen</button>
     </div>
@@ -6849,7 +6993,8 @@ document.addEventListener('DOMContentLoaded',()=>{
 ALTER TABLE audit_state ADD COLUMN IF NOT EXISTS "auditTarget" integer;
 ALTER TABLE audit_state ADD COLUMN IF NOT EXISTS "tempWorkers" text;
 ALTER TABLE audit_state ADD COLUMN IF NOT EXISTS "ferienWunsch" text;
-ALTER TABLE audit_state ADD COLUMN IF NOT EXISTS "orsKey" text;</pre>
+ALTER TABLE audit_state ADD COLUMN IF NOT EXISTS "orsKey" text;
+ALTER TABLE audit_state ADD COLUMN IF NOT EXISTS "deptMeta" text;</pre>
     </details>
     <div id="sb-list"></div>
     <div style="display:flex;justify-content:flex-end;margin-top:16px;border-top:1px solid var(--bd);padding-top:12px">
