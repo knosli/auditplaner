@@ -218,7 +218,7 @@ body.dark .bsc.rsel{background:#0f2a1a}
 .kwfer{padding:4px 8px;background:#FEF3C7;border-bottom:1px solid #FDE68A;font-size:10px;color:#92400E;font-weight:500}
 body.dark .kwfer{background:#3B2A00;color:#FCD34D;border-color:#52390A}
 /* AUDITORS VIEW */
-#aud-view{display:none;flex:1;overflow-y:auto;padding:18px;background:var(--bg)}
+#aud-view{display:none;flex:1;overflow-y:auto;padding:0;background:var(--bg)}
 .card{background:var(--sf);border-radius:var(--r);border:1px solid var(--bd);padding:14px;margin-bottom:14px;box-shadow:var(--sh)}
 .card h3{font-size:13px;font-weight:700;color:var(--tx);margin-bottom:10px}
 .af{display:flex;gap:6px;margin-bottom:8px}
@@ -241,7 +241,11 @@ body.dark .kwfer{background:#3B2A00;color:#FCD34D;border-color:#52390A}
 .dtbl th{font-size:10px;font-weight:600;color:var(--tx2);text-align:left;padding:6px 10px;border-bottom:2px solid var(--bd)}
 .dtbl td{font-size:11px;padding:7px 10px;border-bottom:1px solid var(--bd);color:var(--tx)}
 .dtbl tr:hover td{background:var(--sf2)}
-.agrid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+/* Flex statt Grid: bis zu 6 Karten in einer Reihe, bei weniger Karten zentriert (kein leerer Platz rechts) */
+.agrid{display:flex;flex-wrap:wrap;justify-content:center;gap:12px}
+.agrid>*{flex:0 0 calc((100% - 60px)/6);min-width:170px;box-sizing:border-box}
+@media(max-width:1100px){.agrid>*{flex-basis:calc((100% - 24px)/3)}}
+@media(max-width:640px){.agrid>*{flex-basis:100%}}
 .acard{background:var(--sf);border-radius:var(--r);padding:10px;border:1px solid var(--bd);min-width:0;overflow:hidden}
 .ach{display:flex;align-items:center;gap:9px;margin-bottom:9px}
 .aav{width:36px;height:36px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff}
@@ -345,7 +349,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
   <div class="hsep"></div>
   <button class="hb" onclick="openAdd()"><i class="ti ti-plus"></i> Neu</button>
   <div class="hsep"></div>
-  <button class="hb" id="mpbtn" onclick="toggleMultiPlan()"><i class="ti ti-calendar-plus"></i> Planen</button>
+  <button class="hb" id="mpbtn" onclick="toggleMultiPlan()" style="display:none"><i class="ti ti-calendar-plus"></i> Planen</button>
   <div class="hsep"></div>
   <button class="hb" onclick="setStart()"><i class="ti ti-map-pin"></i> Startadresse</button>
   <div class="hsep"></div>
@@ -357,19 +361,17 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
   <div id="presence-bar" style="display:flex;align-items:center;gap:4px;margin-left:4px"></div>
   <button onclick="toggleDark()" class="hb" title="Dark Mode" style="font-size:14px">🌙</button>
   <button onclick="openGuide()" class="hb" title="Anleitung" style="font-size:14px">❓</button>
-  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.44</span>
+  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.45</span>
   <button onclick="doLogout()" class="hb" title="Abmelden" style="font-size:14px" id="logout-btn">⏻</button>
   <button onclick="toggleMobileView()" id="mobile-btn" class="hb" title="Mobile Ansicht" style="font-size:14px">📱</button>
   <div id="more-w" class="admin-only">
     <button class="hb" onclick="toggleMore(event)"><i class="ti ti-dots-vertical"></i> Admin</button>
     <div id="more-m">
-      <button onclick="openImport();toggleMore()"><i class="ti ti-building"></i> Excel Baustellen</button>
       <button onclick="setPAImportMode();toggleMore()"><i class="ti ti-users"></i> Excel Personen</button>
       <button onclick="doExport();toggleMore()"><i class="ti ti-file-spreadsheet"></i> Excel Export</button>
       <div style="height:1px;background:var(--bd);margin:4px 0"></div>
       <button onclick="openAudAdmin();toggleMore()"><i class="ti ti-users"></i> Auditoren verwalten</button>
       <button onclick="openDeptManager();toggleMore()"><i class="ti ti-building"></i> Abteilungen verwalten</button>
-      <button onclick="openIBImport();toggleMore()"><i class="ti ti-file-upload"></i> IB/ASP Audits importieren</button>
       <button onclick="openPersonalImport();toggleMore()"><i class="ti ti-user-pause"></i> Personal-Import (Pausieren)</button>
       <button onclick="openSammelbox();toggleMore()"><i class="ti ti-inbox"></i> 📥 Sammelbox <span id="sb-count-badge"></span></button>
       <button onclick="openTempWorkers();toggleMore()"><i class="ti ti-user-question"></i> 👤 Temporäre Mitarbeitende <span id="tw-count-badge"></span></button>
@@ -710,16 +712,14 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
 </div>
 <!-- AUDITORS VIEW -->
 <div id="aud-view">
-  <div style="max-width:1100px;margin:0 auto">
+  <!-- Sub-tabs: gleiche Optik/Position wie bei Personen-Audits (volle Breite, oben bündig) -->
+  <div style="display:flex;gap:0;border-bottom:1px solid var(--bd);background:var(--sf);padding:0 16px;position:sticky;top:0;z-index:20;overflow-x:auto">
+    <button onclick="setAudTab('overview')" id="aud-tab-overview" style="padding:10px 16px;border:none;border-bottom:2px solid var(--blue);background:none;cursor:pointer;font-size:12px;font-weight:600;color:var(--blue);white-space:nowrap">📊 Übersicht</button>
+    <button onclick="setAudTab('ferien')" id="aud-tab-ferien" style="padding:10px 16px;border:none;border-bottom:2px solid transparent;background:none;cursor:pointer;font-size:12px;font-weight:600;color:var(--tx2);white-space:nowrap">🏖️ Ferienplanung</button>
+    <button onclick="setAudTab('dept')" id="aud-tab-dept" style="padding:10px 16px;border:none;border-bottom:2px solid transparent;background:none;cursor:pointer;font-size:12px;font-weight:600;color:var(--tx2);white-space:nowrap">🏢 Abteilungen</button>
+  </div>
+  <div style="max-width:1280px;margin:0 auto;padding:18px">
     <div id="aud-tags" style="display:none"></div>
-   <!-- Personen-Audits moved to own tab -->
-
-    <!-- SUB-TABS -->
-    <div style="display:flex;border-bottom:1px solid var(--bd);margin-bottom:16px;overflow-x:auto">
-      <button onclick="setAudTab('overview')" id="aud-tab-overview" style="padding:10px 16px;border:none;border-bottom:2px solid var(--blue);background:none;cursor:pointer;font-size:12px;font-weight:600;color:var(--blue);white-space:nowrap">📊 Übersicht</button>
-      <button onclick="setAudTab('ferien')" id="aud-tab-ferien" style="padding:10px 16px;border:none;border-bottom:2px solid transparent;background:none;cursor:pointer;font-size:12px;font-weight:600;color:var(--tx2);white-space:nowrap">🏖️ Ferienplanung</button>
-      <button onclick="setAudTab('dept')" id="aud-tab-dept" style="padding:10px 16px;border:none;border-bottom:2px solid transparent;background:none;cursor:pointer;font-size:12px;font-weight:600;color:var(--tx2);white-space:nowrap">🏢 Abteilungen</button>
-    </div>
 
     <!-- PANEL: ÜBERSICHT -->
     <div id="aud-panel-overview">
@@ -776,39 +776,29 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
 
     <!-- PANEL: FERIENPLANUNG -->
     <div id="aud-panel-ferien" style="display:none">
-      <div class="card">
-        <h3 style="display:flex;align-items:center;justify-content:space-between">
-          Ferienplanung
-        </h3>
-        <div class="frow">
-          <div><label>Auditor</label><select id="fer-aud"><option value="">—</option></select></div>
-          <div><label>Von</label><input type="date" id="fer-von"></div>
-          <div><label>Bis</label><input type="date" id="fer-bis"></div>
-          <div><label>Bezeichnung</label><input type="text" id="fer-lbl" placeholder="z.B. Sommerferien"></div>
-          <button onclick="addFerien()"><i class="ti ti-plus"></i> Erfassen</button>
+      <!-- Gemeinsame Steuerung für beide Übersichten: Jahr + Zeitraum (Ganzes Jahr / Tertial) -->
+      <div class="card" style="margin-bottom:16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:6px">
+          <label style="font-size:11px;color:var(--tx2);font-weight:600">Jahr</label>
+          <select id="fer-year" onchange="renderFerChart();renderWunschChart()" style="padding:5px 8px;border:1px solid var(--bd);border-radius:var(--rs);background:var(--sf2);color:var(--tx);font-size:12px;font-weight:600"></select>
         </div>
-        <!-- Ferien Liste – ein/ausblendbar -->
-        <div style="display:flex;align-items:center;justify-content:space-between;margin:10px 0 4px;cursor:pointer" onclick="toggleFerList()">
-          <span style="font-size:11px;font-weight:600;color:var(--tx2)">Erfasste Ferien</span>
-          <span id="fer-toggle-icon" style="font-size:11px;color:var(--tx3)">▼ einblenden</span>
+        <div style="display:flex;align-items:center;gap:6px">
+          <label style="font-size:11px;color:var(--tx2);font-weight:600">Ansicht</label>
+          <div id="fer-period-btns" style="display:flex;border:1px solid var(--bd);border-radius:var(--rs);overflow:hidden">
+            <button data-p="Y" onclick="setFerPeriod('Y')" style="padding:5px 10px;border:none;background:var(--blue);color:#fff;font-size:11px;font-weight:600;cursor:pointer">Ganzes Jahr</button>
+            <button data-p="T1" onclick="setFerPeriod('T1')" style="padding:5px 10px;border:none;border-left:1px solid var(--bd);background:var(--sf2);color:var(--tx);font-size:11px;font-weight:600;cursor:pointer">Jan – Apr</button>
+            <button data-p="T2" onclick="setFerPeriod('T2')" style="padding:5px 10px;border:none;border-left:1px solid var(--bd);background:var(--sf2);color:var(--tx);font-size:11px;font-weight:600;cursor:pointer">Mai – Aug</button>
+            <button data-p="T3" onclick="setFerPeriod('T3')" style="padding:5px 10px;border:none;border-left:1px solid var(--bd);background:var(--sf2);color:var(--tx);font-size:11px;font-weight:600;cursor:pointer">Sep – Dez</button>
+          </div>
         </div>
-        <div id="fer-list-wrap" style="display:none">
-          <div id="fer-list"></div>
-        </div>
-        <!-- Jahresübersicht bleibt immer sichtbar -->
-        <div id="fer-chart-wrap" style="margin-top:16px">
-          <div style="font-size:11px;font-weight:600;color:var(--tx2);margin-bottom:8px">Jahresübersicht Ferien</div>
-          <div id="fer-chart"></div>
-        </div>
+        <span style="font-size:10px;color:var(--tx3)">Tipp: In der Tertial-Ansicht sind einzelne Tage, Wochenenden und KW sichtbar.</span>
       </div>
 
       <!-- WUNSCHFERIEN: jeder Auditor trägt eigene Wunschtermine ein, alle sehen alle,
            Admin bestätigt einzeln -> wird zu echten Ferien -->
-      <div class="card" style="margin-top:16px">
-        <h3 style="display:flex;align-items:center;justify-content:space-between">
-          🎄 Wunschferien <span id="wf-year-label" style="font-size:11px;color:var(--tx3);font-weight:400"></span>
-        </h3>
-        <p style="font-size:11px;color:var(--tx2);margin:4px 0 10px">Trag hier deine gewünschten Ferientermine ein. Alle sehen alle Wünsche, damit ihr euch untereinander absprechen könnt. Überschneidungen (2+ Personen gleichzeitig) werden unten rot markiert.</p>
+      <div class="card" style="margin-bottom:16px">
+        <h3>🎄 Wunschferien</h3>
+        <p style="font-size:11px;color:var(--tx2);margin:4px 0 10px">Trag hier deine gewünschten Ferientermine ein. Alle sehen alle Wünsche, damit ihr euch absprechen könnt. Überschneidungen (2+ Personen gleichzeitig) sind im roten Streifen markiert.</p>
         <div class="frow" id="wf-form-row">
           <div id="wf-aud-wrap"></div>
           <div><label>Von</label><input type="date" id="wf-von"></div>
@@ -816,10 +806,36 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
           <div><label>Notiz</label><input type="text" id="wf-lbl" placeholder="optional"></div>
           <button onclick="addWunschFerien()"><i class="ti ti-plus"></i> Wunsch erfassen</button>
         </div>
-        <div id="wf-list" style="margin-top:10px"></div>
         <div style="margin-top:16px">
-          <div style="font-size:11px;font-weight:600;color:var(--tx2);margin-bottom:8px">Jahresübersicht Wunschferien</div>
+          <div style="font-size:11px;font-weight:600;color:var(--tx2);margin-bottom:8px">Übersicht Wunschferien</div>
           <div id="wf-chart"></div>
+        </div>
+        <div style="margin-top:16px;border-top:1px solid var(--bd);padding-top:12px">
+          <div style="font-size:11px;font-weight:600;color:var(--tx2);margin-bottom:6px">Eingegebene Wünsche <span style="font-weight:400;color:var(--tx3)">(Admins: ✓ Bestätigen übernimmt den Wunsch in die fixen Ferien)</span></div>
+          <div id="wf-list"></div>
+        </div>
+      </div>
+
+      <!-- BESTÄTIGTE / FIXE FERIEN -->
+      <div class="card">
+        <h3>✅ Ferien (fix)</h3>
+        <div class="frow">
+          <div><label>Auditor</label><select id="fer-aud"><option value="">—</option></select></div>
+          <div><label>Von</label><input type="date" id="fer-von"></div>
+          <div><label>Bis</label><input type="date" id="fer-bis"></div>
+          <div><label>Bezeichnung</label><input type="text" id="fer-lbl" placeholder="z.B. Sommerferien"></div>
+          <button onclick="addFerien()"><i class="ti ti-plus"></i> Erfassen</button>
+        </div>
+        <div id="fer-chart-wrap" style="margin-top:16px">
+          <div style="font-size:11px;font-weight:600;color:var(--tx2);margin-bottom:8px">Übersicht Ferien</div>
+          <div id="fer-chart"></div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin:14px 0 4px;cursor:pointer;border-top:1px solid var(--bd);padding-top:12px" onclick="toggleFerList()">
+          <span style="font-size:11px;font-weight:600;color:var(--tx2)">Erfasste Ferien</span>
+          <span id="fer-toggle-icon" style="font-size:11px;color:var(--tx3)">▼ einblenden</span>
+        </div>
+        <div id="fer-list-wrap" style="display:none">
+          <div id="fer-list"></div>
         </div>
       </div>
     </div>
@@ -2378,8 +2394,6 @@ function renderWunschFerien(){
       wrap.innerHTML=`<div><label>Auditor</label><div style="padding:7px 9px;background:var(--sf2);border:1px solid var(--bd);border-radius:var(--rs);font-size:12px;color:var(--tx)">${currentUser||'—'}</div></div>`;
     }
   }
-  const yrLbl=document.getElementById('wf-year-label');
-  if(yrLbl)yrLbl.textContent=new Date().getFullYear()+1+''; // Planung betrifft i.d.R. das kommende Jahr
   renderWunschList();
   renderWunschChart();
 }
@@ -2426,139 +2440,110 @@ function renderWunschList(){
 }
 function renderWunschChart(){
   const el=document.getElementById('wf-chart');if(!el)return;
-  if(!ferienWunsch.length){el.innerHTML='<div style="font-size:11px;color:var(--tx3)">Keine Wunschferien erfasst.</div>';return;}
-  const yr=new Date().getFullYear()+1;
-  const start=new Date(yr,0,1);
-  const end=new Date(yr,11,31);
-  const totalDays=(end-start)/86400000+1;
-  const byAud={};
-  auditors.forEach(a=>{byAud[a]=ferienWunsch.filter(f=>f.auditor===a);});
-  const months=['J','F','M','A','M','J','J','A','S','O','N','D'];
-  const monthGrid=months.map((m,i)=>{
-    const d=new Date(yr,i,1);
-    const pct=((d-start)/86400000/totalDays*100).toFixed(2);
-    return`<div style="position:absolute;left:${pct}%;height:100%;border-left:1px solid var(--bd);opacity:.5"></div>`;
-  }).join('');
-  const monthLabelRow=months.map((m,i)=>{
-    const d=new Date(yr,i,1);
-    const pct=((d-start)/86400000/totalDays*100).toFixed(2);
-    const w=i<11?((new Date(yr,i+1,1)-d)/86400000/totalDays*100).toFixed(2):((end-d)/86400000/totalDays*100).toFixed(2);
-    return`<div style="position:absolute;left:${pct}%;width:${w}%;text-align:center;font-size:9px;font-weight:600;color:var(--tx2)">${m}</div>`;
-  }).join('');
+  el.innerHTML=ferGanttHTML(ferienWunsch,true);
+}
+// ═══ GEMEINSAME FERIEN-GANTT-DARSTELLUNG ═══
+// Eine Funktion für beide Übersichten (fixe Ferien + Wunschferien), damit Darstellung, Jahr und
+// Zeitraum immer identisch sind. Zeitraum: ganzes Jahr oder Tertial (4 Monate) - im Tertial
+// werden einzelne Tage, Wochenenden, KW und Beschriftungen in den Balken sichtbar.
+let _ferPeriod='Y';
+function setFerPeriod(p){
+  _ferPeriod=p;
+  document.querySelectorAll('#fer-period-btns button').forEach(b=>{
+    const on=b.dataset.p===p;
+    b.style.background=on?'var(--blue)':'var(--sf2)';b.style.color=on?'#fff':'var(--tx)';
+  });
+  renderFerChart();renderWunschChart();
+}
+function fillFerYearSelect(){
+  const sel=document.getElementById('fer-year');if(!sel||sel.options.length)return;
+  const y=new Date().getFullYear();
+  sel.innerHTML=[y-1,y,y+1,y+2].map(v=>`<option value="${v}"${v===y?' selected':''}>${v}</option>`).join('');
+}
+function ferISO(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function ferLocalDate(s){const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d);}
+function ferGanttHTML(entries,isWish){
+  fillFerYearSelect();
+  const yr=+(document.getElementById('fer-year')?.value||new Date().getFullYear());
+  const ranges={Y:[0,11],T1:[0,3],T2:[4,7],T3:[8,11]};
+  const [m0,m1]=ranges[_ferPeriod]||ranges.Y;
+  const start=new Date(yr,m0,1),end=new Date(yr,m1+1,0);
+  const DAY=86400000;
+  const nDays=Math.round((end-start)/DAY)+1;
+  const idx=d=>Math.round((d-start)/DAY);
+  const pct=i=>(i/nDays*100).toFixed(3);
+  const zoom=_ferPeriod!=='Y';
+  const rowH=zoom?34:26;
+  const mNames=zoom?['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember']:['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+  // Monatsbeschriftung + Monatslinien
+  let monthLbl='',grid='';
+  for(let m=m0;m<=m1;m++){
+    const a=idx(new Date(yr,m,1)),b=idx(new Date(yr,m+1,1));
+    monthLbl+=`<div style="position:absolute;left:${pct(a)}%;width:${pct(b-a)}%;text-align:center;font-size:10px;font-weight:700;color:var(--tx2)">${mNames[m]}</div>`;
+    grid+=`<div style="position:absolute;left:${pct(a)}%;top:0;bottom:0;border-left:1px solid var(--bd)"></div>`;
+  }
+  // Im Tertial: Wochenenden schattiert + KW-Beschriftung an jedem Montag
+  let kwLbl='';
+  if(zoom){
+    for(let i=0;i<nDays;i++){
+      const d=new Date(yr,m0,1+i);const wd=d.getDay();
+      if(wd===0||wd===6)grid+=`<div style="position:absolute;left:${pct(i)}%;width:${pct(1)}%;top:0;bottom:0;background:rgba(148,163,184,.18)"></div>`;
+      if(wd===1){
+        kwLbl+=`<div style="position:absolute;left:${pct(i)}%;font-size:9px;color:var(--tx3);white-space:nowrap">KW${dateToKW(ferISO(d))}</div>`;
+        grid+=`<div style="position:absolute;left:${pct(i)}%;top:0;bottom:0;border-left:1px dashed var(--bd);opacity:.6"></div>`;
+      }
+    }
+  }
+  const dayCounts=new Array(nDays).fill(0);
   const rows=auditors.map(a=>{
-    const col=aC(a);
-    const ini=a.split(' ').map(w=>w[0]).join('');
-    const bars=(byAud[a]||[]).map(f=>{
-      const s=new Date(Math.max(new Date(f.von),start));
-      const e2=new Date(Math.min(new Date(f.bis),end));
-      if(s>e2)return'';
-      const left=((s-start)/86400000/totalDays*100).toFixed(2);
-      const width=Math.max(0.5,((e2-s)/86400000/totalDays*100)).toFixed(2);
-      // Gestrichelte, hellere Balken - visuell klar als "Wunsch" (nicht fix) erkennbar
-      return`<div title="${f.label}: ${fd(f.von)} – ${fd(f.bis)}" style="position:absolute;left:${left}%;width:${width}%;height:100%;background:repeating-linear-gradient(45deg,${col},${col} 4px,transparent 4px,transparent 8px);border:1.5px dashed ${col};border-radius:3px;z-index:1;opacity:.85"></div>`;
+    const col=aC(a),ini=a.split(' ').map(w=>w[0]).join('');
+    const bars=entries.filter(f=>f.auditor===a).map(f=>{
+      const s=Math.max(0,idx(ferLocalDate(f.von))),e=Math.min(nDays-1,idx(ferLocalDate(f.bis)));
+      if(s>e)return'';
+      if(isWish)for(let i=s;i<=e;i++)dayCounts[i]++;
+      const len=e-s+1; // inklusive Enddatum -> einzelne Tage werden korrekt als 1 Tag dargestellt
+      const bg=isWish?`repeating-linear-gradient(45deg,${col}cc,${col}cc 4px,${col}55 4px,${col}55 8px)`:col;
+      const border=isWish?`1.5px dashed ${col}`:'none';
+      const txt=zoom?`<span style="padding:0 4px;font-size:10px;font-weight:600;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${f.label||''}</span>`:'';
+      return`<div title="${a} – ${f.label||''}: ${fd(f.von)} – ${fd(f.bis)} (${len} Tag${len>1?'e':''})" style="position:absolute;left:${pct(s)}%;width:max(${pct(len)}%,4px);top:3px;bottom:3px;background:${bg};border:${border};border-radius:4px;z-index:2;display:flex;align-items:center;overflow:hidden;box-sizing:border-box">${txt}</div>`;
     }).join('');
-    return`<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-      <div style="width:28px;height:28px;border-radius:50%;background:${col};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0" title="${a}">${ini}</div>
-      <div style="flex:1;height:24px;background:var(--sf2);border-radius:4px;position:relative;overflow:hidden">
-        ${monthGrid}${bars||''}
+    return`<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+      <div style="width:120px;flex-shrink:0;display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--tx)" title="${a}">
+        <span style="width:22px;height:22px;border-radius:50%;background:${col};color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0">${ini}</span>
+        <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${a.split(' ')[0]}</span>
       </div>
+      <div style="flex:1;height:${rowH}px;background:var(--sf2);border-radius:4px;position:relative;overflow:hidden">${grid}${bars}</div>
     </div>`;
   }).join('');
-  // Überlappungs-Warnung: pro Tag zählen, wie viele Auditoren gleichzeitig Wunschferien haben;
-  // ab 2+ Personen wird ein roter Streifen unter dem Chart an dieser Stelle eingeblendet.
-  const dayCounts=new Array(Math.ceil(totalDays)).fill(0);
-  ferienWunsch.forEach(f=>{
-    const s=new Date(Math.max(new Date(f.von),start));
-    const e2=new Date(Math.min(new Date(f.bis),end));
-    if(s>e2)return;
-    for(let d=new Date(s);d<=e2;d.setDate(d.getDate()+1)){
-      const idx=Math.floor((d-start)/86400000);
-      if(idx>=0&&idx<dayCounts.length)dayCounts[idx]++;
+  // Heute-Markierung (nur wenn im gewählten Zeitraum)
+  const tI=idx(new Date(new Date().getFullYear(),new Date().getMonth(),new Date().getDate()));
+  const todayMark=(tI>=0&&tI<nDays)?`<div style="position:absolute;left:calc(128px + (100% - 128px) * ${(tI+0.5)/nDays});top:0;bottom:0;width:2px;background:#EF4444;opacity:.7;pointer-events:none;z-index:3" title="Heute"></div>`:'';
+  // Überlappungsstreifen (nur Wunschferien): ab 2 Personen gleichzeitig rot
+  let overlap='';
+  if(isWish){
+    let seg=-1,segs='';
+    for(let i=0;i<=nDays;i++){
+      const hit=i<nDays&&dayCounts[i]>=2;
+      if(hit&&seg<0)seg=i;
+      if(!hit&&seg>=0){segs+=`<div title="Überschneidung: ${fd(ferISO(new Date(yr,m0,1+seg)))} – ${fd(ferISO(new Date(yr,m0,i)))}" style="position:absolute;left:${pct(seg)}%;width:max(${pct(i-seg)}%,3px);top:0;bottom:0;background:#EF4444"></div>`;seg=-1;}
     }
-  });
-  let warnSegments='',segStart=-1;
-  for(let i=0;i<dayCounts.length;i++){
-    if(dayCounts[i]>=2){if(segStart<0)segStart=i;}
-    else if(segStart>=0){
-      const left=(segStart/totalDays*100).toFixed(2),width=Math.max(0.3,((i-segStart)/totalDays*100)).toFixed(2);
-      warnSegments+=`<div style="position:absolute;left:${left}%;width:${width}%;height:100%;background:#EF4444"></div>`;
-      segStart=-1;
-    }
+    overlap=`<div style="display:flex;align-items:center;gap:8px;margin-top:6px">
+      <div style="width:120px;flex-shrink:0;font-size:10px;font-weight:600;color:#EF4444">⚠ Überschneidung</div>
+      <div style="flex:1;height:8px;background:var(--sf2);border-radius:4px;position:relative;overflow:hidden">${segs}</div>
+    </div>`;
   }
-  if(segStart>=0){
-    const left=(segStart/totalDays*100).toFixed(2),width=Math.max(0.3,((dayCounts.length-segStart)/totalDays*100)).toFixed(2);
-    warnSegments+=`<div style="position:absolute;left:${left}%;width:${width}%;height:100%;background:#EF4444"></div>`;
-  }
-  el.innerHTML=`
-    <div style="position:relative;height:18px;margin-bottom:2px;margin-left:36px">
-      <div style="position:relative;height:100%">${monthLabelRow}</div>
-    </div>
-    <div style="position:relative">
-      ${rows}
-    </div>
-    <div style="display:flex;align-items:center;gap:8px;margin-left:36px;margin-top:4px">
-      <div style="flex:1;height:6px;background:var(--sf2);border-radius:3px;position:relative;overflow:hidden">${warnSegments}</div>
-    </div>
-    <div style="font-size:10px;color:var(--tx3);margin-top:4px;text-align:right">🔴 = 2 oder mehr Auditoren gleichzeitig – Absprache nötig</div>`;
+  if(!entries.length)return`<div style="font-size:11px;color:var(--tx3)">${isWish?'Noch keine Wunschferien erfasst.':'Keine Ferien erfasst.'}</div>`;
+  return`<div style="overflow-x:auto"><div style="min-width:${zoom?900:640}px">
+    <div style="display:flex;gap:8px;margin-bottom:2px"><div style="width:120px;flex-shrink:0"></div><div style="flex:1;position:relative;height:16px">${monthLbl}</div></div>
+    ${zoom?`<div style="display:flex;gap:8px;margin-bottom:4px"><div style="width:120px;flex-shrink:0"></div><div style="flex:1;position:relative;height:13px">${kwLbl}</div></div>`:''}
+    <div style="position:relative">${rows}${todayMark}</div>
+    ${overlap}
+    <div style="font-size:10px;color:var(--tx3);margin-top:6px;text-align:right">${isWish?'Schraffiert = Wunsch (noch nicht bestätigt) · ':''}Roter Strich = Heute · Balken antippen/überfahren für Details</div>
+  </div></div>`;
 }
 function renderFerChart(){
   const el=document.getElementById('fer-chart');if(!el)return;
-  if(!ferien.length){el.innerHTML='<div style="font-size:11px;color:var(--tx3)">Keine Ferien erfasst.</div>';return;}
-  const yr=getSelectedYear('xl-year');
-  const start=new Date(yr,0,1);
-  const end=new Date(yr,11,31);
-  const totalDays=(end-start)/86400000+1;
-  // Group by auditor
-  const byAud={};
-  auditors.forEach(a=>{byAud[a]=ferien.filter(f=>f.auditor===a);});
-  // Month labels
-  const months=['J','F','M','A','M','J','J','A','S','O','N','D'];
-  const monthLabels=months.map((m,i)=>{
-    const d=new Date(yr,i,1);
-    const pct=((d-start)/86400000/totalDays*100).toFixed(2);
-    return`<div style="position:absolute;left:${pct}%;font-size:9px;color:var(--tx3);transform:translateX(-50%)">${m}</div>`;
-  }).join('');
-  // Month grid lines + labels
-  const monthGrid=months.map((m,i)=>{
-    const d=new Date(yr,i,1);
-    const pct=((d-start)/86400000/totalDays*100).toFixed(2);
-    return`<div style="position:absolute;left:${pct}%;height:100%;border-left:1px solid var(--bd);opacity:.5"></div>`;
-  }).join('');
-  const monthLabelRow=months.map((m,i)=>{
-    const d=new Date(yr,i,1);
-    const pct=((d-start)/86400000/totalDays*100).toFixed(2);
-    const w=i<11?((new Date(yr,i+1,1)-d)/86400000/totalDays*100).toFixed(2):((end-d)/86400000/totalDays*100).toFixed(2);
-    return`<div style="position:absolute;left:${pct}%;width:${w}%;text-align:center;font-size:9px;font-weight:600;color:var(--tx2)">${m}</div>`;
-  }).join('');
-  const rows=auditors.map(a=>{
-    const col=aC(a);
-    const ini=a.split(' ').map(w=>w[0]).join('');
-    const bars=(byAud[a]||[]).map(f=>{
-      const s=new Date(Math.max(new Date(f.von),start));
-      const e2=new Date(Math.min(new Date(f.bis),end));
-      if(s>e2)return'';
-      const left=((s-start)/86400000/totalDays*100).toFixed(2);
-      const width=Math.max(0.5,((e2-s)/86400000/totalDays*100)).toFixed(2);
-      return`<div title="${f.label}: ${fd(f.von)} – ${fd(f.bis)}" style="position:absolute;left:${left}%;width:${width}%;height:100%;background:${col};border-radius:3px;z-index:1"></div>`;
-    }).join('');
-    return`<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-      <div style="width:28px;height:28px;border-radius:50%;background:${col};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0" title="${a}">${ini}</div>
-      <div style="flex:1;height:24px;background:var(--sf2);border-radius:4px;position:relative;overflow:hidden">
-        ${monthGrid}${bars||''}
-      </div>
-    </div>`;
-  }).join('');
-  // Today marker
-  const todayPct=((new Date()-start)/86400000/totalDays*100).toFixed(2);
-  el.innerHTML=`
-    <div style="position:relative;height:18px;margin-bottom:2px;margin-left:36px">
-      <div style="position:relative;height:100%">${monthLabelRow}</div>
-    </div>
-    <div style="position:relative">
-      ${rows}
-      <div style="position:absolute;left:${todayPct}%;top:0;bottom:0;width:2px;background:#EF4444;opacity:.6;pointer-events:none;z-index:2" title="Heute"></div>
-    </div>
-    <div style="font-size:10px;color:var(--tx3);margin-top:4px;text-align:right">● Roter Strich = Heute</div>`;
+  el.innerHTML=ferGanttHTML(ferien,false);
 }
 function renderFerList(){document.getElementById('fer-list').innerHTML=ferien.length?ferien.sort((a,b)=>a.von.localeCompare(b.von)).map(f=>{const c=aC(f.auditor),ini=f.auditor.split(' ').map(w=>w[0]).join('');return`<div class="fi"><div class="fiav" style="background:${c}">${ini}</div><div class="fiinfo">${f.auditor} – ${f.label}<div class="fid">${fd(f.von)} – ${fd(f.bis)}</div></div><button class="fidel" onclick="rmFerien(${f.id})"><i class="ti ti-trash"></i></button></div>`;}).join(''):'<div style="font-size:11px;color:var(--tx3);padding:6px">Noch keine Ferien.</div>';}
 // ═══ PERSONEN-AUDITS ═══
