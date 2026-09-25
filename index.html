@@ -357,7 +357,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
   <div id="presence-bar" style="display:flex;align-items:center;gap:4px;margin-left:4px"></div>
   <button onclick="toggleDark()" class="hb" title="Dark Mode" style="font-size:14px">🌙</button>
   <button onclick="openGuide()" class="hb" title="Anleitung" style="font-size:14px">❓</button>
-  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.42</span>
+  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.44</span>
   <button onclick="doLogout()" class="hb" title="Abmelden" style="font-size:14px" id="logout-btn">⏻</button>
   <button onclick="toggleMobileView()" id="mobile-btn" class="hb" title="Mobile Ansicht" style="font-size:14px">📱</button>
   <div id="more-w" class="admin-only">
@@ -714,84 +714,122 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
     <div id="aud-tags" style="display:none"></div>
    <!-- Personen-Audits moved to own tab -->
 
-    <!-- GESAMTÜBERSICHT: alle Auditoren, alle Audit-Arten, wählbarer Monatsbereich -->
-    <div class="card" style="margin-bottom:16px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
-        <h3 style="font-size:14px;font-weight:700;color:var(--tx);margin:0">📊 Gesamtübersicht alle Auditoren</h3>
-        <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--tx2)">
-          <span>Von</span>
-          <input type="month" id="ov-from" onchange="renderOverview()" style="padding:4px 6px;border:1px solid var(--bd);border-radius:6px;background:var(--sf2);color:var(--tx);font-size:11px">
-          <span>bis</span>
-          <input type="month" id="ov-to" onchange="renderOverview()" style="padding:4px 6px;border:1px solid var(--bd);border-radius:6px;background:var(--sf2);color:var(--tx);font-size:11px">
+    <!-- SUB-TABS -->
+    <div style="display:flex;border-bottom:1px solid var(--bd);margin-bottom:16px;overflow-x:auto">
+      <button onclick="setAudTab('overview')" id="aud-tab-overview" style="padding:10px 16px;border:none;border-bottom:2px solid var(--blue);background:none;cursor:pointer;font-size:12px;font-weight:600;color:var(--blue);white-space:nowrap">📊 Übersicht</button>
+      <button onclick="setAudTab('ferien')" id="aud-tab-ferien" style="padding:10px 16px;border:none;border-bottom:2px solid transparent;background:none;cursor:pointer;font-size:12px;font-weight:600;color:var(--tx2);white-space:nowrap">🏖️ Ferienplanung</button>
+      <button onclick="setAudTab('dept')" id="aud-tab-dept" style="padding:10px 16px;border:none;border-bottom:2px solid transparent;background:none;cursor:pointer;font-size:12px;font-weight:600;color:var(--tx2);white-space:nowrap">🏢 Abteilungen</button>
+    </div>
+
+    <!-- PANEL: ÜBERSICHT -->
+    <div id="aud-panel-overview">
+      <!-- GESAMTÜBERSICHT: alle Auditoren, alle Audit-Arten, wählbarer Monatsbereich -->
+      <div class="card" style="margin-bottom:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+          <h3 style="font-size:14px;font-weight:700;color:var(--tx);margin:0">📊 Gesamtübersicht alle Auditoren</h3>
+          <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--tx2)">
+            <span>Von</span>
+            <input type="month" id="ov-from" onchange="renderOverview()" style="padding:4px 6px;border:1px solid var(--bd);border-radius:6px;background:var(--sf2);color:var(--tx);font-size:11px">
+            <span>bis</span>
+            <input type="month" id="ov-to" onchange="renderOverview()" style="padding:4px 6px;border:1px solid var(--bd);border-radius:6px;background:var(--sf2);color:var(--tx);font-size:11px">
+          </div>
+        </div>
+        <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:center">
+          <div id="ov-pie" style="flex-shrink:0"></div>
+          <div style="flex:1;min-width:220px">
+            <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:6px">
+              <span id="ov-total" style="font-size:26px;font-weight:800;color:var(--tx)">0</span>
+              <span style="font-size:12px;color:var(--tx2)">Audits gesamt</span>
+            </div>
+            <div style="height:10px;background:var(--sf2);border-radius:6px;overflow:hidden;margin-bottom:6px">
+              <div id="ov-bar" style="height:100%;background:var(--blue);border-radius:6px;width:0%;transition:width .3s"></div>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--tx2)">
+              <span id="ov-progress-label">0% vom Soll</span>
+              <span class="admin-only" style="display:flex;align-items:center;gap:4px">
+                Soll/Jahr: <input type="number" id="ov-target" min="0" step="1" onchange="setAuditTarget(this.value)" style="width:60px;padding:3px 6px;border:1px solid var(--bd);border-radius:6px;background:var(--sf2);color:var(--tx);font-size:11px">
+              </span>
+            </div>
+            <div style="display:flex;gap:12px;margin-top:10px;font-size:11px">
+              <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#3B82F6;margin-right:4px"></span>Baustellen-Audits: <b id="ov-c-site">0</b></span>
+              <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#F59E0B;margin-right:4px"></span>Personen-Audits: <b id="ov-c-person">0</b></span>
+              <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#8B5CF6;margin-right:4px"></span>Beratungen: <b id="ov-c-berat">0</b></span>
+            </div>
+          </div>
         </div>
       </div>
-      <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:center">
-        <div id="ov-pie" style="flex-shrink:0"></div>
-        <div style="flex:1;min-width:220px">
-          <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:6px">
-            <span id="ov-total" style="font-size:26px;font-weight:800;color:var(--tx)">0</span>
-            <span style="font-size:12px;color:var(--tx2)">Audits gesamt</span>
-          </div>
-          <div style="height:10px;background:var(--sf2);border-radius:6px;overflow:hidden;margin-bottom:6px">
-            <div id="ov-bar" style="height:100%;background:var(--blue);border-radius:6px;width:0%;transition:width .3s"></div>
-          </div>
-          <div style="display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--tx2)">
-            <span id="ov-progress-label">0% vom Soll</span>
-            <span class="admin-only" style="display:flex;align-items:center;gap:4px">
-              Soll/Jahr: <input type="number" id="ov-target" min="0" step="1" onchange="setAuditTarget(this.value)" style="width:60px;padding:3px 6px;border:1px solid var(--bd);border-radius:6px;background:var(--sf2);color:var(--tx);font-size:11px">
-            </span>
-          </div>
-          <div style="display:flex;gap:12px;margin-top:10px;font-size:11px">
-            <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#3B82F6;margin-right:4px"></span>Baustellen-Audits: <b id="ov-c-site">0</b></span>
-            <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#F59E0B;margin-right:4px"></span>Personen-Audits: <b id="ov-c-person">0</b></span>
-            <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#8B5CF6;margin-right:4px"></span>Beratungen: <b id="ov-c-berat">0</b></span>
-          </div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <h3 style="font-size:14px;font-weight:700;color:var(--tx)">Auditor-Karten</h3>
+        <div style="display:flex;align-items:center;gap:6px">
+          <label style="font-size:11px;color:var(--tx2)">Jahr:</label>
+          <select id="aud-year" onchange="renderAuditors()" style="padding:4px 8px;border:1px solid var(--bd);border-radius:var(--rs);background:var(--sf2);color:var(--tx);font-size:12px;font-weight:600"></select>
+        </div>
+      </div>
+      <div class="agrid" id="agrid"></div>
+      <div style="height:16px"></div>
+      <div class="card" id="aud-totals-card" style="display:none">
+        <h3 style="margin-bottom:12px"><i class="ti ti-chart-pie" style="color:var(--blue)"></i> Stellenprozente Führungssystem</h3>
+        <div id="aud-totals-content"></div>
+      </div>
+    </div>
+
+    <!-- PANEL: FERIENPLANUNG -->
+    <div id="aud-panel-ferien" style="display:none">
+      <div class="card">
+        <h3 style="display:flex;align-items:center;justify-content:space-between">
+          Ferienplanung
+        </h3>
+        <div class="frow">
+          <div><label>Auditor</label><select id="fer-aud"><option value="">—</option></select></div>
+          <div><label>Von</label><input type="date" id="fer-von"></div>
+          <div><label>Bis</label><input type="date" id="fer-bis"></div>
+          <div><label>Bezeichnung</label><input type="text" id="fer-lbl" placeholder="z.B. Sommerferien"></div>
+          <button onclick="addFerien()"><i class="ti ti-plus"></i> Erfassen</button>
+        </div>
+        <!-- Ferien Liste – ein/ausblendbar -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin:10px 0 4px;cursor:pointer" onclick="toggleFerList()">
+          <span style="font-size:11px;font-weight:600;color:var(--tx2)">Erfasste Ferien</span>
+          <span id="fer-toggle-icon" style="font-size:11px;color:var(--tx3)">▼ einblenden</span>
+        </div>
+        <div id="fer-list-wrap" style="display:none">
+          <div id="fer-list"></div>
+        </div>
+        <!-- Jahresübersicht bleibt immer sichtbar -->
+        <div id="fer-chart-wrap" style="margin-top:16px">
+          <div style="font-size:11px;font-weight:600;color:var(--tx2);margin-bottom:8px">Jahresübersicht Ferien</div>
+          <div id="fer-chart"></div>
+        </div>
+      </div>
+
+      <!-- WUNSCHFERIEN: jeder Auditor trägt eigene Wunschtermine ein, alle sehen alle,
+           Admin bestätigt einzeln -> wird zu echten Ferien -->
+      <div class="card" style="margin-top:16px">
+        <h3 style="display:flex;align-items:center;justify-content:space-between">
+          🎄 Wunschferien <span id="wf-year-label" style="font-size:11px;color:var(--tx3);font-weight:400"></span>
+        </h3>
+        <p style="font-size:11px;color:var(--tx2);margin:4px 0 10px">Trag hier deine gewünschten Ferientermine ein. Alle sehen alle Wünsche, damit ihr euch untereinander absprechen könnt. Überschneidungen (2+ Personen gleichzeitig) werden unten rot markiert.</p>
+        <div class="frow" id="wf-form-row">
+          <div id="wf-aud-wrap"></div>
+          <div><label>Von</label><input type="date" id="wf-von"></div>
+          <div><label>Bis</label><input type="date" id="wf-bis"></div>
+          <div><label>Notiz</label><input type="text" id="wf-lbl" placeholder="optional"></div>
+          <button onclick="addWunschFerien()"><i class="ti ti-plus"></i> Wunsch erfassen</button>
+        </div>
+        <div id="wf-list" style="margin-top:10px"></div>
+        <div style="margin-top:16px">
+          <div style="font-size:11px;font-weight:600;color:var(--tx2);margin-bottom:8px">Jahresübersicht Wunschferien</div>
+          <div id="wf-chart"></div>
         </div>
       </div>
     </div>
 
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-      <h3 style="font-size:14px;font-weight:700;color:var(--tx)">Auditor-Karten</h3>
-      <div style="display:flex;align-items:center;gap:6px">
-        <label style="font-size:11px;color:var(--tx2)">Jahr:</label>
-        <select id="aud-year" onchange="renderAuditors()" style="padding:4px 8px;border:1px solid var(--bd);border-radius:var(--rs);background:var(--sf2);color:var(--tx);font-size:12px;font-weight:600"></select>
+    <!-- PANEL: ABTEILUNGEN -->
+    <div id="aud-panel-dept" style="display:none">
+      <div class="card">
+        <h3>Audits nach Abteilung</h3>
+        <table class="dtbl"><thead><tr><th>Abteilung</th><th>Baustellen</th><th>Auditiert</th><th>Überfällig</th><th>Fällig</th><th>Pausiert</th><th>Inaktiv</th></tr></thead><tbody id="dept-tb"></tbody></table>
       </div>
-    </div>
-    <div class="agrid" id="agrid"></div>
-    <div style="height:16px"></div>
-    <div class="card" id="aud-totals-card" style="display:none">
-      <h3 style="margin-bottom:12px"><i class="ti ti-chart-pie" style="color:var(--blue)"></i> Stellenprozente Führungssystem</h3>
-      <div id="aud-totals-content"></div>
-    </div>
-    <div class="card">
-      <h3 style="display:flex;align-items:center;justify-content:space-between">
-        Ferienplanung
-      </h3>
-      <div class="frow">
-        <div><label>Auditor</label><select id="fer-aud"><option value="">—</option></select></div>
-        <div><label>Von</label><input type="date" id="fer-von"></div>
-        <div><label>Bis</label><input type="date" id="fer-bis"></div>
-        <div><label>Bezeichnung</label><input type="text" id="fer-lbl" placeholder="z.B. Sommerferien"></div>
-        <button onclick="addFerien()"><i class="ti ti-plus"></i> Erfassen</button>
-      </div>
-      <!-- Ferien Liste – ein/ausblendbar -->
-      <div style="display:flex;align-items:center;justify-content:space-between;margin:10px 0 4px;cursor:pointer" onclick="toggleFerList()">
-        <span style="font-size:11px;font-weight:600;color:var(--tx2)">Erfasste Ferien</span>
-        <span id="fer-toggle-icon" style="font-size:11px;color:var(--tx3)">▼ einblenden</span>
-      </div>
-      <div id="fer-list-wrap" style="display:none">
-        <div id="fer-list"></div>
-      </div>
-      <!-- Jahresübersicht bleibt immer sichtbar -->
-      <div id="fer-chart-wrap" style="margin-top:16px">
-        <div style="font-size:11px;font-weight:600;color:var(--tx2);margin-bottom:8px">Jahresübersicht Ferien</div>
-        <div id="fer-chart"></div>
-      </div>
-    </div>
- 
-    <div class="card" style="margin-top:16px">
-      <h3>Audits nach Abteilung</h3>
-      <table class="dtbl"><thead><tr><th>Abteilung</th><th>Baustellen</th><th>Auditiert</th><th>Überfällig</th><th>Fällig</th><th>Pausiert</th><th>Inaktiv</th></tr></thead><tbody id="dept-tb"></tbody></table>
     </div>
   </div>
 </div>
@@ -1350,7 +1388,7 @@ const CFB={luzern:{lat:47.05,lng:8.309},zürich:{lat:47.377,lng:8.542},bern:{lat
 const DGF={Abdichtungen:{lat:47.352,lng:7.904},'Interbohr AG':{lat:47.16,lng:8.45},'Anliker Spezialitäten AG':{lat:47.376,lng:8.541},'Niederlassung Basel':{lat:47.557,lng:7.593},'Niederlassung Winterthur':{lat:47.501,lng:8.724}};
 // ═══ STATE ═══
 let map,cluster,markers={};
-let data=[],plans=[],tlog=[],auditors=['Alain Groelly','René Rottenberger','Niklaus Meier','Matthias Knotz'],ferien=[],personAudits=[];
+let data=[],plans=[],tlog=[],auditors=['Alain Groelly','René Rottenberger','Niklaus Meier','Matthias Knotz'],ferien=[],personAudits=[],ferienWunsch=[];
 let selId=null,curTab='all',editId=null,planMode=false,planned=new Set();
 let curView='map',kwOff=0,popIdx=null,popMode='site',popPersonId=null,qaId=null,statFilters=new Set(),mergeFiles=[];
 // ═══ HELPERS ═══
@@ -1426,14 +1464,14 @@ function dl(e){
 function dotC(e){if(planned.has(e.id))return'#10B981';if(e.type==='werkhof')return'#EA580C';const s=status(e);if(s==='paused')return'rgba(148,163,184,.75)';if(s==='planned')return'#6366F1';if(s==='beratung')return'#8B5CF6';if(s==='overdue')return'#EF4444';if(s==='due')return'#F59E0B';if(s==='soon')return'#FDE047';return'#10B981';}
 // ═══ STORAGE ═══
 let saveT=null;
-function save(){clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem('anliker_persons',JSON.stringify(persons));localStorage.setItem(SK,JSON.stringify({data,plans,tlog,auditors,ferien,ghostAudits:window._ghostAudits||[],personAudits,v:4}));showToast(sbConnected?'☁':'💾',1200);}catch(e){}sbPush();},900);}
+function save(){clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem('anliker_persons',JSON.stringify(persons));localStorage.setItem(SK,JSON.stringify({data,plans,tlog,auditors,ferien,ferienWunsch,ghostAudits:window._ghostAudits||[],personAudits,v:4}));showToast(sbConnected?'☁':'💾',1200);}catch(e){}sbPush();},900);}
 // Immediate save for critical actions (no debounce)
 function saveNow(){
   clearTimeout(saveT);
-  try{localStorage.setItem('anliker_berat_plan',JSON.stringify(beratPlan));localStorage.setItem(SK,JSON.stringify({data,plans,tlog,auditors,ferien,ghostAudits:window._ghostAudits||[],personAudits,v:4}));localStorage.setItem('anliker_pi_collectbox',JSON.stringify(window._piCollectBox||[]));localStorage.setItem('anliker_temp_workers',JSON.stringify(window._tempWorkers||[]));}catch(e){}
+  try{localStorage.setItem('anliker_berat_plan',JSON.stringify(beratPlan));localStorage.setItem(SK,JSON.stringify({data,plans,tlog,auditors,ferien,ferienWunsch,ghostAudits:window._ghostAudits||[],personAudits,v:4}));localStorage.setItem('anliker_pi_collectbox',JSON.stringify(window._piCollectBox||[]));localStorage.setItem('anliker_temp_workers',JSON.stringify(window._tempWorkers||[]));}catch(e){}
   sbPush();
 }
-function load(){try{const r=localStorage.getItem(SK);if(!r)return false;const p=JSON.parse(r);if(p.data)data=p.data;if(p.plans)plans=p.plans;if(p.tlog)tlog=p.tlog;if(p.auditors)auditors=p.auditors;if(p.ferien)ferien=p.ferien;if(p.ghostAudits)window._ghostAudits=p.ghostAudits;if(p.personAudits)personAudits=p.personAudits;try{window._piCollectBox=JSON.parse(localStorage.getItem('anliker_pi_collectbox')||'[]');}catch(e){window._piCollectBox=[];}try{window._tempWorkers=JSON.parse(localStorage.getItem('anliker_temp_workers')||'[]');}catch(e){window._tempWorkers=[];}return true;}catch(e){return false;}}
+function load(){try{const r=localStorage.getItem(SK);if(!r)return false;const p=JSON.parse(r);if(p.data)data=p.data;if(p.plans)plans=p.plans;if(p.tlog)tlog=p.tlog;if(p.auditors)auditors=p.auditors;if(p.ferien)ferien=p.ferien;if(p.ferienWunsch)ferienWunsch=p.ferienWunsch;if(p.ghostAudits)window._ghostAudits=p.ghostAudits;if(p.personAudits)personAudits=p.personAudits;try{window._piCollectBox=JSON.parse(localStorage.getItem('anliker_pi_collectbox')||'[]');}catch(e){window._piCollectBox=[];}try{window._tempWorkers=JSON.parse(localStorage.getItem('anliker_temp_workers')||'[]');}catch(e){window._tempWorkers=[];}return true;}catch(e){return false;}}
 function showToast(m,d=2500){const t=document.getElementById('toast');t.textContent=m;t.style.display='block';clearTimeout(t._t);t._t=setTimeout(()=>t.style.display='none',d);}
 function dlJSON(obj,fn){const b=new Blob([JSON.stringify(obj,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=fn;a.click();}
 function teamExport(){dlJSON({data,plans,auditors,ferien,ghostAudits:window._ghostAudits||[],personAudits,savedAt:new Date().toISOString(),type:'team'},'anliker_export_'+today()+'.json');showToast('📤 Export erstellt – auf SharePoint!',3000);}
@@ -1980,7 +2018,7 @@ function setView(v,el){
   document.getElementById('aud-view').style.display=v==='aud'?'block':'none';
   if(v==='map')setTimeout(()=>map.invalidateSize(),120);
   if(v==='cal'){weekOff=0;buildCalBS();renderCalSB();renderKW();}
-  if(v==='aud'){buildYearSelects();renderAudTags();renderAudCodes();renderAuditors();renderAudTotals();renderFerList();renderFerChart();renderPA();buildAudPASel();}
+  if(v==='aud'){buildYearSelects();renderAudTags();renderAudCodes();renderAuditors();renderAudTotals();renderFerList();renderFerChart();renderWunschFerien();renderPA();buildAudPASel();setAudTab('overview');}
   if(v==='xl'){buildYearSelects();buildXLFilter();renderXL();}
   if(v==='pa'){renderPA2();}
 }
@@ -2256,6 +2294,18 @@ function setAudCode(name,code){
   saveAudCodes();renderAudCodes();renderAll();
   showToast('✓ Kürzel gespeichert',1500);
 }
+function setAudTab(tab){
+  ['overview','ferien','dept'].forEach(t=>{
+    const panel=document.getElementById('aud-panel-'+t);
+    if(panel)panel.style.display=t===tab?'':'none';
+    const btn=document.getElementById('aud-tab-'+t);
+    if(btn){
+      btn.style.borderBottomColor=t===tab?'var(--blue)':'transparent';
+      btn.style.color=t===tab?'var(--blue)':'var(--tx2)';
+    }
+  });
+  if(tab==='ferien'){renderFerList();renderFerChart();renderWunschFerien();}
+}
 function renderAudTotals(){
   const el=document.getElementById('aud-totals-content');if(!el)return;
   let totalQ=0,totalU=0,totalA=0,count=0;
@@ -2266,28 +2316,7 @@ function renderAudTotals(){
   });
   if(!count){el.innerHTML='<div style="font-size:12px;color:var(--tx3)">Noch keine Anstellungsdaten erfasst.</div>';return;}
   const total=totalQ+totalU+totalA;
-  // Calculate total progress
-  let totalSoll=0,totalIst=0;
-  const audYrStr=String(new Date().getFullYear());
-  auditors.forEach(a=>{
-    const m=auditorMeta[a]||{};
-    if(m.soll){
-      totalSoll+=m.soll;
-      totalIst+=data.reduce((s,e)=>s+(e.auditHistory||[]).filter(h=>h.auditor===a&&h.date&&h.date.startsWith(audYrStr)).length,0)
-               +personAudits.filter(p=>p.auditor===a&&p.date&&p.date.startsWith(audYrStr)).length;
-    }
-  });
-  const pct2=totalSoll>0?Math.min(100,Math.round(totalIst/totalSoll*100)):0;
-  const progressBar=totalSoll>0?`<div style="margin-bottom:16px;padding:12px;background:var(--sf2);border-radius:10px">
-    <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:600;color:var(--tx);margin-bottom:6px">
-      <span>Gesamtfortschritt ${audYrStr}</span><span>${totalIst} / ${totalSoll} Audits</span>
-    </div>
-    <div style="height:10px;background:var(--bd);border-radius:5px;overflow:hidden">
-      <div style="height:100%;width:${pct2}%;background:${pct2>=100?'#10B981':pct2>=70?'#6366F1':'#F59E0B'};border-radius:5px;transition:width .5s"></div>
-    </div>
-    <div style="font-size:11px;color:var(--tx3);margin-top:4px">${pct2}% erreicht</div>
-  </div>`:'';
-  el.innerHTML=progressBar+`
+  el.innerHTML=`
     <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:14px">
       <div style="text-align:center;padding:12px 20px;background:#EEF2FF;border-radius:10px;min-width:80px">
         <div style="font-size:22px;font-weight:700;color:#6366F1">${totalQ}%</div>
@@ -2333,6 +2362,145 @@ function toggleFerList(){
 function toggleFerCard(){toggleFerList();}
 function addFerien(){const aud=document.getElementById('fer-aud').value,von=document.getElementById('fer-von').value,bis=document.getElementById('fer-bis').value,lbl=document.getElementById('fer-lbl').value.trim()||'Ferien';if(!aud||!von||!bis){showToast('Alle Felder erforderlich');return;}if(bis<von){showToast('Bis muss nach Von sein');return;}ferien.push({id:Date.now(),auditor:aud,von,bis,label:lbl});['fer-von','fer-bis','fer-lbl'].forEach(id=>document.getElementById(id).value='');renderFerList();renderFerChart();saveNow();showToast('✓ Ferien erfasst');}
 function rmFerien(id){ferien=ferien.filter(f=>f.id!==id);renderFerList();renderFerChart();saveNow();}
+// ═══ WUNSCHFERIEN ═══
+// Jeder Auditor trägt eigene Wunschtermine ein (für sich selbst, kein Dropdown für Nicht-
+// Admins), alle sehen alle Wünsche zur gegenseitigen Absprache, Admin bestätigt einzeln ->
+// wird automatisch zum echten, fixen Ferien-Eintrag.
+function renderWunschFerien(){
+  const isAdmin=document.body.classList.contains('admin-mode');
+  const wrap=document.getElementById('wf-aud-wrap');
+  if(wrap){
+    if(isAdmin){
+      wrap.innerHTML=`<div><label>Auditor</label><select id="wf-aud"><option value="">—</option>${auditors.map(a=>`<option value="${a}">${a}</option>`).join('')}</select></div>`;
+      const sel=document.getElementById('wf-aud');
+      if(sel&&currentUser&&auditors.includes(currentUser))sel.value=currentUser;
+    }else{
+      wrap.innerHTML=`<div><label>Auditor</label><div style="padding:7px 9px;background:var(--sf2);border:1px solid var(--bd);border-radius:var(--rs);font-size:12px;color:var(--tx)">${currentUser||'—'}</div></div>`;
+    }
+  }
+  const yrLbl=document.getElementById('wf-year-label');
+  if(yrLbl)yrLbl.textContent=new Date().getFullYear()+1+''; // Planung betrifft i.d.R. das kommende Jahr
+  renderWunschList();
+  renderWunschChart();
+}
+function addWunschFerien(){
+  const isAdmin=document.body.classList.contains('admin-mode');
+  const aud=isAdmin?(document.getElementById('wf-aud')?.value||''):currentUser;
+  const von=document.getElementById('wf-von').value,bis=document.getElementById('wf-bis').value,lbl=document.getElementById('wf-lbl').value.trim()||'Wunsch';
+  if(!aud||!von||!bis){showToast('Alle Felder erforderlich');return;}
+  if(bis<von){showToast('Bis muss nach Von sein');return;}
+  ferienWunsch.push({id:Date.now(),auditor:aud,von,bis,label:lbl});
+  ['wf-von','wf-bis','wf-lbl'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  renderWunschList();renderWunschChart();saveNow();showToast('✓ Wunsch erfasst');
+}
+function rmWunschFerien(id){
+  const w=ferienWunsch.find(x=>x.id===id);
+  const isAdmin=document.body.classList.contains('admin-mode');
+  if(w&&!isAdmin&&w.auditor!==currentUser){showToast('Nur eigene Wünsche löschbar');return;}
+  ferienWunsch=ferienWunsch.filter(x=>x.id!==id);
+  renderWunschList();renderWunschChart();saveNow();
+}
+// Admin bestätigt einen Wunsch -> wird zum echten Ferien-Eintrag, Wunsch verschwindet aus der Liste
+function confirmWunsch(id){
+  const w=ferienWunsch.find(x=>x.id===id);if(!w)return;
+  ferien.push({id:Date.now(),auditor:w.auditor,von:w.von,bis:w.bis,label:w.label==='Wunsch'?'Ferien':w.label});
+  ferienWunsch=ferienWunsch.filter(x=>x.id!==id);
+  log('Ferien bestätigt ✓ (Wunsch)',w.auditor,'#10B981','');
+  renderWunschList();renderWunschChart();renderFerList();renderFerChart();saveNow();
+  showToast('✓ Bestätigt und übernommen: '+w.auditor);
+}
+function renderWunschList(){
+  const el=document.getElementById('wf-list');if(!el)return;
+  const isAdmin=document.body.classList.contains('admin-mode');
+  if(!ferienWunsch.length){el.innerHTML='<div style="font-size:11px;color:var(--tx3);padding:6px">Noch keine Wunschferien erfasst.</div>';return;}
+  el.innerHTML=ferienWunsch.sort((a,b)=>a.von.localeCompare(b.von)).map(w=>{
+    const c=aC(w.auditor),ini=w.auditor.split(' ').map(x=>x[0]).join('');
+    const canDelete=isAdmin||w.auditor===currentUser;
+    return`<div class="fi">
+      <div class="fiav" style="background:${c}">${ini}</div>
+      <div class="fiinfo">${w.auditor} – ${w.label}<div class="fid">${fd(w.von)} – ${fd(w.bis)}</div></div>
+      ${isAdmin?`<button onclick="confirmWunsch(${w.id})" title="Bestätigen und in echte Ferien übernehmen" style="border:none;background:#10B981;color:#fff;border-radius:6px;padding:5px 9px;font-size:11px;cursor:pointer;margin-right:4px;white-space:nowrap">✓ Bestätigen</button>`:''}
+      ${canDelete?`<button class="fidel" onclick="rmWunschFerien(${w.id})"><i class="ti ti-trash"></i></button>`:''}
+    </div>`;
+  }).join('');
+}
+function renderWunschChart(){
+  const el=document.getElementById('wf-chart');if(!el)return;
+  if(!ferienWunsch.length){el.innerHTML='<div style="font-size:11px;color:var(--tx3)">Keine Wunschferien erfasst.</div>';return;}
+  const yr=new Date().getFullYear()+1;
+  const start=new Date(yr,0,1);
+  const end=new Date(yr,11,31);
+  const totalDays=(end-start)/86400000+1;
+  const byAud={};
+  auditors.forEach(a=>{byAud[a]=ferienWunsch.filter(f=>f.auditor===a);});
+  const months=['J','F','M','A','M','J','J','A','S','O','N','D'];
+  const monthGrid=months.map((m,i)=>{
+    const d=new Date(yr,i,1);
+    const pct=((d-start)/86400000/totalDays*100).toFixed(2);
+    return`<div style="position:absolute;left:${pct}%;height:100%;border-left:1px solid var(--bd);opacity:.5"></div>`;
+  }).join('');
+  const monthLabelRow=months.map((m,i)=>{
+    const d=new Date(yr,i,1);
+    const pct=((d-start)/86400000/totalDays*100).toFixed(2);
+    const w=i<11?((new Date(yr,i+1,1)-d)/86400000/totalDays*100).toFixed(2):((end-d)/86400000/totalDays*100).toFixed(2);
+    return`<div style="position:absolute;left:${pct}%;width:${w}%;text-align:center;font-size:9px;font-weight:600;color:var(--tx2)">${m}</div>`;
+  }).join('');
+  const rows=auditors.map(a=>{
+    const col=aC(a);
+    const ini=a.split(' ').map(w=>w[0]).join('');
+    const bars=(byAud[a]||[]).map(f=>{
+      const s=new Date(Math.max(new Date(f.von),start));
+      const e2=new Date(Math.min(new Date(f.bis),end));
+      if(s>e2)return'';
+      const left=((s-start)/86400000/totalDays*100).toFixed(2);
+      const width=Math.max(0.5,((e2-s)/86400000/totalDays*100)).toFixed(2);
+      // Gestrichelte, hellere Balken - visuell klar als "Wunsch" (nicht fix) erkennbar
+      return`<div title="${f.label}: ${fd(f.von)} – ${fd(f.bis)}" style="position:absolute;left:${left}%;width:${width}%;height:100%;background:repeating-linear-gradient(45deg,${col},${col} 4px,transparent 4px,transparent 8px);border:1.5px dashed ${col};border-radius:3px;z-index:1;opacity:.85"></div>`;
+    }).join('');
+    return`<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+      <div style="width:28px;height:28px;border-radius:50%;background:${col};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0" title="${a}">${ini}</div>
+      <div style="flex:1;height:24px;background:var(--sf2);border-radius:4px;position:relative;overflow:hidden">
+        ${monthGrid}${bars||''}
+      </div>
+    </div>`;
+  }).join('');
+  // Überlappungs-Warnung: pro Tag zählen, wie viele Auditoren gleichzeitig Wunschferien haben;
+  // ab 2+ Personen wird ein roter Streifen unter dem Chart an dieser Stelle eingeblendet.
+  const dayCounts=new Array(Math.ceil(totalDays)).fill(0);
+  ferienWunsch.forEach(f=>{
+    const s=new Date(Math.max(new Date(f.von),start));
+    const e2=new Date(Math.min(new Date(f.bis),end));
+    if(s>e2)return;
+    for(let d=new Date(s);d<=e2;d.setDate(d.getDate()+1)){
+      const idx=Math.floor((d-start)/86400000);
+      if(idx>=0&&idx<dayCounts.length)dayCounts[idx]++;
+    }
+  });
+  let warnSegments='',segStart=-1;
+  for(let i=0;i<dayCounts.length;i++){
+    if(dayCounts[i]>=2){if(segStart<0)segStart=i;}
+    else if(segStart>=0){
+      const left=(segStart/totalDays*100).toFixed(2),width=Math.max(0.3,((i-segStart)/totalDays*100)).toFixed(2);
+      warnSegments+=`<div style="position:absolute;left:${left}%;width:${width}%;height:100%;background:#EF4444"></div>`;
+      segStart=-1;
+    }
+  }
+  if(segStart>=0){
+    const left=(segStart/totalDays*100).toFixed(2),width=Math.max(0.3,((dayCounts.length-segStart)/totalDays*100)).toFixed(2);
+    warnSegments+=`<div style="position:absolute;left:${left}%;width:${width}%;height:100%;background:#EF4444"></div>`;
+  }
+  el.innerHTML=`
+    <div style="position:relative;height:18px;margin-bottom:2px;margin-left:36px">
+      <div style="position:relative;height:100%">${monthLabelRow}</div>
+    </div>
+    <div style="position:relative">
+      ${rows}
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-left:36px;margin-top:4px">
+      <div style="flex:1;height:6px;background:var(--sf2);border-radius:3px;position:relative;overflow:hidden">${warnSegments}</div>
+    </div>
+    <div style="font-size:10px;color:var(--tx3);margin-top:4px;text-align:right">🔴 = 2 oder mehr Auditoren gleichzeitig – Absprache nötig</div>`;
+}
 function renderFerChart(){
   const el=document.getElementById('fer-chart');if(!el)return;
   if(!ferien.length){el.innerHTML='<div style="font-size:11px;color:var(--tx3)">Keine Ferien erfasst.</div>';return;}
@@ -5127,6 +5295,10 @@ async function runPersonalImport(file){
       const item={...r,match:m};
       if(!m){buckets.unknown.push(item);return;}
       const e=m.entry;
+      // Werkhöfe dürfen NIE durch den Personal-Import pausiert/reaktiviert werden - komplett
+      // überspringen, taucht in keinem Eimer auf (auch nicht als "ausgeschlossen"), hat schlicht
+      // nichts mit dieser Prüfung zu tun.
+      if(e.type==='werkhof')return;
       // Dauerhaft von der Personal-Import-Prüfung ausgeschlossen (z.B. Baustellen in Gefängnissen
       // o.ä., die nie auditiert werden) - wird nie mehr in einen Entscheidungs-Eimer gesteckt,
       // egal wie viele Personen laut Liste dort eingeteilt sind.
@@ -5623,6 +5795,7 @@ async function sbPush(){
     piCollectBox:JSON.stringify(window._piCollectBox||[]),
     auditTarget:window._auditTarget||0,
     tempWorkers:JSON.stringify(window._tempWorkers||[]),
+    ferienWunsch:JSON.stringify(ferienWunsch||[]),
     updated_at:new Date().toISOString()};
   let result=await sbFetch('audit_state',{method:'POST',body:JSON.stringify(payload),
     headers:{'Prefer':'resolution=merge-duplicates'}});
@@ -5630,7 +5803,7 @@ async function sbPush(){
     // Fallback: falls Spalten in Supabase noch nicht existieren (alte Tabelle, Spalte noch
     // nicht per SQL ergänzt) -> ohne diese Felder nochmal versuchen, damit der Rest der
     // Synchronisation nicht komplett blockiert wird.
-    const{piCollectBox,auditTarget,tempWorkers,...fallbackPayload}=payload;
+    const{piCollectBox,auditTarget,tempWorkers,ferienWunsch,...fallbackPayload}=payload;
     result=await sbFetch('audit_state',{method:'POST',body:JSON.stringify(fallbackPayload),
       headers:{'Prefer':'resolution=merge-duplicates'}});
     if(result)console.warn('sbPush: piCollectBox/auditTarget-Spalten fehlen in Supabase - siehe Admin-Menü "Sammelbox" für Setup-SQL. Restliche Daten wurden trotzdem synchronisiert.');
@@ -5658,6 +5831,7 @@ async function sbPull(){
     if(p.piCollectBox){try{window._piCollectBox=JSON.parse(p.piCollectBox);}catch(e){}}
     if(p.auditTarget!==undefined&&p.auditTarget!==null)window._auditTarget=+p.auditTarget;
     if(p.tempWorkers){try{window._tempWorkers=JSON.parse(p.tempWorkers);}catch(e){}}
+    if(p.ferienWunsch){try{ferienWunsch=JSON.parse(p.ferienWunsch);}catch(e){}}
     if(p.persons){try{persons=JSON.parse(p.persons);localStorage.setItem('anliker_persons',JSON.stringify(persons));}catch(e){}}
     if(p.beratPlan){try{beratPlan=JSON.parse(p.beratPlan);localStorage.setItem('anliker_berat_plan',JSON.stringify(beratPlan));}catch(e){}}
     if(p.auditorMeta){try{auditorMeta=JSON.parse(p.auditorMeta);localStorage.setItem('anliker_aud_meta',JSON.stringify(auditorMeta));}catch(e){}}
@@ -6296,7 +6470,7 @@ function exportICSDay_old(){
 // exportICSWeek with audFilter defined above
 
 // ═══ RENDER ALL ═══
-function renderAll(){renderMarkers();renderList();updateStats();renderTL();updatePAPanelBadge();if(curView==='cal'){renderCalSB();renderKW();}if(curView==='aud'){renderAuditors();renderFerList();renderPA();}}
+function renderAll(){renderMarkers();renderList();updateStats();renderTL();updatePAPanelBadge();if(curView==='cal'){renderCalSB();renderKW();}if(curView==='aud'){renderAuditors();renderFerList();renderWunschFerien();renderPA();}}
 function updatePAPanelBadge(){
   const badge=document.getElementById('pa-panel-badge');
   const audSel=document.getElementById('pa-panel-aud');
@@ -6511,7 +6685,8 @@ document.addEventListener('DOMContentLoaded',()=>{
       <p style="margin:6px 0">Falls die Sammelbox nicht zwischen Geräten synchronisiert, fehlt eventuell die Spalte in Supabase. Einmalig im Supabase SQL-Editor ausführen:</p>
       <pre style="background:var(--sf2);padding:8px;border-radius:6px;overflow-x:auto;user-select:all">ALTER TABLE audit_state ADD COLUMN IF NOT EXISTS "piCollectBox" text;
 ALTER TABLE audit_state ADD COLUMN IF NOT EXISTS "auditTarget" integer;
-ALTER TABLE audit_state ADD COLUMN IF NOT EXISTS "tempWorkers" text;</pre>
+ALTER TABLE audit_state ADD COLUMN IF NOT EXISTS "tempWorkers" text;
+ALTER TABLE audit_state ADD COLUMN IF NOT EXISTS "ferienWunsch" text;</pre>
     </details>
     <div id="sb-list"></div>
     <div style="display:flex;justify-content:flex-end;margin-top:16px;border-top:1px solid var(--bd);padding-top:12px">
