@@ -361,7 +361,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
   <div id="presence-bar" style="display:flex;align-items:center;gap:4px;margin-left:4px"></div>
   <button onclick="toggleDark()" class="hb" title="Dark Mode" style="font-size:14px">🌙</button>
   <button onclick="openGuide()" class="hb" title="Anleitung" style="font-size:14px">❓</button>
-  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.57</span>
+  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.59</span>
   <button onclick="doLogout()" class="hb" title="Abmelden" style="font-size:14px" id="logout-btn">⏻</button>
   <button onclick="toggleMobileView()" id="mobile-btn" class="hb" title="Mobile Ansicht" style="font-size:14px">📱</button>
   <div id="more-w" class="admin-only">
@@ -488,7 +488,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
       <div class="dkf" id="plan-form">
         <label>Auditor</label><select id="plan-aud"><option value="">—</option></select>
         <div style="display:flex;gap:0;border:1px solid var(--bd);border-radius:var(--rs);overflow:hidden;margin-bottom:4px">
-          <button id="plan-mode-kw" onclick="setPlanMode('kw')" style="flex:1;padding:5px 8px;border:none;background:var(--blue);color:#fff;cursor:pointer;font-size:11px;font-weight:600">KW <input type="number" id="plan-kw" min="1" max="53" placeholder="30" onclick="event.stopPropagation();setPlanMode('kw')" style="width:40px;padding:1px 4px;border:1px solid rgba(255,255,255,.4);border-radius:3px;font-size:11px;background:rgba(255,255,255,.2);color:#fff"></button>
+          <button id="plan-mode-kw" onclick="setPlanMode('kw')" style="flex:1;padding:5px 8px;border:none;background:var(--blue);color:#fff;cursor:pointer;font-size:11px;font-weight:600">KW <input type="number" id="plan-kw" min="1" max="53" placeholder="30" onclick="event.stopPropagation();setPlanMode('kw')" style="width:40px;padding:1px 4px;border:1px solid rgba(255,255,255,.4);border-radius:3px;font-size:11px;background:rgba(255,255,255,.2);color:#fff" onchange="setStickyPlanKW(this.value)"></button>
           <button id="plan-mode-date" onclick="setPlanMode('date')" style="flex:1;padding:5px 8px;border:none;border-left:1px solid var(--bd);background:var(--sf2);color:var(--tx);cursor:pointer;font-size:11px;font-weight:600">Datum <input type="date" id="plan-date" onclick="event.stopPropagation();setPlanMode('date')" style="padding:1px 3px;border:1px solid var(--bd);border-radius:3px;font-size:10px;background:var(--sf);color:var(--tx)"></button>
         </div>
         <button class="cfm bl" onclick="confirmPlan()">+ Planung speichern</button>
@@ -1175,7 +1175,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
 <div id="dist-bg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:4000;align-items:center;justify-content:center">
   <div style="background:var(--sf);border-radius:12px;padding:24px;width:680px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)">
     <h3 style="font-size:15px;font-weight:700;color:var(--tx);margin-bottom:4px"><i class="ti ti-layout-distribute-horizontal" style="color:var(--blue)"></i> Baustellen auf die Woche verteilen</h3>
-    <p style="font-size:12px;color:var(--tx2);margin-bottom:16px">Die Baustellen werden so verteilt, dass die Tage möglichst <b>gleich lang</b> sind: Fahrzeit (Rundtour ab Startadresse) + Zeit pro Audit + bereits geplante Termine (Rapporte etc.). Ferientage werden ausgelassen, Unterschied höchstens 1 Baustelle pro Tag.</p>
+    <p style="font-size:12px;color:var(--tx2);margin-bottom:16px">Die Baustellen werden so verteilt, dass die Tage möglichst <b>gleich lang</b> sind: Fahrzeit (Rundtour ab Startadresse) + Zeit pro Audit inkl. Rapportieren + bereits geplante Termine (Rapporte etc.). Ferientage werden ausgelassen, Unterschied höchstens 1 Baustelle pro Tag.</p>
     
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
       <div><label style="font-size:11px;font-weight:600;color:var(--tx2);display:block;margin-bottom:4px">Auditor</label>
@@ -1198,7 +1198,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
     </div>
 
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;font-size:12px;color:var(--tx2)">
-      <label style="font-weight:600">Ø Dauer pro Audit vor Ort</label>
+      <label style="font-weight:600" title="Inkl. Rapportieren, Nachbearbeitung etc.">Ø Dauer pro Audit (inkl. Rapportieren)</label>
       <input type="number" id="dist-auditmin" min="10" max="240" step="5" style="width:70px;padding:6px 8px;border:1px solid var(--bd);border-radius:var(--rs);background:var(--sf2);color:var(--tx);font-size:12px"> min
     </div>
     <div id="dist-info" style="padding:10px 12px;background:var(--sf2);border-radius:8px;font-size:12px;color:var(--tx2);margin-bottom:14px">
@@ -1949,16 +1949,30 @@ function selEntry(id){
   setTimeout(()=>{const el=document.querySelector('.bsc.sel');if(el)el.scrollIntoView({behavior:'smooth',block:'nearest'});},100);
 }
 function closeDP(){const p=selId;selId=null;document.getElementById('dp').style.display='none';if(p&&markers[p]){const e=data.find(x=>x.id===p);if(e)markers[p].setIcon(makeIcon(e,false));}renderList();}
+function getStickyPlanKW(){
+  const next=dateToKW(today())+1;
+  try{
+    const s=JSON.parse(localStorage.getItem('plan_kw_sticky')||'null');
+    // gespeicherter Montag muss >= Montag der aktuellen Woche sein (funktioniert auch über den Jahreswechsel)
+    if(s&&s.kw&&s.monday&&s.monday>=kwToDate(dateToKW(today())))return s.kw;
+  }catch(e){}
+  return next;
+}
+function setStickyPlanKW(kw){
+  kw=+kw;if(!kw)return;
+  try{localStorage.setItem('plan_kw_sticky',JSON.stringify({kw,monday:kwToDate(kw)}));}catch(e){}
+}
 function showF(w){
   ['audit-form','plan-form','note-form','pause-form','resume-form','delc'].forEach(x=>document.getElementById(x).style.display='none');
   if(w==='audit'){document.getElementById('audit-form').style.display='block';if(currentUser){const ap=document.getElementById('aud-pick');if(ap)[...ap.options].forEach(o=>{if(o.text===currentUser||o.value===currentUser)ap.value=o.value;});};document.getElementById('aud-date').value=today();}
   if(w==='plan'){
     document.getElementById('plan-form').style.display='block';
     if(currentUser){const pa=document.getElementById('plan-aud');if(pa)[...pa.options].forEach(o=>{if(o.text===currentUser||o.value===currentUser)pa.value=o.value;});}
-    // Default: KW mode, next week
+    // Default: KW mode. Zuletzt gewählte KW bleibt stehen (bis man sie ändert), solange sie nicht
+    // in der Vergangenheit liegt - sonst nächste KW.
     _planMode='kw';
     setPlanMode('kw');
-    document.getElementById('plan-kw').value=dateToKW(today())+1;
+    document.getElementById('plan-kw').value=getStickyPlanKW();
     document.getElementById('plan-date').value='';
   }
   if(w==='note'){const e=data.find(x=>x.id===selId);document.getElementById('note-form').style.display='block';document.getElementById('note-inp').value=e?.note||'';}
@@ -1996,6 +2010,7 @@ function setPlanMode(mode){
 function confirmPlan(){
   const aud=document.getElementById('plan-aud').value;
   const kwVal=document.getElementById('plan-kw').value;
+  if(kwVal)setStickyPlanKW(kwVal);
   const dtVal=document.getElementById('plan-date').value;
   let dt=_planMode==='kw'?kwToDate(+kwVal):dtVal;
   if(!aud||!dt||(dt==='Invalid Date')){showToast('Auditor und KW/Datum erforderlich');return;}
@@ -4360,7 +4375,7 @@ function updateDistInfo(){
   const aud=document.getElementById('dist-aud').value;
   const kw=+document.getElementById('dist-kw').value;
   const amEl=document.getElementById('dist-auditmin');
-  if(amEl&&!amEl.value)amEl.value=localStorage.getItem('dist_audit_min')||'45';
+  if(amEl&&!amEl.value)amEl.value=localStorage.getItem('dist_audit_min_v2')||'90';
   const ks=kwToDate(kw),ke=kwToDate(kw+1);
   const kwPlans=plans.filter(p=>p.date>=ks&&p.date<ke&&p.auditor===aud);
   const withCoords=kwPlans.filter(p=>{const e=data.find(x=>x.id===p.bsId);return e&&e.lat&&e.lng;});
@@ -4372,7 +4387,7 @@ function updateDistInfo(){
     if(fer){cb.checked=false;cb.disabled=true;}else cb.disabled=false;
     cb.parentElement.style.opacity=fer?'.45':'1';
     const sp=cb.parentElement.querySelector('.dd-lbl');if(sp)sp.textContent=names[di]+(fer?' 🌴 Ferien':'');
-    const fx=distFixedMin(aud,ds,+amEl.value||45);
+    const fx=distFixedMin(aud,ds,+amEl.value||90);
     if(!fer&&fx)notes.push(`${names[di]}: ${Math.round(fx)} min belegt`);
   });
   document.getElementById('dist-info').innerHTML=
@@ -4400,8 +4415,8 @@ async function previewDistribute(){
   const aud=document.getElementById('dist-aud').value;
   const kw=+document.getElementById('dist-kw').value;
   const days=getCheckedDays();
-  const auditMin=Math.max(5,+document.getElementById('dist-auditmin').value||45);
-  try{localStorage.setItem('dist_audit_min',String(auditMin));}catch(e){}
+  const auditMin=Math.max(5,+document.getElementById('dist-auditmin').value||90);
+  try{localStorage.setItem('dist_audit_min_v2',String(auditMin));}catch(e){}
   if(!days.length){showToast('Bitte mindestens einen Tag wählen');return;}
   const ks=kwToDate(kw),ke=kwToDate(kw+1);
   const kwPlans=plans.filter(p=>p.date>=ks&&p.date<ke&&p.auditor===aud);
