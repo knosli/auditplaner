@@ -357,7 +357,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
   <div id="presence-bar" style="display:flex;align-items:center;gap:4px;margin-left:4px"></div>
   <button onclick="toggleDark()" class="hb" title="Dark Mode" style="font-size:14px">🌙</button>
   <button onclick="openGuide()" class="hb" title="Anleitung" style="font-size:14px">❓</button>
-  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.40</span>
+  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.42</span>
   <button onclick="doLogout()" class="hb" title="Abmelden" style="font-size:14px" id="logout-btn">⏻</button>
   <button onclick="toggleMobileView()" id="mobile-btn" class="hb" title="Mobile Ansicht" style="font-size:14px">📱</button>
   <div id="more-w" class="admin-only">
@@ -5121,12 +5121,16 @@ async function runPersonalImport(file){
       return;
     }
 
-    const buckets={pause:[],review:[],reactivate:[],unknown:[],noop:[],reactivateInactive:[],inactiveInfo:[]};
+    const buckets={pause:[],review:[],reactivate:[],unknown:[],noop:[],reactivateInactive:[],inactiveInfo:[],excluded:[]};
     raw.forEach(r=>{
       const m=piMatchBaustelle(r.psp,r.name);
       const item={...r,match:m};
       if(!m){buckets.unknown.push(item);return;}
       const e=m.entry;
+      // Dauerhaft von der Personal-Import-Prüfung ausgeschlossen (z.B. Baustellen in Gefängnissen
+      // o.ä., die nie auditiert werden) - wird nie mehr in einen Entscheidungs-Eimer gesteckt,
+      // egal wie viele Personen laut Liste dort eingeteilt sind.
+      if(e.excludeFromPersonalReview){buckets.excluded.push(item);return;}
       if(m.wasInactive){
         // Inaktive Baustelle taucht auf einer Einsatzliste auf -> eigene Kategorie, nie
         // automatisch reaktiviert. Nur bei mehr als 1 Person schlagen wir Reaktivierung vor.
@@ -5200,9 +5204,33 @@ function piRenderPreview(){
     </div>`:'';
   let html='';
   html+=grp('⏸ Pausieren (0 Personen)','#94A3B8',buckets.pause,'pause',true);
-  html+=grp('⚠️ Prüfen – anhaken um trotzdem zu pausieren (1–2 Personen)','#F59E0B',buckets.review,'review',true,false);
+  // "Prüfen" bekommt einen eigenen Renderer statt des generischen grp() - zusätzlich zum
+  // normalen Haken gibt's hier einen Button, um eine Baustelle DAUERHAFT von dieser Prüfung
+  // auszuschliessen (z.B. Baustellen in Gefängnissen o.ä., die nie auditiert werden und sonst
+  // jede Woche wieder in "Prüfen" auftauchen würden).
+  if(buckets.review.length){
+    html+=`<div style="margin-bottom:14px">
+      <div style="font-size:12px;font-weight:700;color:#F59E0B;margin-bottom:6px">⚠️ Prüfen – anhaken um trotzdem zu pausieren (1–2 Personen) (${buckets.review.length})</div>
+      ${buckets.review.map((it,i)=>`
+        <label style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--sf2);border-radius:8px;margin-bottom:4px;font-size:12px;color:var(--tx)">
+          <input type="checkbox" data-key="review" data-idx="${i}">
+          <span style="flex:1">${it.match?it.match.entry.name:(it.name+' — kein Match')}</span>
+          <span style="color:var(--tx3)">${it.count} Pers.</span>
+          <button type="button" onclick="event.preventDefault();piExcludePermanently(${i})" title="Diese Baustelle nie mehr fragen, immer pausiert lassen" style="padding:3px 8px;border-radius:6px;border:1px solid var(--bd);background:transparent;color:var(--tx2);font-size:10px;cursor:pointer;white-space:nowrap">🔇 Dauerhaft ausschliessen</button>
+        </label>`).join('')}
+    </div>`;
+  }
   html+=grp('▶ Reaktivieren (wieder Personal)','#10B981',buckets.reactivate,'reactivate',true);
   html+=grp('🔓 Inaktive Baustelle wieder aktivieren? (Personal auf Liste)','#8B5CF6',buckets.reactivateInactive,'reactivateInactive',true,false);
+  if(buckets.excluded.length){
+    html+=`<div style="margin-bottom:14px">
+      <div style="font-size:12px;font-weight:700;color:var(--tx3);margin-bottom:6px">🔇 Dauerhaft ausgeschlossen – keine Aktion (${buckets.excluded.length})</div>
+      ${buckets.excluded.map(it=>`<div style="padding:6px 10px;background:var(--sf2);border-radius:8px;margin-bottom:4px;font-size:12px;color:var(--tx3);display:flex;align-items:center;justify-content:space-between">
+        <span>${it.match.entry.name} — ${it.count} Pers.</span>
+        <button onclick="piUnexclude(${it.match.entry.id})" style="padding:3px 8px;border-radius:6px;border:1px solid var(--bd);background:transparent;color:var(--tx2);font-size:10px;cursor:pointer">Wieder einschliessen</button>
+      </div>`).join('')}
+    </div>`;
+  }
   if(buckets.inactiveInfo.length){
     html+=`<div style="margin-bottom:14px">
       <div style="font-size:12px;font-weight:700;color:var(--tx3);margin-bottom:6px">ℹ️ Inaktiv, nur vereinzelt Personal – keine Aktion (${buckets.inactiveInfo.length})</div>
@@ -5216,6 +5244,34 @@ function piRenderPreview(){
   document.getElementById('pi-preview').style.display='block';
 }
 
+// Baustelle DAUERHAFT von der Personal-Import-Prüfung ausschliessen (z.B. Baustellen in
+// Gefängnissen o.ä., die nie auditiert werden) - wird sofort pausiert und taucht ab sofort in
+// KEINEM Import mehr in einem Entscheidungs-Eimer auf, unabhängig von der Personenzahl.
+function piExcludePermanently(idx){
+  if(!_piPending)return;
+  const item=_piPending.buckets.review[idx];
+  if(!item||!item.match)return;
+  const e=data.find(x=>x.id===item.match.entry.id);
+  if(!e)return;
+  if(!confirm(`"${e.name}" dauerhaft von der Personal-Import-Prüfung ausschliessen?\n\nWird sofort pausiert und taucht künftig nie mehr in "Prüfen" auf, egal wie viele Personen dort laut Einsatzliste eingeteilt sind. Kann jederzeit wieder rückgängig gemacht werden.`))return;
+  e.excludeFromPersonalReview=true;
+  e.paused=true;e.pauseReason='Dauerhaft ausgeschlossen (Personal-Import)';e.pauseUntil=null;
+  log('Dauerhaft ausgeschlossen 🔇 (Personal-Import)',e.name,'#6B7280','');
+  _piPending.buckets.review.splice(idx,1);
+  _piPending.buckets.excluded.push(item);
+  saveNow();renderAll();
+  piRenderPreview();
+  showToast('🔇 Dauerhaft ausgeschlossen: '+e.name,2500);
+}
+function piUnexclude(entryId){
+  const e=data.find(x=>x.id===entryId);
+  if(!e)return;
+  e.excludeFromPersonalReview=false;
+  log('Ausschluss aufgehoben (Personal-Import)',e.name,'#3B82F6','');
+  saveNow();renderAll();
+  if(_piPending){_piPending.buckets.excluded=_piPending.buckets.excluded.filter(it=>it.match.entry.id!==entryId);piRenderPreview();}
+  showToast('✓ Wieder eingeschlossen: '+e.name+' – wird beim nächsten Import normal geprüft',2500);
+}
 function piResolveUnknown(idx){
   if(!_piPending)return;
   const sel=document.getElementById('pi-alias-sel-'+idx);
@@ -5370,12 +5426,17 @@ function sbCreate(ci){
 function confirmPersonalImport(){
   if(!_piPending)return;
   const{buckets,targetKW,temporaere}=_piPending;
+  // Immer die AKTUELLE Baustelle aus data per ID nachschlagen, statt der beim Öffnen der
+  // Vorschau gespeicherten Referenz zu vertrauen - falls in der Zwischenzeit ein
+  // Supabase-Sync die data-Liste ausgetauscht hat, würde man sonst ein verwaistes,
+  // nicht mehr angezeigtes Objekt verändern (Änderung würde nirgends sichtbar).
+  const liveEntry=it=>it.match&&it.match.entry?(data.find(x=>x.id===it.match.entry.id)||it.match.entry):null;
   // Personal-Zahl aus der Einsatzliste an der Baustelle festhalten - unabhängig von Häkchen,
   // rein informativ fürs Detail-Panel ("Personal KW X: N"). Baustellen, die NICHT in einer
   // importierten Einsatzliste geführt werden, bleiben unberücksichtigt (kein Eintrag hier).
   [...buckets.pause,...buckets.review,...buckets.reactivate,...buckets.noop,...buckets.reactivateInactive,...buckets.inactiveInfo].forEach(it=>{
     if(!it.match)return;
-    const e=it.match.entry;
+    const e=liveEntry(it);
     e.lastPersonalCount=it.count;
     e.lastPersonalKW=targetKW;
   });
@@ -5397,7 +5458,7 @@ function confirmPersonalImport(){
   };
   const persistAlias=it=>{
     if(!it.match||it.match.how!=='alias')return;
-    const e=it.match.entry;
+    const e=liveEntry(it);
     const np=piNormPSP(it.match.aliasPsp);
     const nn=piNormName(it.match.aliasName);
     e.pspAliases=e.pspAliases||[];
@@ -5410,25 +5471,25 @@ function confirmPersonalImport(){
   [...buckets.pause,...buckets.review,...buckets.reactivate,...buckets.noop,...buckets.reactivateInactive,...buckets.inactiveInfo].forEach(persistAlias);
   buckets.pause.forEach((it,i)=>{
     if(!checked('pause',i)||!it.match)return;
-    const e=it.match.entry;
+    const e=liveEntry(it);
     e.paused=true;e.pauseReason='Import: kein Personal (KW '+_piPending.targetKW+')';e.pauseUntil=null;
     log('Pausiert ⏸ (Import)',e.name,'#94A3B8','');n++;
   });
   buckets.reactivate.forEach((it,i)=>{
     if(!checked('reactivate',i)||!it.match)return;
-    const e=it.match.entry;
+    const e=liveEntry(it);
     e.paused=false;e.pauseReason=null;e.pauseUntil=null;
     log('Reaktiviert ▶ (Import)',e.name,'#10B981','');n++;
   });
   buckets.review.forEach((it,i)=>{
     if(!checked('review',i)||!it.match)return;
-    const e=it.match.entry;
+    const e=liveEntry(it);
     e.paused=true;e.pauseReason='Import: nur '+it.count+' Person(en) (KW '+_piPending.targetKW+')';e.pauseUntil=null;
     log('Pausiert ⏸ (Prüfen, Import)',e.name,'#F59E0B','');n++;
   });
   buckets.reactivateInactive.forEach((it,i)=>{
     if(!checked('reactivateInactive',i)||!it.match)return;
-    const e=it.match.entry;
+    const e=liveEntry(it);
     e.active=true;e.paused=false;e.pauseReason=null;e.pauseUntil=null;
     log('Reaktiviert (war inaktiv) ▶ (Import)',e.name,'#8B5CF6','');n++;
   });
