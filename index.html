@@ -361,7 +361,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
   <div id="presence-bar" style="display:flex;align-items:center;gap:4px;margin-left:4px"></div>
   <button onclick="toggleDark()" class="hb" title="Dark Mode" style="font-size:14px">🌙</button>
   <button onclick="openGuide()" class="hb" title="Anleitung" style="font-size:14px">❓</button>
-  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.52</span>
+  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.53</span>
   <button onclick="doLogout()" class="hb" title="Abmelden" style="font-size:14px" id="logout-btn">⏻</button>
   <button onclick="toggleMobileView()" id="mobile-btn" class="hb" title="Mobile Ansicht" style="font-size:14px">📱</button>
   <div id="more-w" class="admin-only">
@@ -3193,6 +3193,56 @@ function exportMyRapporteICS(){
   dlICS(buildRappICS(mine),`rapporte_${(currentUser||'alle').split(' ').pop()}.ics`);
   showToast('📅 Geplante Rapporte → Outlook',2500);
 }
+let _rpeId=null;
+function openRapportEdit(id){
+  const r=rapporte.find(x=>x.id===id);if(!r)return;
+  _rpeId=id;
+  const set=(k,v)=>{const el=document.getElementById('rpe-'+k);if(el)el.value=v??'';};
+  set('type',r.type);set('date',r.date);set('time',r.time||'');set('dur',String(r.dur||60));set('addr',r.addr||'');set('ort',r.ort||'');set('note',r.note||'');
+  const dSel=document.getElementById('rpe-dept');
+  const opts=getAllDepts();if(r.dept&&!opts.includes(r.dept))opts.push(r.dept);
+  dSel.innerHTML='<option value="">— keine / übergreifend —</option>'+opts.map(d=>`<option value="${d.replace(/"/g,'&quot;')}">${d}</option>`).join('');dSel.value=r.dept||'';
+  document.getElementById('rpe-auds').innerHTML=auditors.map(a=>`<label style="display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border:1px solid var(--bd);border-radius:16px;font-size:12px;cursor:pointer;background:var(--sf2)"><input type="checkbox" value="${a.replace(/"/g,'&quot;')}" ${(r.auditors||[]).includes(a)?'checked':''}> ${a}</label>`).join('');
+  window._rpePendingLat=r.lat||null;window._rpePendingLng=r.lng||null;
+  const h=document.getElementById('rpe-addr-hint');if(h)h.textContent='';
+  const sw=document.getElementById('rpe-series-wrap');
+  const hasFollow=r.seriesId&&rapporte.some(x=>x.seriesId===r.seriesId&&x.planned&&x.date>r.date);
+  sw.style.display=hasFollow?'flex':'none';document.getElementById('rpe-series').checked=false;
+  document.getElementById('rpe-btn-done').style.display=r.planned?'':'none';
+  document.getElementById('rpe-btn-undo').style.display=r.planned?'none':'';
+  document.getElementById('rpe-title').textContent=(r.planned?'📋 Rapport bearbeiten':'✓ Rapport (teilgenommen)')+(r.seriesId?' 🔁':'');
+  document.getElementById('rpe-bg').style.display='flex';
+}
+function rpeRefresh(){
+  saveNow();renderRapporte();renderOverview();renderDeptTable();
+  if(typeof renderKW==='function'&&curView==='cal')renderKW();
+  if(document.getElementById('mob-plan-list'))renderMobPlan();
+}
+function rpeAction(action){
+  const r=rapporte.find(x=>x.id===_rpeId);if(!r)return;
+  const close=()=>{document.getElementById('rpe-bg').style.display='none';};
+  if(action==='cancel'){close();rmRapport(r.id);return;}
+  if(action==='done'){r.planned=false;close();rpeRefresh();showToast('✓ Teilnahme bestätigt');return;}
+  if(action==='undo'){r.planned=true;close();rpeRefresh();showToast('↩ Wieder auf geplant gesetzt');return;}
+  // Speichern
+  const g=k=>document.getElementById('rpe-'+k).value;
+  const auds=[...document.querySelectorAll('#rpe-auds input:checked')].map(x=>x.value);
+  if(!g('date')){showToast('Datum erforderlich');return;}
+  if(!auds.length){showToast('Mindestens einen Auditor wählen');return;}
+  const addr=g('addr').trim();
+  const shared={type:g('type'),time:g('time'),dur:+g('dur')||60,dept:g('dept'),addr,lat:addr?window._rpePendingLat||null:null,lng:addr?window._rpePendingLng||null:null,ort:g('ort').trim(),auditors:auds};
+  Object.assign(r,shared,{date:g('date'),note:g('note').trim()});
+  let n=0;
+  if(r.seriesId&&document.getElementById('rpe-series').checked){
+    rapporte.filter(x=>x.seriesId===r.seriesId&&x.planned&&x.id!==r.id&&x.date>r.date).forEach(x=>{Object.assign(x,shared);n++;});
+  }
+  close();rpeRefresh();
+  showToast(n?`✓ Gespeichert (+ ${n} folgende Serientermine)`:'✓ Gespeichert',2500);
+}
+function moveRapportTo(id,ds){
+  const r=rapporte.find(x=>x.id===id);if(!r||r.date===ds)return;
+  r.date=ds;rpeRefresh();showToast('📅 Verschoben auf '+fd(ds));
+}
 function confirmRapport(id){
   const r=rapporte.find(x=>x.id===id);if(!r)return;
   r.planned=false;
@@ -3474,7 +3524,7 @@ function renderWeekView(kw){
         ${dayP.length?`<div style="display:flex;gap:3px"><button onclick="kwRoute_day('${ds}')"><i class="ti ti-map-2"></i></button><button onclick="kwPrint_day('${ds}')"><i class="ti ti-printer"></i></button></div>`:''}
       </div>
       ${fer.map(f=>`<div class="kwfer">🌴 ${f.auditor.split(' ').pop()}: ${f.label}</div>`).join('')}
-      ${(()=>{const rs=rapporte.filter(r=>r.date===ds&&(!audFilter||(r.auditors||[]).includes(audFilter))).sort((a,b)=>(a.time||'').localeCompare(b.time||''));return rs.map(r=>`<div class="kwe" style="border-left:3px solid #0EA5E9;${r.planned?'':'background:#F0F9FF'}"><div class="kwe-top"><div class="kwen" style="color:#0369A1">${r.planned?'':'✓ '}📋 ${r.type}${r.time?' '+r.time:''}${r.dept?`<div style="font-size:10px;font-weight:400;color:var(--tx3)">${r.dept}${r.ort?' · '+r.ort:''}</div>`:''}</div><span style="display:flex;gap:2px">${(r.auditors||[]).map(a=>`<span class="kwea" style="background:${aC(a)}">${a.split(' ').pop()}</span>`).join('')}</span></div>${r.planned?`<div class="kwe-move" style="display:flex;gap:4px;padding:2px 6px 3px;border-top:1px solid var(--bd)"><button onclick="confirmRapport(${r.id})" style="padding:1px 6px;border-radius:3px;border:none;background:#10B981;color:#fff;font-size:9px;cursor:pointer;line-height:1.4">✓ Teilgenommen</button><button onclick="moveRapport(${r.id})" style="padding:1px 5px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">📅 Verschieben</button></div>`:''}</div>`).join('');})()}
+      ${(()=>{const rs=rapporte.filter(r=>r.date===ds&&(!audFilter||(r.auditors||[]).includes(audFilter))).sort((a,b)=>(a.time||'').localeCompare(b.time||''));return rs.map(r=>`<div class="kwe" style="border-left:3px solid #0EA5E9;${r.planned?'':'background:#F0F9FF'}"><div class="kwe-top" onclick="openRapportEdit(${r.id})" style="cursor:pointer"><div class="kwen" style="color:#0369A1">${r.planned?'':'✓ '}📋 ${r.type}${r.seriesId?' 🔁':''}${r.time?' '+r.time:''}${(r.dept||r.ort)?`<div style="font-size:10px;font-weight:400;color:var(--tx3)">${[r.dept,r.ort].filter(Boolean).join(' · ')}</div>`:''}</div><span style="display:flex;gap:2px;flex-wrap:wrap;justify-content:flex-end">${(r.auditors||[]).map(a=>`<span class="kwea" style="background:${aC(a)}">${a.split(' ').pop()}</span>`).join('')}</span></div>${r.planned?`<div class="kwe-move" style="display:flex;gap:2px;padding:2px 6px 3px;border-top:1px solid var(--bd)"><button onclick="moveRapportTo(${r.id},'${rpAddDays(kwToDate(kw),-3)}')" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">←</button>${days.map((day,dj)=>`<button onclick="moveRapportTo(${r.id},'${rpAddDays(kwToDate(kw),dj)}')" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:${rpAddDays(kwToDate(kw),dj)===ds?'#0EA5E9':'var(--sf2)'};color:${rpAddDays(kwToDate(kw),dj)===ds?'#fff':'var(--tx2)'};font-size:9px;cursor:pointer;line-height:1.4">${day}</button>`).join('')}<button onclick="moveRapportTo(${r.id},'${kwToDate(kw+1)}')" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">→</button></div>`:''}</div>`).join('');})()}
       ${(()=>{const bp=beratPlan.filter(p=>p.date===ds&&(!audFilter||p.auditor===audFilter));return bp.map(p=>{const e=data.find(x=>x.id===p.bsId);const audCol=aC(p.auditor||'');return`<div class="kwe" style="border-left:3px solid #8B5CF6"><div class="kwe-top" onclick="openBeratPlanPop(${p.id})" style="cursor:pointer"><div class="kwen">💬 ${e?e.name:'(gel.)'}</div><span class="kwea" style="background:${audCol}">${(p.auditor||'?').split(' ').pop()}</span></div>${p.note?`<div style="font-size:10px;color:#7C3AED;padding:2px 6px 3px">${p.note}</div>`:''}<div class="kwe-move" style="display:flex;gap:2px;padding:2px 6px 3px;border-top:1px solid var(--bd)"><button onclick="moveBeratPlan(${p.id},'${kwToDate(kw-1)}',4)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">←</button>${days.map((day,dj)=>`<button onclick="moveBeratPlan(${p.id},'${kwToDate(kw)}',${dj})" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:${dj===di?'var(--blue)':'var(--sf2)'};color:${dj===di?'#fff':'var(--tx2)'};font-size:9px;cursor:pointer;line-height:1.4">${day}</button>`).join('')}<button onclick="moveBeratPlan(${p.id},'${kwToDate(kw+1)}',0)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">→</button></div></div>`;}).join('');})()}
       ${(()=>{const done=data.flatMap(e=>(e.beratungen||[]).filter(b=>b.date===ds).map(b=>({...b,eName:e.name,eId:e.id})));return done.map(b=>{const bAudCol=aC(b.auditor||'');return`<div class="kwe" style="background:#F5F3FF;border-left:3px solid #8B5CF6;cursor:pointer" onclick="openBeratDoneUndo(${b.eId},${b.id})"><div class="kwe-top"><div class="kwen" style="color:#7C3AED">💬 ${b.eName}</div><span class="kwea" style="background:${bAudCol}">${(b.auditor||'?').split(' ').pop()}</span></div>${b.note?`<div style="font-size:10px;color:#7C3AED;padding:2px 6px 3px">${b.note}</div>`:''}</div>`;}).join('');})()}
       ${dayAudits.map(h=>`<div class="kwe" style="background:#F0FDF4;border-left:3px solid #10B981;cursor:pointer" onclick="openAuditUndo(${h.eId},'${h.date}')"><div class="kwe-top"><div class="kwen" style="color:#065F46">✓ ${h.eName}</div><span class="kwea" style="background:#10B981">${(h.auditor||'?').split(' ').pop()}</span></div></div>`).join('')}
@@ -4660,9 +4710,11 @@ function renderMobPlan(){
   const dayAudits=data.filter(e=>(e.auditHistory||[]).some(h=>h.date===_mobDate&&(!currentUser||h.auditor===currentUser)));
   const dayBeratDone=data.filter(e=>(e.beratungen||[]).some(b=>b.date===_mobDate&&(!currentUser||b.auditor===currentUser)));
   const dayPersonDone=personAudits.filter(p=>!p.planned&&p.date===_mobDate&&(!currentUser||p.auditor===currentUser));
-  document.getElementById('mob-count-label').textContent=`${dayPlans.length+dayBeratPlans.length+dayPersonPlans.length} geplant · ${dayAudits.length+dayBeratDone.length+dayPersonDone.length} erledigt`;
+  const _dayRapp=rapporte.filter(r=>r.date===_mobDate&&(!currentUser||(r.auditors||[]).includes(currentUser))).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+  const _rpPlanN=_dayRapp.filter(r=>r.planned).length,_rpDoneN=_dayRapp.length-_rpPlanN;
+  document.getElementById('mob-count-label').textContent=`${dayPlans.length+dayBeratPlans.length+dayPersonPlans.length+_rpPlanN} geplant · ${dayAudits.length+dayBeratDone.length+dayPersonDone.length+_rpDoneN} erledigt`;
   const el=document.getElementById('mob-plan-list');
-  if(!dayPlans.length&&!dayBeratPlans.length&&!dayPersonPlans.length&&!dayAudits.length&&!dayBeratDone.length&&!dayPersonDone.length){
+  if(!dayPlans.length&&!dayBeratPlans.length&&!dayPersonPlans.length&&!dayAudits.length&&!dayBeratDone.length&&!dayPersonDone.length&&!_dayRapp.length){
     el.innerHTML=`<div style="text-align:center;padding:40px 20px;color:var(--tx3)">
       <div style="font-size:40px;margin-bottom:12px">${isToday?'☀️':'📅'}</div>
       <div style="font-size:14px;font-weight:600">Keine Audits ${isToday?'heute':'an diesem Tag'}</div>
@@ -4728,13 +4780,14 @@ function renderMobPlan(){
   };
   const _stops=mobOrderedStops(dayPlans,dayBeratPlans,dayPersonPlans);
   // Rapporte des Tages (eigener Block oben, nicht Teil der Fahrzeit-Route)
-  const _dayRapp=rapporte.filter(r=>r.date===_mobDate&&(!currentUser||(r.auditors||[]).includes(currentUser))).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
   _dayRapp.forEach(r=>{
     html+=`<div style="background:var(--sf);border:1px solid var(--bd);border-left:4px solid #0EA5E9;border-radius:12px;padding:12px 14px;margin-bottom:10px">
       <div style="font-size:10px;font-weight:700;color:#0369A1;margin-bottom:2px">${r.planned?'📋 RAPPORT GEPLANT':'✓ TEILGENOMMEN'}${r.time?' · '+r.time+' Uhr':''}</div>
-      <div style="font-size:14px;font-weight:700;color:var(--tx)">${r.type}</div>
-      <div style="font-size:12px;color:var(--tx2)">${[r.dept,r.ort].filter(Boolean).join(' · ')}</div>
-      ${r.addr?`<div style="font-size:11px;color:var(--tx2);margin-top:2px">📍 ${r.addr}</div>`:''}
+      <div onclick="openRapportEdit(${r.id})" style="cursor:pointer">
+        <div style="font-size:14px;font-weight:700;color:var(--tx)">${r.type}${r.seriesId?' 🔁':''} <span style="font-size:11px;font-weight:400;color:var(--tx3)">✏️</span></div>
+        <div style="font-size:12px;color:var(--tx2)">${[r.dept,r.ort].filter(Boolean).join(' · ')}</div>
+        ${r.addr?`<div style="font-size:11px;color:var(--tx2);margin-top:2px">📍 ${r.addr}</div>`:''}
+      </div>
       ${r.note?`<div style="font-size:11px;color:var(--tx3);margin-top:2px">${r.note}</div>`:''}
       ${r.planned?`<div style="display:flex;gap:6px;margin-top:10px">
         <button onclick="confirmRapport(${r.id})" style="flex:1;padding:9px;border:none;border-radius:9px;background:#10B981;color:#fff;font-size:13px;font-weight:600;cursor:pointer">✓ Teilgenommen</button>
@@ -6895,6 +6948,7 @@ function selectAddr(label,lat,lng,prefix){
   if(prefix==='f'){window._pendingLat=lat||null;window._pendingLng=lng||null;}
   else if(prefix==='pop'){window._popPendingLat=lat||null;window._popPendingLng=lng||null;}
   else if(prefix==='rp'){window._rpPendingLat=lat||null;window._rpPendingLng=lng||null;}
+  else if(prefix==='rpe'){window._rpePendingLat=lat||null;window._rpePendingLng=lng||null;}
   else{window._paPendingLat=lat||null;window._paPendingLng=lng||null;}
 }
 
@@ -7290,6 +7344,42 @@ ALTER TABLE audit_state ADD COLUMN IF NOT EXISTS "rapporte" text;</pre>
     <div id="sb-list"></div>
     <div style="display:flex;justify-content:flex-end;margin-top:16px;border-top:1px solid var(--bd);padding-top:12px">
       <button onclick="document.getElementById('pisb-bg').style.display='none'" style="padding:8px 16px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf2);cursor:pointer;font-size:12px;color:var(--tx)">Schliessen</button>
+    </div>
+  </div>
+</div>
+<!-- RAPPORT BEARBEITEN -->
+<div id="rpe-bg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:4100;align-items:center;justify-content:center" onclick="if(event.target===this)this.style.display='none'">
+  <div style="background:var(--sf);border-radius:12px;padding:20px;width:560px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)">
+    <h3 id="rpe-title" style="font-size:15px;font-weight:700;color:var(--tx);margin-bottom:12px">📋 Rapport bearbeiten</h3>
+    <div class="frow" style="flex-wrap:wrap">
+      <div><label>Art</label><select id="rpe-type"><option>SiBe-Rapport</option><option>Bauführerrapport</option><option>Polierrapport</option><option>Andere Sitzung</option></select></div>
+      <div><label>Datum</label><input type="date" id="rpe-date"></div>
+      <div><label>Zeit</label><input type="time" id="rpe-time"></div>
+      <div><label>Dauer</label><select id="rpe-dur"><option value="30">30 min</option><option value="45">45 min</option><option value="60">1 h</option><option value="90">1.5 h</option><option value="120">2 h</option><option value="180">3 h</option><option value="240">4 h</option></select></div>
+    </div>
+    <div class="frow" style="flex-wrap:wrap">
+      <div><label>Abteilung</label><select id="rpe-dept"></select></div>
+      <div style="flex:1;min-width:200px;position:relative">
+        <label>Adresse <span id="rpe-addr-hint" style="font-weight:400;font-size:10px;color:var(--blue)"></span></label>
+        <input type="text" id="rpe-addr" placeholder="Strasse Nr, PLZ Ort" oninput="window._rpePendingLat=null;window._rpePendingLng=null;addrAutocomplete(this.value,'rpe')" autocomplete="off">
+        <div id="rpe-addr-suggestions" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--sf);border:1px solid var(--bd);border-radius:var(--rs);z-index:999;max-height:180px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.15)"></div>
+      </div>
+    </div>
+    <div class="frow"><div style="flex:1"><label>Thema / Raum</label><input type="text" id="rpe-ort"></div><div style="flex:1"><label>Notiz</label><input type="text" id="rpe-note"></div></div>
+    <label style="font-size:11px;color:var(--tx2);display:block;margin:6px 0 4px">Teilnehmende Auditoren</label>
+    <div id="rpe-auds" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px"></div>
+    <label id="rpe-series-wrap" style="display:none;align-items:center;gap:6px;font-size:12px;color:#0369A1;margin-bottom:12px"><input type="checkbox" id="rpe-series"> 🔁 Zeit, Dauer, Ort, Art, Abteilung und Teilnehmende auch für alle <b>folgenden geplanten</b> Termine der Serie übernehmen</label>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;border-top:1px solid var(--bd);padding-top:12px">
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button id="rpe-btn-done" onclick="rpeAction('done')" style="padding:8px 12px;border:none;border-radius:var(--rs);background:#10B981;color:#fff;font-size:12px;font-weight:600;cursor:pointer">✓ Teilgenommen</button>
+        <button id="rpe-btn-undo" onclick="rpeAction('undo')" style="padding:8px 12px;border:1px solid var(--bd);border-radius:var(--rs);background:var(--sf2);color:var(--tx);font-size:12px;cursor:pointer">↩ Wieder geplant</button>
+        <button onclick="rpeAction('cancel')" style="padding:8px 12px;border:1px solid #FCA5A5;border-radius:var(--rs);background:#FEF2F2;color:#DC2626;font-size:12px;cursor:pointer">✕ Absagen / Löschen</button>
+        <button onclick="exportRapportICS(_rpeId)" style="padding:8px 12px;border:1px solid var(--bd);border-radius:var(--rs);background:var(--sf2);color:var(--tx);font-size:12px;cursor:pointer">⬇️ Outlook</button>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button onclick="document.getElementById('rpe-bg').style.display='none'" style="padding:8px 14px;border:1px solid var(--bd);border-radius:var(--rs);background:var(--sf2);color:var(--tx);font-size:12px;cursor:pointer">Schliessen</button>
+        <button onclick="rpeAction('save')" style="padding:8px 14px;border:none;border-radius:var(--rs);background:var(--blue);color:#fff;font-size:12px;font-weight:600;cursor:pointer">Speichern</button>
+      </div>
     </div>
   </div>
 </div>
