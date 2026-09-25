@@ -361,7 +361,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
   <div id="presence-bar" style="display:flex;align-items:center;gap:4px;margin-left:4px"></div>
   <button onclick="toggleDark()" class="hb" title="Dark Mode" style="font-size:14px">🌙</button>
   <button onclick="openGuide()" class="hb" title="Anleitung" style="font-size:14px">❓</button>
-  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.56</span>
+  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.57</span>
   <button onclick="doLogout()" class="hb" title="Abmelden" style="font-size:14px" id="logout-btn">⏻</button>
   <button onclick="toggleMobileView()" id="mobile-btn" class="hb" title="Mobile Ansicht" style="font-size:14px">📱</button>
   <div id="more-w" class="admin-only">
@@ -1173,9 +1173,9 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
 
 <!-- DISTRIBUTE MODAL -->
 <div id="dist-bg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:4000;align-items:center;justify-content:center">
-  <div style="background:var(--sf);border-radius:12px;padding:24px;width:480px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)">
-    <h3 style="font-size:15px;font-weight:700;color:var(--tx);margin-bottom:4px"><i class="ti ti-layout-distribute-horizontal" style="color:var(--blue)"></i> Baustellen geografisch verteilen</h3>
-    <p style="font-size:12px;color:var(--tx2);margin-bottom:16px">Wähle Auditor, KW und Tage – die Baustellen werden geografisch optimal auf die gewählten Tage aufgeteilt.</p>
+  <div style="background:var(--sf);border-radius:12px;padding:24px;width:680px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)">
+    <h3 style="font-size:15px;font-weight:700;color:var(--tx);margin-bottom:4px"><i class="ti ti-layout-distribute-horizontal" style="color:var(--blue)"></i> Baustellen auf die Woche verteilen</h3>
+    <p style="font-size:12px;color:var(--tx2);margin-bottom:16px">Die Baustellen werden so verteilt, dass die Tage möglichst <b>gleich lang</b> sind: Fahrzeit (Rundtour ab Startadresse) + Zeit pro Audit + bereits geplante Termine (Rapporte etc.). Ferientage werden ausgelassen, Unterschied höchstens 1 Baustelle pro Tag.</p>
     
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
       <div><label style="font-size:11px;font-weight:600;color:var(--tx2);display:block;margin-bottom:4px">Auditor</label>
@@ -1189,14 +1189,18 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
     <div style="margin-bottom:14px">
       <label style="font-size:11px;font-weight:600;color:var(--tx2);display:block;margin-bottom:8px">Verfügbare Tage</label>
       <div style="display:flex;gap:6px;flex-wrap:wrap" id="dist-days">
-        <label style="display:flex;align-items:center;gap:4px;padding:6px 12px;background:var(--sf2);border:1px solid var(--bd);border-radius:8px;cursor:pointer;font-size:12px;font-weight:600"><input type="checkbox" value="0" checked style="cursor:pointer"> Mo</label>
-        <label style="display:flex;align-items:center;gap:4px;padding:6px 12px;background:var(--sf2);border:1px solid var(--bd);border-radius:8px;cursor:pointer;font-size:12px;font-weight:600"><input type="checkbox" value="1" checked style="cursor:pointer"> Di</label>
-        <label style="display:flex;align-items:center;gap:4px;padding:6px 12px;background:var(--sf2);border:1px solid var(--bd);border-radius:8px;cursor:pointer;font-size:12px;font-weight:600"><input type="checkbox" value="2" checked style="cursor:pointer"> Mi</label>
-        <label style="display:flex;align-items:center;gap:4px;padding:6px 12px;background:var(--sf2);border:1px solid var(--bd);border-radius:8px;cursor:pointer;font-size:12px;font-weight:600"><input type="checkbox" value="3" checked style="cursor:pointer"> Do</label>
-        <label style="display:flex;align-items:center;gap:4px;padding:6px 12px;background:var(--sf2);border:1px solid var(--bd);border-radius:8px;cursor:pointer;font-size:12px;font-weight:600"><input type="checkbox" value="4" checked style="cursor:pointer"> Fr</label>
+        <label style="display:flex;align-items:center;gap:4px;padding:6px 12px;background:var(--sf2);border:1px solid var(--bd);border-radius:8px;cursor:pointer;font-size:12px;font-weight:600"><input type="checkbox" value="0" checked style="cursor:pointer" onchange="document.getElementById('dist-preview').style.display='none';document.getElementById('dist-confirm-btn').style.display='none'"><span class="dd-lbl">Mo</span></label>
+        <label style="display:flex;align-items:center;gap:4px;padding:6px 12px;background:var(--sf2);border:1px solid var(--bd);border-radius:8px;cursor:pointer;font-size:12px;font-weight:600"><input type="checkbox" value="1" checked style="cursor:pointer" onchange="document.getElementById('dist-preview').style.display='none';document.getElementById('dist-confirm-btn').style.display='none'"><span class="dd-lbl">Di</span></label>
+        <label style="display:flex;align-items:center;gap:4px;padding:6px 12px;background:var(--sf2);border:1px solid var(--bd);border-radius:8px;cursor:pointer;font-size:12px;font-weight:600"><input type="checkbox" value="2" checked style="cursor:pointer" onchange="document.getElementById('dist-preview').style.display='none';document.getElementById('dist-confirm-btn').style.display='none'"><span class="dd-lbl">Mi</span></label>
+        <label style="display:flex;align-items:center;gap:4px;padding:6px 12px;background:var(--sf2);border:1px solid var(--bd);border-radius:8px;cursor:pointer;font-size:12px;font-weight:600"><input type="checkbox" value="3" checked style="cursor:pointer" onchange="document.getElementById('dist-preview').style.display='none';document.getElementById('dist-confirm-btn').style.display='none'"><span class="dd-lbl">Do</span></label>
+        <label style="display:flex;align-items:center;gap:4px;padding:6px 12px;background:var(--sf2);border:1px solid var(--bd);border-radius:8px;cursor:pointer;font-size:12px;font-weight:600"><input type="checkbox" value="4" checked style="cursor:pointer" onchange="document.getElementById('dist-preview').style.display='none';document.getElementById('dist-confirm-btn').style.display='none'"><span class="dd-lbl">Fr</span></label>
       </div>
     </div>
 
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;font-size:12px;color:var(--tx2)">
+      <label style="font-weight:600">Ø Dauer pro Audit vor Ort</label>
+      <input type="number" id="dist-auditmin" min="10" max="240" step="5" style="width:70px;padding:6px 8px;border:1px solid var(--bd);border-radius:var(--rs);background:var(--sf2);color:var(--tx);font-size:12px"> min
+    </div>
     <div id="dist-info" style="padding:10px 12px;background:var(--sf2);border-radius:8px;font-size:12px;color:var(--tx2);margin-bottom:14px">
       Auditor und KW wählen um Vorschau zu sehen...
     </div>
@@ -1213,46 +1217,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
     </div>
   </div>
 </div>
-<!-- DISTRIBUTE MODAL -->
-<div id="dist-bg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:4000;align-items:center;justify-content:center">
-  <div style="background:var(--sf);border-radius:12px;padding:24px;width:480px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)">
-    <h3 style="font-size:15px;font-weight:700;color:var(--tx);margin-bottom:4px"><i class="ti ti-layout-distribute-horizontal" style="color:var(--blue)"></i> Baustellen geografisch verteilen</h3>
-    <p style="font-size:12px;color:var(--tx2);margin-bottom:16px">Wähle Auditor, KW und Tage – die Baustellen werden geografisch optimal auf die gewählten Tage aufgeteilt.</p>
-    
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
-      <div><label style="font-size:11px;font-weight:600;color:var(--tx2);display:block;margin-bottom:4px">Auditor</label>
-        <select id="dist-aud" style="width:100%;padding:7px 9px;border:1px solid var(--bd);border-radius:var(--rs);background:var(--sf2);color:var(--tx);font-size:12px"></select>
-      </div>
-      <div><label style="font-size:11px;font-weight:600;color:var(--tx2);display:block;margin-bottom:4px">Kalenderwoche</label>
-        <select id="dist-kw" style="width:100%;padding:7px 9px;border:1px solid var(--bd);border-radius:var(--rs);background:var(--sf2);color:var(--tx);font-size:12px"></select>
-      </div>
-    </div>
 
-    <div style="margin-bottom:14px">
-      <label style="font-size:11px;font-weight:600;color:var(--tx2);display:block;margin-bottom:8px">Verfügbare Tage</label>
-      <div style="display:flex;gap:6px;flex-wrap:wrap" id="dist-days">
-        ${['Mo','Di','Mi','Do','Fr'].map((d,i)=>`<label style="display:flex;align-items:center;gap:4px;padding:6px 12px;background:var(--sf2);border:1px solid var(--bd);border-radius:8px;cursor:pointer;font-size:12px;font-weight:600">
-          <input type="checkbox" value="${i}" checked style="cursor:pointer"> ${d}
-        </label>`).join('')}
-      </div>
-    </div>
-
-    <div id="dist-info" style="padding:10px 12px;background:var(--sf2);border-radius:8px;font-size:12px;color:var(--tx2);margin-bottom:14px">
-      Auditor und KW wählen um Vorschau zu sehen...
-    </div>
-
-    <div id="dist-preview" style="display:none;margin-bottom:14px">
-      <div style="font-size:12px;font-weight:600;color:var(--tx);margin-bottom:8px">Vorschau Verteilung:</div>
-      <div id="dist-preview-content"></div>
-    </div>
-
-    <div style="display:flex;gap:8px;justify-content:flex-end">
-      <button onclick="document.getElementById('dist-bg').style.display='none'" style="padding:8px 16px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf2);cursor:pointer;font-size:12px;color:var(--tx)">Abbrechen</button>
-      <button onclick="previewDistribute()" style="padding:8px 16px;border-radius:var(--rs);border:none;background:var(--blue);color:#fff;cursor:pointer;font-size:12px;font-weight:600">🔍 Vorschau</button>
-      <button onclick="confirmDistribute()" id="dist-confirm-btn" style="display:none;padding:8px 16px;border-radius:var(--rs);border:none;background:#10B981;color:#fff;cursor:pointer;font-size:12px;font-weight:600">✓ Übernehmen</button>
-    </div>
-  </div>
-</div>
 <!-- MARKER ADJUST MODAL -->
 <div id="marker-adj-bg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:5500;align-items:center;justify-content:center">
   <div style="background:var(--sf);border-radius:12px;padding:0;width:700px;max-width:97vw;max-height:94vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.4);overflow:hidden">
@@ -4379,131 +4344,164 @@ function openDistribute(){
   updateDistInfo();
   kwSel.onchange=updateDistInfo;
   audSel.onchange=updateDistInfo;
+  const amEl=document.getElementById('dist-auditmin');if(amEl)amEl.onchange=updateDistInfo;
 }
 
+function distDayDate(kw,di){return rpAddDays(kwToDate(kw),di);}
+// Fixe Zeit pro Tag (min): Rapporte mit Dauer, geplante Personen-Audits/Beratungen mit Audit-Dauer
+function distFixedMin(aud,ds,auditMin){
+  const rp=rapporte.filter(r=>r.date===ds&&r.auditor===aud).reduce((s,r)=>s+(r.dur||60),0);
+  const pa=personAudits.filter(p=>p.planned&&p.date===ds&&p.auditor===aud).length*auditMin;
+  const bp=beratPlan.filter(p=>p.date===ds&&p.auditor===aud).length*auditMin;
+  return rp+pa+bp;
+}
+function distIsFerien(aud,ds){return ferien.some(f=>f.auditor===aud&&f.von<=ds&&f.bis>=ds);}
 function updateDistInfo(){
   const aud=document.getElementById('dist-aud').value;
   const kw=+document.getElementById('dist-kw').value;
+  const amEl=document.getElementById('dist-auditmin');
+  if(amEl&&!amEl.value)amEl.value=localStorage.getItem('dist_audit_min')||'45';
   const ks=kwToDate(kw),ke=kwToDate(kw+1);
   const kwPlans=plans.filter(p=>p.date>=ks&&p.date<ke&&p.auditor===aud);
   const withCoords=kwPlans.filter(p=>{const e=data.find(x=>x.id===p.bsId);return e&&e.lat&&e.lng;});
-  document.getElementById('dist-info').textContent=
-    `${kwPlans.length} Baustellen in KW ${kw} für ${aud} – ${withCoords.length} mit GPS-Koordinaten`;
+  // Ferientage automatisch abwählen und markieren
+  const names=['Mo','Di','Mi','Do','Fr'];const notes=[];
+  document.querySelectorAll('#dist-days input').forEach(cb=>{
+    const di=+cb.value,ds=distDayDate(kw,di);
+    const fer=distIsFerien(aud,ds);
+    if(fer){cb.checked=false;cb.disabled=true;}else cb.disabled=false;
+    cb.parentElement.style.opacity=fer?'.45':'1';
+    const sp=cb.parentElement.querySelector('.dd-lbl');if(sp)sp.textContent=names[di]+(fer?' 🌴 Ferien':'');
+    const fx=distFixedMin(aud,ds,+amEl.value||45);
+    if(!fer&&fx)notes.push(`${names[di]}: ${Math.round(fx)} min belegt`);
+  });
+  document.getElementById('dist-info').innerHTML=
+    `${kwPlans.length} Baustellen in KW ${kw} für ${aud} – ${withCoords.length} mit Koordinaten`+
+    (notes.length?`<div style="margin-top:4px;font-size:11px;color:var(--tx3)">Bereits geplant: ${notes.join(' · ')}</div>`:'');
+  document.getElementById('dist-preview').style.display='none';
+  document.getElementById('dist-confirm-btn').style.display='none';
 }
-
 function getCheckedDays(){
   return Array.from(document.getElementById('dist-days').querySelectorAll('input:checked'))
     .map(cb=>+cb.value).sort();
 }
 
-function previewDistribute(){
+// Schnelle Tour-Schätzung (Nearest-Neighbour + 2-Opt) für die Suche; exakte Reihenfolge danach per solveRoute
+function distTourSec(D,set){
+  if(!set.length)return 0;
+  let rem=set.slice(),seq=[],cur=0;
+  while(rem.length){let bi=0;rem.forEach((j,i)=>{if(D[cur][j]<D[cur][rem[bi]])bi=i;});cur=rem.splice(bi,1)[0];seq.push(cur);}
+  const cost=s=>{let c=0,p=0;s.forEach(j=>{c+=D[p][j];p=j;});return c+D[p][0];};
+  let best=cost(seq),imp=true;
+  while(imp){imp=false;for(let i=0;i<seq.length-1;i++)for(let k=i+1;k<seq.length;k++){const cand=seq.slice(0,i).concat(seq.slice(i,k+1).reverse(),seq.slice(k+1));const cc=cost(cand);if(cc<best-1){seq=cand;best=cc;imp=true;}}}
+  return best;
+}
+async function previewDistribute(){
   const aud=document.getElementById('dist-aud').value;
   const kw=+document.getElementById('dist-kw').value;
   const days=getCheckedDays();
+  const auditMin=Math.max(5,+document.getElementById('dist-auditmin').value||45);
+  try{localStorage.setItem('dist_audit_min',String(auditMin));}catch(e){}
   if(!days.length){showToast('Bitte mindestens einen Tag wählen');return;}
-  
   const ks=kwToDate(kw),ke=kwToDate(kw+1);
   const kwPlans=plans.filter(p=>p.date>=ks&&p.date<ke&&p.auditor===aud);
   if(!kwPlans.length){showToast('Keine Planungen für diese KW und Auditor');return;}
-  
-  // Get entries with coords
   const entries=kwPlans.map(p=>({plan:p,e:data.find(x=>x.id===p.bsId)})).filter(x=>x.e);
   const withCoords=entries.filter(x=>x.e.lat&&x.e.lng);
   const withoutCoords=entries.filter(x=>!x.e.lat||!x.e.lng);
-  
-  // Geographic clustering with balance constraint
-  const nDays=days.length;
-  const avg=Math.ceil(withCoords.length/nDays);
-  const maxPerDay=avg+2;
-  
-  // Greedy clustering from centroid
-  const assigned=new Array(nDays).fill(null).map(()=>[]);
-  const remaining=[...withCoords];
-  
-  // Start with geographic spread - seed each day with a geographically distant point
-  if(remaining.length>=nDays){
-    // Find northernmost point as first seed
-    remaining.sort((a,b)=>b.e.lat-a.e.lat);
-    assigned[0].push(remaining.splice(0,1)[0]);
-    // For remaining days, find point furthest from all assigned seeds
-    for(let d=1;d<nDays&&remaining.length;d++){
-      let bestIdx=0,bestDist=0;
-      remaining.forEach((item,i)=>{
-        const minDist=assigned.slice(0,d).map(grp=>grp.length?haversine(item.e.lat,item.e.lng,grp[0].e.lat,grp[0].e.lng):0);
-        const dist=Math.min(...minDist);
-        if(dist>bestDist){bestDist=dist;bestIdx=i;}
-      });
-      assigned[d].push(remaining.splice(bestIdx,1)[0]);
+  const info=document.getElementById('dist-info');const oldInfo=info.innerHTML;
+  info.innerHTML='⏳ Berechne Fahrzeiten und beste Verteilung…';
+  await new Promise(r=>setTimeout(r,30));
+  const home=(await getHomeCoords())||(withCoords.length?{lat:withCoords.reduce((s,x)=>s+x.e.lat,0)/withCoords.length,lng:withCoords.reduce((s,x)=>s+x.e.lng,0)/withCoords.length}:{lat:47,lng:8});
+  const pts=[home,...withCoords.map(x=>({lat:x.e.lat,lng:x.e.lng}))];
+  const{D,src}=await getDurationMatrix(pts);
+  const k=days.length,N=withCoords.length;
+  const fixed=days.map(di=>distFixedMin(aud,distDayDate(kw,di),auditMin));
+  // Zielanzahl pro Tag: gleichmässig; bei ungleich belegten Tagen anteilig nach freier Zeit (±1)
+  const DAYMIN=510;
+  const free=fixed.map(f=>Math.max(60,DAYMIN-f));
+  const hasFixed=fixed.some(f=>f>0);
+  let target=hasFixed?free.map(f=>N*f/free.reduce((a,b)=>a+b,0)):days.map(()=>N/k);
+  let base=target.map(t=>Math.floor(t));let rest=N-base.reduce((a,b)=>a+b,0);
+  target.map((t,i)=>[t-Math.floor(t),i]).sort((a,b)=>b[0]-a[0]).slice(0,rest).forEach(([,i])=>base[i]++);
+  const lo=base.map(b=>hasFixed?Math.max(0,b-1):Math.floor(N/k)),hi=base.map(b=>hasFixed?b+1:Math.ceil(N/k));
+  // Startlösung: Sektoren rund um die Startadresse (nach Winkel), in Zielgrössen geschnitten
+  const idx=withCoords.map((x,i)=>({i:i+1,a:Math.atan2(x.e.lat-home.lat,x.e.lng-home.lng)})).sort((p,q)=>p.a-q.a).map(p=>p.i);
+  // besten Startwinkel wählen (Schnitt zwischen den am weitesten entfernten Nachbarn)
+  let bestRot=0,bestGap=-1;
+  for(let r=0;r<idx.length;r++){const a=pts[idx[r]],b=pts[idx[(r+idx.length-1)%idx.length]];const g=haversine(a.lat,a.lng,b.lat,b.lng);if(g>bestGap){bestGap=g;bestRot=r;}}
+  const ring=idx.slice(bestRot).concat(idx.slice(0,bestRot));
+  let groups=[],pos=0;base.forEach(n=>{groups.push(ring.slice(pos,pos+n));pos+=n;});
+  // Lokale Suche: Verschieben/Tauschen, Ziel = längster Tag möglichst kurz + Gesamtzeit
+  const cache={};
+  const dayCost=(d,set)=>{const key=d+':'+set.slice().sort((a,b)=>a-b).join(',');if(key in cache)return cache[key];return cache[key]=distTourSec(D,set)+set.length*auditMin*60+fixed[d]*60;};
+  const total=gs=>{const cs=gs.map((s,d)=>dayCost(d,s));return Math.max(...cs)*3+cs.reduce((a,b)=>a+b,0);};
+  let cur=total(groups),t0=Date.now(),improved=true;
+  while(improved&&Date.now()-t0<6000){
+    improved=false;
+    for(let a=0;a<k&&!improved;a++)for(let b=0;b<k&&!improved;b++){if(a===b)continue;
+      // verschieben a->b
+      if(groups[a].length>lo[a]&&groups[b].length<hi[b])for(let x=0;x<groups[a].length;x++){
+        const ga=groups[a].filter((_,j)=>j!==x),gb=groups[b].concat(groups[a][x]);
+        const g2=groups.slice();g2[a]=ga;g2[b]=gb;const v=total(g2);
+        if(v<cur-1){groups=g2;cur=v;improved=true;break;}
+      }
+      // tauschen
+      if(!improved)for(let x=0;x<groups[a].length&&!improved;x++)for(let y=0;y<groups[b].length;y++){
+        const ga=groups[a].slice(),gb=groups[b].slice();const t=ga[x];ga[x]=gb[y];gb[y]=t;
+        const g2=groups.slice();g2[a]=ga;g2[b]=gb;const v=total(g2);
+        if(v<cur-1){groups=g2;cur=v;improved=true;break;}
+      }
     }
   }
-  
-  // Assign remaining to nearest cluster with balance
-  while(remaining.length){
-    const item=remaining.shift();
-    let bestDay=0,bestDist=Infinity;
-    for(let d=0;d<nDays;d++){
-      if(assigned[d].length>=maxPerDay)continue;
-      if(!assigned[d].length){bestDay=d;break;}
-      const centLat=assigned[d].reduce((s,x)=>s+x.e.lat,0)/assigned[d].length;
-      const centLng=assigned[d].reduce((s,x)=>s+x.e.lng,0)/assigned[d].length;
-      const dist=haversine(item.e.lat,item.e.lng,centLat,centLng);
-      if(dist<bestDist){bestDist=dist;bestDay=d;}
-    }
-    assigned[bestDay].push(item);
-  }
-  
-  // Sort within each day by nearest-neighbor
-  const dayNames=['Mo','Di','Mi','Do','Fr'];
-  const result=assigned.map((grp,di)=>{
-    const sorted=greedySort(grp.map(x=>({...x.plan,bsId:x.plan.bsId,_entry:x.e})),
-      localStorage.getItem('audit_start_lat')||grp[0]?.e?.lat||47,
-      localStorage.getItem('audit_start_lng')||grp[0]?.e?.lng||8);
-    return{dayIdx:days[di],dayName:dayNames[days[di]],items:grp,sorted};
-  });
-  
-  _distResult={result,aud,kw,days,withoutCoords};
-  
-  // Show preview
-  const dayNamesAll=['Mo','Di','Mi','Do','Fr'];
-  document.getElementById('dist-preview-content').innerHTML=
-    result.map(r=>`<div style="margin-bottom:8px;padding:8px 10px;background:var(--sf2);border-radius:8px;border-left:3px solid var(--blue)">
-      <div style="font-size:11px;font-weight:700;color:var(--blue);margin-bottom:4px">${r.dayName} – ${r.items.length} Baustellen</div>
-      ${r.items.map(x=>`<div style="font-size:11px;color:var(--tx2);padding:1px 0">• ${x.e.name}</div>`).join('')}
-    </div>`).join('')+
-    (withoutCoords.length?`<div style="padding:8px 10px;background:#FEF3C7;border-radius:8px;font-size:11px;color:#92400E">
-      ⚠️ ${withoutCoords.length} Baustellen ohne GPS-Koordinaten bleiben auf ${dayNamesAll[days[0]]}.
-    </div>`:'');
-  
-  document.getElementById('dist-preview').style.display='block';
-  document.getElementById('dist-confirm-btn').style.display='inline-flex';
+  info.innerHTML=oldInfo;
+  _distResult={aud,kw,days,auditMin,fixed,D,src,withCoords,withoutCoords,groups};
+  renderDistPreview();
 }
-
+function distDayStats(d){
+  const R=_distResult,set=R.groups[d];
+  const order=set.length?solveRoute(R.D,0,set,0):[];
+  let drive=0,p=0;order.forEach(j=>{drive+=R.D[p][j];p=j;});if(order.length)drive+=R.D[p][0];
+  const auditT=set.length*R.auditMin,fx=R.fixed[d];
+  return{order,drive:drive/60,auditT,fx,total:drive/60+auditT+fx};
+}
+function renderDistPreview(){
+  const R=_distResult;const names=['Mo','Di','Mi','Do','Fr'];
+  const fmt=m=>{m=Math.round(m);return Math.floor(m/60)+':'+String(m%60).padStart(2,'0')+' h';};
+  const st=R.groups.map((_,d)=>distDayStats(d));
+  const maxT=Math.max(...st.map(s=>s.total),1);
+  document.getElementById('dist-preview-content').innerHTML=
+    `<div style="font-size:10px;color:${R.src==='ors'?'#10B981':'#F59E0B'};margin-bottom:8px">${R.src==='ors'?'✓ Fahrzeiten über Strassennetz':'⚠ Fahrzeiten geschätzt (Luftlinie)'} · Rundtour ab/bis Startadresse</div>`+
+    st.map((s,d)=>`<div style="margin-bottom:8px;padding:8px 10px;background:var(--sf2);border-radius:8px;border-left:3px solid var(--blue)">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px">
+        <span style="font-size:12px;font-weight:700;color:var(--blue)">${names[R.days[d]]} ${fd(distDayDate(R.kw,R.days[d]))} – ${s.order.length} Baustellen</span>
+        <span style="font-size:11px;font-weight:700;color:var(--tx)">≈ ${fmt(s.total)}</span>
+      </div>
+      <div style="height:6px;background:var(--bd);border-radius:3px;overflow:hidden;display:flex;margin-bottom:4px">
+        <div title="Fahrzeit" style="width:${s.drive/maxT*100}%;background:#F59E0B"></div><div title="Audits" style="width:${s.auditT/maxT*100}%;background:#3B82F6"></div><div title="Termine" style="width:${s.fx/maxT*100}%;background:#0EA5E9"></div>
+      </div>
+      <div style="font-size:10px;color:var(--tx3);margin-bottom:4px">🚗 ${fmt(s.drive)} · 🏗️ ${fmt(s.auditT)}${s.fx?` · 📋 ${fmt(s.fx)} Termine`:''}</div>
+      ${s.order.map(j=>{const x=R.withCoords[j-1];return`<div style="display:flex;align-items:center;justify-content:space-between;gap:6px;font-size:11px;color:var(--tx2);padding:1px 0">• ${x.e.name}
+        <select onchange="distMoveItem(${j},+this.value)" style="font-size:10px;padding:1px 3px;border:1px solid var(--bd);border-radius:4px;background:var(--sf);color:var(--tx2)">${R.days.map((di,dd)=>`<option value="${dd}"${dd===d?' selected':''}>${names[di]}</option>`).join('')}</select></div>`;}).join('')}
+    </div>`).join('')+
+    (R.withoutCoords.length?`<div style="padding:8px 10px;background:#FEF3C7;border-radius:8px;font-size:11px;color:#92400E">⚠️ ${R.withoutCoords.length} Baustelle(n) ohne Koordinaten werden auf die Tage mit den wenigsten Baustellen verteilt.</div>`:'');
+  document.getElementById('dist-preview').style.display='block';
+  document.getElementById('dist-confirm-btn').style.display='inline-block';
+}
+function distMoveItem(j,toD){
+  const R=_distResult;
+  R.groups=R.groups.map(g=>g.filter(x=>x!==j));R.groups[toD].push(j);
+  renderDistPreview();
+}
 function confirmDistribute(){
-  if(!_distResult)return;
-  const {result,aud,kw,days,withoutCoords}=_distResult;
-  const ks=kwToDate(kw);
-  
-  // Apply: set date for each plan
-  result.forEach(r=>{
-    const d=parseDate(ks);d.setDate(d.getDate()+r.dayIdx);
-    const ds=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-    r.items.forEach(x=>{
-      const planIdx=plans.findIndex(p=>p===x.plan||p.bsId===x.plan.bsId&&p.auditor===aud);
-      if(planIdx>=0)plans[planIdx].date=ds;
-    });
-  });
-  // Baustellen ohne Koordinaten auf ersten Tag
-  if(withoutCoords.length){
-    const d=parseDate(ks);d.setDate(d.getDate()+days[0]);
-    const ds=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-    withoutCoords.forEach(x=>{
-      const planIdx=plans.findIndex(p=>p.bsId===x.plan.bsId&&p.auditor===aud);
-      if(planIdx>=0)plans[planIdx].date=ds;
-    });
-  }
+  const R=_distResult;if(!R||!R.groups)return;
+  const counts=R.groups.map(g=>g.length);
+  R.groups.forEach((g,d)=>{const ds=distDayDate(R.kw,R.days[d]);g.forEach(j=>{R.withCoords[j-1].plan.date=ds;});});
+  // ohne Koordinaten: jeweils auf den Tag mit den wenigsten Baustellen
+  R.withoutCoords.forEach(x=>{const d=counts.indexOf(Math.min(...counts));x.plan.date=distDayDate(R.kw,R.days[d]);counts[d]++;});
   saveNow();renderKW();renderAll();
   document.getElementById('dist-bg').style.display='none';
-  showToast('✓ Baustellen verteilt auf '+result.length+' Tage',3000);
+  showToast('✓ Baustellen verteilt: '+counts.join(' / '),3000);
 }
 
 
