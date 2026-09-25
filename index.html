@@ -361,7 +361,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
   <div id="presence-bar" style="display:flex;align-items:center;gap:4px;margin-left:4px"></div>
   <button onclick="toggleDark()" class="hb" title="Dark Mode" style="font-size:14px">🌙</button>
   <button onclick="openGuide()" class="hb" title="Anleitung" style="font-size:14px">❓</button>
-  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.45</span>
+  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.47</span>
   <button onclick="doLogout()" class="hb" title="Abmelden" style="font-size:14px" id="logout-btn">⏻</button>
   <button onclick="toggleMobileView()" id="mobile-btn" class="hb" title="Mobile Ansicht" style="font-size:14px">📱</button>
   <div id="more-w" class="admin-only">
@@ -378,6 +378,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
       <div style="height:1px;background:var(--bd);margin:4px 0"></div>
       <button onclick="teamExport();toggleMore()"><i class="ti ti-device-floppy"></i> Notfall-Backup</button>
       <label style="display:flex;align-items:center;gap:6px;padding:7px 12px;cursor:pointer;font-size:12px;color:var(--tx);border-bottom:1px solid var(--bd)"><i class="ti ti-upload"></i> Backup laden<input type="file" accept=".json" onchange="loadJSON(this.files[0])" style="display:none"></label>
+      <button onclick="setOrsKey();toggleMore()"><i class="ti ti-route"></i> 🚗 Routen-Schlüssel (Fahrzeit)</button>
       <button onclick="openSupabaseConfig();toggleMore()" id="sb-btn"><i class="ti ti-cloud"></i> <span id="sb-status-lbl">Supabase einrichten</span></button>
       <div style="height:1px;background:var(--bd);margin:4px 0"></div>
       <button onclick="clearGhostAudits();toggleMore()" style="color:#EF4444"><i class="ti ti-ghost"></i> Ghost-Audits löschen</button>
@@ -794,30 +795,8 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
         <span style="font-size:10px;color:var(--tx3)">Tipp: In der Tertial-Ansicht sind einzelne Tage, Wochenenden und KW sichtbar.</span>
       </div>
 
-      <!-- WUNSCHFERIEN: jeder Auditor trägt eigene Wunschtermine ein, alle sehen alle,
-           Admin bestätigt einzeln -> wird zu echten Ferien -->
-      <div class="card" style="margin-bottom:16px">
-        <h3>🎄 Wunschferien</h3>
-        <p style="font-size:11px;color:var(--tx2);margin:4px 0 10px">Trag hier deine gewünschten Ferientermine ein. Alle sehen alle Wünsche, damit ihr euch absprechen könnt. Überschneidungen (2+ Personen gleichzeitig) sind im roten Streifen markiert.</p>
-        <div class="frow" id="wf-form-row">
-          <div id="wf-aud-wrap"></div>
-          <div><label>Von</label><input type="date" id="wf-von"></div>
-          <div><label>Bis</label><input type="date" id="wf-bis"></div>
-          <div><label>Notiz</label><input type="text" id="wf-lbl" placeholder="optional"></div>
-          <button onclick="addWunschFerien()"><i class="ti ti-plus"></i> Wunsch erfassen</button>
-        </div>
-        <div style="margin-top:16px">
-          <div style="font-size:11px;font-weight:600;color:var(--tx2);margin-bottom:8px">Übersicht Wunschferien</div>
-          <div id="wf-chart"></div>
-        </div>
-        <div style="margin-top:16px;border-top:1px solid var(--bd);padding-top:12px">
-          <div style="font-size:11px;font-weight:600;color:var(--tx2);margin-bottom:6px">Eingegebene Wünsche <span style="font-weight:400;color:var(--tx3)">(Admins: ✓ Bestätigen übernimmt den Wunsch in die fixen Ferien)</span></div>
-          <div id="wf-list"></div>
-        </div>
-      </div>
-
       <!-- BESTÄTIGTE / FIXE FERIEN -->
-      <div class="card">
+      <div class="card" style="margin-bottom:16px">
         <h3>✅ Ferien (fix)</h3>
         <div class="frow">
           <div><label>Auditor</label><select id="fer-aud"><option value="">—</option></select></div>
@@ -836,6 +815,28 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
         </div>
         <div id="fer-list-wrap" style="display:none">
           <div id="fer-list"></div>
+        </div>
+      </div>
+
+      <!-- WUNSCHFERIEN: jeder Auditor trägt eigene Wunschtermine ein, alle sehen alle,
+           Admin bestätigt einzeln -> wird zu echten Ferien -->
+      <div class="card">
+        <h3>🎄 Wunschferien</h3>
+        <p style="font-size:11px;color:var(--tx2);margin:4px 0 10px">Trag hier deine gewünschten Ferientermine ein. Alle sehen alle Wünsche, damit ihr euch absprechen könnt. Überschneidungen (2+ Personen gleichzeitig) sind im roten Streifen markiert.</p>
+        <div class="frow" id="wf-form-row">
+          <div id="wf-aud-wrap"></div>
+          <div><label>Von</label><input type="date" id="wf-von"></div>
+          <div><label>Bis</label><input type="date" id="wf-bis"></div>
+          <div><label>Notiz</label><input type="text" id="wf-lbl" placeholder="optional"></div>
+          <button onclick="addWunschFerien()"><i class="ti ti-plus"></i> Wunsch erfassen</button>
+        </div>
+        <div style="margin-top:16px">
+          <div style="font-size:11px;font-weight:600;color:var(--tx2);margin-bottom:8px">Übersicht Wunschferien</div>
+          <div id="wf-chart"></div>
+        </div>
+        <div style="margin-top:16px;border-top:1px solid var(--bd);padding-top:12px">
+          <div style="font-size:11px;font-weight:600;color:var(--tx2);margin-bottom:6px">Eingegebene Wünsche <span style="font-weight:400;color:var(--tx3)">(Admins: ✓ Bestätigen übernimmt den Wunsch in die fixen Ferien)</span></div>
+          <div id="wf-list"></div>
         </div>
       </div>
     </div>
@@ -1487,7 +1488,7 @@ function saveNow(){
   try{localStorage.setItem('anliker_berat_plan',JSON.stringify(beratPlan));localStorage.setItem(SK,JSON.stringify({data,plans,tlog,auditors,ferien,ferienWunsch,ghostAudits:window._ghostAudits||[],personAudits,v:4}));localStorage.setItem('anliker_pi_collectbox',JSON.stringify(window._piCollectBox||[]));localStorage.setItem('anliker_temp_workers',JSON.stringify(window._tempWorkers||[]));}catch(e){}
   sbPush();
 }
-function load(){try{const r=localStorage.getItem(SK);if(!r)return false;const p=JSON.parse(r);if(p.data)data=p.data;if(p.plans)plans=p.plans;if(p.tlog)tlog=p.tlog;if(p.auditors)auditors=p.auditors;if(p.ferien)ferien=p.ferien;if(p.ferienWunsch)ferienWunsch=p.ferienWunsch;if(p.ghostAudits)window._ghostAudits=p.ghostAudits;if(p.personAudits)personAudits=p.personAudits;try{window._piCollectBox=JSON.parse(localStorage.getItem('anliker_pi_collectbox')||'[]');}catch(e){window._piCollectBox=[];}try{window._tempWorkers=JSON.parse(localStorage.getItem('anliker_temp_workers')||'[]');}catch(e){window._tempWorkers=[];}return true;}catch(e){return false;}}
+function load(){try{const r=localStorage.getItem(SK);if(!r)return false;const p=JSON.parse(r);if(p.data)data=p.data;if(p.plans)plans=p.plans;if(p.tlog)tlog=p.tlog;if(p.auditors)auditors=p.auditors;if(p.ferien)ferien=p.ferien;if(p.ferienWunsch)ferienWunsch=p.ferienWunsch;if(p.ghostAudits)window._ghostAudits=p.ghostAudits;if(p.personAudits)personAudits=p.personAudits;try{window._piCollectBox=JSON.parse(localStorage.getItem('anliker_pi_collectbox')||'[]');}catch(e){window._piCollectBox=[];}try{window._tempWorkers=JSON.parse(localStorage.getItem('anliker_temp_workers')||'[]');}catch(e){window._tempWorkers=[];}try{window._orsKey=localStorage.getItem('anliker_ors_key')||'';}catch(e){}return true;}catch(e){return false;}}
 function showToast(m,d=2500){const t=document.getElementById('toast');t.textContent=m;t.style.display='block';clearTimeout(t._t);t._t=setTimeout(()=>t.style.display='none',d);}
 function dlJSON(obj,fn){const b=new Blob([JSON.stringify(obj,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=fn;a.click();}
 function teamExport(){dlJSON({data,plans,auditors,ferien,ghostAudits:window._ghostAudits||[],personAudits,savedAt:new Date().toISOString(),type:'team'},'anliker_export_'+today()+'.json');showToast('📤 Export erstellt – auf SharePoint!',3000);}
@@ -4285,7 +4286,6 @@ function renderMobPlan(){
   document.getElementById('mob-date-label').textContent=`${dayNames[d.getDay()]}, ${d.getDate()}.${d.getMonth()+1}.${d.getFullYear()}`;
   // Get plans for this day for current user
   let dayPlans=plans.filter(p=>p.date===_mobDate&&(!currentUser||p.auditor===currentUser));
-  if(_mobGPSPos&&dayPlans.length>1)dayPlans=greedySort(dayPlans,_mobGPSPos.lat,_mobGPSPos.lng);
   const dayBeratPlans=beratPlan.filter(p=>p.date===_mobDate&&(!currentUser||p.auditor===currentUser));
   const dayPersonPlans=personAudits.filter(p=>p.planned&&p.date===_mobDate&&(!currentUser||p.auditor===currentUser));
   const dayAudits=data.filter(e=>(e.auditHistory||[]).some(h=>h.date===_mobDate&&(!currentUser||h.auditor===currentUser)));
@@ -4301,11 +4301,13 @@ function renderMobPlan(){
     return;
   }
   let html='';
-  // 1. Geplante Audits (oben)
-  dayPlans.forEach(p=>{
-    const e=data.find(x=>x.id===p.bsId);if(!e)return;
+  // 1.-2b. Geplante Stopps (Baustellen-Audits, Beratungen, Personen-Audits). Mit optimierter
+  // Route in Routen-Reihenfolge inkl. Fahrzeit-Etappen, sonst wie bisher nach Typ gruppiert.
+  const _cardFns={
+    P:p=>{
+    const e=data.find(x=>x.id===p.bsId);if(!e)return'';
     const col=aC(p.auditor||'');
-    html+=`<div style="padding:14px;background:var(--sf);border-radius:12px;margin-bottom:10px;border-left:4px solid ${col};box-shadow:0 2px 8px rgba(0,0,0,.08)">
+    return`<div style="padding:14px;background:var(--sf);border-radius:12px;margin-bottom:10px;border-left:4px solid ${col};box-shadow:0 2px 8px rgba(0,0,0,.08)">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
         <span style="font-size:10px;font-weight:700;color:${col}">GEPLANT</span>
         <span style="font-size:11px;color:var(--tx3)">${e.dept||''}</span>
@@ -4319,11 +4321,10 @@ function renderMobPlan(){
         <button onclick="openMobPlanMenu(${e.id},'${p.date}')" style="padding:9px 12px;background:var(--sf2);border:1px solid var(--bd);border-radius:8px;cursor:pointer;font-size:16px;line-height:1">⋯</button>
       </div>
     </div>`;
-  });
-  // 2. Geplante Beratungen
-  dayBeratPlans.forEach(p=>{
-    const e=data.find(x=>x.id===p.bsId);if(!e)return;
-    html+=`<div style="padding:14px;background:var(--sf);border-radius:12px;margin-bottom:10px;border-left:4px solid #8B5CF6;box-shadow:0 2px 8px rgba(0,0,0,.08)">
+  },
+    B:p=>{
+    const e=data.find(x=>x.id===p.bsId);if(!e)return'';
+    return`<div style="padding:14px;background:var(--sf);border-radius:12px;margin-bottom:10px;border-left:4px solid #8B5CF6;box-shadow:0 2px 8px rgba(0,0,0,.08)">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
         <span style="font-size:10px;font-weight:700;color:#8B5CF6">💬 BERATUNG GEPLANT</span>
         <span style="font-size:11px;color:var(--tx3)">${e.dept||''}</span>
@@ -4337,11 +4338,10 @@ function renderMobPlan(){
         <button onclick="openMobBeratMenu(${p.id})" style="padding:9px 12px;background:var(--sf2);border:1px solid var(--bd);border-radius:8px;cursor:pointer;font-size:16px;line-height:1">⋯</button>
       </div>
     </div>`;
-  });
-  // 2b. Geplante Personen-Audits - verhalten sich genau wie Baustellen-Audits (nur ✓ statt Fehlt-Option, mobil vereinfacht)
-  dayPersonPlans.forEach(p=>{
+  },
+    A:p=>{
     const col=aC(p.auditor||'');
-    html+=`<div style="padding:14px;background:var(--sf);border-radius:12px;margin-bottom:10px;border-left:4px solid ${col};box-shadow:0 2px 8px rgba(0,0,0,.08)">
+    return`<div style="padding:14px;background:var(--sf);border-radius:12px;margin-bottom:10px;border-left:4px solid ${col};box-shadow:0 2px 8px rgba(0,0,0,.08)">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
         <span style="font-size:10px;font-weight:700;color:${col}">👤 PERSONEN-AUDIT GEPLANT</span>
         <span style="font-size:11px;color:var(--tx3)">${p.kat||''}</span>
@@ -4355,7 +4355,12 @@ function renderMobPlan(){
         <button onclick="openMobPAMenu(${p.id})" style="padding:9px 12px;background:var(--sf2);border:1px solid var(--bd);border-radius:8px;cursor:pointer;font-size:16px;line-height:1">⋯</button>
       </div>
     </div>`;
-  });
+  },
+  };
+  const _stops=mobOrderedStops(dayPlans,dayBeratPlans,dayPersonPlans);
+  html+=mobRouteBannerHTML(_stops);
+  _stops.forEach(st=>{html+=mobLegHTML(st);html+=_cardFns[st.type](st.ref);});
+  html+=mobReturnLegHTML(_stops);
   // 3. Erledigte Audits (unten)
   dayAudits.forEach(e=>{
     const h=(e.auditHistory||[]).find(h=>h.date===_mobDate);
@@ -4431,14 +4436,13 @@ function mobPlanFor(id){
 let _mobGPSPos=null;
 function mobSortByGPS(){
   const btn=document.getElementById('mob-gps-btn');
-  if(!navigator.geolocation){showToast('GPS nicht verfügbar auf diesem Gerät',3000);return;}
+  if(!navigator.geolocation){showToast('GPS nicht verfügbar – Route startet an der Startadresse',3000);computeMobRoute();return;}
   if(btn){btn.textContent='⏳ GPS…';btn.disabled=true;btn.style.background='#EFF6FF';}
   navigator.geolocation.getCurrentPosition(
     pos=>{
       _mobGPSPos={lat:pos.coords.latitude,lng:pos.coords.longitude};
-      if(btn){btn.textContent='📍 ✓';btn.disabled=false;btn.style.background='#D1FAE5';}
-      renderMobPlan();
-      showToast('✓ Nach aktuellem Standort sortiert',2500);
+      if(btn){btn.textContent='⏳ Route…';}
+      computeMobRoute().finally(()=>{if(btn){btn.textContent='📍 ✓';btn.disabled=false;btn.style.background='#D1FAE5';}});
     },
     err=>{
       if(btn){btn.textContent='📍 Sortieren';btn.disabled=false;btn.style.background='';}
@@ -4450,6 +4454,176 @@ function mobSortByGPS(){
     },
     {timeout:10000,maximumAge:30000,enableHighAccuracy:true}
   );
+}
+// ═══ ROUTEN-OPTIMIERUNG NACH FAHRZEIT ═══
+// Start = aktueller GPS-Standort (sonst Startadresse), Ende = Startadresse (Rundtour).
+// Fahrzeiten kommen als Matrix von openrouteservice (Strassennetz). Ohne Schlüssel oder ohne
+// Netz: Schätzung aus Luftlinie (Umwegfaktor). Reihenfolge: bis 12 Stopps exakt optimal
+// (Held-Karp), darüber Nearest-Neighbour + 2-Opt. Optional fester erster Stopp.
+let _mobRoute=null;            // {date,keys:[...],legs:[sec],back:sec,total:sec,src:'ors'|'air'}
+let _mobFirstPin={};           // date -> stopKey (fest gewählter erster Stopp)
+const _orsMatrixCache={};
+function mobDayStopList(dayPlans,dayBeratPlans,dayPersonPlans){
+  const out=[];
+  dayPlans.forEach(p=>{const e=data.find(x=>x.id===p.bsId);if(e)out.push({key:'P'+p.bsId,type:'P',ref:p,lat:e.lat,lng:e.lng,addr:e.addr||'',name:e.name});});
+  dayBeratPlans.forEach(p=>{const e=data.find(x=>x.id===p.bsId);if(e)out.push({key:'B'+p.id,type:'B',ref:p,lat:e.lat,lng:e.lng,addr:e.addr||'',name:'💬 '+e.name});});
+  dayPersonPlans.forEach(p=>out.push({key:'A'+p.id,type:'A',ref:p,lat:p.lat,lng:p.lng,addr:p.addr||'',name:'👤 '+p.person}));
+  return out;
+}
+function mobCurrentDayStops(){
+  const f=x=>x.date===_mobDate&&(!currentUser||x.auditor===currentUser);
+  return mobDayStopList(plans.filter(f),beratPlan.filter(f),personAudits.filter(p=>p.planned&&f(p)));
+}
+// Reihenfolge für die Anzeige: gespeicherte Route (erledigte Stopps fallen raus, neue hinten an),
+// sonst Standard-Gruppierung nach Typ.
+function mobOrderedStops(dayPlans,dayBeratPlans,dayPersonPlans){
+  const stops=mobDayStopList(dayPlans,dayBeratPlans,dayPersonPlans);
+  if(!_mobRoute||_mobRoute.date!==_mobDate)return stops;
+  const pos={};_mobRoute.keys.forEach((k,i)=>pos[k]=i);
+  return stops.slice().sort((a,b)=>(a.key in pos?pos[a.key]:9999)-(b.key in pos?pos[b.key]:9999));
+}
+function fmtDur(sec){const m=Math.round(sec/60);return m<60?m+' min':Math.floor(m/60)+' h '+String(m%60).padStart(2,'0')+' min';}
+function mobRouteValid(stops){return _mobRoute&&_mobRoute.date===_mobDate&&stops.length&&stops.every(s=>_mobRoute.keys.includes(s.key));}
+function mobRouteBannerHTML(stops){
+  const withCoords=stops.filter(s=>s.lat&&s.lng);
+  if(withCoords.length<2)return'';
+  const pin=_mobFirstPin[_mobDate]||'';
+  const opts=`<option value="">Automatisch (optimal)</option>`+withCoords.map(s=>`<option value="${s.key}"${s.key===pin?' selected':''}>${s.name.replace(/"/g,'&quot;')}</option>`).join('');
+  let info='';
+  if(mobRouteValid(stops)){
+    const r=_mobRoute;
+    info=`<div style="font-size:13px;font-weight:700;color:var(--tx)">🚗 ${fmtDur(r.total)} Fahrzeit${r.back?' <span style="font-weight:400;color:var(--tx2);font-size:11px">(inkl. Rückfahrt)</span>':''}</div>
+      <div style="font-size:10px;color:${r.src==='ors'?'#10B981':'#F59E0B'};margin-top:2px">${r.src==='ors'?'✓ Berechnet über Strassennetz':'⚠ Schätzung nach Luftlinie (kein Routen-Schlüssel oder offline)'}</div>`;
+  }else{
+    info=`<div style="font-size:12px;color:var(--tx2)">Tipp: <b>📍 Sortieren</b> berechnet die schnellste Reihenfolge ab deinem Standort${localStorage.getItem('audit_start')?' mit Rückfahrt zur Startadresse':''}.</div>`;
+  }
+  return`<div style="padding:12px 14px;background:var(--sf);border:1px solid var(--bd);border-radius:12px;margin-bottom:10px">
+    ${info}
+    <div style="display:flex;align-items:center;gap:6px;margin-top:8px">
+      <label style="font-size:11px;color:var(--tx2);white-space:nowrap">Erster Stopp:</label>
+      <select onchange="mobSetFirstPin(this.value)" style="flex:1;min-width:0;padding:6px;border:1px solid var(--bd);border-radius:8px;background:var(--sf2);color:var(--tx);font-size:12px">${opts}</select>
+    </div>
+  </div>`;
+}
+function mobLegHTML(st){
+  if(!_mobRoute||_mobRoute.date!==_mobDate)return'';
+  const i=_mobRoute.keys.indexOf(st.key);if(i<0||_mobRoute.legs[i]==null)return'';
+  return`<div style="display:flex;align-items:center;gap:6px;margin:-2px 0 6px 10px;font-size:11px;color:var(--tx3)"><span>↓</span><span>🚗 ${fmtDur(_mobRoute.legs[i])}${i===0?(_mobRoute.fromGPS?' ab Standort':' ab Startadresse'):''}</span></div>`;
+}
+function mobReturnLegHTML(stops){
+  if(!mobRouteValid(stops)||!_mobRoute.back)return'';
+  return`<div style="display:flex;align-items:center;gap:6px;margin:-2px 0 12px 10px;font-size:11px;color:var(--tx3)"><span>↓</span><span>🏠 Rückfahrt zur Startadresse ${fmtDur(_mobRoute.back)}</span></div>`;
+}
+function mobSetFirstPin(key){
+  if(key)_mobFirstPin[_mobDate]=key;else delete _mobFirstPin[_mobDate];
+  computeMobRoute();
+}
+async function getHomeCoords(){
+  const addr=(localStorage.getItem('audit_start')||'').trim();
+  if(!addr)return null;
+  if(localStorage.getItem('audit_start_geo_for')===addr){
+    const la=+localStorage.getItem('audit_start_lat'),ln=+localStorage.getItem('audit_start_lng');
+    if(la&&ln)return{lat:la,lng:ln};
+  }
+  try{
+    const r=await fetch(`https://api3.geo.admin.ch/rest/services/api/SearchServer?searchText=${encodeURIComponent(addr)}&type=locations&limit=1&sr=4326&lang=de`);
+    const d=await r.json();const a=d.results&&d.results[0]&&d.results[0].attrs;
+    if(!a)return null;
+    localStorage.setItem('audit_start_lat',a.lat);localStorage.setItem('audit_start_lng',a.lon);localStorage.setItem('audit_start_geo_for',addr);
+    return{lat:a.lat,lng:a.lon};
+  }catch(e){return null;}
+}
+async function getDurationMatrix(pts){
+  const key=window._orsKey;
+  const sig=pts.map(p=>p.lat.toFixed(5)+','+p.lng.toFixed(5)).join('|');
+  if(key){
+    if(_orsMatrixCache[sig])return{D:_orsMatrixCache[sig],src:'ors'};
+    try{
+      const r=await fetch('https://api.openrouteservice.org/v2/matrix/driving-car',{method:'POST',
+        headers:{'Authorization':key,'Content-Type':'application/json'},
+        body:JSON.stringify({locations:pts.map(p=>[p.lng,p.lat]),metrics:['duration']})});
+      if(!r.ok)throw new Error('ORS '+r.status);
+      const d=await r.json();
+      if(d.durations&&d.durations.every(row=>row.every(v=>v!==null))){_orsMatrixCache[sig]=d.durations;return{D:d.durations,src:'ors'};}
+      throw new Error('unvollständig');
+    }catch(ex){console.warn('Routen-Matrix fehlgeschlagen, Luftlinie:',ex);}
+  }
+  // Rückfall: Luftlinie × Umwegfaktor 1.35 bei Ø 50 km/h
+  const D=pts.map(a=>pts.map(b=>haversine(a.lat,a.lng,b.lat,b.lng)*1.35/50*3600));
+  return{D,src:'air'};
+}
+// Optimale Reihenfolge der Knoten 'nodes' zwischen festem Start s und optionalem Ende e.
+function solveRoute(D,s,nodes,e){
+  const n=nodes.length;
+  const pathCost=seq=>{let c=0,cur=s;seq.forEach(j=>{c+=D[cur][j];cur=j;});if(e!=null)c+=D[cur][e];return c;};
+  if(n<=1)return nodes.slice();
+  if(n<=12){
+    const FULL=1<<n,INF=1e18;
+    const dp=new Float64Array(FULL*n).fill(INF),par=new Int16Array(FULL*n).fill(-1);
+    for(let j=0;j<n;j++)dp[(1<<j)*n+j]=D[s][nodes[j]];
+    for(let m=1;m<FULL;m++)for(let j=0;j<n;j++){
+      const v=dp[m*n+j];if(v>=INF||!(m&(1<<j)))continue;
+      for(let k=0;k<n;k++){if(m&(1<<k))continue;const nm=m|(1<<k),nv=v+D[nodes[j]][nodes[k]];if(nv<dp[nm*n+k]){dp[nm*n+k]=nv;par[nm*n+k]=j;}}
+    }
+    let best=INF,bj=0;
+    for(let j=0;j<n;j++){const v=dp[(FULL-1)*n+j]+(e!=null?D[nodes[j]][e]:0);if(v<best){best=v;bj=j;}}
+    const seq=[];let m=FULL-1,j=bj;
+    while(j>=0){seq.push(nodes[j]);const pj=par[m*n+j];m&=~(1<<j);j=pj;}
+    return seq.reverse();
+  }
+  // Grösser: Nearest-Neighbour als Start, dann 2-Opt (Segment umdrehen) solange Verbesserung
+  let rem=nodes.slice(),seq=[],cur=s;
+  while(rem.length){let bi=0;rem.forEach((j,i)=>{if(D[cur][j]<D[cur][rem[bi]])bi=i;});cur=rem.splice(bi,1)[0];seq.push(cur);}
+  let bestC=pathCost(seq),improved=true;
+  while(improved){improved=false;
+    for(let i=0;i<seq.length-1;i++)for(let k=i+1;k<seq.length;k++){
+      const cand=seq.slice(0,i).concat(seq.slice(i,k+1).reverse(),seq.slice(k+1));
+      const cc=pathCost(cand);if(cc<bestC-1){seq=cand;bestC=cc;improved=true;}
+    }
+  }
+  return seq;
+}
+let _mobRouteBusy=false;
+async function computeMobRoute(){
+  if(_mobRouteBusy)return;
+  const stops=mobCurrentDayStops().filter(s=>s.lat&&s.lng);
+  const noCoord=mobCurrentDayStops().filter(s=>!s.lat||!s.lng);
+  if(stops.length<1){renderMobPlan();return;}
+  _mobRouteBusy=true;
+  try{
+    const home=await getHomeCoords();
+    const startPt=_mobGPSPos||home;
+    if(!startPt){showToast('Kein Standort und keine Startadresse – bitte GPS erlauben oder Startadresse setzen',4000);return;}
+    // Punkte: [Start, Stopp1..n, (Heim)]
+    const pts=[startPt,...stops,...(home?[home]:[])];
+    const{D,src}=await getDurationMatrix(pts);
+    const S=0,E=home?pts.length-1:null;
+    let idxs=stops.map((_,i)=>i+1);
+    const pinKey=_mobFirstPin[_mobDate];
+    const pinIdx=pinKey?stops.findIndex(s=>s.key===pinKey):-1;
+    let order;
+    if(pinIdx>=0){
+      const p=pinIdx+1;
+      order=[p,...solveRoute(D,p,idxs.filter(i=>i!==p),E)];
+    }else order=solveRoute(D,S,idxs,E);
+    const legs=[];let cur=S;
+    order.forEach(i=>{legs.push(D[cur][i]);cur=i;});
+    const back=E!=null?D[cur][E]:0;
+    _mobRoute={date:_mobDate,keys:[...order.map(i=>stops[i-1].key),...noCoord.map(s=>s.key)],
+      legs:[...legs,...noCoord.map(()=>null)],back,total:legs.reduce((a,b)=>a+b,0)+back,src,fromGPS:!!_mobGPSPos};
+    if(src==='air'&&!window._orsKey)showToast('Sortiert nach Luftlinie – für echte Fahrzeiten Routen-Schlüssel im Admin-Menü hinterlegen',4000);
+    else if(src==='air')showToast('⚠ Routen-Dienst nicht erreichbar – Schätzung nach Luftlinie',3500);
+    else showToast('✓ Schnellste Route berechnet: '+fmtDur(_mobRoute.total),2500);
+    if(noCoord.length)showToast(`⚠ ${noCoord.length} Stopp(s) ohne Koordinaten – ans Ende gestellt`,3500);
+  }finally{_mobRouteBusy=false;renderMobPlan();}
+}
+function setOrsKey(){
+  const v=prompt('openrouteservice API-Schlüssel (kostenlos unter openrouteservice.org → Sign up → API Key).\nLeer lassen = Routen nach Luftlinie.',window._orsKey||'');
+  if(v===null)return;
+  window._orsKey=v.trim();
+  try{localStorage.setItem('anliker_ors_key',window._orsKey);}catch(e){}
+  saveNow();
+  showToast(window._orsKey?'✓ Routen-Schlüssel gespeichert (für alle synchronisiert)':'Routen-Schlüssel entfernt',3000);
 }
 function haversine(lat1,lng1,lat2,lng2){const R=6371,dLat=(lat2-lat1)*Math.PI/180,dLng=(lng2-lng1)*Math.PI/180,a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));}
 function greedySort(plans,fromLat,fromLng){
@@ -4550,15 +4724,16 @@ function mobConfirmBerat(id){
   showToast('💬 Beratung erfasst – '+e.name,2500);
 }
 function mobRoute(){
-  let dayPlans=plans.filter(p=>p.date===_mobDate&&(!currentUser||p.auditor===currentUser));
-  if(_mobGPSPos&&dayPlans.length>1)dayPlans=greedySort(dayPlans,_mobGPSPos.lat,_mobGPSPos.lng);
-  if(!dayPlans.length){showToast('Keine Planungen für diesen Tag');return;}
-  const addrs=dayPlans.map(p=>{const e=data.find(x=>x.id===p.bsId);return e?e.addr:'';}).filter(Boolean);
+  const f=x=>x.date===_mobDate&&(!currentUser||x.auditor===currentUser);
+  const stops=mobOrderedStops(plans.filter(f),beratPlan.filter(f),personAudits.filter(p=>p.planned&&f(p)));
+  if(!stops.length){showToast('Keine Planungen für diesen Tag');return;}
+  let addrs=stops.map(s=>s.addr).filter(Boolean);
+  // Google Maps übernimmt in Links max. 9 Zwischenstopps - Rest muss nachher separat geöffnet werden
+  if(addrs.length>9){showToast(`Google Maps zeigt max. 9 Stopps – die ersten 9 werden geöffnet (${addrs.length-9} danach separat)`,4500);addrs=addrs.slice(0,9);}
   const start=localStorage.getItem('audit_start')||'';
-  const pts=[...addrs].map(a=>encodeURIComponent(a)).join('/');
-  const url=start?
-    `https://www.google.com/maps/dir/${encodeURIComponent(start)}/${pts}/${encodeURIComponent(start)}`:
-    `https://www.google.com/maps/dir/${pts}`;
+  const origin=_mobGPSPos?`${_mobGPSPos.lat},${_mobGPSPos.lng}`:start;
+  const pts=addrs.map(a=>encodeURIComponent(a)).join('/');
+  const url=`https://www.google.com/maps/dir/${origin?encodeURIComponent(origin):''}/${pts}${start?'/'+encodeURIComponent(start):''}`;
   window.open(url,'_blank');
 }
 
@@ -5781,6 +5956,7 @@ async function sbPush(){
     auditTarget:window._auditTarget||0,
     tempWorkers:JSON.stringify(window._tempWorkers||[]),
     ferienWunsch:JSON.stringify(ferienWunsch||[]),
+    orsKey:window._orsKey||'',
     updated_at:new Date().toISOString()};
   let result=await sbFetch('audit_state',{method:'POST',body:JSON.stringify(payload),
     headers:{'Prefer':'resolution=merge-duplicates'}});
@@ -5788,7 +5964,7 @@ async function sbPush(){
     // Fallback: falls Spalten in Supabase noch nicht existieren (alte Tabelle, Spalte noch
     // nicht per SQL ergänzt) -> ohne diese Felder nochmal versuchen, damit der Rest der
     // Synchronisation nicht komplett blockiert wird.
-    const{piCollectBox,auditTarget,tempWorkers,ferienWunsch,...fallbackPayload}=payload;
+    const{piCollectBox,auditTarget,tempWorkers,ferienWunsch,orsKey,...fallbackPayload}=payload;
     result=await sbFetch('audit_state',{method:'POST',body:JSON.stringify(fallbackPayload),
       headers:{'Prefer':'resolution=merge-duplicates'}});
     if(result)console.warn('sbPush: piCollectBox/auditTarget-Spalten fehlen in Supabase - siehe Admin-Menü "Sammelbox" für Setup-SQL. Restliche Daten wurden trotzdem synchronisiert.');
@@ -5817,6 +5993,7 @@ async function sbPull(){
     if(p.auditTarget!==undefined&&p.auditTarget!==null)window._auditTarget=+p.auditTarget;
     if(p.tempWorkers){try{window._tempWorkers=JSON.parse(p.tempWorkers);}catch(e){}}
     if(p.ferienWunsch){try{ferienWunsch=JSON.parse(p.ferienWunsch);}catch(e){}}
+    if(typeof p.orsKey==='string'){window._orsKey=p.orsKey;try{localStorage.setItem('anliker_ors_key',p.orsKey);}catch(e){}}
     if(p.persons){try{persons=JSON.parse(p.persons);localStorage.setItem('anliker_persons',JSON.stringify(persons));}catch(e){}}
     if(p.beratPlan){try{beratPlan=JSON.parse(p.beratPlan);localStorage.setItem('anliker_berat_plan',JSON.stringify(beratPlan));}catch(e){}}
     if(p.auditorMeta){try{auditorMeta=JSON.parse(p.auditorMeta);localStorage.setItem('anliker_aud_meta',JSON.stringify(auditorMeta));}catch(e){}}
@@ -6671,7 +6848,8 @@ document.addEventListener('DOMContentLoaded',()=>{
       <pre style="background:var(--sf2);padding:8px;border-radius:6px;overflow-x:auto;user-select:all">ALTER TABLE audit_state ADD COLUMN IF NOT EXISTS "piCollectBox" text;
 ALTER TABLE audit_state ADD COLUMN IF NOT EXISTS "auditTarget" integer;
 ALTER TABLE audit_state ADD COLUMN IF NOT EXISTS "tempWorkers" text;
-ALTER TABLE audit_state ADD COLUMN IF NOT EXISTS "ferienWunsch" text;</pre>
+ALTER TABLE audit_state ADD COLUMN IF NOT EXISTS "ferienWunsch" text;
+ALTER TABLE audit_state ADD COLUMN IF NOT EXISTS "orsKey" text;</pre>
     </details>
     <div id="sb-list"></div>
     <div style="display:flex;justify-content:flex-end;margin-top:16px;border-top:1px solid var(--bd);padding-top:12px">
