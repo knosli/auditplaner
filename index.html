@@ -361,7 +361,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
   <div id="presence-bar" style="display:flex;align-items:center;gap:4px;margin-left:4px"></div>
   <button onclick="toggleDark()" class="hb" title="Dark Mode" style="font-size:14px">🌙</button>
   <button onclick="openGuide()" class="hb" title="Anleitung" style="font-size:14px">❓</button>
-  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.51</span>
+  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.52</span>
   <button onclick="doLogout()" class="hb" title="Abmelden" style="font-size:14px" id="logout-btn">⏻</button>
   <button onclick="toggleMobileView()" id="mobile-btn" class="hb" title="Mobile Ansicht" style="font-size:14px">📱</button>
   <div id="more-w" class="admin-only">
@@ -849,11 +849,25 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
         <h3>📋 Rapport planen / erfassen</h3>
         <p style="font-size:11px;color:var(--tx2);margin:4px 0 10px">Bauführer-, Polier- oder andere Rapporte. Geplante Rapporte erscheinen im Wochenkalender, im Handy-Tagesplan und im Outlook-Export. Gezählt werden nur bestätigte Teilnahmen – separat, nicht als Audit.</p>
         <div class="frow" style="flex-wrap:wrap">
+          <div><label>Art</label><select id="rp-type" onchange="rpPrefillFromType()"><option>SiBe-Rapport</option><option>Bauführerrapport</option><option>Polierrapport</option><option>Andere Sitzung</option></select></div>
           <div><label>Datum</label><input type="date" id="rp-date"></div>
           <div><label>Zeit</label><input type="time" id="rp-time"></div>
-          <div><label>Art</label><select id="rp-type"><option>Bauführerrapport</option><option>Polierrapport</option><option>Andere Sitzung</option></select></div>
+          <div><label>Dauer</label><select id="rp-dur"><option value="30">30 min</option><option value="45">45 min</option><option value="60" selected>1 h</option><option value="90">1.5 h</option><option value="120">2 h</option><option value="180">3 h</option><option value="240">4 h</option></select></div>
           <div><label>Abteilung</label><select id="rp-dept"></select></div>
-          <div style="flex:1;min-width:160px"><label>Ort / Thema</label><input type="text" id="rp-ort" placeholder="z.B. Büro Hochdorf, Thema Absturzsicherung"></div>
+        </div>
+        <div class="frow" style="flex-wrap:wrap">
+          <div style="flex:1.4;min-width:220px;position:relative">
+            <label>Adresse <span id="rp-addr-hint" style="font-weight:400;font-size:10px;color:var(--blue)"></span></label>
+            <input type="text" id="rp-addr" placeholder="Strasse Nr, PLZ Ort" oninput="this.dataset.touched='1';window._rpPendingLat=null;window._rpPendingLng=null;addrAutocomplete(this.value,'rp')" autocomplete="off">
+            <div id="rp-addr-suggestions" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--sf);border:1px solid var(--bd);border-radius:var(--rs);z-index:999;max-height:180px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.15)"></div>
+          </div>
+          <div style="flex:1;min-width:160px"><label>Thema / Raum</label><input type="text" id="rp-ort" placeholder="z.B. Sitzungszimmer 2, Absturzsicherung"></div>
+        </div>
+        <div class="frow" style="flex-wrap:wrap;align-items:flex-end">
+          <div><label>Wiederholung</label><select id="rp-rep" onchange="document.getElementById('rp-until-wrap').style.display=this.value?'':'none'">
+            <option value="">Einmalig</option><option value="7">Wöchentlich</option><option value="14">Alle 2 Wochen</option><option value="28">Alle 4 Wochen</option><option value="M">Monatlich (gleicher Tag)</option>
+          </select></div>
+          <div id="rp-until-wrap" style="display:none"><label>bis</label><input type="date" id="rp-until"></div>
         </div>
         <div style="margin:8px 0">
           <label style="font-size:11px;color:var(--tx2);display:block;margin-bottom:4px">Teilnehmende Auditoren</label>
@@ -3027,6 +3041,7 @@ function renderOverview(){
   }
 }
 // ═══ RAPPORTE ═══
+let _rpShowAllSeries=false;
 function renderRapporte(){
   const ysel=document.getElementById('rp-year');
   if(ysel&&!ysel.options.length){const y=new Date().getFullYear();ysel.innerHTML=[y-2,y-1,y,y+1].map(v=>`<option${v===y?' selected':''}>${v}</option>`).join('');}
@@ -3041,6 +3056,9 @@ function renderRapporte(){
   const yr=ysel?ysel.value:String(new Date().getFullYear());
   const list=rapporte.filter(r=>!r.planned&&(r.date||'').startsWith(yr)).sort((a,b)=>b.date.localeCompare(a.date));
   const planned=rapporte.filter(r=>r.planned).sort((a,b)=>(a.date+(a.time||'')).localeCompare(b.date+(b.time||'')));
+  const seriesCount={},seriesLast={},seenSeries=new Set();
+  planned.forEach(r=>{if(r.seriesId){seriesCount[r.seriesId]=(seriesCount[r.seriesId]||0)+1;seriesLast[r.seriesId]=r.date;}});
+  const plannedShown=_rpShowAllSeries?planned:planned.filter(r=>{if(!r.seriesId)return true;if(seenSeries.has(r.seriesId))return false;seenSeries.add(r.seriesId);return true;});
   // Zusammenfassung: nach Art, nach Abteilung, nach Auditor
   const cnt=(arr,fn)=>{const m={};arr.forEach(x=>(fn(x)||[]).forEach(k=>{m[k]=(m[k]||0)+1;}));return Object.entries(m).sort((a,b)=>b[1]-a[1]);};
   const chips=(title,entries)=>entries.length?`<div style="margin-bottom:8px"><div style="font-size:10px;font-weight:600;color:var(--tx2);margin-bottom:4px">${title}</div><div style="display:flex;flex-wrap:wrap;gap:6px">${entries.map(([k,v])=>`<span style="padding:4px 10px;background:var(--sf2);border:1px solid var(--bd);border-radius:14px;font-size:11px">${k}: <b>${v}</b></span>`).join('')}</div></div>`:'';
@@ -3053,17 +3071,30 @@ function renderRapporte(){
   const row=(r,isPlan)=>`
     <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-bottom:1px solid var(--bd);font-size:12px;${isPlan?'background:#F0F9FF':''}">
       <span style="width:92px;flex-shrink:0;color:var(--tx2)">${fd(r.date)}${r.time?'<br><span style="font-size:10px">'+r.time+' Uhr</span>':''}</span>
-      <span style="flex:1;min-width:0"><b>${r.type}</b>${r.dept?' · '+r.dept:''}${r.ort?` <span style="color:var(--tx2)">· ${r.ort}</span>`:''}${r.note?`<div style="font-size:11px;color:var(--tx3)">${r.note}</div>`:''}</span>
+      <span style="flex:1;min-width:0"><b>${r.type}</b>${r.seriesId?' <span title="Teil einer Serie" style="font-size:10px;color:#0284C7">🔁</span>':''}${r.dept?' · '+r.dept:''}${r.ort?` <span style="color:var(--tx2)">· ${r.ort}</span>`:''}${r.addr?`<div style="font-size:11px;color:var(--tx2)">📍 ${r.addr}</div>`:''}${r.note?`<div style="font-size:11px;color:var(--tx3)">${r.note}</div>`:''}</span>
       <span style="display:flex;gap:3px;flex-shrink:0">${(r.auditors||[]).map(a=>`<span title="${a}" style="width:22px;height:22px;border-radius:50%;background:${aC(a)};color:#fff;font-size:9px;font-weight:700;display:inline-flex;align-items:center;justify-content:center">${(AUD_CODES[a]||a.split(' ').map(w=>w[0]).join('')).slice(0,4)}</span>`).join('')}</span>
-      ${isPlan?`<button onclick="confirmRapport(${r.id})" style="padding:4px 9px;border:none;border-radius:6px;background:#10B981;color:#fff;font-size:11px;cursor:pointer;white-space:nowrap">✓ Teilgenommen</button><button onclick="moveRapport(${r.id})" title="Datum/Zeit ändern" style="padding:4px 7px;border:1px solid var(--bd);border-radius:6px;background:var(--sf2);font-size:11px;cursor:pointer">📅</button>`:''}
+      ${isPlan?`<button onclick="confirmRapport(${r.id})" style="padding:4px 9px;border:none;border-radius:6px;background:#10B981;color:#fff;font-size:11px;cursor:pointer;white-space:nowrap">✓ Teilgenommen</button><button onclick="moveRapport(${r.id})" title="Datum/Zeit ändern" style="padding:4px 7px;border:1px solid var(--bd);border-radius:6px;background:var(--sf2);font-size:11px;cursor:pointer">📅</button><button onclick="exportRapportICS(${r.id})" title="${r.seriesId?'Ganze Serie':'Termin'} nach Outlook exportieren" style="padding:4px 7px;border:1px solid var(--bd);border-radius:6px;background:var(--sf2);font-size:11px;cursor:pointer">⬇️ Outlook</button>`:''}
       ${(isAdmin||(r.auditors||[]).includes(currentUser))?`<button onclick="rmRapport(${r.id})" class="fidel"><i class="ti ti-trash"></i></button>`:''}
     </div>`;
   document.getElementById('rp-list').innerHTML=
-    `<div style="font-size:11px;font-weight:700;color:#0284C7;margin:4px 0 6px">📅 Geplant (${planned.length})</div>`+
-    (planned.length?planned.map(r=>row(r,true)).join(''):'<div style="font-size:11px;color:var(--tx3);padding:6px">Keine geplanten Rapporte.</div>')+
+    `<div style="display:flex;align-items:center;justify-content:space-between;margin:4px 0 6px"><span style="font-size:11px;font-weight:700;color:#0284C7">📅 Geplant (${planned.length})</span>${planned.length?`<button onclick="exportMyRapporteICS()" style="padding:4px 10px;border:1px solid var(--bd);border-radius:6px;background:var(--sf2);font-size:11px;cursor:pointer">⬇️ Alle meine geplanten → Outlook</button>`:''}</div>`+
+    (plannedShown.length?plannedShown.map(r=>row(r,true)+(r.seriesId&&seriesCount[r.seriesId]>1?`<div style="font-size:10px;color:#0284C7;padding:0 10px 6px 112px;background:#F0F9FF;border-bottom:1px solid var(--bd)">🔁 nächster Termin der Serie · danach noch ${seriesCount[r.seriesId]-1} weitere bis ${fd(seriesLast[r.seriesId])} <a href="#" onclick="event.preventDefault();_rpShowAllSeries=!_rpShowAllSeries;renderRapporte()" style="color:#0284C7">${_rpShowAllSeries?'Serien zusammenfassen':'alle anzeigen'}</a></div>`:'')).join(''):'<div style="font-size:11px;color:var(--tx3);padding:6px">Keine geplanten Rapporte.</div>')+
     `<div style="font-size:11px;font-weight:700;color:var(--tx2);margin:16px 0 6px">✅ Teilgenommen ${yr} (${list.length})</div>`+
     (list.length?list.map(r=>row(r,false)).join(''):'<div style="font-size:11px;color:var(--tx3);padding:6px">Keine Rapporte in diesem Jahr.</div>');
 }
+// Letzte Adresse/Zeit/Dauer/Abteilung des gleichen Rapport-Typs vorbelegen (z.B. SiBe-Rapport immer gleicher Ort)
+function rpPrefillFromType(){
+  const type=document.getElementById('rp-type').value;
+  const last=rapporte.filter(r=>r.type===type).sort((a,b)=>b.date.localeCompare(a.date))[0];
+  if(!last)return;
+  const set=(id,v)=>{const el=document.getElementById(id);if(el&&!el.value&&v)el.value=v;};
+  set('rp-addr',last.addr);set('rp-time',last.time);
+  if(last.dur)document.getElementById('rp-dur').value=String(last.dur);
+  if(last.dept&&!document.getElementById('rp-dept').value)document.getElementById('rp-dept').value=last.dept;
+  if(last.addr&&!document.getElementById('rp-addr').dataset.touched){window._rpPendingLat=last.lat||null;window._rpPendingLng=last.lng||null;}
+}
+function rpAddDays(ds,n){const d=parseDate(ds);d.setDate(d.getDate()+n);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function rpAddMonth(ds,k){const[y,m,d]=ds.split('-').map(Number);const t=new Date(y,m-1+k,1);const last=new Date(t.getFullYear(),t.getMonth()+1,0).getDate();t.setDate(Math.min(d,last));return t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0');}
 function addRapport(){
   const date=document.getElementById('rp-date').value;
   const type=document.getElementById('rp-type').value;
@@ -3071,15 +3102,96 @@ function addRapport(){
   const ort=document.getElementById('rp-ort').value.trim();
   const note=document.getElementById('rp-note').value.trim();
   const time=document.getElementById('rp-time').value;
+  const dur=+document.getElementById('rp-dur').value||60;
+  const addr=document.getElementById('rp-addr').value.trim();
   const done=document.getElementById('rp-done').checked;
+  const rpt=document.getElementById('rp-rep').value;
+  const until=document.getElementById('rp-until').value;
   const auds=[...document.querySelectorAll('#rp-auds input:checked')].map(x=>x.value);
   if(!date){showToast('Datum erforderlich');return;}
   if(!auds.length){showToast('Mindestens einen Auditor wählen');return;}
-  rapporte.push({id:Date.now(),date,time,type,dept,ort,note,auditors:auds,planned:!done});
-  ['rp-ort','rp-note','rp-time'].forEach(id=>document.getElementById(id).value='');
+  const base={time,dur,type,dept,ort,note,addr,lat:addr?window._rpPendingLat||null:null,lng:addr?window._rpPendingLng||null:null,auditors:auds};
+  // Termine berechnen (Serie oder einmalig)
+  let dates=[date];
+  if(rpt&&!done){
+    if(!until){showToast('Für eine Serie bitte ein Enddatum («bis») wählen');return;}
+    if(until<date){showToast('Enddatum liegt vor dem Startdatum');return;}
+    dates=[];let cur=date,k=0;
+    while(cur<=until&&dates.length<200){dates.push(cur);k++;cur=rpt==='M'?rpAddMonth(date,k):rpAddDays(date,(+rpt)*k);}
+  }
+  const seriesId=dates.length>1?Date.now():null;
+  dates.forEach((d,i)=>rapporte.push({...base,id:Date.now()+i,date:d,planned:!done,...(seriesId?{seriesId,rep:rpt}:{})}));
+  ['rp-ort','rp-note','rp-time','rp-addr','rp-until'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('rp-rep').value='';document.getElementById('rp-until-wrap').style.display='none';
   document.getElementById('rp-done').checked=false;
-  saveNow();renderRapporte();renderOverview();renderDeptTable();if(typeof renderKW==='function')renderKW();
-  showToast(done?'✓ '+type+' als teilgenommen erfasst':'📅 '+type+' geplant');
+  const h=document.getElementById('rp-addr-hint');if(h)h.textContent='';
+  window._rpPendingLat=null;window._rpPendingLng=null;document.getElementById('rp-addr').dataset.touched='';
+  saveNow();renderRapporte();renderOverview();renderDeptTable();if(typeof renderKW==='function'&&curView==='cal')renderKW();
+  showToast(done?'✓ '+type+' als teilgenommen erfasst':seriesId?`🔁 Serie mit ${dates.length} Terminen geplant`:'📅 '+type+' geplant',3000);
+}
+// ═══ RAPPORTE → OUTLOOK (.ics) ═══
+// Echte Termine mit Uhrzeit/Dauer/Ort (Zeitzone Europe/Zurich). Eine Serie wird als EIN Serientermin
+// (RRULE) exportiert, sofern alle noch geplanten Termine der Regel entsprechen; wurde einer verschoben,
+// werden die Termine einzeln exportiert. Stabile UIDs -> erneuter Import aktualisiert statt dupliziert.
+function icsEsc(s){return String(s||'').replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\n/g,'\\n');}
+function icsDT(ds,time,addMin){
+  const[y,m,d]=ds.split('-').map(Number);const[hh,mm]=(time||'00:00').split(':').map(Number);
+  const t=new Date(y,m-1,d,hh,mm+(addMin||0));const p=n=>String(n).padStart(2,'0');
+  return t.getFullYear()+p(t.getMonth()+1)+p(t.getDate())+'T'+p(t.getHours())+p(t.getMinutes())+'00';
+}
+const ICS_TZ=['BEGIN:VTIMEZONE','TZID:Europe/Zurich','BEGIN:DAYLIGHT','TZOFFSETFROM:+0100','TZOFFSETTO:+0200','TZNAME:CEST','DTSTART:19700329T020000','RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU','END:DAYLIGHT','BEGIN:STANDARD','TZOFFSETFROM:+0200','TZOFFSETTO:+0100','TZNAME:CET','DTSTART:19701025T030000','RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU','END:STANDARD','END:VTIMEZONE'];
+function rappVEvent(r,uid,rrule){
+  const L=['BEGIN:VEVENT','UID:'+uid,'DTSTAMP:'+new Date().toISOString().replace(/[-:]/g,'').slice(0,15)+'Z'];
+  if(r.time){L.push('DTSTART;TZID=Europe/Zurich:'+icsDT(r.date,r.time,0));L.push('DTEND;TZID=Europe/Zurich:'+icsDT(r.date,r.time,r.dur||60));}
+  else{L.push('DTSTART;VALUE=DATE:'+r.date.replace(/-/g,''));L.push('DTEND;VALUE=DATE:'+rpAddDays(r.date,1).replace(/-/g,''));}
+  if(rrule)L.push('RRULE:'+rrule);
+  L.push('SUMMARY:'+icsEsc(r.type+(r.dept?' – '+r.dept:'')));
+  if(r.addr)L.push('LOCATION:'+icsEsc(r.addr));
+  const desc=[r.ort?'Thema/Raum: '+r.ort:'',r.note||'','Teilnehmende: '+(r.auditors||[]).join(', '),r.addr?'Route: https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent(r.addr):''].filter(Boolean).join('\n');
+  L.push('DESCRIPTION:'+icsEsc(desc));
+  L.push('END:VEVENT');
+  return L;
+}
+function rappSeriesRule(occ){
+  // prüft, ob die geplanten Termine exakt einer Regel folgen -> RRULE, sonst null
+  if(occ.length<2)return null;
+  const rep=occ[0].rep,first=occ[0].date,last=occ[occ.length-1].date;
+  if(occ.some(o=>(o.time||'')!==(occ[0].time||'')))return null;
+  const exp=[];let k=0,cur=first;
+  while(cur<=last&&exp.length<400){exp.push(cur);k++;cur=rep==='M'?rpAddMonth(first,k):rpAddDays(first,(+rep||7)*k);}
+  if(exp.length!==occ.length||exp.some((d,i)=>d!==occ[i].date))return null;
+  const until=last.replace(/-/g,'')+'T235959';
+  return rep==='M'?`FREQ=MONTHLY;INTERVAL=1;UNTIL=${until}`:`FREQ=WEEKLY;INTERVAL=${(+rep||7)/7};UNTIL=${until}`;
+}
+function buildRappICS(list){
+  const L=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Anliker Audit Planer//DE','CALSCALE:GREGORIAN','METHOD:PUBLISH',...ICS_TZ];
+  const done=new Set();
+  list.forEach(r=>{
+    if(done.has(r.id))return;
+    if(r.seriesId){
+      const occ=rapporte.filter(x=>x.seriesId===r.seriesId&&x.planned).sort((a,b)=>a.date.localeCompare(b.date));
+      const rule=rappSeriesRule(occ);
+      occ.forEach(o=>done.add(o.id));
+      if(rule){L.push(...rappVEvent(occ[0],'rapport-serie-'+r.seriesId+'@anliker.ch',rule));return;}
+      occ.forEach(o=>L.push(...rappVEvent(o,'rapport-'+o.id+'@anliker.ch',null)));
+      return;
+    }
+    done.add(r.id);
+    L.push(...rappVEvent(r,'rapport-'+r.id+'@anliker.ch',null));
+  });
+  L.push('END:VCALENDAR');
+  return L.join('\r\n');
+}
+function exportRapportICS(id){
+  const r=rapporte.find(x=>x.id===id);if(!r)return;
+  dlICS(buildRappICS([r]),`rapport_${r.type.replace(/\W+/g,'_')}_${r.date}.ics`);
+  showToast(r.seriesId?'🔁 Serie → Outlook (Datei öffnen/importieren)':'📅 Termin → Outlook',3000);
+}
+function exportMyRapporteICS(){
+  const mine=rapporte.filter(r=>r.planned&&(!currentUser||(r.auditors||[]).includes(currentUser)));
+  if(!mine.length){showToast('Keine geplanten Rapporte für dich');return;}
+  dlICS(buildRappICS(mine),`rapporte_${(currentUser||'alle').split(' ').pop()}.ics`);
+  showToast('📅 Geplante Rapporte → Outlook',2500);
 }
 function confirmRapport(id){
   const r=rapporte.find(x=>x.id===id);if(!r)return;
@@ -3100,8 +3212,19 @@ function moveRapport(id){
   showToast('📅 Verschoben auf '+fd(r.date));
 }
 function rmRapport(id){
-  if(!confirm('Rapport-Eintrag löschen?'))return;
-  rapporte=rapporte.filter(r=>r.id!==id);
+  const r=rapporte.find(x=>x.id===id);if(!r)return;
+  const sib=r.seriesId?rapporte.filter(x=>x.seriesId===r.seriesId&&x.planned):[];
+  if(r.planned&&sib.length>1){
+    if(confirm(`Dieser Termin gehört zu einer Serie (${sib.length} geplante Termine).\n\nOK = alle noch geplanten Termine der Serie löschen\nAbbrechen = weiter zur Auswahl «nur diesen Termin»`)){
+      rapporte=rapporte.filter(x=>!(x.seriesId===r.seriesId&&x.planned));
+    }else{
+      if(!confirm('Nur diesen einen Termin löschen?'))return;
+      rapporte=rapporte.filter(x=>x.id!==id);
+    }
+  }else{
+    if(!confirm('Rapport-Eintrag löschen?'))return;
+    rapporte=rapporte.filter(x=>x.id!==id);
+  }
   saveNow();renderRapporte();renderOverview();renderDeptTable();
   if(typeof renderKW==='function'&&curView==='cal')renderKW();
   if(typeof renderMobPlan==='function'&&document.getElementById('mob-plan-list'))renderMobPlan();
@@ -4611,9 +4734,11 @@ function renderMobPlan(){
       <div style="font-size:10px;font-weight:700;color:#0369A1;margin-bottom:2px">${r.planned?'📋 RAPPORT GEPLANT':'✓ TEILGENOMMEN'}${r.time?' · '+r.time+' Uhr':''}</div>
       <div style="font-size:14px;font-weight:700;color:var(--tx)">${r.type}</div>
       <div style="font-size:12px;color:var(--tx2)">${[r.dept,r.ort].filter(Boolean).join(' · ')}</div>
+      ${r.addr?`<div style="font-size:11px;color:var(--tx2);margin-top:2px">📍 ${r.addr}</div>`:''}
       ${r.note?`<div style="font-size:11px;color:var(--tx3);margin-top:2px">${r.note}</div>`:''}
       ${r.planned?`<div style="display:flex;gap:6px;margin-top:10px">
         <button onclick="confirmRapport(${r.id})" style="flex:1;padding:9px;border:none;border-radius:9px;background:#10B981;color:#fff;font-size:13px;font-weight:600;cursor:pointer">✓ Teilgenommen</button>
+        ${r.addr?`<button onclick="mobOpenMaps('${r.addr.replace(/'/g,'').replace(/"/g,'')}','${r.type.replace(/'/g,'')}')" style="padding:9px 12px;border:1px solid var(--bd);border-radius:9px;background:var(--sf2);color:var(--tx);font-size:13px;cursor:pointer">🛣️</button>`:''}
         <button onclick="moveRapport(${r.id})" style="padding:9px 12px;border:1px solid var(--bd);border-radius:9px;background:var(--sf2);color:var(--tx);font-size:13px;cursor:pointer">📅</button>
       </div>`:''}
     </div>`;
@@ -6769,6 +6894,7 @@ function selectAddr(label,lat,lng,prefix){
   if(hint)hint.textContent=lat?`✓ ${lat.toFixed(4)}, ${lng.toFixed(4)}`:'';
   if(prefix==='f'){window._pendingLat=lat||null;window._pendingLng=lng||null;}
   else if(prefix==='pop'){window._popPendingLat=lat||null;window._popPendingLng=lng||null;}
+  else if(prefix==='rp'){window._rpPendingLat=lat||null;window._rpPendingLng=lng||null;}
   else{window._paPendingLat=lat||null;window._paPendingLng=lng||null;}
 }
 
@@ -6870,7 +6996,7 @@ function exportICSDay(audFilter,kw,pickedDate){
   const items=dayPlans.map(p=>{const e=data.find(x=>x.id===p.bsId);return e?{name:e.name,addr:e.addr||'',dept:e.dept||'',auditor:p.auditor}:null;}).filter(Boolean);
   const beratItems2=dayBeratPlans.map(p=>{const e=data.find(x=>x.id===p.bsId);return e?{name:'💬 '+e.name+(p.note?' ('+p.note+')':''),addr:e.addr||'',dept:e.dept||'',auditor:p.auditor}:null;}).filter(Boolean);
   const personItems=dayPersonAudits.map(p=>({name:'👤 '+p.person+(p.bs?' – '+p.bs:'')+(p.note?' ('+p.note+')':''),addr:p.addr||'',dept:p.kat||'',auditor:p.auditor}));
-  const rappItems=dayRapp.map(r=>({name:'📋 '+r.type+(r.time?' '+r.time+' Uhr':'')+(r.dept?' – '+r.dept:''),addr:r.ort||'',dept:r.dept||'',auditor:(r.auditors||[]).join(', ')}));
+  const rappItems=dayRapp.map(r=>({name:'📋 '+r.type+(r.time?' '+r.time+' Uhr':'')+(r.dept?' – '+r.dept:''),addr:r.addr||r.ort||'',dept:r.dept||'',auditor:(r.auditors||[]).join(', ')}));
   const allItems=[...rappItems,...items,...beratItems2,...personItems];
   const audLabel=audFilter||allItems[0]?.auditor||'Auditor';
   const addrs=allItems.map(i=>i.addr).filter(Boolean);
@@ -6904,7 +7030,7 @@ function exportICSWeek(audFilter,kw){
     dayPA.forEach(p=>{const aud=p.auditor||'Unbekannt';if(!byAud[aud])byAud[aud]=[];byAud[aud].push({...p,_type:'person'});});
     Object.entries(byAud).forEach(([aud,ps])=>{
       const items=ps.map(p=>{
-        if(p._type==='rapp')return{name:'📋 '+p.type+(p.time?' '+p.time+' Uhr':'')+(p.dept?' – '+p.dept:''),addr:p.ort||'',dept:p.dept||'',auditor:aud};
+        if(p._type==='rapp')return{name:'📋 '+p.type+(p.time?' '+p.time+' Uhr':'')+(p.dept?' – '+p.dept:''),addr:p.addr||p.ort||'',dept:p.dept||'',auditor:aud};
         if(p._type==='person')return{name:'👤 '+p.person+(p.bs?' – '+p.bs:'')+(p.note?' ('+p.note+')':''),addr:p.addr||'',dept:p.kat||'',auditor:aud};
         const e=data.find(x=>x.id===p.bsId);if(!e)return null;
         const name=p._type==='berat'?'💬 '+e.name+(p.note?' ('+p.note+')':''):e.name;
