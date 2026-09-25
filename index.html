@@ -361,7 +361,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
   <div id="presence-bar" style="display:flex;align-items:center;gap:4px;margin-left:4px"></div>
   <button onclick="toggleDark()" class="hb" title="Dark Mode" style="font-size:14px">🌙</button>
   <button onclick="openGuide()" class="hb" title="Anleitung" style="font-size:14px">❓</button>
-  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.49</span>
+  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.51</span>
   <button onclick="doLogout()" class="hb" title="Abmelden" style="font-size:14px" id="logout-btn">⏻</button>
   <button onclick="toggleMobileView()" id="mobile-btn" class="hb" title="Mobile Ansicht" style="font-size:14px">📱</button>
   <div id="more-w" class="admin-only">
@@ -718,6 +718,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
     <button onclick="setAudTab('overview')" id="aud-tab-overview" style="padding:10px 16px;border:none;border-bottom:2px solid var(--blue);background:none;cursor:pointer;font-size:12px;font-weight:600;color:var(--blue);white-space:nowrap">📊 Übersicht</button>
     <button onclick="setAudTab('ferien')" id="aud-tab-ferien" style="padding:10px 16px;border:none;border-bottom:2px solid transparent;background:none;cursor:pointer;font-size:12px;font-weight:600;color:var(--tx2);white-space:nowrap">🏖️ Ferienplanung</button>
     <button onclick="setAudTab('dept')" id="aud-tab-dept" style="padding:10px 16px;border:none;border-bottom:2px solid transparent;background:none;cursor:pointer;font-size:12px;font-weight:600;color:var(--tx2);white-space:nowrap">🏢 Abteilungen</button>
+    <button onclick="setAudTab('rapp')" id="aud-tab-rapp" style="padding:10px 16px;border:none;border-bottom:2px solid transparent;background:none;cursor:pointer;font-size:12px;font-weight:600;color:var(--tx2);white-space:nowrap">📋 Rapporte</button>
   </div>
   <div style="max-width:1280px;margin:0 auto;padding:18px">
     <div id="aud-tags" style="display:none"></div>
@@ -756,6 +757,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
               <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#F59E0B;margin-right:4px"></span>Personen-Audits: <b id="ov-c-person">0</b></span>
               <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#8B5CF6;margin-right:4px"></span>Beratungen: <b id="ov-c-berat">0</b></span>
             </div>
+            <div style="margin-top:8px;padding-top:8px;border-top:1px dashed var(--bd);font-size:11px;color:var(--tx2)">📋 Rapport-Teilnahmen im Zeitraum: <b id="ov-c-rapp">0</b> <span style="color:var(--tx3)">(separat, nicht im Audit-Total)</span></div>
           </div>
         </div>
       </div>
@@ -841,6 +843,40 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
       </div>
     </div>
 
+    <!-- PANEL: RAPPORTE (Bauführer-/Polierrapporte etc. - eigene Terminart, zählt NICHT als Audit) -->
+    <div id="aud-panel-rapp" style="display:none">
+      <div class="card" style="margin-bottom:16px">
+        <h3>📋 Rapport planen / erfassen</h3>
+        <p style="font-size:11px;color:var(--tx2);margin:4px 0 10px">Bauführer-, Polier- oder andere Rapporte. Geplante Rapporte erscheinen im Wochenkalender, im Handy-Tagesplan und im Outlook-Export. Gezählt werden nur bestätigte Teilnahmen – separat, nicht als Audit.</p>
+        <div class="frow" style="flex-wrap:wrap">
+          <div><label>Datum</label><input type="date" id="rp-date"></div>
+          <div><label>Zeit</label><input type="time" id="rp-time"></div>
+          <div><label>Art</label><select id="rp-type"><option>Bauführerrapport</option><option>Polierrapport</option><option>Andere Sitzung</option></select></div>
+          <div><label>Abteilung</label><select id="rp-dept"></select></div>
+          <div style="flex:1;min-width:160px"><label>Ort / Thema</label><input type="text" id="rp-ort" placeholder="z.B. Büro Hochdorf, Thema Absturzsicherung"></div>
+        </div>
+        <div style="margin:8px 0">
+          <label style="font-size:11px;color:var(--tx2);display:block;margin-bottom:4px">Teilnehmende Auditoren</label>
+          <div id="rp-auds" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+        </div>
+        <div class="frow">
+          <div style="flex:1"><label>Notiz</label><input type="text" id="rp-note" placeholder="optional"></div>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--tx);white-space:nowrap;align-self:flex-end;padding-bottom:8px"><input type="checkbox" id="rp-done"> ✅ Bereits stattgefunden</label>
+          <button onclick="addRapport()"><i class="ti ti-plus"></i> Speichern</button>
+        </div>
+      </div>
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+          <h3 style="margin:0">Übersicht</h3>
+          <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--tx2)">Jahr
+            <select id="rp-year" onchange="renderRapporte()" style="padding:4px 8px;border:1px solid var(--bd);border-radius:6px;background:var(--sf2);color:var(--tx);font-size:12px;font-weight:600"></select>
+          </div>
+        </div>
+        <div id="rp-summary" style="margin-bottom:14px"></div>
+        <div id="rp-list"></div>
+      </div>
+    </div>
+
     <!-- PANEL: ABTEILUNGEN -->
     <div id="aud-panel-dept" style="display:none">
       <div class="card">
@@ -859,13 +895,15 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
             <th title="Durchgeführte Personen-Audits im Zeitraum">👤 Pers.</th>
             <th title="Durchgeführte Beratungen im Zeitraum">💬 Berat.</th>
             <th title="Total durchgeführt im Zeitraum">Total</th>
-            <th title="Anteil der aktiven Baustellen mit mind. einem Audit im Zeitraum">Abdeckung</th>
+            <th title="Anteil der Audit-Abstände im Zeitraum, die innerhalb des Rhythmus (+25 % Toleranz) lagen; aktuell überfällige Baustellen zählen als verspätet">Termintreue</th>
+            <th title="Durchschnittlicher Abstand zwischen zwei Audits derselben Baustelle im Zeitraum">Ø Abstand</th>
             <th title="Mitarbeitende laut Admin → Abteilungen verwalten (Jahr des Enddatums)">MA</th>
             <th title="Total durchgeführte Audits pro 100 Mitarbeitende">pro 100 MA</th>
             <th title="Aktuell überfällige Baustellen">Überfällig</th>
+            <th title="Rapport-Teilnahmen (Bauführer-/Polierrapporte) im Zeitraum - nicht im Audit-Total">📋 Rapp.</th>
           </tr></thead><tbody id="dept-tb"></tbody></table>
         </div>
-        <div style="font-size:10px;color:var(--tx3);margin-top:8px">Personen-Audits werden über die zugeordnete Baustelle bzw. die Abteilung im Personen-Register zugeteilt. Mitarbeitende pflegen: Admin-Menü → Abteilungen verwalten.</div>
+        <div style="font-size:10px;color:var(--tx3);margin-top:8px"><b>Termintreue:</b> Anteil der Audit-Abstände, die innerhalb des Rhythmus lagen (+25 % Toleranz, z.B. 28 → 35 Tage); aktuell überfällige Baustellen zählen als verspätet. Ampel: grün ab 80 %, orange ab 60 %. <br>Personen-Audits werden über die zugeordnete Baustelle bzw. die Abteilung im Personen-Register zugeteilt. Mitarbeitende pflegen: Admin-Menü → Abteilungen verwalten.</div>
       </div>
     </div>
   </div>
@@ -1425,7 +1463,7 @@ const CFB={luzern:{lat:47.05,lng:8.309},zürich:{lat:47.377,lng:8.542},bern:{lat
 const DGF={Abdichtungen:{lat:47.352,lng:7.904},'Interbohr AG':{lat:47.16,lng:8.45},'Anliker Spezialitäten AG':{lat:47.376,lng:8.541},'Niederlassung Basel':{lat:47.557,lng:7.593},'Niederlassung Winterthur':{lat:47.501,lng:8.724}};
 // ═══ STATE ═══
 let map,cluster,markers={};
-let data=[],plans=[],tlog=[],auditors=['Alain Groelly','René Rottenberger','Niklaus Meier','Matthias Knotz'],ferien=[],personAudits=[],ferienWunsch=[];
+let data=[],plans=[],tlog=[],auditors=['Alain Groelly','René Rottenberger','Niklaus Meier','Matthias Knotz'],ferien=[],personAudits=[],ferienWunsch=[],rapporte=[];
 let selId=null,curTab='all',editId=null,planMode=false,planned=new Set();
 let curView='map',kwOff=0,popIdx=null,popMode='site',popPersonId=null,qaId=null,statFilters=new Set(),mergeFiles=[];
 // ═══ HELPERS ═══
@@ -1501,14 +1539,14 @@ function dl(e){
 function dotC(e){if(planned.has(e.id))return'#10B981';if(e.type==='werkhof')return'#EA580C';const s=status(e);if(s==='paused')return'rgba(148,163,184,.75)';if(s==='planned')return'#6366F1';if(s==='beratung')return'#8B5CF6';if(s==='overdue')return'#EF4444';if(s==='due')return'#F59E0B';if(s==='soon')return'#FDE047';return'#10B981';}
 // ═══ STORAGE ═══
 let saveT=null;
-function save(){clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem('anliker_persons',JSON.stringify(persons));localStorage.setItem(SK,JSON.stringify({data,plans,tlog,auditors,ferien,ferienWunsch,ghostAudits:window._ghostAudits||[],personAudits,v:4}));showToast(sbConnected?'☁':'💾',1200);}catch(e){}sbPush();},900);}
+function save(){clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem('anliker_persons',JSON.stringify(persons));localStorage.setItem(SK,JSON.stringify({data,plans,tlog,auditors,ferien,ferienWunsch,rapporte,ghostAudits:window._ghostAudits||[],personAudits,v:4}));showToast(sbConnected?'☁':'💾',1200);}catch(e){}sbPush();},900);}
 // Immediate save for critical actions (no debounce)
 function saveNow(){
   clearTimeout(saveT);
-  try{localStorage.setItem('anliker_berat_plan',JSON.stringify(beratPlan));localStorage.setItem(SK,JSON.stringify({data,plans,tlog,auditors,ferien,ferienWunsch,ghostAudits:window._ghostAudits||[],personAudits,v:4}));localStorage.setItem('anliker_pi_collectbox',JSON.stringify(window._piCollectBox||[]));localStorage.setItem('anliker_temp_workers',JSON.stringify(window._tempWorkers||[]));}catch(e){}
+  try{localStorage.setItem('anliker_berat_plan',JSON.stringify(beratPlan));localStorage.setItem(SK,JSON.stringify({data,plans,tlog,auditors,ferien,ferienWunsch,rapporte,ghostAudits:window._ghostAudits||[],personAudits,v:4}));localStorage.setItem('anliker_pi_collectbox',JSON.stringify(window._piCollectBox||[]));localStorage.setItem('anliker_temp_workers',JSON.stringify(window._tempWorkers||[]));}catch(e){}
   sbPush();
 }
-function load(){try{const r=localStorage.getItem(SK);if(!r)return false;const p=JSON.parse(r);if(p.data)data=p.data;if(p.plans)plans=p.plans;if(p.tlog)tlog=p.tlog;if(p.auditors)auditors=p.auditors;if(p.ferien)ferien=p.ferien;if(p.ferienWunsch)ferienWunsch=p.ferienWunsch;if(p.ghostAudits)window._ghostAudits=p.ghostAudits;if(p.personAudits)personAudits=p.personAudits;try{window._piCollectBox=JSON.parse(localStorage.getItem('anliker_pi_collectbox')||'[]');}catch(e){window._piCollectBox=[];}try{window._tempWorkers=JSON.parse(localStorage.getItem('anliker_temp_workers')||'[]');}catch(e){window._tempWorkers=[];}try{window._orsKey=localStorage.getItem('anliker_ors_key')||'';}catch(e){}return true;}catch(e){return false;}}
+function load(){try{const r=localStorage.getItem(SK);if(!r)return false;const p=JSON.parse(r);if(p.data)data=p.data;if(p.plans)plans=p.plans;if(p.tlog)tlog=p.tlog;if(p.auditors)auditors=p.auditors;if(p.ferien)ferien=p.ferien;if(p.ferienWunsch)ferienWunsch=p.ferienWunsch;if(p.rapporte)rapporte=p.rapporte;if(p.ghostAudits)window._ghostAudits=p.ghostAudits;if(p.personAudits)personAudits=p.personAudits;try{window._piCollectBox=JSON.parse(localStorage.getItem('anliker_pi_collectbox')||'[]');}catch(e){window._piCollectBox=[];}try{window._tempWorkers=JSON.parse(localStorage.getItem('anliker_temp_workers')||'[]');}catch(e){window._tempWorkers=[];}try{window._orsKey=localStorage.getItem('anliker_ors_key')||'';}catch(e){}return true;}catch(e){return false;}}
 function showToast(m,d=2500){const t=document.getElementById('toast');t.textContent=m;t.style.display='block';clearTimeout(t._t);t._t=setTimeout(()=>t.style.display='none',d);}
 function dlJSON(obj,fn){const b=new Blob([JSON.stringify(obj,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=fn;a.click();}
 function teamExport(){dlJSON({data,plans,auditors,ferien,ghostAudits:window._ghostAudits||[],personAudits,savedAt:new Date().toISOString(),type:'team'},'anliker_export_'+today()+'.json');showToast('📤 Export erstellt – auf SharePoint!',3000);}
@@ -2339,7 +2377,7 @@ function setAudCode(name,code){
   showToast('✓ Kürzel gespeichert',1500);
 }
 function setAudTab(tab){
-  ['overview','ferien','dept'].forEach(t=>{
+  ['overview','ferien','dept','rapp'].forEach(t=>{
     const panel=document.getElementById('aud-panel-'+t);
     if(panel)panel.style.display=t===tab?'':'none';
     const btn=document.getElementById('aud-tab-'+t);
@@ -2349,6 +2387,7 @@ function setAudTab(tab){
     }
   });
   if(tab==='ferien'){renderFerList();renderFerChart();renderWunschFerien();}
+  if(tab==='rapp')renderRapporte();
 }
 function renderAudTotals(){
   const el=document.getElementById('aud-totals-content');if(!el)return;
@@ -2968,6 +3007,7 @@ function renderOverview(){
   document.getElementById('ov-c-site').textContent=siteCount;
   document.getElementById('ov-c-person').textContent=personCount;
   document.getElementById('ov-c-berat').textContent=beratCount;
+  const rpEl=document.getElementById('ov-c-rapp');if(rpEl)rpEl.textContent=rapporte.filter(r=>!r.planned&&inRange(r.date)).length;
   // Soll auf den gewählten Zeitraum skalieren (Jahres-Soll ÷ 12 × Anzahl Monate im Bereich)
   const [fy,fm]=fromV.split('-').map(Number),[ty,tm]=toV.split('-').map(Number);
   const monthsInRange=Math.max(1,(ty-fy)*12+(tm-fm)+1);
@@ -2986,6 +3026,86 @@ function renderOverview(){
     pie.innerHTML=`<div style="width:110px;height:110px;border-radius:50%;background:${g};box-shadow:0 2px 8px rgba(0,0,0,.1)"></div>`;
   }
 }
+// ═══ RAPPORTE ═══
+function renderRapporte(){
+  const ysel=document.getElementById('rp-year');
+  if(ysel&&!ysel.options.length){const y=new Date().getFullYear();ysel.innerHTML=[y-2,y-1,y,y+1].map(v=>`<option${v===y?' selected':''}>${v}</option>`).join('');}
+  const dEl=document.getElementById('rp-date');if(dEl&&!dEl.value)dEl.value=today();
+  const dSel=document.getElementById('rp-dept');
+  if(dSel){const cur=dSel.value;dSel.innerHTML='<option value="">— keine / übergreifend —</option>'+getAllDepts().map(d=>`<option value="${d.replace(/"/g,'&quot;')}">${d}</option>`).join('');dSel.value=cur;}
+  const box=document.getElementById('rp-auds');
+  if(box&&!box.dataset.init){
+    box.innerHTML=auditors.map(a=>`<label style="display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border:1px solid var(--bd);border-radius:16px;font-size:12px;cursor:pointer;background:var(--sf2)"><input type="checkbox" value="${a.replace(/"/g,'&quot;')}" ${a===currentUser?'checked':''}> ${a}</label>`).join('');
+    box.dataset.init='1';
+  }
+  const yr=ysel?ysel.value:String(new Date().getFullYear());
+  const list=rapporte.filter(r=>!r.planned&&(r.date||'').startsWith(yr)).sort((a,b)=>b.date.localeCompare(a.date));
+  const planned=rapporte.filter(r=>r.planned).sort((a,b)=>(a.date+(a.time||'')).localeCompare(b.date+(b.time||'')));
+  // Zusammenfassung: nach Art, nach Abteilung, nach Auditor
+  const cnt=(arr,fn)=>{const m={};arr.forEach(x=>(fn(x)||[]).forEach(k=>{m[k]=(m[k]||0)+1;}));return Object.entries(m).sort((a,b)=>b[1]-a[1]);};
+  const chips=(title,entries)=>entries.length?`<div style="margin-bottom:8px"><div style="font-size:10px;font-weight:600;color:var(--tx2);margin-bottom:4px">${title}</div><div style="display:flex;flex-wrap:wrap;gap:6px">${entries.map(([k,v])=>`<span style="padding:4px 10px;background:var(--sf2);border:1px solid var(--bd);border-radius:14px;font-size:11px">${k}: <b>${v}</b></span>`).join('')}</div></div>`:'';
+  document.getElementById('rp-summary').innerHTML=`
+    <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:10px"><span style="font-size:26px;font-weight:800;color:var(--tx)">${list.length}</span><span style="font-size:12px;color:var(--tx2)">Rapport-Teilnahmen ${yr}</span></div>
+    ${chips('Nach Art',cnt(list,r=>[r.type]))}
+    ${chips('Nach Abteilung',cnt(list,r=>[r.dept||'Übergreifend']))}
+    ${chips('Nach Auditor',cnt(list,r=>r.auditors||[]))}`;
+  const isAdmin=document.body.classList.contains('admin-mode');
+  const row=(r,isPlan)=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-bottom:1px solid var(--bd);font-size:12px;${isPlan?'background:#F0F9FF':''}">
+      <span style="width:92px;flex-shrink:0;color:var(--tx2)">${fd(r.date)}${r.time?'<br><span style="font-size:10px">'+r.time+' Uhr</span>':''}</span>
+      <span style="flex:1;min-width:0"><b>${r.type}</b>${r.dept?' · '+r.dept:''}${r.ort?` <span style="color:var(--tx2)">· ${r.ort}</span>`:''}${r.note?`<div style="font-size:11px;color:var(--tx3)">${r.note}</div>`:''}</span>
+      <span style="display:flex;gap:3px;flex-shrink:0">${(r.auditors||[]).map(a=>`<span title="${a}" style="width:22px;height:22px;border-radius:50%;background:${aC(a)};color:#fff;font-size:9px;font-weight:700;display:inline-flex;align-items:center;justify-content:center">${(AUD_CODES[a]||a.split(' ').map(w=>w[0]).join('')).slice(0,4)}</span>`).join('')}</span>
+      ${isPlan?`<button onclick="confirmRapport(${r.id})" style="padding:4px 9px;border:none;border-radius:6px;background:#10B981;color:#fff;font-size:11px;cursor:pointer;white-space:nowrap">✓ Teilgenommen</button><button onclick="moveRapport(${r.id})" title="Datum/Zeit ändern" style="padding:4px 7px;border:1px solid var(--bd);border-radius:6px;background:var(--sf2);font-size:11px;cursor:pointer">📅</button>`:''}
+      ${(isAdmin||(r.auditors||[]).includes(currentUser))?`<button onclick="rmRapport(${r.id})" class="fidel"><i class="ti ti-trash"></i></button>`:''}
+    </div>`;
+  document.getElementById('rp-list').innerHTML=
+    `<div style="font-size:11px;font-weight:700;color:#0284C7;margin:4px 0 6px">📅 Geplant (${planned.length})</div>`+
+    (planned.length?planned.map(r=>row(r,true)).join(''):'<div style="font-size:11px;color:var(--tx3);padding:6px">Keine geplanten Rapporte.</div>')+
+    `<div style="font-size:11px;font-weight:700;color:var(--tx2);margin:16px 0 6px">✅ Teilgenommen ${yr} (${list.length})</div>`+
+    (list.length?list.map(r=>row(r,false)).join(''):'<div style="font-size:11px;color:var(--tx3);padding:6px">Keine Rapporte in diesem Jahr.</div>');
+}
+function addRapport(){
+  const date=document.getElementById('rp-date').value;
+  const type=document.getElementById('rp-type').value;
+  const dept=document.getElementById('rp-dept').value;
+  const ort=document.getElementById('rp-ort').value.trim();
+  const note=document.getElementById('rp-note').value.trim();
+  const time=document.getElementById('rp-time').value;
+  const done=document.getElementById('rp-done').checked;
+  const auds=[...document.querySelectorAll('#rp-auds input:checked')].map(x=>x.value);
+  if(!date){showToast('Datum erforderlich');return;}
+  if(!auds.length){showToast('Mindestens einen Auditor wählen');return;}
+  rapporte.push({id:Date.now(),date,time,type,dept,ort,note,auditors:auds,planned:!done});
+  ['rp-ort','rp-note','rp-time'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('rp-done').checked=false;
+  saveNow();renderRapporte();renderOverview();renderDeptTable();if(typeof renderKW==='function')renderKW();
+  showToast(done?'✓ '+type+' als teilgenommen erfasst':'📅 '+type+' geplant');
+}
+function confirmRapport(id){
+  const r=rapporte.find(x=>x.id===id);if(!r)return;
+  r.planned=false;
+  saveNow();renderRapporte();renderOverview();renderDeptTable();
+  if(typeof renderKW==='function'&&curView==='cal')renderKW();
+  if(typeof renderMobPlan==='function'&&document.getElementById('mob-plan-list'))renderMobPlan();
+  showToast('✓ Teilnahme bestätigt: '+r.type);
+}
+function moveRapport(id){
+  const r=rapporte.find(x=>x.id===id);if(!r)return;
+  const nd=prompt('Neues Datum (JJJJ-MM-TT):',r.date);if(nd===null)return;
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(nd.trim())){showToast('Format: JJJJ-MM-TT');return;}
+  const nt=prompt('Uhrzeit (HH:MM, leer = ohne):',r.time||'');
+  r.date=nd.trim();if(nt!==null)r.time=nt.trim();
+  saveNow();renderRapporte();if(typeof renderKW==='function'&&curView==='cal')renderKW();
+  if(typeof renderMobPlan==='function'&&document.getElementById('mob-plan-list'))renderMobPlan();
+  showToast('📅 Verschoben auf '+fd(r.date));
+}
+function rmRapport(id){
+  if(!confirm('Rapport-Eintrag löschen?'))return;
+  rapporte=rapporte.filter(r=>r.id!==id);
+  saveNow();renderRapporte();renderOverview();renderDeptTable();
+  if(typeof renderKW==='function'&&curView==='cal')renderKW();
+  if(typeof renderMobPlan==='function'&&document.getElementById('mob-plan-list'))renderMobPlan();
+}
 function renderDeptTable(){
   const tb=document.getElementById('dept-tb');if(!tb)return;
   const fEl=document.getElementById('dept-from'),tEl=document.getElementById('dept-to');
@@ -2995,6 +3115,7 @@ function renderDeptTable(){
   const from=fEl.value,to=tEl.value;
   const inR=ds=>{if(!ds)return false;const ym=ds.slice(0,7);return ym>=from&&ym<=to;};
   const maYear=to.slice(0,4);
+  const todayYM=today().slice(0,7);
   const depts=getAllDepts();
   const personDept=p=>{
     const bs=p.bs?data.find(e=>e.name===p.bs):null;
@@ -3002,32 +3123,51 @@ function renderDeptTable(){
     const per=(typeof persons!=='undefined'?persons:[]).find(x=>((x.nachname||'')+' '+(x.vorname||'')).trim()===(p.person||'').trim());
     return per&&per.abt?[per.abt]:[];
   };
-  const tot={bs:0,a:0,p:0,b:0,ma:0,ov:0,cov:0};
+  const tot={bs:0,a:0,p:0,b:0,ma:0,ov:0,on:0,iv:0,gs:0,gn:0};
   const rows=depts.map(d=>{
     const inD=e=>deptParts(e.dept).includes(d);
     const active=data.filter(e=>inD(e)&&e.active&&!e.paused&&e.type!=='werkhof');
     const a=data.filter(inD).reduce((s,e)=>s+(e.auditHistory||[]).filter(h=>inR(h.date)).length,0);
     const b=data.filter(inD).reduce((s,e)=>s+(e.beratungen||[]).filter(x=>inR(x.date)).length,0);
     const p=personAudits.filter(x=>!x.planned&&inR(x.date)&&personDept(x).includes(d)).length;
-    const covered=active.filter(e=>(e.auditHistory||[]).some(h=>inR(h.date))).length;
-    const cov=active.length?Math.round(covered/active.length*100):null;
+    // Termintreue: jeder Abstand zwischen zwei aufeinanderfolgenden Audits, dessen späteres Audit im
+    // Zeitraum liegt, gilt als rechtzeitig, wenn <= Rhythmus x 1.25. Aktuell überfällige Baustellen
+    // (offene Lücke) zählen zusätzlich als ein verspäteter Abstand, sofern der Zeitraum bis heute reicht.
+    let onTime=0,intervals=0,gapSum=0,gapCount=0;
+    data.filter(inD).forEach(e=>{
+      const rh=(+e.rhythm||28)*1.25;
+      const ds=(e.auditHistory||[]).map(h=>h.date).filter(Boolean).sort();
+      for(let i=1;i<ds.length;i++){
+        if(!inR(ds[i]))continue;
+        const gap=Math.round((parseDate(ds[i])-parseDate(ds[i-1]))/86400000);
+        if(gap<=0)continue;
+        intervals++;gapSum+=gap;gapCount++;if(gap<=rh)onTime++;
+      }
+      if(e.active&&!e.paused&&status(e)==='overdue'&&to>=todayYM)intervals++;
+    });
+    const tt=intervals?Math.round(onTime/intervals*100):null;
+    const avgGap=gapCount?Math.round(gapSum/gapCount):null;
     const ma=deptMA(d,maYear);
     const total=a+p+b;
     const per100=ma?(total/ma*100).toFixed(1):null;
     const ov=active.filter(e=>status(e)==='overdue').length;
-    tot.bs+=active.length;tot.a+=a;tot.p+=p;tot.b+=b;tot.ma+=ma;tot.ov+=ov;tot.cov+=covered;
-    if(!active.length&&!total)return'';
-    const covCol=cov===null?'var(--tx3)':cov>=80?'#10B981':cov>=50?'#F59E0B':'#EF4444';
+    const rp=rapporte.filter(r=>!r.planned&&r.dept===d&&inR(r.date)).length;
+    tot.bs+=active.length;tot.a+=a;tot.p+=p;tot.b+=b;tot.ma+=ma;tot.ov+=ov;tot.on+=onTime;tot.iv+=intervals;tot.gs+=gapSum;tot.gn+=gapCount;
+    if(!active.length&&!total&&!rp)return'';
+    const covCol=tt===null?'var(--tx3)':tt>=80?'#10B981':tt>=60?'#F59E0B':'#EF4444';
     return`<tr><td><strong>${d}</strong></td><td>${active.length}</td><td>${a}</td><td>${p}</td><td>${b}</td>
       <td style="font-weight:700">${total}</td>
-      <td style="font-weight:600;color:${covCol}">${cov===null?'—':cov+'%'}</td>
+      <td style="font-weight:600;color:${covCol}">${tt===null?'—':tt+'%'}</td>
+      <td style="color:var(--tx2)">${avgGap===null?'—':avgGap+' T'}</td>
       <td style="color:var(--tx2)">${ma||'—'}</td><td style="font-weight:600">${per100??'—'}</td>
-      <td style="color:${ov?'#EF4444':'var(--tx3)'};font-weight:${ov?600:400}">${ov}</td></tr>`;
+      <td style="color:${ov?'#EF4444':'var(--tx3)'};font-weight:${ov?600:400}">${ov}</td>
+      <td style="color:var(--tx2)">${rp||'—'}</td></tr>`;
   }).join('');
   const tAll=tot.a+tot.p+tot.b;
-  const tCov=tot.bs?Math.round(tot.cov/tot.bs*100)+'%':'—';
-  tb.innerHTML=(rows||'<tr><td colspan="10" style="padding:10px;color:var(--tx3);text-align:center">Keine Daten im Zeitraum.</td></tr>')+
-    `<tr style="border-top:2px solid var(--bd);background:var(--sf2)"><td><strong>Total</strong></td><td>${tot.bs}</td><td>${tot.a}</td><td>${tot.p}</td><td>${tot.b}</td><td style="font-weight:800">${tAll}</td><td style="font-weight:700">${tCov}</td><td>${tot.ma||'—'}</td><td style="font-weight:700">${tot.ma?(tAll/tot.ma*100).toFixed(1):'—'}</td><td>${tot.ov}</td></tr>`;
+  const tCov=tot.iv?Math.round(tot.on/tot.iv*100)+'%':'—';
+  const tGap=tot.gn?Math.round(tot.gs/tot.gn)+' T':'—';
+  tb.innerHTML=(rows||'<tr><td colspan="12" style="padding:10px;color:var(--tx3);text-align:center">Keine Daten im Zeitraum.</td></tr>')+
+    `<tr style="border-top:2px solid var(--bd);background:var(--sf2)"><td><strong>Total</strong></td><td>${tot.bs}</td><td>${tot.a}</td><td>${tot.p}</td><td>${tot.b}</td><td style="font-weight:800">${tAll}</td><td style="font-weight:700">${tCov}</td><td>${tGap}</td><td>${tot.ma||'—'}</td><td style="font-weight:700">${tot.ma?(tAll/tot.ma*100).toFixed(1):'—'}</td><td>${tot.ov}</td><td>${rapporte.filter(r=>!r.planned&&inR(r.date)).length||'—'}</td></tr>`;
 }
 function renderAuditors(){
   initOverviewDefaults();
@@ -3211,6 +3351,7 @@ function renderWeekView(kw){
         ${dayP.length?`<div style="display:flex;gap:3px"><button onclick="kwRoute_day('${ds}')"><i class="ti ti-map-2"></i></button><button onclick="kwPrint_day('${ds}')"><i class="ti ti-printer"></i></button></div>`:''}
       </div>
       ${fer.map(f=>`<div class="kwfer">🌴 ${f.auditor.split(' ').pop()}: ${f.label}</div>`).join('')}
+      ${(()=>{const rs=rapporte.filter(r=>r.date===ds&&(!audFilter||(r.auditors||[]).includes(audFilter))).sort((a,b)=>(a.time||'').localeCompare(b.time||''));return rs.map(r=>`<div class="kwe" style="border-left:3px solid #0EA5E9;${r.planned?'':'background:#F0F9FF'}"><div class="kwe-top"><div class="kwen" style="color:#0369A1">${r.planned?'':'✓ '}📋 ${r.type}${r.time?' '+r.time:''}${r.dept?`<div style="font-size:10px;font-weight:400;color:var(--tx3)">${r.dept}${r.ort?' · '+r.ort:''}</div>`:''}</div><span style="display:flex;gap:2px">${(r.auditors||[]).map(a=>`<span class="kwea" style="background:${aC(a)}">${a.split(' ').pop()}</span>`).join('')}</span></div>${r.planned?`<div class="kwe-move" style="display:flex;gap:4px;padding:2px 6px 3px;border-top:1px solid var(--bd)"><button onclick="confirmRapport(${r.id})" style="padding:1px 6px;border-radius:3px;border:none;background:#10B981;color:#fff;font-size:9px;cursor:pointer;line-height:1.4">✓ Teilgenommen</button><button onclick="moveRapport(${r.id})" style="padding:1px 5px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">📅 Verschieben</button></div>`:''}</div>`).join('');})()}
       ${(()=>{const bp=beratPlan.filter(p=>p.date===ds&&(!audFilter||p.auditor===audFilter));return bp.map(p=>{const e=data.find(x=>x.id===p.bsId);const audCol=aC(p.auditor||'');return`<div class="kwe" style="border-left:3px solid #8B5CF6"><div class="kwe-top" onclick="openBeratPlanPop(${p.id})" style="cursor:pointer"><div class="kwen">💬 ${e?e.name:'(gel.)'}</div><span class="kwea" style="background:${audCol}">${(p.auditor||'?').split(' ').pop()}</span></div>${p.note?`<div style="font-size:10px;color:#7C3AED;padding:2px 6px 3px">${p.note}</div>`:''}<div class="kwe-move" style="display:flex;gap:2px;padding:2px 6px 3px;border-top:1px solid var(--bd)"><button onclick="moveBeratPlan(${p.id},'${kwToDate(kw-1)}',4)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">←</button>${days.map((day,dj)=>`<button onclick="moveBeratPlan(${p.id},'${kwToDate(kw)}',${dj})" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:${dj===di?'var(--blue)':'var(--sf2)'};color:${dj===di?'#fff':'var(--tx2)'};font-size:9px;cursor:pointer;line-height:1.4">${day}</button>`).join('')}<button onclick="moveBeratPlan(${p.id},'${kwToDate(kw+1)}',0)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">→</button></div></div>`;}).join('');})()}
       ${(()=>{const done=data.flatMap(e=>(e.beratungen||[]).filter(b=>b.date===ds).map(b=>({...b,eName:e.name,eId:e.id})));return done.map(b=>{const bAudCol=aC(b.auditor||'');return`<div class="kwe" style="background:#F5F3FF;border-left:3px solid #8B5CF6;cursor:pointer" onclick="openBeratDoneUndo(${b.eId},${b.id})"><div class="kwe-top"><div class="kwen" style="color:#7C3AED">💬 ${b.eName}</div><span class="kwea" style="background:${bAudCol}">${(b.auditor||'?').split(' ').pop()}</span></div>${b.note?`<div style="font-size:10px;color:#7C3AED;padding:2px 6px 3px">${b.note}</div>`:''}</div>`;}).join('');})()}
       ${dayAudits.map(h=>`<div class="kwe" style="background:#F0FDF4;border-left:3px solid #10B981;cursor:pointer" onclick="openAuditUndo(${h.eId},'${h.date}')"><div class="kwe-top"><div class="kwen" style="color:#065F46">✓ ${h.eName}</div><span class="kwea" style="background:#10B981">${(h.auditor||'?').split(' ').pop()}</span></div></div>`).join('')}
@@ -4463,6 +4604,20 @@ function renderMobPlan(){
   },
   };
   const _stops=mobOrderedStops(dayPlans,dayBeratPlans,dayPersonPlans);
+  // Rapporte des Tages (eigener Block oben, nicht Teil der Fahrzeit-Route)
+  const _dayRapp=rapporte.filter(r=>r.date===_mobDate&&(!currentUser||(r.auditors||[]).includes(currentUser))).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+  _dayRapp.forEach(r=>{
+    html+=`<div style="background:var(--sf);border:1px solid var(--bd);border-left:4px solid #0EA5E9;border-radius:12px;padding:12px 14px;margin-bottom:10px">
+      <div style="font-size:10px;font-weight:700;color:#0369A1;margin-bottom:2px">${r.planned?'📋 RAPPORT GEPLANT':'✓ TEILGENOMMEN'}${r.time?' · '+r.time+' Uhr':''}</div>
+      <div style="font-size:14px;font-weight:700;color:var(--tx)">${r.type}</div>
+      <div style="font-size:12px;color:var(--tx2)">${[r.dept,r.ort].filter(Boolean).join(' · ')}</div>
+      ${r.note?`<div style="font-size:11px;color:var(--tx3);margin-top:2px">${r.note}</div>`:''}
+      ${r.planned?`<div style="display:flex;gap:6px;margin-top:10px">
+        <button onclick="confirmRapport(${r.id})" style="flex:1;padding:9px;border:none;border-radius:9px;background:#10B981;color:#fff;font-size:13px;font-weight:600;cursor:pointer">✓ Teilgenommen</button>
+        <button onclick="moveRapport(${r.id})" style="padding:9px 12px;border:1px solid var(--bd);border-radius:9px;background:var(--sf2);color:var(--tx);font-size:13px;cursor:pointer">📅</button>
+      </div>`:''}
+    </div>`;
+  });
   html+=mobRouteBannerHTML(_stops);
   _stops.forEach(st=>{html+=mobLegHTML(st);html+=_cardFns[st.type](st.ref);});
   html+=mobReturnLegHTML(_stops);
@@ -6096,6 +6251,7 @@ async function sbPush(){
     ferienWunsch:JSON.stringify(ferienWunsch||[]),
     orsKey:window._orsKey||'',
     deptMeta:JSON.stringify({customDepts,deptMeta}),
+    rapporte:JSON.stringify(rapporte||[]),
     updated_at:new Date().toISOString()};
   let result=await sbFetch('audit_state',{method:'POST',body:JSON.stringify(payload),
     headers:{'Prefer':'resolution=merge-duplicates'}});
@@ -6103,7 +6259,7 @@ async function sbPush(){
     // Fallback: falls Spalten in Supabase noch nicht existieren (alte Tabelle, Spalte noch
     // nicht per SQL ergänzt) -> ohne diese Felder nochmal versuchen, damit der Rest der
     // Synchronisation nicht komplett blockiert wird.
-    const{piCollectBox,auditTarget,tempWorkers,ferienWunsch,orsKey,deptMeta:_dm,...fallbackPayload}=payload;
+    const{piCollectBox,auditTarget,tempWorkers,ferienWunsch,orsKey,deptMeta:_dm,rapporte:_rp,...fallbackPayload}=payload;
     result=await sbFetch('audit_state',{method:'POST',body:JSON.stringify(fallbackPayload),
       headers:{'Prefer':'resolution=merge-duplicates'}});
     if(result)console.warn('sbPush: piCollectBox/auditTarget-Spalten fehlen in Supabase - siehe Admin-Menü "Sammelbox" für Setup-SQL. Restliche Daten wurden trotzdem synchronisiert.');
@@ -6132,6 +6288,7 @@ async function sbPull(){
     if(p.auditTarget!==undefined&&p.auditTarget!==null)window._auditTarget=+p.auditTarget;
     if(p.tempWorkers){try{window._tempWorkers=JSON.parse(p.tempWorkers);}catch(e){}}
     if(p.ferienWunsch){try{ferienWunsch=JSON.parse(p.ferienWunsch);}catch(e){}}
+    if(p.rapporte){try{rapporte=JSON.parse(p.rapporte);}catch(e){}}
     if(p.deptMeta){try{const dm=JSON.parse(p.deptMeta);if(Array.isArray(dm.customDepts))customDepts=dm.customDepts;if(dm.deptMeta)deptMeta=dm.deptMeta;localStorage.setItem('anliker_depts',JSON.stringify(customDepts));localStorage.setItem('anliker_dept_meta',JSON.stringify(deptMeta));}catch(e){}}
     if(typeof p.orsKey==='string'){window._orsKey=p.orsKey;try{localStorage.setItem('anliker_ors_key',p.orsKey);}catch(e){}}
     if(p.persons){try{persons=JSON.parse(p.persons);localStorage.setItem('anliker_persons',JSON.stringify(persons));}catch(e){}}
@@ -6707,11 +6864,14 @@ function exportICSDay(audFilter,kw,pickedDate){
   if(audFilter)dayBeratPlans=dayBeratPlans.filter(p=>p.auditor===audFilter);
   let dayPersonAudits=personAudits.filter(p=>p.planned&&p.date===targetDate);
   if(audFilter)dayPersonAudits=dayPersonAudits.filter(p=>p.auditor===audFilter);
-  if(!dayPlans.length&&!dayBeratPlans.length&&!dayPersonAudits.length){showToast('Keine Planungen für diesen Tag');return;}
+  let dayRapp=rapporte.filter(r=>r.planned&&r.date===targetDate);
+  if(audFilter)dayRapp=dayRapp.filter(r=>(r.auditors||[]).includes(audFilter));
+  if(!dayPlans.length&&!dayBeratPlans.length&&!dayPersonAudits.length&&!dayRapp.length){showToast('Keine Planungen für diesen Tag');return;}
   const items=dayPlans.map(p=>{const e=data.find(x=>x.id===p.bsId);return e?{name:e.name,addr:e.addr||'',dept:e.dept||'',auditor:p.auditor}:null;}).filter(Boolean);
   const beratItems2=dayBeratPlans.map(p=>{const e=data.find(x=>x.id===p.bsId);return e?{name:'💬 '+e.name+(p.note?' ('+p.note+')':''),addr:e.addr||'',dept:e.dept||'',auditor:p.auditor}:null;}).filter(Boolean);
   const personItems=dayPersonAudits.map(p=>({name:'👤 '+p.person+(p.bs?' – '+p.bs:'')+(p.note?' ('+p.note+')':''),addr:p.addr||'',dept:p.kat||'',auditor:p.auditor}));
-  const allItems=[...items,...beratItems2,...personItems];
+  const rappItems=dayRapp.map(r=>({name:'📋 '+r.type+(r.time?' '+r.time+' Uhr':'')+(r.dept?' – '+r.dept:''),addr:r.ort||'',dept:r.dept||'',auditor:(r.auditors||[]).join(', ')}));
+  const allItems=[...rappItems,...items,...beratItems2,...personItems];
   const audLabel=audFilter||allItems[0]?.auditor||'Auditor';
   const addrs=allItems.map(i=>i.addr).filter(Boolean);
   const d=parseDate(targetDate);
@@ -6734,13 +6894,17 @@ function exportICSWeek(audFilter,kw){
     if(audFilter)dayBerats=dayBerats.filter(p=>p.auditor===audFilter);
     let dayPA=personAudits.filter(p=>p.planned&&p.date===ds);
     if(audFilter)dayPA=dayPA.filter(p=>p.auditor===audFilter);
-    if(!dayPlans.length&&!dayBerats.length&&!dayPA.length)continue;
+    let dayRp=rapporte.filter(r=>r.planned&&r.date===ds);
+    if(audFilter)dayRp=dayRp.filter(r=>(r.auditors||[]).includes(audFilter));
+    if(!dayPlans.length&&!dayBerats.length&&!dayPA.length&&!dayRp.length)continue;
     const byAud={};
+    dayRp.forEach(r=>(r.auditors||[]).filter(a=>!audFilter||a===audFilter).forEach(aud=>{if(!byAud[aud])byAud[aud]=[];byAud[aud].push({...r,_type:'rapp'});}));
     dayPlans.forEach(p=>{const aud=p.auditor||'Unbekannt';if(!byAud[aud])byAud[aud]=[];byAud[aud].push({...p,_type:'audit'});});
     dayBerats.forEach(p=>{const aud=p.auditor||'Unbekannt';if(!byAud[aud])byAud[aud]=[];byAud[aud].push({...p,_type:'berat'});});
     dayPA.forEach(p=>{const aud=p.auditor||'Unbekannt';if(!byAud[aud])byAud[aud]=[];byAud[aud].push({...p,_type:'person'});});
     Object.entries(byAud).forEach(([aud,ps])=>{
       const items=ps.map(p=>{
+        if(p._type==='rapp')return{name:'📋 '+p.type+(p.time?' '+p.time+' Uhr':'')+(p.dept?' – '+p.dept:''),addr:p.ort||'',dept:p.dept||'',auditor:aud};
         if(p._type==='person')return{name:'👤 '+p.person+(p.bs?' – '+p.bs:'')+(p.note?' ('+p.note+')':''),addr:p.addr||'',dept:p.kat||'',auditor:aud};
         const e=data.find(x=>x.id===p.bsId);if(!e)return null;
         const name=p._type==='berat'?'💬 '+e.name+(p.note?' ('+p.note+')':''):e.name;
@@ -6994,7 +7158,8 @@ ALTER TABLE audit_state ADD COLUMN IF NOT EXISTS "auditTarget" integer;
 ALTER TABLE audit_state ADD COLUMN IF NOT EXISTS "tempWorkers" text;
 ALTER TABLE audit_state ADD COLUMN IF NOT EXISTS "ferienWunsch" text;
 ALTER TABLE audit_state ADD COLUMN IF NOT EXISTS "orsKey" text;
-ALTER TABLE audit_state ADD COLUMN IF NOT EXISTS "deptMeta" text;</pre>
+ALTER TABLE audit_state ADD COLUMN IF NOT EXISTS "deptMeta" text;
+ALTER TABLE audit_state ADD COLUMN IF NOT EXISTS "rapporte" text;</pre>
     </details>
     <div id="sb-list"></div>
     <div style="display:flex;justify-content:flex-end;margin-top:16px;border-top:1px solid var(--bd);padding-top:12px">
