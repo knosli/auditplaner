@@ -361,7 +361,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
   <div id="presence-bar" style="display:flex;align-items:center;gap:4px;margin-left:4px"></div>
   <button onclick="toggleDark()" class="hb" title="Dark Mode" style="font-size:14px">🌙</button>
   <button onclick="openGuide()" class="hb" title="Anleitung" style="font-size:14px">❓</button>
-  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.55</span>
+  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.56</span>
   <button onclick="doLogout()" class="hb" title="Abmelden" style="font-size:14px" id="logout-btn">⏻</button>
   <button onclick="toggleMobileView()" id="mobile-btn" class="hb" title="Mobile Ansicht" style="font-size:14px">📱</button>
   <div id="more-w" class="admin-only">
@@ -752,12 +752,12 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
                 Soll/Jahr: <input type="number" id="ov-target" min="0" step="1" onchange="setAuditTarget(this.value)" style="width:60px;padding:3px 6px;border:1px solid var(--bd);border-radius:6px;background:var(--sf2);color:var(--tx);font-size:11px">
               </span>
             </div>
-            <div style="display:flex;gap:12px;margin-top:10px;font-size:11px">
+            <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:10px;font-size:11px">
               <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#3B82F6;margin-right:4px"></span>Baustellen-Audits: <b id="ov-c-site">0</b></span>
               <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#F59E0B;margin-right:4px"></span>Personen-Audits: <b id="ov-c-person">0</b></span>
               <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#8B5CF6;margin-right:4px"></span>Beratungen: <b id="ov-c-berat">0</b></span>
+              <span style="color:var(--tx2)">📋 Rapporte: <b id="ov-c-rapp">0</b></span>
             </div>
-            <div style="margin-top:8px;padding-top:8px;border-top:1px dashed var(--bd);font-size:11px;color:var(--tx2)">📋 Rapporte im Zeitraum: <b id="ov-c-rapp">0</b> <span style="color:var(--tx3)">(separat, nicht im Audit-Total)</span></div>
           </div>
         </div>
       </div>
@@ -917,7 +917,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
             <th title="Rapport-Teilnahmen (Bauführer-/Polierrapporte) im Zeitraum - nicht im Audit-Total">📋 Rapp.</th>
           </tr></thead><tbody id="dept-tb"></tbody></table>
         </div>
-        <div style="font-size:10px;color:var(--tx3);margin-top:8px"><b>Termintreue:</b> Anteil der Audit-Abstände, die innerhalb des Rhythmus lagen (+25 % Toleranz, z.B. 28 → 35 Tage); aktuell überfällige Baustellen zählen als verspätet. Ampel: grün ab 80 %, orange ab 60 %. <br>Personen-Audits werden über die zugeordnete Baustelle bzw. die Abteilung im Personen-Register zugeteilt. Mitarbeitende pflegen: Admin-Menü → Abteilungen verwalten.</div>
+        <div style="font-size:10px;color:var(--tx3);margin-top:8px"><b>Termintreue:</b> Anteil der Audit-Abstände, die innerhalb des Rhythmus lagen (+25 % Toleranz, z.B. 28 → 35 Tage); aktuell überfällige Baustellen zählen als verspätet. Ampel: grün ab 80 %, orange ab 60 %. <br>Personen-Audits zählen bei der Abteilung der Person laut Personen-Register (sonst bei der Abteilung der Baustelle). Mitarbeitende pflegen: Admin-Menü → Abteilungen verwalten.</div>
       </div>
     </div>
   </div>
@@ -1396,8 +1396,8 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
     <div style="width:40px;height:4px;background:var(--bd);border-radius:2px;margin:0 auto 16px"></div>
     <div id="mob-rp-menu-name" style="font-size:14px;font-weight:700;color:var(--tx);margin-bottom:16px"></div>
     <div style="display:flex;flex-direction:column;gap:8px">
-      <button onclick="mobRPMoveDay(-1)" style="padding:12px;border-radius:10px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx);cursor:pointer;font-size:13px;text-align:left">← Auf gestern verschieben</button>
-      <button onclick="mobRPMoveDay(1)" style="padding:12px;border-radius:10px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx);cursor:pointer;font-size:13px;text-align:left">→ Auf morgen verschieben</button>
+      <button onclick="mobRPMoveDay(-1)" style="padding:12px;border-radius:10px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx);cursor:pointer;font-size:13px;text-align:left">← Termin auf gestern verschieben (für alle)</button>
+      <button onclick="mobRPMoveDay(1)" style="padding:12px;border-radius:10px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx);cursor:pointer;font-size:13px;text-align:left">→ Termin auf morgen verschieben (für alle)</button>
       <button onclick="document.getElementById('mob-rp-menu-bg').style.display='none';openRapportEdit(_mobMenuRPId)" style="padding:12px;border-radius:10px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx);cursor:pointer;font-size:13px;text-align:left">✏️ Bearbeiten (Zeit, Ort, Teilnehmende …)</button>
       <button onclick="mobCancelRP()" style="padding:12px;border-radius:10px;border:1px solid #EF4444;background:none;color:#EF4444;cursor:pointer;font-size:13px;text-align:left">✕ Rapport für mich absagen</button>
       <button onclick="document.getElementById('mob-rp-menu-bg').style.display='none'" style="padding:12px;border-radius:10px;border:none;background:none;color:var(--tx2);cursor:pointer;font-size:13px">Abbrechen</button>
@@ -3034,7 +3034,7 @@ function renderOverview(){
   document.getElementById('ov-c-site').textContent=siteCount;
   document.getElementById('ov-c-person').textContent=personCount;
   document.getElementById('ov-c-berat').textContent=beratCount;
-  const rpEl=document.getElementById('ov-c-rapp');if(rpEl){const dn=rapporte.filter(r=>!r.planned&&inRange(r.date));rpEl.textContent=rpTermine(dn)+' Termine · '+dn.length+' Teilnahmen';}
+  const rpEl=document.getElementById('ov-c-rapp');if(rpEl)rpEl.textContent=rpTermine(rapporte.filter(r=>!r.planned&&inRange(r.date)));
   // Soll auf den gewählten Zeitraum skalieren (Jahres-Soll ÷ 12 × Anzahl Monate im Bereich)
   const [fy,fm]=fromV.split('-').map(Number),[ty,tm]=toV.split('-').map(Number);
   const monthsInRange=Math.max(1,(ty-fy)*12+(tm-fm)+1);
@@ -3229,6 +3229,8 @@ function exportMyRapporteICS(){
   showToast('📅 Geplante Rapporte → Outlook',2500);
 }
 let _rpeId=null;
+// Bearbeiten gilt immer für den ganzen Termin (Gruppe); Status (geplant / teilgenommen / abgesagt)
+// wird pro Person gesetzt.
 function openRapportEdit(id){
   const r=rapporte.find(x=>x.id===id);if(!r)return;
   _rpeId=id;
@@ -3238,18 +3240,24 @@ function openRapportEdit(id){
   const opts=getAllDepts();if(r.dept&&!opts.includes(r.dept))opts.push(r.dept);
   dSel.innerHTML='<option value="">— keine / übergreifend —</option>'+opts.map(d=>`<option value="${d.replace(/"/g,'&quot;')}">${d}</option>`).join('');dSel.value=r.dept||'';
   const grp=rpGroup(r);
-  document.getElementById('rpe-auds').innerHTML=auditors.map(a=>{const m=grp.find(x=>x.auditor===a);return`<label style="display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border:1px solid var(--bd);border-radius:16px;font-size:12px;cursor:pointer;background:var(--sf2)"><input type="checkbox" value="${a.replace(/"/g,'&quot;')}" ${m?'checked':''} ${m&&!m.planned?'disabled title="Bereits teilgenommen"':''}> ${a}${m&&!m.planned?' ✓':''}</label>`;}).join('');
-  document.getElementById('rpe-all-wrap').style.display=grp.length>1?'flex':'none';document.getElementById('rpe-all').checked=true;
+  const seg=(m,val,lbl,col)=>`<label style="display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:12px;font-size:11px;cursor:pointer;border:1px solid var(--bd)"><input type="radio" name="rpe-st-${m.id}" value="${val}" ${((val==='planned'&&m.planned)||(val==='done'&&!m.planned))?'checked':''} style="accent-color:${col}"> ${lbl}</label>`;
+  document.getElementById('rpe-members').innerHTML=grp.map(m=>`<div data-mid="${m.id}" style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-bottom:1px solid var(--bd);flex-wrap:wrap">
+      <span style="width:22px;height:22px;border-radius:50%;background:${aC(m.auditor)};color:#fff;font-size:8px;font-weight:700;display:inline-flex;align-items:center;justify-content:center">${(AUD_CODES[m.auditor]||m.auditor.split(' ').map(w=>w[0]).join('')).slice(0,4)}</span>
+      <span style="flex:1;min-width:110px;font-size:12px;font-weight:600">${m.auditor}</span>
+      ${seg(m,'planned','Geplant','#0EA5E9')}${seg(m,'done','✓ Teilgenommen','#10B981')}${seg(m,'remove','✕ Abgesagt','#EF4444')}
+    </div>`).join('');
+  const free=auditors.filter(a=>!grp.some(m=>m.auditor===a));
+  document.getElementById('rpe-add').innerHTML=free.length?`<span style="font-size:11px;color:var(--tx2);align-self:center">Hinzufügen:</span>`+free.map(a=>`<label style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border:1px dashed var(--bd);border-radius:16px;font-size:12px;cursor:pointer"><input type="checkbox" value="${a.replace(/"/g,'&quot;')}"> ${a}</label>`).join(''):'';
   window._rpePendingLat=r.lat||null;window._rpePendingLng=r.lng||null;
   const h=document.getElementById('rpe-addr-hint');if(h)h.textContent='';
-  const sw=document.getElementById('rpe-series-wrap');
-  const hasFollow=r.seriesId&&rapporte.some(x=>x.seriesId===r.seriesId&&x.planned&&x.auditor===r.auditor&&x.date>r.date);
-  sw.style.display=hasFollow?'flex':'none';document.getElementById('rpe-series').checked=false;
-  document.getElementById('rpe-btn-done').style.display=r.planned?'':'none';
-  document.getElementById('rpe-btn-undo').style.display=r.planned?'none':'';
-  document.getElementById('rpe-title').textContent=(r.planned?'📋 Rapport bearbeiten':'✓ Rapport (teilgenommen)')+(r.seriesId?' 🔁':'')+' – '+r.auditor;
+  const hasFollow=r.seriesId&&rapporte.some(x=>x.seriesId===r.seriesId&&x.date>r.date);
+  document.getElementById('rpe-series-wrap').style.display=hasFollow?'flex':'none';document.getElementById('rpe-series').checked=false;
+  const mine=grp.find(m=>m.auditor===currentUser);
+  document.getElementById('rpe-btn-done').style.display=mine&&mine.planned?'':'none';
+  document.getElementById('rpe-title').textContent='📋 '+r.type+(r.seriesId?' 🔁':'')+' – '+fd(r.date);
   document.getElementById('rpe-bg').style.display='flex';
 }
+function rpeMyId(){const r=rapporte.find(x=>x.id===_rpeId);if(!r)return _rpeId;const m=rpGroup(r).find(x=>x.auditor===currentUser);return m?m.id:_rpeId;}
 function rpeRefresh(){
   saveNow();renderRapporte();renderOverview();renderDeptTable();
   if(typeof renderKW==='function'&&curView==='cal')renderKW();
@@ -3258,37 +3266,57 @@ function rpeRefresh(){
 function rpeAction(action){
   const r=rapporte.find(x=>x.id===_rpeId);if(!r)return;
   const close=()=>{document.getElementById('rpe-bg').style.display='none';};
-  if(action==='cancel'){close();rmRapport(r.id);return;}
-  if(action==='done'){r.planned=false;close();rpeRefresh();showToast('✓ Teilnahme bestätigt');return;}
-  if(action==='undo'){r.planned=true;close();rpeRefresh();showToast('↩ Wieder auf geplant gesetzt');return;}
-  // Speichern
+  if(action==='cancelAll'){close();cancelRapportTermin(r.id);return;}
+  if(action==='done'){const m=rpGroup(r).find(x=>x.auditor===currentUser);if(m)m.planned=false;close();rpeRefresh();showToast('✓ Teilnahme bestätigt');return;}
+  // Speichern: gemeinsame Angaben für alle Teilnehmenden, Status pro Person
   const g=k=>document.getElementById('rpe-'+k).value;
-  const wanted=[...document.querySelectorAll('#rpe-auds input:checked')].map(x=>x.value);
   if(!g('date')){showToast('Datum erforderlich');return;}
-  if(!wanted.length){showToast('Mindestens einen Auditor wählen – oder «Absagen» verwenden');return;}
   const addr=g('addr').trim();
-  const shared={type:g('type'),time:g('time'),dur:+g('dur')||60,dept:g('dept'),addr,lat:addr?window._rpePendingLat||null:null,lng:addr?window._rpePendingLng||null:null,ort:g('ort').trim()};
-  const toAll=document.getElementById('rpe-all').checked;
-  const oldDate=r.date;
-  Object.assign(r,shared,{date:g('date'),note:g('note').trim()});
-  if(toAll)rpGroup(r).filter(x=>x.id!==r.id&&x.planned).forEach(x=>Object.assign(x,shared,{date:r.date}));
-  // Teilnehmende: neu angehakte hinzufügen, abgehakte (nur geplante) absagen
-  const grp=rpGroup(r);let added=0,removed=0;
-  wanted.filter(a=>!grp.some(x=>x.auditor===a)).forEach((a,i)=>{rapporte.push({...r,id:Date.now()*100+i,auditor:a,auditors:[a],planned:true});added++;});
-  grp.filter(x=>x.planned&&!wanted.includes(x.auditor)).forEach(x=>{rapporte=rapporte.filter(y=>y.id!==x.id);removed++;});
-  const team=rpGroup(r).map(x=>x.auditor);rpGroup(r).forEach(x=>x.team=team);
-  // Serie: folgende geplante Termine (eigene bzw. aller Teilnehmenden)
+  const shared={type:g('type'),time:g('time'),dur:+g('dur')||60,dept:g('dept'),addr,lat:addr?window._rpePendingLat||null:null,lng:addr?window._rpePendingLng||null:null,ort:g('ort').trim(),note:g('note').trim()};
+  const oldDate=r.date,gid=r.groupId;
+  const grp=rpGroup(r);
+  const status={};grp.forEach(m=>{const s=document.querySelector(`input[name="rpe-st-${m.id}"]:checked`);status[m.id]=s?s.value:(m.planned?'planned':'done');});
+  const addNew=[...document.querySelectorAll('#rpe-add input:checked')].map(x=>x.value);
+  const remaining=grp.filter(m=>status[m.id]!=='remove').length+addNew.length;
+  if(!remaining){if(!confirm('Alle Teilnehmenden abgesagt – ganzen Termin löschen?'))return;}
+  grp.forEach(m=>{Object.assign(m,shared,{date:g('date')});if(status[m.id]!=='remove')m.planned=status[m.id]==='planned';});
+  const removed=grp.filter(m=>status[m.id]==='remove').map(m=>m.auditor);
+  rapporte=rapporte.filter(x=>!(x.groupId===gid&&status[x.id]==='remove'));
+  const tpl=rapporte.find(x=>x.groupId===gid)||{...r,...shared,date:g('date')};
+  addNew.forEach((a,i)=>rapporte.push({...tpl,id:Date.now()*100+i,auditor:a,auditors:[a],planned:true,groupId:gid}));
+  const team=rapporte.filter(x=>x.groupId===gid).map(x=>x.auditor);rapporte.filter(x=>x.groupId===gid).forEach(x=>x.team=team);
+  // Serie: folgende Termine übernehmen (Angaben + gleiche Teilnehmendenliste)
   let n=0;
   if(r.seriesId&&document.getElementById('rpe-series').checked){
-    rapporte.filter(x=>x.seriesId===r.seriesId&&x.planned&&x.date>oldDate&&x.id!==r.id&&(toAll||x.auditor===r.auditor)).forEach(x=>{Object.assign(x,shared);n++;});
+    const later=[...new Set(rapporte.filter(x=>x.seriesId===r.seriesId&&x.date>oldDate&&x.groupId!==gid).map(x=>x.groupId))];
+    later.forEach(lg=>{
+      const mem=rapporte.filter(x=>x.groupId===lg);const t=mem[0];const d=t.date;
+      mem.forEach(x=>{const{note,...s2}=shared;Object.assign(x,s2);});
+      rapporte=rapporte.filter(x=>!(x.groupId===lg&&x.planned&&removed.includes(x.auditor)));
+      addNew.forEach((a,i)=>{if(!rapporte.some(x=>x.groupId===lg&&x.auditor===a))rapporte.push({...t,...shared,note:t.note,date:d,id:Date.now()*100+500+n*10+i,auditor:a,auditors:[a],planned:true});});
+      const tm=rapporte.filter(x=>x.groupId===lg).map(x=>x.auditor);rapporte.filter(x=>x.groupId===lg).forEach(x=>x.team=tm);
+      n++;
+    });
   }
   close();rpeRefresh();
-  const parts=[n?`${n} Serientermine`:'',added?`${added} hinzugefügt`:'',removed?`${removed} abgesagt`:''].filter(Boolean).join(', ');
-  showToast('✓ Gespeichert'+(parts?' ('+parts+')':''),2800);
+  const parts=[n?`${n} folgende Serientermine`:'',addNew.length?`${addNew.length} hinzugefügt`:'',removed.length?`${removed.join(', ')} abgesagt`:''].filter(Boolean).join(' · ');
+  showToast('✓ Gespeichert'+(parts?' ('+parts+')':''),3000);
+}
+// Ganzen Termin für alle absagen (bei Serien: nur dieser oder alle folgenden geplanten)
+function cancelRapportTermin(id){
+  const r=rapporte.find(x=>x.id===id);if(!r)return;
+  const later=r.seriesId?[...new Set(rapporte.filter(x=>x.seriesId===r.seriesId&&x.planned&&x.date>=r.date).map(x=>x.groupId))]:[];
+  if(later.length>1){
+    if(confirm(`Serientermin für ALLE Teilnehmenden absagen.\n\nOK = diesen und alle folgenden geplanten Termine der Serie (${later.length})\nAbbrechen = weiter zur Auswahl «nur diesen Termin»`)){
+      rapporte=rapporte.filter(x=>!(x.seriesId===r.seriesId&&x.planned&&x.date>=r.date));rpeRefresh();showToast('✕ Serie ab '+fd(r.date)+' abgesagt');return;
+    }
+  }
+  if(!confirm(`Termin ${r.type} vom ${fd(r.date)} für alle Teilnehmenden absagen?`))return;
+  rapporte=rapporte.filter(x=>x.groupId!==r.groupId);rpeRefresh();showToast('✕ Termin abgesagt');
 }
 function moveRapportTo(id,ds){
   const r=rapporte.find(x=>x.id===id);if(!r||r.date===ds)return;
-  r.date=ds;rpeRefresh();showToast('📅 Verschoben auf '+fd(ds));
+  rpGroup(r).forEach(x=>{x.date=ds;});rpeRefresh();showToast('📅 Termin verschoben auf '+fd(ds));
 }
 function confirmRapport(id){
   const r=rapporte.find(x=>x.id===id);if(!r)return;
@@ -3339,10 +3367,12 @@ function renderDeptTable(){
   const todayYM=today().slice(0,7);
   const depts=getAllDepts();
   const personDept=p=>{
+    const per=(typeof persons!=='undefined'?persons:[]).find(x=>((x.nachname||'')+' '+(x.vorname||'')).trim()===(p.person||'').trim());
+    const m=per?mapPersonAbt(per.abt):null;
+    if(m)return[m];
     const bs=p.bs?data.find(e=>e.name===p.bs):null;
     if(bs&&bs.dept)return deptParts(bs.dept);
-    const per=(typeof persons!=='undefined'?persons:[]).find(x=>((x.nachname||'')+' '+(x.vorname||'')).trim()===(p.person||'').trim());
-    return per&&per.abt?[per.abt]:[];
+    return[];
   };
   const tot={bs:0,a:0,p:0,b:0,ma:0,ov:0,on:0,iv:0,gs:0,gn:0};
   const rows=depts.map(d=>{
@@ -3384,10 +3414,13 @@ function renderDeptTable(){
       <td style="color:${ov?'#EF4444':'var(--tx3)'};font-weight:${ov?600:400}">${ov}</td>
       <td style="color:var(--tx2)">${rp||'—'}</td></tr>`;
   }).join('');
+  const paUn=personAudits.filter(x=>!x.planned&&inR(x.date)&&!personDept(x).length).length;
+  const unRow=paUn?`<tr style="background:#FFFBEB"><td><strong>Personen-Audits ohne Abteilung</strong><div style="font-size:10px;color:#92400E">Zuordnung ergänzen: Admin-Menü → Abteilungen verwalten</div></td><td>—</td><td>—</td><td style="font-weight:600;color:#B45309">${paUn}</td><td>—</td><td style="font-weight:700">${paUn}</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>`:'';
+  tot.p+=paUn;
   const tAll=tot.a+tot.p+tot.b;
   const tCov=tot.iv?Math.round(tot.on/tot.iv*100)+'%':'—';
   const tGap=tot.gn?Math.round(tot.gs/tot.gn)+' T':'—';
-  tb.innerHTML=(rows||'<tr><td colspan="12" style="padding:10px;color:var(--tx3);text-align:center">Keine Daten im Zeitraum.</td></tr>')+
+  tb.innerHTML=(rows||'<tr><td colspan="12" style="padding:10px;color:var(--tx3);text-align:center">Keine Daten im Zeitraum.</td></tr>')+unRow+
     `<tr style="border-top:2px solid var(--bd);background:var(--sf2)"><td><strong>Total</strong></td><td>${tot.bs}</td><td>${tot.a}</td><td>${tot.p}</td><td>${tot.b}</td><td style="font-weight:800">${tAll}</td><td style="font-weight:700">${tCov}</td><td>${tGap}</td><td>${tot.ma||'—'}</td><td style="font-weight:700">${tot.ma?(tAll/tot.ma*100).toFixed(1):'—'}</td><td>${tot.ov}</td><td>${rpTermine(rapporte.filter(r=>!r.planned&&inR(r.date)))||'—'}</td></tr>`;
 }
 function renderAuditors(){
@@ -3466,8 +3499,8 @@ function renderAuditors(){
       <div class="anums">
         <div class="anb"><div class="anv" style="color:${c}">${hc}</div><div class="anl">${audYr}</div></div>
         <div class="anb"><div class="anv" style="color:#6366F1">${pln.length}</div><div class="anl">Geplant</div></div>
-        <div class="anb"><div class="anv" style="color:#F59E0B">${mC}</div><div class="anl">Monat</div></div>
         <div class="anb"><div class="anv" style="color:#8B5CF6">${beratCount}</div><div class="anl">Beratungen</div></div>
+        <div class="anb"><div class="anv" style="color:#0EA5E9">${rapporte.filter(r=>!r.planned&&r.auditor===a&&(r.date||'').startsWith(String(audYr))).length}</div><div class="anl">Rapporte</div></div>
       </div>
       ${sollBar}
       ${nextP?`<div style="background:#EFF6FF;border-radius:5px;padding:6px 9px;font-size:10px;color:#1D4ED8;margin-bottom:7px"><i class="ti ti-calendar"></i> KW ${dateToKW(nextP.date)} · ${fd(nextP.date)}</div>`:'<div style="background:var(--sf2);border-radius:5px;padding:6px 9px;font-size:10px;color:var(--tx3);margin-bottom:7px">Kein Audit geplant</div>'}
@@ -3572,7 +3605,7 @@ function renderWeekView(kw){
         ${dayP.length?`<div style="display:flex;gap:3px"><button onclick="kwRoute_day('${ds}')"><i class="ti ti-map-2"></i></button><button onclick="kwPrint_day('${ds}')"><i class="ti ti-printer"></i></button></div>`:''}
       </div>
       ${fer.map(f=>`<div class="kwfer">🌴 ${f.auditor.split(' ').pop()}: ${f.label}</div>`).join('')}
-      ${(()=>{const rs=rapporte.filter(r=>r.date===ds&&(!audFilter||(r.auditors||[]).includes(audFilter))).sort((a,b)=>(a.time||'').localeCompare(b.time||''));return rs.map(r=>`<div class="kwe" style="border-left:3px solid #0EA5E9;${r.planned?'':'background:#F0F9FF'}"><div class="kwe-top" onclick="openRapportEdit(${r.id})" style="cursor:pointer"><div class="kwen" style="color:#0369A1">${r.planned?'':'✓ '}📋 ${r.type}${r.seriesId?' 🔁':''}${r.time?' '+r.time:''}${(r.team||[]).length>1?`<span title="Mit: ${(r.team||[]).filter(a=>a!==r.auditor).join(', ')}" style="font-size:9px;font-weight:400;color:var(--tx3)"> 👥${r.team.length}</span>`:''}${(r.dept||r.ort)?`<div style="font-size:10px;font-weight:400;color:var(--tx3)">${[r.dept,r.ort].filter(Boolean).join(' · ')}</div>`:''}</div><span style="display:flex;gap:2px;flex-wrap:wrap;justify-content:flex-end">${(r.auditors||[]).map(a=>`<span class="kwea" style="background:${aC(a)}">${a.split(' ').pop()}</span>`).join('')}</span></div>${r.planned?`<div class="kwe-move" style="display:flex;gap:2px;padding:2px 6px 3px;border-top:1px solid var(--bd)"><button onclick="moveRapportTo(${r.id},'${rpAddDays(kwToDate(kw),-3)}')" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">←</button>${days.map((day,dj)=>`<button onclick="moveRapportTo(${r.id},'${rpAddDays(kwToDate(kw),dj)}')" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:${rpAddDays(kwToDate(kw),dj)===ds?'#0EA5E9':'var(--sf2)'};color:${rpAddDays(kwToDate(kw),dj)===ds?'#fff':'var(--tx2)'};font-size:9px;cursor:pointer;line-height:1.4">${day}</button>`).join('')}<button onclick="moveRapportTo(${r.id},'${kwToDate(kw+1)}')" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">→</button></div>`:''}</div>`).join('');})()}
+      ${(()=>{const gids=[...new Set(rapporte.filter(r=>r.date===ds&&(!audFilter||r.auditor===audFilter)).map(r=>r.groupId))];const gs=gids.map(g=>rapporte.filter(x=>x.groupId===g&&x.date===ds)).filter(m=>m.length).sort((a,b)=>(a[0].time||'').localeCompare(b[0].time||''));return gs.map(mem=>{const r=mem[0];const anyPlan=mem.some(m=>m.planned);return`<div class="kwe" style="border-left:3px solid #0EA5E9;${anyPlan?'':'background:#F0F9FF'}"><div class="kwe-top" onclick="openRapportEdit(${r.id})" style="cursor:pointer"><div class="kwen" style="color:#0369A1">${anyPlan?'':'✓ '}📋 ${r.type}${r.seriesId?' 🔁':''}${r.time?' '+r.time:''}${(r.dept||r.ort)?`<div style="font-size:10px;font-weight:400;color:var(--tx3)">${[r.dept,r.ort].filter(Boolean).join(' · ')}</div>`:''}</div><span style="display:flex;gap:2px;flex-wrap:wrap;justify-content:flex-end">${mem.map(m=>m.planned?`<span class="kwea" title="${m.auditor}: geplant" style="background:transparent;border:1.5px solid ${aC(m.auditor)};color:${aC(m.auditor)}">${m.auditor.split(' ').pop()}</span>`:`<span class="kwea" title="${m.auditor}: teilgenommen" style="background:${aC(m.auditor)}">✓ ${m.auditor.split(' ').pop()}</span>`).join('')}</span></div>${anyPlan?`<div class="kwe-move" style="display:flex;gap:2px;padding:2px 6px 3px;border-top:1px solid var(--bd)"><button onclick="moveRapportTo(${r.id},'${rpAddDays(kwToDate(kw),-3)}')" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">←</button>${days.map((day,dj)=>`<button onclick="moveRapportTo(${r.id},'${rpAddDays(kwToDate(kw),dj)}')" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:${rpAddDays(kwToDate(kw),dj)===ds?'#0EA5E9':'var(--sf2)'};color:${rpAddDays(kwToDate(kw),dj)===ds?'#fff':'var(--tx2)'};font-size:9px;cursor:pointer;line-height:1.4">${day}</button>`).join('')}<button onclick="moveRapportTo(${r.id},'${kwToDate(kw+1)}')" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">→</button></div>`:''}</div>`;}).join('');})()}
       ${(()=>{const bp=beratPlan.filter(p=>p.date===ds&&(!audFilter||p.auditor===audFilter));return bp.map(p=>{const e=data.find(x=>x.id===p.bsId);const audCol=aC(p.auditor||'');return`<div class="kwe" style="border-left:3px solid #8B5CF6"><div class="kwe-top" onclick="openBeratPlanPop(${p.id})" style="cursor:pointer"><div class="kwen">💬 ${e?e.name:'(gel.)'}</div><span class="kwea" style="background:${audCol}">${(p.auditor||'?').split(' ').pop()}</span></div>${p.note?`<div style="font-size:10px;color:#7C3AED;padding:2px 6px 3px">${p.note}</div>`:''}<div class="kwe-move" style="display:flex;gap:2px;padding:2px 6px 3px;border-top:1px solid var(--bd)"><button onclick="moveBeratPlan(${p.id},'${kwToDate(kw-1)}',4)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">←</button>${days.map((day,dj)=>`<button onclick="moveBeratPlan(${p.id},'${kwToDate(kw)}',${dj})" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:${dj===di?'var(--blue)':'var(--sf2)'};color:${dj===di?'#fff':'var(--tx2)'};font-size:9px;cursor:pointer;line-height:1.4">${day}</button>`).join('')}<button onclick="moveBeratPlan(${p.id},'${kwToDate(kw+1)}',0)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">→</button></div></div>`;}).join('');})()}
       ${(()=>{const done=data.flatMap(e=>(e.beratungen||[]).filter(b=>b.date===ds).map(b=>({...b,eName:e.name,eId:e.id})));return done.map(b=>{const bAudCol=aC(b.auditor||'');return`<div class="kwe" style="background:#F5F3FF;border-left:3px solid #8B5CF6;cursor:pointer" onclick="openBeratDoneUndo(${b.eId},${b.id})"><div class="kwe-top"><div class="kwen" style="color:#7C3AED">✓ 💬 ${b.eName}</div><span class="kwea" style="background:${bAudCol}">${(b.auditor||'?').split(' ').pop()}</span></div>${b.note?`<div style="font-size:10px;color:#7C3AED;padding:2px 6px 3px">${b.note}</div>`:''}</div>`;}).join('');})()}
       ${dayAudits.map(h=>`<div class="kwe" style="background:#F0FDF4;border-left:3px solid #10B981;cursor:pointer" onclick="openAuditUndo(${h.eId},'${h.date}')"><div class="kwe-top"><div class="kwen" style="color:#065F46">✓ ${h.eName}</div><span class="kwea" style="background:#10B981">${(h.auditor||'?').split(' ').pop()}</span></div></div>`).join('')}
@@ -5656,6 +5689,7 @@ function renameDept(oldD,newD){
   data.forEach(e=>{const p=deptParts(e.dept);if(p.includes(oldD)){e.dept=[...new Set(p.map(x=>x===oldD?newD:x))].join(' + ');n++;}});
   customDepts=[...new Set(customDepts.map(d=>d===oldD?newD:d))].sort();
   if(deptMeta[oldD]){deptMeta[newD]=Object.assign({},deptMeta[oldD],deptMeta[newD]||{});delete deptMeta[oldD];}
+  if(deptMeta._abtMap)Object.keys(deptMeta._abtMap).forEach(k=>{if(deptMeta._abtMap[k]===oldD)deptMeta._abtMap[k]=newD;});
   saveDepts();buildDF();renderDeptList();renderAll();
   showToast(`✓ «${oldD}» → «${newD}» (${n} Baustellen angepasst)`,3000);
 }
@@ -5666,8 +5700,38 @@ function setDeptMA(dept,val){
   if(isNaN(v)||v<=0)delete deptMeta[dept].ma[yr];else deptMeta[dept].ma[yr]=v;
   saveDepts();
 }
+// Abteilung einer Person aus dem Personen-Register: exakter Name (ohne Gross/Klein) oder manuelle
+// Zuordnung (deptMeta._abtMap), gepflegt in "Abteilungen verwalten".
+function mapPersonAbt(abt){
+  if(!abt)return null;
+  const a=abt.trim().toLowerCase();
+  const d=getAllDepts().find(x=>x.toLowerCase()===a);if(d)return d;
+  const m=(deptMeta._abtMap||{})[abt.trim()];return m||null;
+}
+function unmappedPersonAbts(){
+  const vals=[...new Set((typeof persons!=='undefined'?persons:[]).map(p=>(p.abt||'').trim()).filter(Boolean))];
+  return vals.filter(v=>!getAllDepts().some(d=>d.toLowerCase()===v.toLowerCase())).sort();
+}
+function setAbtMap(abt,dept){
+  deptMeta._abtMap=deptMeta._abtMap||{};
+  if(dept)deptMeta._abtMap[abt]=dept;else delete deptMeta._abtMap[abt];
+  saveDepts();renderDeptTable();
+}
 function deptMA(dept,yr){return((deptMeta[dept]||{}).ma||{})[String(yr)]||0;}
+function renderAbtMap(){
+  const box=document.getElementById('dept-abtmap');if(!box)return;
+  const vals=unmappedPersonAbts();
+  if(!vals.length){box.innerHTML='';return;}
+  const opts=getAllDepts();
+  box.innerHTML=`<div style="font-size:12px;font-weight:700;color:var(--tx);margin:4px 0 4px">👤 Personen-Register → Abteilung</div>
+    <div style="font-size:11px;color:var(--tx3);margin-bottom:6px">Diese Abteilungs-Bezeichnungen aus dem Personen-Register passen nicht automatisch. Einmal zuordnen – danach zählen die Personen-Audits bei der richtigen Abteilung.</div>
+    <div style="max-height:220px;overflow-y:auto;border:1px solid var(--bd);border-radius:var(--rs);margin-bottom:12px">${vals.map(v=>{const cur=(deptMeta._abtMap||{})[v]||'';const n=persons.filter(p=>(p.abt||'').trim()===v).length;return`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:center;padding:6px 10px;border-bottom:1px solid var(--bd)">
+      <span style="font-size:12px">${v} <span style="color:var(--tx3);font-size:10px">(${n} Pers.)</span></span>
+      <select data-v="${v.replace(/"/g,'&quot;')}" onchange="setAbtMap(this.dataset.v,this.value)" style="padding:5px;border:1px solid ${cur?'var(--bd)':'#F59E0B'};border-radius:5px;background:var(--sf);color:var(--tx);font-size:12px"><option value="">— nicht zugeordnet —</option>${opts.map(d=>`<option value="${d.replace(/"/g,'&quot;')}"${d===cur?' selected':''}>${d}</option>`).join('')}</select>
+    </div>`;}).join('')}</div>`;
+}
 function renderDeptList(){
+  renderAbtMap();
   const el=document.getElementById('dept-list');if(!el)return;
   const ysel=document.getElementById('dept-ma-year');
   if(ysel&&!ysel.options.length){const y=new Date().getFullYear();ysel.innerHTML=[y-1,y,y+1].map(v=>`<option${v===y?' selected':''}>${v}</option>`).join('');}
@@ -7360,6 +7424,7 @@ document.addEventListener('DOMContentLoaded',()=>{
       <select id="dept-ma-year" onchange="renderDeptList()" style="padding:4px 6px;border:1px solid var(--bd);border-radius:6px;background:var(--sf2);color:var(--tx);font-size:11px"></select>
     </div>
     <div id="dept-list" style="max-height:380px;overflow-y:auto;border:1px solid var(--bd);border-radius:var(--rs);margin-bottom:12px"></div>
+    <div id="dept-abtmap"></div>
     <div style="font-size:11px;color:var(--tx3);margin-bottom:12px">Name ändern = umbenennen (alle Baustellen werden mitgezogen). Umbenennen auf einen bestehenden Namen führt zusammen. Löschen nur möglich, wenn keine Baustelle die Abteilung verwendet. Änderungen werden sofort gespeichert.</div>
     <div style="text-align:right">
       <button onclick="document.getElementById('dept-bg').style.display='none'" style="padding:8px 16px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf2);cursor:pointer;font-size:12px;color:var(--tx)">Schliessen</button>
@@ -7445,16 +7510,15 @@ ALTER TABLE audit_state ADD COLUMN IF NOT EXISTS "rapporte" text;</pre>
       </div>
     </div>
     <div class="frow"><div style="flex:1"><label>Thema / Raum</label><input type="text" id="rpe-ort"></div><div style="flex:1"><label>Notiz</label><input type="text" id="rpe-note"></div></div>
-    <label style="font-size:11px;color:var(--tx2);display:block;margin:6px 0 4px">Teilnehmende an diesem Termin <span style="color:var(--tx3)">(Häkchen entfernen = für diese Person absagen, neues Häkchen = Person hinzufügen)</span></label>
-    <div id="rpe-auds" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px"></div>
-    <label id="rpe-all-wrap" style="display:none;align-items:center;gap:6px;font-size:12px;color:var(--tx);margin-bottom:6px"><input type="checkbox" id="rpe-all" checked> 👥 Datum, Zeit, Dauer, Ort, Art und Abteilung auch für die <b>anderen Teilnehmenden</b> dieses Termins übernehmen</label>
-    <label id="rpe-series-wrap" style="display:none;align-items:center;gap:6px;font-size:12px;color:#0369A1;margin-bottom:12px"><input type="checkbox" id="rpe-series"> 🔁 Zeit, Dauer, Ort, Art und Abteilung auch für alle <b>folgenden geplanten</b> Termine der Serie übernehmen</label>
+    <label style="font-size:11px;color:var(--tx2);display:block;margin:6px 0 4px">Teilnehmende – Status pro Person</label>
+    <div id="rpe-members" style="border:1px solid var(--bd);border-radius:8px;margin-bottom:8px"></div>
+    <div id="rpe-add" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px"></div>
+    <label id="rpe-series-wrap" style="display:none;align-items:center;gap:6px;font-size:12px;color:#0369A1;margin-bottom:12px"><input type="checkbox" id="rpe-series"> 🔁 Zeit, Dauer, Ort, Art, Abteilung und Teilnehmende auch für alle <b>folgenden</b> Termine der Serie übernehmen</label>
     <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;border-top:1px solid var(--bd);padding-top:12px">
       <div style="display:flex;gap:6px;flex-wrap:wrap">
-        <button id="rpe-btn-done" onclick="rpeAction('done')" style="padding:8px 12px;border:none;border-radius:var(--rs);background:#10B981;color:#fff;font-size:12px;font-weight:600;cursor:pointer">✓ Teilgenommen</button>
-        <button id="rpe-btn-undo" onclick="rpeAction('undo')" style="padding:8px 12px;border:1px solid var(--bd);border-radius:var(--rs);background:var(--sf2);color:var(--tx);font-size:12px;cursor:pointer">↩ Wieder geplant</button>
-        <button onclick="rpeAction('cancel')" style="padding:8px 12px;border:1px solid #FCA5A5;border-radius:var(--rs);background:#FEF2F2;color:#DC2626;font-size:12px;cursor:pointer">✕ Absagen / Löschen</button>
-        <button onclick="exportRapportICS(_rpeId)" style="padding:8px 12px;border:1px solid var(--bd);border-radius:var(--rs);background:var(--sf2);color:var(--tx);font-size:12px;cursor:pointer">⬇️ Outlook</button>
+        <button id="rpe-btn-done" onclick="rpeAction('done')" style="padding:8px 12px;border:none;border-radius:var(--rs);background:#10B981;color:#fff;font-size:12px;font-weight:600;cursor:pointer">✓ Ich habe teilgenommen</button>
+        <button onclick="rpeAction('cancelAll')" style="padding:8px 12px;border:1px solid #FCA5A5;border-radius:var(--rs);background:#FEF2F2;color:#DC2626;font-size:12px;cursor:pointer">✕ Ganzen Termin absagen</button>
+        <button onclick="exportRapportICS(rpeMyId())" style="padding:8px 12px;border:1px solid var(--bd);border-radius:var(--rs);background:var(--sf2);color:var(--tx);font-size:12px;cursor:pointer">⬇️ Outlook</button>
       </div>
       <div style="display:flex;gap:6px">
         <button onclick="document.getElementById('rpe-bg').style.display='none'" style="padding:8px 14px;border:1px solid var(--bd);border-radius:var(--rs);background:var(--sf2);color:var(--tx);font-size:12px;cursor:pointer">Schliessen</button>
