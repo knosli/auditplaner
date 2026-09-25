@@ -361,7 +361,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
   <div id="presence-bar" style="display:flex;align-items:center;gap:4px;margin-left:4px"></div>
   <button onclick="toggleDark()" class="hb" title="Dark Mode" style="font-size:14px">🌙</button>
   <button onclick="openGuide()" class="hb" title="Anleitung" style="font-size:14px">❓</button>
-  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.59</span>
+  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.60</span>
   <button onclick="doLogout()" class="hb" title="Abmelden" style="font-size:14px" id="logout-btn">⏻</button>
   <button onclick="toggleMobileView()" id="mobile-btn" class="hb" title="Mobile Ansicht" style="font-size:14px">📱</button>
   <div id="more-w" class="admin-only">
@@ -4375,7 +4375,7 @@ function updateDistInfo(){
   const aud=document.getElementById('dist-aud').value;
   const kw=+document.getElementById('dist-kw').value;
   const amEl=document.getElementById('dist-auditmin');
-  if(amEl&&!amEl.value)amEl.value=localStorage.getItem('dist_audit_min_v2')||'90';
+  if(amEl&&!amEl.value)amEl.value=localStorage.getItem('dist_audit_min_v3')||'60';
   const ks=kwToDate(kw),ke=kwToDate(kw+1);
   const kwPlans=plans.filter(p=>p.date>=ks&&p.date<ke&&p.auditor===aud);
   const withCoords=kwPlans.filter(p=>{const e=data.find(x=>x.id===p.bsId);return e&&e.lat&&e.lng;});
@@ -4387,7 +4387,7 @@ function updateDistInfo(){
     if(fer){cb.checked=false;cb.disabled=true;}else cb.disabled=false;
     cb.parentElement.style.opacity=fer?'.45':'1';
     const sp=cb.parentElement.querySelector('.dd-lbl');if(sp)sp.textContent=names[di]+(fer?' 🌴 Ferien':'');
-    const fx=distFixedMin(aud,ds,+amEl.value||90);
+    const fx=distFixedMin(aud,ds,+amEl.value||60);
     if(!fer&&fx)notes.push(`${names[di]}: ${Math.round(fx)} min belegt`);
   });
   document.getElementById('dist-info').innerHTML=
@@ -4415,8 +4415,8 @@ async function previewDistribute(){
   const aud=document.getElementById('dist-aud').value;
   const kw=+document.getElementById('dist-kw').value;
   const days=getCheckedDays();
-  const auditMin=Math.max(5,+document.getElementById('dist-auditmin').value||90);
-  try{localStorage.setItem('dist_audit_min_v2',String(auditMin));}catch(e){}
+  const auditMin=Math.max(5,+document.getElementById('dist-auditmin').value||60);
+  try{localStorage.setItem('dist_audit_min_v3',String(auditMin));}catch(e){}
   if(!days.length){showToast('Bitte mindestens einen Tag wählen');return;}
   const ks=kwToDate(kw),ke=kwToDate(kw+1);
   const kwPlans=plans.filter(p=>p.date>=ks&&p.date<ke&&p.auditor===aud);
