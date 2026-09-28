@@ -361,7 +361,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
   <div id="presence-bar" style="display:flex;align-items:center;gap:4px;margin-left:4px"></div>
   <button onclick="toggleDark()" class="hb" title="Dark Mode" style="font-size:14px">🌙</button>
   <button onclick="openGuide()" class="hb" title="Anleitung" style="font-size:14px">❓</button>
-  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.62</span>
+  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.63</span>
   <button onclick="doLogout()" class="hb" title="Abmelden" style="font-size:14px" id="logout-btn">⏻</button>
   <button onclick="toggleMobileView()" id="mobile-btn" class="hb" title="Mobile Ansicht" style="font-size:14px">📱</button>
   <div id="more-w" class="admin-only">
@@ -1529,7 +1529,24 @@ function status(e){
   if(d<=10)return'soon';
   return'ok';
 }
-function ensureCreatedAt(){let n=0;data.forEach(e=>{if(!e.createdAt&&!e.lastAudit&&!e.resumeFrom){e.createdAt=today();n++;}});if(n)setTimeout(()=>{try{saveNow();}catch(x){}},800);}
+// Erfassungsdatum für nie auditierte Baustellen: die interne ID ist der Erfassungs- bzw. Importzeitpunkt
+// (Date.now()) -> daraus das echte Datum ableiten. Ein später gesetztes Datum (z.B. Migration «heute»)
+// wird durch das frühere ID-Datum ersetzt. Ohne plausible ID: heute (Frist läuft ab jetzt).
+function idToDate(id){
+  const t=Math.floor(+id);
+  if(!(t>1.5e12&&t<Date.now()+86400000))return null;
+  const d=new Date(t);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function ensureCreatedAt(){
+  let n=0;
+  data.forEach(e=>{
+    if(e.lastAudit||e.resumeFrom)return;
+    const idD=idToDate(e.id);
+    const want=idD&&(!e.createdAt||idD<e.createdAt)?idD:(e.createdAt||today());
+    if(e.createdAt!==want){e.createdAt=want;n++;}
+  });
+  if(n)setTimeout(()=>{try{saveNow();}catch(x){}},800);
+}
 function dl(e){
   // Nie auditierte Baustellen: Rhythmus läuft ab Erfassungsdatum
   const ref=e.lastAudit||e.resumeFrom||e.createdAt;
