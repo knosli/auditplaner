@@ -361,7 +361,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
   <div id="presence-bar" style="display:flex;align-items:center;gap:4px;margin-left:4px"></div>
   <button onclick="toggleDark()" class="hb" title="Dark Mode" style="font-size:14px">🌙</button>
   <button onclick="openGuide()" class="hb" title="Anleitung" style="font-size:14px">❓</button>
-  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.72</span>
+  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.73</span>
   <button onclick="doLogout()" class="hb" title="Abmelden" style="font-size:14px" id="logout-btn">⏻</button>
   <button onclick="toggleMobileView()" id="mobile-btn" class="hb" title="Mobile Ansicht" style="font-size:14px">📱</button>
   <div id="more-w" class="admin-only">
@@ -5813,6 +5813,12 @@ function tgAuditMin(e){
   if(n===null||n===undefined)return 45;
   if(n<=3)return 30;if(n<=9)return 45;if(n<=19)return 60;return 75;
 }
+// Personal-Klasse für die Priorität: 0 = 20+, 1 = 10-19, 2 = 4-9, 3 = 1-3, 4 = unbekannt (kein Import)
+function tgPersClass(e){
+  const n=e.lastPersonalKW!==undefined?e.lastPersonalCount:null;
+  if(n===null||n===undefined)return 4;
+  if(n>=20)return 0;if(n>=10)return 1;if(n>=4)return 2;return 3;
+}
 function tgUrgency(e){const s=status(e);return{overdue:0,due:1,soon:2,new:3}[s];}
 function tgCandidates(aud,kw){
   const m=auditorMeta[aud]||{};const pref=new Set(m.prefDepts||[]),excl=new Set(m.exclDepts||[]);
@@ -5825,8 +5831,9 @@ function tgCandidates(aud,kw){
     if(e.lastPersonalKW!==undefined&&e.lastPersonalCount===0)return false; // laut Import kein Personal
     if(deptParts(e.dept).some(d=>excl.has(d)))return false;   // ausgeschlossen (hart)
     return true;
-  }).map(e=>{const isPref=deptParts(e.dept).some(d=>pref.has(d));return{e,isPref,rank:tgUrgency(e)*2+(isPref?0:1),min:tgAuditMin(e)};})
-    .sort((a,b)=>a.rank-b.rank||dl(a.e)-dl(b.e));
+  }).map(e=>{const isPref=deptParts(e.dept).some(d=>pref.has(d));return{e,isPref,urg:tgUrgency(e),pers:tgPersClass(e),min:tgAuditMin(e)};})
+    // Priorität: 1) Ampel  2) Personal-Grösse (mehr Personal = höheres Risiko)  3) bevorzugte Abteilung  4) am längsten fällig
+    .sort((a,b)=>a.urg-b.urg||a.pers-b.pers||(a.isPref?0:1)-(b.isPref?0:1)||dl(a.e)-dl(b.e));
 }
 function tgFixedMin(aud,ds){
   const rp=rapporte.filter(r=>r.date===ds&&r.auditor===aud).reduce((s,r)=>s+(r.dur||60),0);
@@ -7642,7 +7649,7 @@ ALTER TABLE audit_state ADD COLUMN IF NOT EXISTS "rapporte" text;</pre>
 <div id="tg-bg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:4000;align-items:center;justify-content:center">
   <div style="background:var(--sf);border-radius:12px;padding:22px;width:720px;max-width:96vw;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)">
     <h3 style="font-size:16px;font-weight:700;color:var(--tx);margin-bottom:4px"><i class="ti ti-compass" style="color:var(--blue)"></i> Tourguide</h3>
-    <p style="font-size:12px;color:var(--tx2);margin-bottom:14px">Sag mir, an welchen Tagen du Zeit hast – ich stelle dir pro Tag bis zu 6 Baustellen zusammen: dringende zuerst, bevorzugte Abteilungen vor anderen, geografisch sinnvoll, max. 9 h inkl. Fahrzeit. Bereits Geplantes bleibt und wird aufgefüllt.</p>
+    <p style="font-size:12px;color:var(--tx2);margin-bottom:14px">Sag mir, an welchen Tagen du Zeit hast – ich stelle dir pro Tag bis zu 6 Baustellen zusammen: dringende zuerst, bei gleicher Dringlichkeit grosse Baustellen (mehr Personal) vor kleinen, dann bevorzugte Abteilungen, geografisch sinnvoll, max. 9 h inkl. Fahrzeit. Bereits Geplantes bleibt und wird aufgefüllt.</p>
     <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:10px">
       <div><label style="font-size:11px;color:var(--tx2);display:block;margin-bottom:3px">Auditor</label><select id="tg-aud" onchange="tgUpdateDays()" style="padding:6px 8px;border:1px solid var(--bd);border-radius:var(--rs);background:var(--sf2);color:var(--tx);font-size:12px"></select></div>
       <div><label style="font-size:11px;color:var(--tx2);display:block;margin-bottom:3px">Woche</label><select id="tg-kw" onchange="tgUpdateDays()" style="padding:6px 8px;border:1px solid var(--bd);border-radius:var(--rs);background:var(--sf2);color:var(--tx);font-size:12px"></select></div>
