@@ -361,7 +361,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
   <div id="presence-bar" style="display:flex;align-items:center;gap:4px;margin-left:4px"></div>
   <button onclick="toggleDark()" class="hb" title="Dark Mode" style="font-size:14px">🌙</button>
   <button onclick="openGuide()" class="hb" title="Anleitung" style="font-size:14px">❓</button>
-  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.77</span>
+  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.78</span>
   <button onclick="doLogout()" class="hb" title="Abmelden" style="font-size:14px" id="logout-btn">⏻</button>
   <button onclick="toggleMobileView()" id="mobile-btn" class="hb" title="Mobile Ansicht" style="font-size:14px">📱</button>
   <div id="more-w" class="admin-only">
@@ -5831,6 +5831,10 @@ const SETTINGS_DEF=[
   {k:'tg_min_10_19',l:'Audit-Dauer bei 10–19 Personen',def:60,min:5,max:480,u:'min'},
   {k:'tg_min_20',l:'Audit-Dauer bei 20+ Personen',def:75,min:5,max:480,u:'min'},
   {k:'tg_min_unknown',l:'Audit-Dauer, Personal unbekannt',def:45,min:5,max:480,u:'min'},
+  {k:'tg_bonus_20',l:'Umweg in Kauf nehmen: Baustelle mit 20+ Pers.',def:20,min:0,max:180,u:'min'},
+  {k:'tg_bonus_10',l:'Umweg in Kauf nehmen: 10–19 Pers.',def:10,min:0,max:180,u:'min'},
+  {k:'tg_bonus_4',l:'Umweg in Kauf nehmen: 4–9 Pers.',def:5,min:0,max:180,u:'min'},
+  {k:'tg_bonus_pref',l:'Umweg in Kauf nehmen: bevorzugte Abteilung',def:10,min:0,max:180,u:'min'},
   {k:'tg_fixed_pa',l:'Geplantes Personen-Audit belegt',def:45,min:0,max:480,u:'min'},
   {k:'tg_fixed_berat',l:'Geplante Beratung belegt',def:45,min:0,max:480,u:'min'}]},
  {grp:'Verteilen (KW-Planung)',items:[
@@ -5897,7 +5901,8 @@ function rulesHTML(){
     `Temporäre Mitarbeitende: nur Personal-Nummern (keine Namen), pro Einheit bei jedem Import ersetzt.`]) +
   sec('compass','Tourguide',[
     `Vorschläge nur für fällige Baustellen mit Koordinaten; nie: pausiert, inaktiv, 0 Personal laut Import, ausgeschlossene Abteilungen, diese KW bereits (von irgendwem) eingeplant.`,
-    `Priorität: 1. Ampel (überfällig → fällig → bald fällig → neu) · 2. Personal (20+ → 10–19 → 4–9 → 1–3 → unbekannt) · 3. bevorzugte Abteilung ★ · 4. am längsten fällig.`,
+    `Auswahl: 1. Ampel – zuerst werden alle roten Baustellen eingeplant, die noch Platz haben, dann orange, gelb, neu. 2. Innerhalb derselben Farbe entscheidet der kleinste Umweg zur bestehenden Tagesroute (bereits geplante Baustellen und Termine wie Rapporte sind Anker) – so entstehen regionale Tage.`,
+    `Grössere Baustellen und bevorzugte Abteilungen dürfen mehr Umweg kosten: 20+ Pers. ${v('tg_bonus_20')} min · 10–19 ${v('tg_bonus_10')} min · 4–9 ${v('tg_bonus_4')} min · bevorzugte Abteilung ★ ${v('tg_bonus_pref')} min (alle 0 = rein geografisch).`,
     `Audit-Dauer: 1–3 Pers. ${v('tg_min_1_3')} · 4–9 ${v('tg_min_4_9')} · 10–19 ${v('tg_min_10_19')} · 20+ ${v('tg_min_20')} · unbekannt ${v('tg_min_unknown')} min (inkl. Schreiben/Rapportieren; Fahrzeit separat).`,
     `Tag: Abfahrt ab Startadresse um ${tgHM(S('tg_day_start')*60)}, max. ${v('tg_day_hours')} h bis zur Rückkehr (inkl. aller Fahrten und Wartezeiten), max. ${v('tg_max_per_day')} Baustellen.`,
     `Tagesablauf wird echt simuliert: Fahrt zu jedem Stopp (Baustellen <u>und</u> Termine an ihrer Adresse), Auditzeit, Fahrt zum nächsten, Rückfahrt.`,
@@ -6070,12 +6075,27 @@ async function tgCompute(){
   const fixedNodes=fixedPlans.map(list=>list.map(e=>idxFixed.get(e.id)));
   const base=fixedNodes.map((n,d)=>tgPlanDay(d,n).sim);
   const ok=(d,p)=>p.sim.total<=dayLen+0.5&&p.sim.late<=base[d].late+0.5;
-  // Auswahl: Priorität bestimmt Reihenfolge, Tag/Position = geringster Mehraufwand bei eingehaltenen Zeitfenstern
-  let sets=fixedNodes.map(n=>n.slice());const skipped=[];
-  pool.forEach((x,i)=>{const j=idxPool[i];let best=null;
-    sets.forEach((set,d)=>{if(set.length>=maxN)return;const cur=tgPlanDay(d,set).sim;const p=tgPlanDay(d,set.concat(j));
-      if(!ok(d,p))return;const add=p.sim.total-cur.total;if(!best||add<best.add)best={d,add};});
-    if(best)sets[best.d].push(j);else skipped.push(x);});
+  // Auswahl: Ampel-Stufe für Stufe (rot vor orange vor gelb vor neu). Innerhalb einer Stufe wird immer die
+  // Baustelle mit dem kleinsten Umweg zur bestehenden Tagesroute genommen (fixe Baustellen und Termine sind
+  // Anker) - grössere Baustellen und bevorzugte Abteilungen dürfen einen einstellbaren Umweg mehr kosten.
+  // So entstehen regionale Tage statt Hin-und-her-Fahrten quer durchs Land.
+  let sets=fixedNodes.map(n=>n.slice());
+  const remaining=new Set(pool.map((_,i)=>i));
+  const bonus=x=>([S('tg_bonus_20'),S('tg_bonus_10'),S('tg_bonus_4'),0,0][x.pers]||0)+(x.isPref?S('tg_bonus_pref'):0);
+  [0,1,2,3].forEach(cls=>{
+    for(;;){
+      let best=null;
+      remaining.forEach(i=>{const x=pool[i];if(x.urg!==cls)return;const j=idxPool[i];
+        sets.forEach((set,d)=>{if(set.length>=maxN)return;
+          const cur=tgPlanDay(d,set).sim,p=tgPlanDay(d,set.concat(j));if(!ok(d,p))return;
+          const detour=p.sim.total-cur.total-x.min;   // zusätzliche Fahr- und Wartezeit, ohne die Auditzeit selbst
+          const score=detour-bonus(x);
+          if(!best||score<best.score-0.01)best={i,d,score};});});
+      if(!best)break;
+      sets[best.d].push(idxPool[best.i]);remaining.delete(best.i);
+    }
+  });
+  const skipped=pool.filter((_,i)=>remaining.has(i));
   // Ausgleich zwischen den Tagen (neue Baustellen verschieben/tauschen), bereits geplante bleiben
   const fixedSet=new Set(fixedNodes.flat());
   const cost=ss=>{let mx=0,sum=0;for(let d=0;d<ss.length;d++){if(ss[d].length>maxN)return Infinity;const p=tgPlanDay(d,ss[d]);if(!ok(d,p))return Infinity;mx=Math.max(mx,p.sim.total);sum+=p.sim.total;}return mx*3+sum;};
@@ -6171,7 +6191,7 @@ function openTourguide(){
   const kwSel=document.getElementById('tg-kw');const cur=dateToKW(today());
   kwSel.innerHTML=[0,1,2,3,4].map(i=>`<option value="${cur+i}">KW ${cur+i}${i===1?' (nächste)':''}</option>`).join('');
   kwSel.value=String(typeof getStickyPlanKW==='function'?getStickyPlanKW():cur+1);
-  document.getElementById('tg-desc').textContent=`Sag mir, an welchen Tagen du Zeit hast – ich stelle dir pro Tag bis zu ${S('tg_max_per_day')} Baustellen zusammen: dringende zuerst, bei gleicher Dringlichkeit grosse Baustellen (mehr Personal) vor kleinen, dann bevorzugte Abteilungen, geografisch sinnvoll, max. ${String(S('tg_day_hours')).replace('.',',')} h inkl. Fahrzeit. Bereits Geplantes bleibt und wird aufgefüllt.`;
+  document.getElementById('tg-desc').textContent=`Sag mir, an welchen Tagen du Zeit hast – ich stelle dir pro Tag bis zu ${S('tg_max_per_day')} Baustellen zusammen: dringende zuerst, innerhalb gleicher Dringlichkeit regional passend zu dem, was schon geplant ist (grosse Baustellen und bevorzugte Abteilungen dürfen etwas mehr Umweg kosten), max. ${String(S('tg_day_hours')).replace('.',',')} h inkl. Fahrzeit. Bereits Geplantes bleibt und wird aufgefüllt.`;
   document.getElementById('tg-bg').style.display='flex';
   tgUpdateDays();initStickyFooters();
 }
