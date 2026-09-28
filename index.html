@@ -361,7 +361,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
   <div id="presence-bar" style="display:flex;align-items:center;gap:4px;margin-left:4px"></div>
   <button onclick="toggleDark()" class="hb" title="Dark Mode" style="font-size:14px">🌙</button>
   <button onclick="openGuide()" class="hb" title="Anleitung" style="font-size:14px">❓</button>
-  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.71</span>
+  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.72</span>
   <button onclick="doLogout()" class="hb" title="Abmelden" style="font-size:14px" id="logout-btn">⏻</button>
   <button onclick="toggleMobileView()" id="mobile-btn" class="hb" title="Mobile Ansicht" style="font-size:14px">📱</button>
   <div id="more-w" class="admin-only">
@@ -454,6 +454,21 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
         <div class="dp-ti" id="dp-name"></div>
         <div class="dp-su" id="dp-sub"></div>
       </div>
+      <div class="dp-bd">
+        <div class="dp-r"><span class="dp-l">PSP</span><span class="dp-v" id="dp-psp"></span></div>
+        <div class="dp-r"><span class="dp-l">Baustellen-Name</span><span class="dp-v" id="dp-sap"></span></div>
+        <div class="dp-r"><span class="dp-l">Adresse</span><span class="dp-v" id="dp-addr"></span></div>
+        <div class="dp-r"><span class="dp-l">PrV</span><span class="dp-v" id="dp-prv"></span></div>
+        <div class="dp-r"><span class="dp-l">BC</span><span class="dp-v" id="dp-bc"></span></div>
+        <div class="dp-r"><span class="dp-l">Abteilung</span><span class="dp-v" id="dp-dept"></span></div>
+        <div class="dp-r"><span class="dp-l">Rhythmus</span><span class="dp-v" id="dp-rh"></span></div>
+        <div class="dp-r" id="dp-zb-row" style="display:none"><span class="dp-l">Zeitbedarf</span><span class="dp-v" id="dp-zb"></span></div>
+        <div class="dp-r" id="dp-personal-row" style="display:none"><span class="dp-l">Personal KW <span id="dp-personal-kw"></span></span><span class="dp-v" id="dp-personal-cnt"></span></div>
+        <div class="dp-r"><span class="dp-l">Letztes Audit</span><span class="dp-v" id="dp-last"></span><button id="dp-last-clr" onclick="clearLastAudit()" style="display:none;background:none;border:none;cursor:pointer;color:#EF4444;font-size:11px;margin-left:4px" title="Datum löschen">×</button></div>
+        <div class="dp-r"><span class="dp-l">Auditor</span><span class="dp-v" id="dp-aud"></span></div>
+        <div class="dp-r"><span class="dp-l">Nächstes Audit</span><span class="dp-v" id="dp-next"></span></div>
+        <div class="dp-cnt" id="dp-cntb" style="display:none">Audits 2026: <span id="dp-cnt"></span></div>
+      </div>
       <div class="dp-acts">
         <button class="bg" onclick="showF('audit')"><i class="ti ti-check"></i> Auditiert</button>
         <button class="bg" onclick="openBeratungChoice()" style="background:#8B5CF6"><i class="ti ti-message-circle"></i> Beratung</button>
@@ -498,19 +513,6 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
         </div>
       </div>
       <div class="dp-bd">
-        <div class="dp-r"><span class="dp-l">PSP</span><span class="dp-v" id="dp-psp"></span></div>
-        <div class="dp-r"><span class="dp-l">Baustellen-Name</span><span class="dp-v" id="dp-sap"></span></div>
-        <div class="dp-r"><span class="dp-l">Adresse</span><span class="dp-v" id="dp-addr"></span></div>
-        <div class="dp-r"><span class="dp-l">PrV</span><span class="dp-v" id="dp-prv"></span></div>
-        <div class="dp-r"><span class="dp-l">BC</span><span class="dp-v" id="dp-bc"></span></div>
-        <div class="dp-r"><span class="dp-l">Abteilung</span><span class="dp-v" id="dp-dept"></span></div>
-        <div class="dp-r"><span class="dp-l">Rhythmus</span><span class="dp-v" id="dp-rh"></span></div>
-        <div class="dp-r" id="dp-zb-row" style="display:none"><span class="dp-l">Zeitbedarf</span><span class="dp-v" id="dp-zb"></span></div>
-        <div class="dp-r" id="dp-personal-row" style="display:none"><span class="dp-l">Personal KW <span id="dp-personal-kw"></span></span><span class="dp-v" id="dp-personal-cnt"></span></div>
-        <div class="dp-r"><span class="dp-l">Letztes Audit</span><span class="dp-v" id="dp-last"></span><button id="dp-last-clr" onclick="clearLastAudit()" style="display:none;background:none;border:none;cursor:pointer;color:#EF4444;font-size:11px;margin-left:4px" title="Datum löschen">×</button></div>
-        <div class="dp-r"><span class="dp-l">Auditor</span><span class="dp-v" id="dp-aud"></span></div>
-        <div class="dp-r"><span class="dp-l">Nächstes Audit</span><span class="dp-v" id="dp-next"></span></div>
-        <div class="dp-cnt" id="dp-cntb" style="display:none">Audits 2026: <span id="dp-cnt"></span></div>
         <div id="dp-hist" style="display:none;border-top:1px solid var(--bd)"></div>
         <div id="dp-plans" style="display:none;border-top:1px solid var(--bd)"></div>
         <div class="dp-note" id="dp-noteb" style="display:none"></div>
