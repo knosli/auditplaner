@@ -361,7 +361,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
   <div id="presence-bar" style="display:flex;align-items:center;gap:4px;margin-left:4px"></div>
   <button onclick="toggleDark()" class="hb" title="Dark Mode" style="font-size:14px">🌙</button>
   <button onclick="openGuide()" class="hb" title="Anleitung" style="font-size:14px">❓</button>
-  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.61</span>
+  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.62</span>
   <button onclick="doLogout()" class="hb" title="Abmelden" style="font-size:14px" id="logout-btn">⏻</button>
   <button onclick="toggleMobileView()" id="mobile-btn" class="hb" title="Mobile Ansicht" style="font-size:14px">📱</button>
   <div id="more-w" class="admin-only">
@@ -928,7 +928,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
   <div class="li"><div class="ld" style="background:#F97316"></div>Fällig 0–10T</div>
   <div class="li"><div class="ld" style="background:#FDE047"></div>Bald fällig ≤10T</div>
   <div class="li"><div class="ld" style="background:#10B981"></div>OK</div>
-  <div class="li"><span style="font-size:14px;color:#7C3AED;line-height:1">★</span> Neu (noch nie auditiert)</div>
+  <div class="li" title="Stern = noch nie auditiert. Violett = neu, orange = fällig, rot = überfällig (Frist ab Erfassung)"><span style="font-size:14px;color:#7C3AED;line-height:1">★</span><span style="font-size:14px;color:#F59E0B;line-height:1;margin-left:-2px">★</span><span style="font-size:14px;color:#EF4444;line-height:1;margin-left:-2px">★</span> Nie auditiert (neu / fällig / überfällig)</div>
   <div class="li"><div class="ld" style="background:#6366F1"></div>Geplant</div>
   <div class="li"><div class="ld" style="background:#94A3B8;opacity:.7"></div>Pausiert</div>
   <div class="li"><div class="ld sq" style="background:#EA580C"></div>Werkhof</div>
@@ -1572,8 +1572,10 @@ function makeIcon(e,sel){
   const isNew=!e.lastAudit&&!isPa&&e.active&&!isWH&&!isGU&&!hasP(e)&&!planned.has(e.id);
   if(isNew){
     const sz=sel?28:22;
-    return L.divIcon({className:'',html:`<div style="opacity:${op};filter:${sel?'drop-shadow(0 0 6px #7C3AED)':''}">`+
-      `<svg width="${sz}" height="${sz}" viewBox="0 0 24 24" fill="#7C3AED" xmlns="http://www.w3.org/2000/svg">`+
+    // Stern = noch nie auditiert; Farbe nach Frist ab Erfassung: violett (neu), orange (fällig), rot (überfällig)
+    const st=status(e);const sc=st==='overdue'?'#EF4444':st==='due'?'#F59E0B':'#7C3AED';
+    return L.divIcon({className:'',html:`<div style="opacity:${op};filter:${sel?'drop-shadow(0 0 6px '+sc+')':'drop-shadow(0 1px 2px rgba(0,0,0,.3))'}">`+
+      `<svg width="${sz}" height="${sz}" viewBox="0 0 24 24" fill="${sc}" stroke="#fff" stroke-width="1.2" xmlns="http://www.w3.org/2000/svg">`+
       `<path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>`+
       `</svg></div>`,iconSize:[sz,sz],iconAnchor:[sz/2,sz/2]});
   }
