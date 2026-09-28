@@ -123,14 +123,14 @@ body.dark .bsc.rsel{background:#0f2a1a}
 .dp-cl:hover{color:rgba(255,255,255,.75)}
 .dp-ti{font-size:18px;font-weight:800;color:#fff;padding-right:18px;line-height:1.3}
 .dp-su{font-size:13px;font-weight:600;color:rgba(255,255,255,.55);margin-top:2px}
-.dp-bd{padding:10px 14px}
+.dp-bd{padding:10px 14px;border-top:1px solid rgba(255,255,255,.1)}
 .dp-r{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px}
 .dp-l{font-size:11px;color:rgba(255,255,255,.38)}
 .dp-v{font-size:12px;color:rgba(255,255,255,.88);font-weight:500;text-align:right;max-width:195px;word-break:break-word}
 .dp-note{margin-bottom:8px;padding:7px 9px;background:rgba(255,255,255,.05);border-radius:6px;font-size:11px;color:rgba(255,255,255,.65);font-style:italic}
 .dp-cnt{padding:6px 9px;background:rgba(255,255,255,.05);border-radius:6px;margin-bottom:8px;font-size:11px;color:rgba(255,255,255,.45)}
 .dp-cnt span{color:rgba(255,255,255,.85);font-weight:600}
-.dp-acts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;padding:0 14px 8px}
+.dp-acts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;padding:10px 14px 8px}
 .dp-acts button{padding:7px 3px;border-radius:6px;border:none;cursor:pointer;font-size:10px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:3px}
 .bg{background:var(--green);color:#fff}.bb{background:var(--blue);color:#fff}
 .bt2{background:rgba(255,255,255,.1);color:#fff}.br{background:var(--red);color:#fff}
@@ -361,7 +361,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
   <div id="presence-bar" style="display:flex;align-items:center;gap:4px;margin-left:4px"></div>
   <button onclick="toggleDark()" class="hb" title="Dark Mode" style="font-size:14px">🌙</button>
   <button onclick="openGuide()" class="hb" title="Anleitung" style="font-size:14px">❓</button>
-  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.70</span>
+  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.71</span>
   <button onclick="doLogout()" class="hb" title="Abmelden" style="font-size:14px" id="logout-btn">⏻</button>
   <button onclick="toggleMobileView()" id="mobile-btn" class="hb" title="Mobile Ansicht" style="font-size:14px">📱</button>
   <div id="more-w" class="admin-only">
@@ -454,23 +454,6 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
         <div class="dp-ti" id="dp-name"></div>
         <div class="dp-su" id="dp-sub"></div>
       </div>
-      <div class="dp-bd">
-        <div class="dp-r"><span class="dp-l">PSP</span><span class="dp-v" id="dp-psp"></span></div>
-        <div class="dp-r"><span class="dp-l">Baustellen-Name</span><span class="dp-v" id="dp-sap"></span></div>
-        <div class="dp-r"><span class="dp-l">Adresse</span><span class="dp-v" id="dp-addr"></span></div>
-        <div class="dp-r"><span class="dp-l">PrV</span><span class="dp-v" id="dp-prv"></span></div>
-        <div class="dp-r"><span class="dp-l">BC</span><span class="dp-v" id="dp-bc"></span></div>
-        <div class="dp-r"><span class="dp-l">Abteilung</span><span class="dp-v" id="dp-dept"></span></div>
-        <div class="dp-r"><span class="dp-l">Rhythmus</span><span class="dp-v" id="dp-rh"></span></div>
-        <div class="dp-r" id="dp-personal-row" style="display:none"><span class="dp-l">Personal KW <span id="dp-personal-kw"></span></span><span class="dp-v" id="dp-personal-cnt"></span></div>
-        <div class="dp-r"><span class="dp-l">Letztes Audit</span><span class="dp-v" id="dp-last"></span><button id="dp-last-clr" onclick="clearLastAudit()" style="display:none;background:none;border:none;cursor:pointer;color:#EF4444;font-size:11px;margin-left:4px" title="Datum löschen">×</button></div>
-        <div class="dp-r"><span class="dp-l">Auditor</span><span class="dp-v" id="dp-aud"></span></div>
-        <div class="dp-r"><span class="dp-l">Nächstes Audit</span><span class="dp-v" id="dp-next"></span></div>
-        <div class="dp-cnt" id="dp-cntb" style="display:none">Audits 2026: <span id="dp-cnt"></span></div>
-        <div id="dp-hist" style="display:none;border-top:1px solid var(--bd)"></div>
-        <div id="dp-plans" style="display:none;border-top:1px solid var(--bd)"></div>
-        <div class="dp-note" id="dp-noteb" style="display:none"></div>
-      </div>
       <div class="dp-acts">
         <button class="bg" onclick="showF('audit')"><i class="ti ti-check"></i> Auditiert</button>
         <button class="bg" onclick="openBeratungChoice()" style="background:#8B5CF6"><i class="ti ti-message-circle"></i> Beratung</button>
@@ -513,6 +496,25 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
           <button style="background:var(--red);color:#fff" onclick="doDelete()">Ja, löschen</button>
           <button style="background:rgba(255,255,255,.1);color:#fff" onclick="hideDel()">Abbrechen</button>
         </div>
+      </div>
+      <div class="dp-bd">
+        <div class="dp-r"><span class="dp-l">PSP</span><span class="dp-v" id="dp-psp"></span></div>
+        <div class="dp-r"><span class="dp-l">Baustellen-Name</span><span class="dp-v" id="dp-sap"></span></div>
+        <div class="dp-r"><span class="dp-l">Adresse</span><span class="dp-v" id="dp-addr"></span></div>
+        <div class="dp-r"><span class="dp-l">PrV</span><span class="dp-v" id="dp-prv"></span></div>
+        <div class="dp-r"><span class="dp-l">BC</span><span class="dp-v" id="dp-bc"></span></div>
+        <div class="dp-r"><span class="dp-l">Abteilung</span><span class="dp-v" id="dp-dept"></span></div>
+        <div class="dp-r"><span class="dp-l">Rhythmus</span><span class="dp-v" id="dp-rh"></span></div>
+        <div class="dp-r" id="dp-zb-row" style="display:none"><span class="dp-l">Zeitbedarf</span><span class="dp-v" id="dp-zb"></span></div>
+        <div class="dp-r" id="dp-personal-row" style="display:none"><span class="dp-l">Personal KW <span id="dp-personal-kw"></span></span><span class="dp-v" id="dp-personal-cnt"></span></div>
+        <div class="dp-r"><span class="dp-l">Letztes Audit</span><span class="dp-v" id="dp-last"></span><button id="dp-last-clr" onclick="clearLastAudit()" style="display:none;background:none;border:none;cursor:pointer;color:#EF4444;font-size:11px;margin-left:4px" title="Datum löschen">×</button></div>
+        <div class="dp-r"><span class="dp-l">Auditor</span><span class="dp-v" id="dp-aud"></span></div>
+        <div class="dp-r"><span class="dp-l">Nächstes Audit</span><span class="dp-v" id="dp-next"></span></div>
+        <div class="dp-cnt" id="dp-cntb" style="display:none">Audits 2026: <span id="dp-cnt"></span></div>
+        <div id="dp-hist" style="display:none;border-top:1px solid var(--bd)"></div>
+        <div id="dp-plans" style="display:none;border-top:1px solid var(--bd)"></div>
+        <div class="dp-note" id="dp-noteb" style="display:none"></div>
+        <div id="dp-phist" style="display:none;border-top:1px solid rgba(255,255,255,.1);margin-top:6px"></div>
       </div>
     </div>
     <div id="planbar">
@@ -691,6 +693,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
           <option value="">Alle Auditoren</option>
         </select>
         <button onclick="calToday()" style="padding:6px 14px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf);cursor:pointer;font-size:12px;font-weight:600;color:var(--blue)">Heute</button>
+        <button onclick="openTourguide()" style="padding:6px 14px;border-radius:var(--rs);border:1px solid var(--blue);background:var(--blue);cursor:pointer;font-size:12px;font-weight:600;color:#fff"><i class="ti ti-compass"></i> Tourguide</button>
         <button onclick="openDistribute()" style="padding:6px 14px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf);cursor:pointer;font-size:12px;font-weight:600;color:var(--tx)"><i class="ti ti-layout-distribute-horizontal"></i> Verteilen</button>
         <button onclick="openKWPrintDialog()" style="padding:6px 14px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf);cursor:pointer;font-size:12px;font-weight:600;color:var(--tx)"><i class="ti ti-printer"></i> Drucken</button>
         <button onclick="openICSDialog()" style="padding:6px 14px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf);cursor:pointer;font-size:12px;font-weight:600;color:var(--tx)"><i class="ti ti-calendar-plus"></i> Outlook</button>
@@ -742,22 +745,20 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
           <div style="flex:1;min-width:220px">
             <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:6px">
               <span id="ov-total" style="font-size:26px;font-weight:800;color:var(--tx)">0</span>
-              <span style="font-size:12px;color:var(--tx2)">Audits gesamt</span>
+              <span style="font-size:12px;color:var(--tx2)">Audits gesamt <span style="color:var(--tx3)">(Baustellen + Personen)</span></span>
             </div>
             <div style="height:10px;background:var(--sf2);border-radius:6px;overflow:hidden;margin-bottom:6px">
               <div id="ov-bar" style="height:100%;background:var(--blue);border-radius:6px;width:0%;transition:width .3s"></div>
             </div>
             <div style="display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--tx2)">
               <span id="ov-progress-label">0% vom Soll</span>
-              <span class="admin-only" style="display:flex;align-items:center;gap:4px">
-                Soll/Jahr: <input type="number" id="ov-target" min="0" step="1" onchange="setAuditTarget(this.value)" style="width:60px;padding:3px 6px;border:1px solid var(--bd);border-radius:6px;background:var(--sf2);color:var(--tx);font-size:11px">
-              </span>
+              <span title="Summe der Soll-Werte aller Auditoren (Admin-Menü → Auditoren verwalten)">Soll/Jahr: <b id="ov-target">—</b></span>
             </div>
             <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:10px;font-size:11px">
               <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#3B82F6;margin-right:4px"></span>Baustellen-Audits: <b id="ov-c-site">0</b></span>
               <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#F59E0B;margin-right:4px"></span>Personen-Audits: <b id="ov-c-person">0</b></span>
-              <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#8B5CF6;margin-right:4px"></span>Beratungen: <b id="ov-c-berat">0</b></span>
-              <span style="color:var(--tx2)">📋 Rapporte: <b id="ov-c-rapp">0</b></span>
+              <span style="color:var(--tx2);border-left:1px solid var(--bd);padding-left:12px">Separat: <i class="ti ti-message-circle" style="color:#8B5CF6"></i> Beratungen <b id="ov-c-berat">0</b></span>
+              <span style="color:var(--tx2)"><i class="ti ti-clipboard-list" style="color:#0EA5E9"></i> Rapporte <b id="ov-c-rapp">0</b></span>
             </div>
           </div>
         </div>
@@ -990,6 +991,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
         </div>
         <div class="fr"><label>Letztes Audit</label><input type="date" id="f-last"></div>
       </div>
+      <div class="fr"><label title="Nur für Spezialbaustellen: feste Zeit pro Audit in Minuten. Übersteuert die automatische Schätzung nach Personal (Tourguide).">Zeitbedarf pro Audit (min) <span style="font-weight:400;color:var(--tx3)">– optional, nur Spezialbaustellen</span></label><input type="number" id="f-zb" min="10" max="600" step="5" placeholder="leer = automatisch nach Personal"></div>
       <!-- Row 6: Notiz -->
       <div class="fr"><label>Notiz</label><textarea id="f-note" placeholder="Optional..."></textarea></div>
     </div>
@@ -1782,7 +1784,7 @@ function renderList(){
     const chk=(planMode||multiPlanMode||multiAuditMode)&&e.active&&!e.paused?`<div class="pchk${ip?' on':''}" onclick="togPI(event,${e.id})">${ip?'✓':''}</div>`:'';
     return`<div class="bsc${selId===e.id?' sel':''}${ip?' rsel':''}${!e.active?' inact':''}${e.paused?' paused':''}" onclick="selEntry(${e.id})">
       <div style="display:flex;align-items:flex-start;gap:5px">${chk}<div style="flex:1;min-width:0">
-        <div class="bn">${e.type==='werkhof'?'🏠 ':''}${e.name}</div>
+        <div class="bn">${e.type==='werkhof'?'🏠 ':''}${e.name}${(()=>{const t=personalTrend(e);return t?` <span title="Personal ${t.txt}" style="color:${t.col};font-weight:700">${t.sym}</span>`:'';})()}</div>
         <div class="bsub"><span class="ddot" style="background:${dC(e.dept)}"></span>${e.dept||'—'}</div>
         ${e.prv?`<div class="bsub" style="padding-left:14px">${e.prv}</div>`:''}
         ${e.psp?`<div class="bsub" style="padding-left:14px;color:var(--tx3);font-size:10px">${e.psp}</div>`:''}
@@ -1878,6 +1880,8 @@ function selEntry(id){
   document.getElementById('dp-dept').textContent=e.dept||'—';
   const rh={28:'4 Wochen',35:'5 Wochen',42:'6 Wochen',49:'7 Wochen',56:'8 Wochen',182:'6 Monate'};
   document.getElementById('dp-rh').textContent=rh[e.rhythm]||e.rhythm+'T';
+  {const zr=document.getElementById('dp-zb-row');if(zr){zr.style.display=e.zeitbedarf?'':'none';if(e.zeitbedarf)document.getElementById('dp-zb').textContent=e.zeitbedarf+' min (fix)';}}
+  renderPersonalHistory(e);
   // Personal aus dem letzten Einsatzlisten-Import (Personal-Import Feature) - nur sichtbar,
   // wenn diese Baustelle je in einem Import geführt wurde (kein Wert = nie importiert).
   const perRow=document.getElementById('dp-personal-row');
@@ -2984,8 +2988,10 @@ function initOverviewDefaults(){
   }
 }
 function renderOverview(){
+  // Gesamt-Soll = Summe der Soll-Werte aller Auditoren (Auditoren verwalten) - keine separate Eingabe mehr
+  const sollSum=auditors.reduce((s,a)=>s+(+((auditorMeta[a]||{}).soll)||0),0);
   const targetEl=document.getElementById('ov-target');
-  if(targetEl&&document.activeElement!==targetEl)targetEl.value=window._auditTarget||0;
+  if(targetEl)targetEl.textContent=sollSum||'—';
   const fromV=document.getElementById('ov-from')?.value; // "YYYY-MM"
   const toV=document.getElementById('ov-to')?.value;
   if(!fromV||!toV)return;
@@ -3001,7 +3007,8 @@ function renderOverview(){
   });
   siteCount+=(window._ghostAudits||[]).filter(h=>inRange(h.date)).length;
   personCount=personAudits.filter(p=>!p.planned&&inRange(p.date)).length;
-  const total=siteCount+personCount+beratCount;
+  // Soll/Fortschritt: nur Baustellen- und Personen-Audits; Beratungen und Rapporte werden separat gezählt
+  const total=siteCount+personCount;
   document.getElementById('ov-total').textContent=total;
   document.getElementById('ov-c-site').textContent=siteCount;
   document.getElementById('ov-c-person').textContent=personCount;
@@ -3010,18 +3017,18 @@ function renderOverview(){
   // Soll auf den gewählten Zeitraum skalieren (Jahres-Soll ÷ 12 × Anzahl Monate im Bereich)
   const [fy,fm]=fromV.split('-').map(Number),[ty,tm]=toV.split('-').map(Number);
   const monthsInRange=Math.max(1,(ty-fy)*12+(tm-fm)+1);
-  const scaledTarget=Math.round((window._auditTarget||0)*monthsInRange/12);
+  const scaledTarget=Math.round(sollSum*monthsInRange/12);
   const pct=scaledTarget>0?Math.min(100,Math.round(total/scaledTarget*100)):0;
   document.getElementById('ov-bar').style.width=pct+'%';
   document.getElementById('ov-bar').style.background=pct>=100?'#10B981':pct>=60?'#3B82F6':'#F59E0B';
-  document.getElementById('ov-progress-label').textContent=scaledTarget>0?`${total} / ${scaledTarget} (${pct}%)`:'Kein Soll gesetzt';
+  document.getElementById('ov-progress-label').textContent=scaledTarget>0?`${total} / ${scaledTarget} (${pct}%)`:'Kein Soll gesetzt (Auditoren verwalten)';
   // Kuchendiagramm per CSS conic-gradient - kein zusätzliches Chart-Tool nötig für 3 Segmente
   const pie=document.getElementById('ov-pie');
   if(total===0){
     pie.innerHTML=`<div style="width:110px;height:110px;border-radius:50%;background:var(--sf2);display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--tx3);text-align:center">Keine<br>Audits</div>`;
   }else{
-    const pSite=siteCount/total*360,pPerson=personCount/total*360;
-    const g=`conic-gradient(#3B82F6 0deg ${pSite}deg, #F59E0B ${pSite}deg ${pSite+pPerson}deg, #8B5CF6 ${pSite+pPerson}deg 360deg)`;
+    const pSite=siteCount/total*360;
+    const g=`conic-gradient(#3B82F6 0deg ${pSite}deg, #F59E0B ${pSite}deg 360deg)`;
     pie.innerHTML=`<div style="width:110px;height:110px;border-radius:50%;background:${g};box-shadow:0 2px 8px rgba(0,0,0,.1)"></div>`;
   }
 }
@@ -4111,6 +4118,12 @@ function saveAudMeta2(name){
   if(code){AUD_CODES[name]=code.toUpperCase().slice(0,4);saveAudCodes();}
   const col=document.getElementById('am-col-'+name.replace(/ /g,'_'))?.value||'';
   if(col){auditorColors[name]=col;localStorage.setItem('auditorColors',JSON.stringify(auditorColors));}
+  // Tourguide: Startadresse + Abteilungs-Präferenzen
+  const id_=name.replace(/ /g,'_');
+  const homeV=(document.getElementById('am-home-'+id_)?.value||'').trim();
+  if(homeV!==(meta.home||'')){meta.home=homeV;meta.homeLat=null;meta.homeLng=null;if(homeV)tgGeocodeHome(name,homeV);}
+  const chips=[...document.querySelectorAll('#am-depts-'+id_+' span[data-d]')];
+  if(chips.length){meta.prefDepts=chips.filter(x=>x.dataset.st==='pref').map(x=>x.dataset.d);meta.exclDepts=chips.filter(x=>x.dataset.st==='excl').map(x=>x.dataset.d);}
   auditorMeta[name]=meta;
   saveAudMeta();
   const newName=(document.getElementById('am-name-'+name.replace(/ /g,'_'))?.value||'').trim();
@@ -4167,6 +4180,13 @@ function renderAudAdminList(){
           </select>
         </div>
       </div>
+      <div style="border-top:1px solid var(--bd);padding-top:10px;margin-bottom:10px">
+        <div style="font-size:11px;font-weight:700;color:var(--tx);margin-bottom:6px"><i class="ti ti-compass" style="color:var(--blue)"></i> Tourguide</div>
+        <label style="font-size:10px;color:var(--tx2);display:block;margin-bottom:2px">Startadresse (Rundtour ab/bis hier)</label>
+        <input id="am-home-${id}" value="${escH(meta.home||'')}" placeholder="Strasse Nr, PLZ Ort" style="width:100%;padding:5px 7px;border:1px solid var(--bd);border-radius:5px;background:var(--sf);color:var(--tx);font-size:12px;margin-bottom:8px">
+        <label style="font-size:10px;color:var(--tx2);display:block;margin-bottom:4px">Abteilungen – antippen zum Wechseln: neutral → <b style="color:#10B981">★ bevorzugt</b> → <b style="color:#EF4444">⛔ ausgeschlossen</b></label>
+        <div id="am-depts-${id}" style="display:flex;flex-wrap:wrap;gap:4px">${getAllDepts().map(d=>{const st=(meta.prefDepts||[]).includes(d)?'pref':(meta.exclDepts||[]).includes(d)?'excl':'';return`<span data-d="${escH(d)}" data-st="${st}" onclick="tgCycleDept(this)" style="${tgChipStyle(st)}">${tgChipLbl(st)}${escH(d)}</span>`;}).join('')}</div>
+      </div>
       <button onclick="saveAudMeta2('${a}')" style="width:100%;padding:7px;border-radius:var(--rs);border:none;background:var(--blue);color:#fff;cursor:pointer;font-size:12px;font-weight:600">✓ Speichern</button>
     </div>`;
   }).join('');
@@ -4183,7 +4203,7 @@ function setPAImportMode(){
   },100);
 }
 
-function openAdd(){editId=null;window._pendingLat=null;window._pendingLng=null;{const la=document.getElementById('f-lat'),ln=document.getElementById('f-lng');if(la)la.value='';if(ln)ln.value='';}document.getElementById('m-title').textContent='Neue Baustelle';document.getElementById('form-s').style.display='block';(document.getElementById('imp-s')||{style:{},classList:{remove(){}}}).style.display='none';(document.getElementById('json-s')||{style:{},classList:{remove(){}}}).style.display='none';document.getElementById('m-save').style.display='';['f-name','f-addr','f-psp','f-sap','f-prv','f-bc','f-note'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});fillFDept('');document.getElementById('f-rh').value='28';document.getElementById('f-last').value='';document.getElementById('f-type').value='baustelle';document.getElementById('addr-suggestions').style.display='none';const hint=document.getElementById('f-addr-hint');if(hint)hint.textContent='';document.getElementById('mbg').classList.add('open');}
+function openAdd(){editId=null;window._pendingLat=null;window._pendingLng=null;{const z=document.getElementById('f-zb');if(z)z.value='';}{const la=document.getElementById('f-lat'),ln=document.getElementById('f-lng');if(la)la.value='';if(ln)ln.value='';}document.getElementById('m-title').textContent='Neue Baustelle';document.getElementById('form-s').style.display='block';(document.getElementById('imp-s')||{style:{},classList:{remove(){}}}).style.display='none';(document.getElementById('json-s')||{style:{},classList:{remove(){}}}).style.display='none';document.getElementById('m-save').style.display='';['f-name','f-addr','f-psp','f-sap','f-prv','f-bc','f-note'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});fillFDept('');document.getElementById('f-rh').value='28';document.getElementById('f-last').value='';document.getElementById('f-type').value='baustelle';document.getElementById('addr-suggestions').style.display='none';const hint=document.getElementById('f-addr-hint');if(hint)hint.textContent='';document.getElementById('mbg').classList.add('open');}
 function openEdit(id){
   // Reset manual marker
   const latEl=document.getElementById('f-lat');
@@ -4206,6 +4226,7 @@ function openEdit(id){
   document.getElementById('f-bc').value=e.bc||'';
   fillFDept(e.dept||'');
   document.getElementById('f-rh').value=e.rhythm||28;
+  document.getElementById('f-zb').value=e.zeitbedarf||'';
   document.getElementById('f-last').value=e.lastAudit||'';
   document.getElementById('f-note').value=e.note||'';
   document.getElementById('f-type').value=e.type||'baustelle';
@@ -4236,7 +4257,8 @@ async function saveEntry(){
   }
   btn.textContent='Speichern';btn.disabled=false;
   let rh=+document.getElementById('f-rh').value;if(type==='werkhof'&&rh===28)rh=182;
-  const entry={id:editId||Date.now(),name,addr,psp:document.getElementById('f-psp').value.trim(),sap:name,prv:document.getElementById('f-prv').value.trim(),bc:document.getElementById('f-bc').value.trim(),dept,rhythm:rh,type,lastAudit:document.getElementById('f-last').value||null,lastKW:null,note:document.getElementById('f-note').value.trim(),auditor:editId?data.find(e=>e.id===editId)?.auditor:null,active:true,paused:false,auditHistory:[],plannedKW:[],lat,lng};
+  const _zb=+document.getElementById('f-zb').value||0;
+  const entry={id:editId||Date.now(),name,addr,zeitbedarf:_zb>0?_zb:undefined,psp:document.getElementById('f-psp').value.trim(),sap:name,prv:document.getElementById('f-prv').value.trim(),bc:document.getElementById('f-bc').value.trim(),dept,rhythm:rh,type,lastAudit:document.getElementById('f-last').value||null,lastKW:null,note:document.getElementById('f-note').value.trim(),auditor:editId?data.find(e=>e.id===editId)?.auditor:null,active:true,paused:false,auditHistory:[],plannedKW:[],lat,lng};
   if(editId){const old=data.find(e=>e.id===editId);if(old){entry.active=old.active!==false;entry.lastKW=old.lastKW??null;entry.auditor=old.auditor;entry.paused=old.paused;entry.pauseReason=old.pauseReason;entry.auditHistory=old.auditHistory||[];entry.plannedKW=old.plannedKW||[];}data[data.findIndex(e=>e.id===editId)]={...old,...entry};}
   else{entry.createdAt=today();data.push(entry);}
   log(editId?'Bearbeitet':'Hinzugefügt',name,editId?'#F59E0B':'#3B82F6','');
@@ -5482,7 +5504,7 @@ function hideLoginModal(){
   setTimeout(()=>{
     if(typeof map!=='undefined'&&map)map.invalidateSize(true);
   },200);
-  if(!localStorage.getItem(GUIDE_KEY)&&window.innerWidth>=768)setTimeout(()=>openGuide(),1500);
+  // Anleitung öffnet sich nicht mehr automatisch - nur noch über den ❓-Button in der Kopfzeile
 }
 
 async function onAuthSuccess(user){
@@ -5771,12 +5793,252 @@ function stickFooter(box){
   box.dataset.stickyDone='1';
 }
 function initStickyFooters(){
-  ['dist-bg','aud-admin-bg','pi-bg','pisb-bg','rpe-bg','tw-bg','dept-bg','rpt-bg','guide-bg'].forEach(id=>{
+  ['dist-bg','aud-admin-bg','pi-bg','pisb-bg','rpe-bg','tw-bg','dept-bg','rpt-bg','tg-bg','guide-bg'].forEach(id=>{
     const ov=document.getElementById(id);if(ov)stickFooter(ov.firstElementChild);
   });
   document.querySelectorAll('.mbg > .modal').forEach(stickFooter);
 }
 document.addEventListener('DOMContentLoaded',()=>setTimeout(initStickyFooters,300));
+// ═══ TOURGUIDE ═══
+// Schlägt für einen Auditor und die gewählten Tage einer KW passende Baustellen vor (Richtwert 4-6, max. 6
+// pro Tag inkl. bereits geplanter). Tag = 9 h inkl. Fahrzeit (Rundtour ab/bis Startadresse); bereits geplante
+// Baustellen, Rapporte, Personen-Audits und Beratungen werden berücksichtigt. Dringlichkeit: überfällig >
+// fällig > bald fällig > neu; bevorzugte Abteilungen zuerst, ausgeschlossene nie. Füllt nur auf.
+const TG_DAY_MIN=540,TG_MAX_PER_DAY=6;
+function tgAuditMin(e){
+  if(e.zeitbedarf)return +e.zeitbedarf;
+  const n=e.lastPersonalKW!==undefined?e.lastPersonalCount:null;
+  if(n===null||n===undefined)return 45;
+  if(n<=3)return 30;if(n<=9)return 45;if(n<=19)return 60;return 75;
+}
+function tgUrgency(e){const s=status(e);return{overdue:0,due:1,soon:2,new:3}[s];}
+function tgCandidates(aud,kw){
+  const m=auditorMeta[aud]||{};const pref=new Set(m.prefDepts||[]),excl=new Set(m.exclDepts||[]);
+  const ks=kwToDate(kw),ke=kwToDate(kw+1);
+  const plannedThisKW=new Set(plans.filter(p=>p.date>=ks&&p.date<ke).map(p=>p.bsId));
+  return data.filter(e=>{
+    if(!e.active||e.paused||!e.lat||!e.lng)return false;
+    if(tgUrgency(e)===undefined)return false;                 // ok / geplant / Beratung -> nicht vorschlagen
+    if(plannedThisKW.has(e.id))return false;                  // von irgendwem diese KW eingeplant
+    if(e.lastPersonalKW!==undefined&&e.lastPersonalCount===0)return false; // laut Import kein Personal
+    if(deptParts(e.dept).some(d=>excl.has(d)))return false;   // ausgeschlossen (hart)
+    return true;
+  }).map(e=>{const isPref=deptParts(e.dept).some(d=>pref.has(d));return{e,isPref,rank:tgUrgency(e)*2+(isPref?0:1),min:tgAuditMin(e)};})
+    .sort((a,b)=>a.rank-b.rank||dl(a.e)-dl(b.e));
+}
+function tgFixedMin(aud,ds){
+  const rp=rapporte.filter(r=>r.date===ds&&r.auditor===aud).reduce((s,r)=>s+(r.dur||60),0);
+  const pa=personAudits.filter(p=>p.planned&&p.date===ds&&p.auditor===aud).length*45;
+  const bp=beratPlan.filter(p=>p.date===ds&&p.auditor===aud).length*45;
+  return rp+pa+bp;
+}
+let _tg=null;
+async function tgCompute(){
+  const aud=document.getElementById('tg-aud').value;
+  const kw=+document.getElementById('tg-kw').value;
+  const days=[...document.querySelectorAll('#tg-days input:checked')].map(x=>+x.value);
+  if(!aud){showToast('Auditor wählen');return;}
+  if(!days.length){showToast('Mindestens einen Tag wählen');return;}
+  const box=document.getElementById('tg-result');
+  box.innerHTML='<div style="padding:20px;text-align:center;color:var(--tx2);font-size:13px">🧭 Tourguide rechnet Fahrzeiten und stellt die Woche zusammen…</div>';
+  const home=await tgHomeFor(aud);
+  if(!home){box.innerHTML='<div style="padding:14px;color:#B45309;font-size:12px">⚠ Keine Startadresse für '+escH(aud)+'. Bitte in «Auditoren verwalten» hinterlegen.</div>';return;}
+  const ks=kwToDate(kw);
+  const dayDates=days.map(di=>rpAddDays(ks,di));
+  // bereits geplante Baustellen dieses Auditors (fix)
+  const fixedPlans=dayDates.map(ds=>plans.filter(p=>p.date===ds&&p.auditor===aud).map(p=>data.find(x=>x.id===p.bsId)).filter(e=>e&&e.lat&&e.lng));
+  const cands=tgCandidates(aud,kw);
+  // Kandidaten-Pool begrenzen (Fahrzeit-Matrix max. ~55 Punkte): die dringendsten zuerst
+  const fixedAll=[...new Set(fixedPlans.flat())];
+  const pool=cands.slice(0,Math.max(0,54-fixedAll.length));
+  const pts=[home,...fixedAll.map(e=>({lat:e.lat,lng:e.lng})),...pool.map(x=>({lat:x.e.lat,lng:x.e.lng}))];
+  const{D,src}=await getDurationMatrix(pts);
+  const idxFixed=new Map(fixedAll.map((e,i)=>[e.id,i+1]));
+  const idxPool=pool.map((_,i)=>i+1+fixedAll.length);
+  const dur=new Map();fixedAll.forEach(e=>dur.set(idxFixed.get(e.id),tgAuditMin(e)));pool.forEach((x,i)=>dur.set(idxPool[i],x.min));
+  // Tagesmodell: Route (Knoten-Indizes), fixe Termine
+  const dayState=dayDates.map((ds,d)=>({ds,route:fixedPlans[d].map(e=>idxFixed.get(e.id)),fixedN:fixedPlans[d].length,fx:tgFixedMin(aud,ds)}));
+  const tourSec=r=>{let s=0,p=0;r.forEach(j=>{s+=D[p][j];p=j;});return r.length?s+D[p][0]:0;};
+  const dayMin=st=>tourSec(st.route)/60+st.route.reduce((s,j)=>s+dur.get(j),0)+st.fx;
+  // Einfügen mit geringstem Mehraufwand (Cheapest Insertion) über alle Tage, Dringlichkeit bestimmt Reihenfolge
+  const chosen=[],skipped=[];
+  pool.forEach((x,i)=>{
+    const j=idxPool[i];let best=null;
+    dayState.forEach((st,d)=>{
+      if(st.route.length>=TG_MAX_PER_DAY)return;
+      const base=dayMin(st);
+      for(let pos=0;pos<=st.route.length;pos++){
+        const r=st.route.slice(0,pos).concat(j,st.route.slice(pos));
+        const t=tourSec(r)/60+r.reduce((s,k)=>s+dur.get(k),0)+st.fx;
+        if(t>TG_DAY_MIN)continue;
+        const add=t-base;
+        if(!best||add<best.add)best={d,r,add};
+      }
+    });
+    if(best){dayState[best.d].route=best.r;chosen.push(j);}else skipped.push(x);
+  });
+  // Ausgleich: ausgewählte (neue) Baustellen zwischen den Tagen verschieben/tauschen, damit der längste Tag
+  // möglichst kurz wird (sonst bleiben Tage leer, weil ein leerer Tag immer die ganze Anfahrt kostet).
+  // Grenzen: max. 6 Baustellen und 9 h pro Tag; bereits geplante Baustellen bleiben auf ihrem Tag.
+  {
+    const fixedSet=new Set(fixedAll.map(e=>idxFixed.get(e.id)));
+    const cache=new Map();
+    const dm=(d,set)=>{const k=d+':'+set.slice().sort((a,b)=>a-b).join(',');if(cache.has(k))return cache.get(k);
+      const v=distTourSec(D,set)/60+set.reduce((s,j)=>s+dur.get(j),0)+dayState[d].fx;cache.set(k,v);return v;};
+    let sets=dayState.map(st=>st.route.slice());
+    const cost=ss=>{const t=ss.map((s,d)=>dm(d,s));if(t.some(x=>x>TG_DAY_MIN)||ss.some(s=>s.length>TG_MAX_PER_DAY))return Infinity;return Math.max(...t)*3+t.reduce((a,b)=>a+b,0);};
+    let cur=cost(sets),t0=Date.now(),imp=true;
+    while(imp&&Date.now()-t0<5000){imp=false;
+      for(let a=0;a<sets.length&&!imp;a++)for(let b=0;b<sets.length&&!imp;b++){if(a===b)continue;
+        for(const j of sets[a]){if(fixedSet.has(j))continue;
+          const s2=sets.slice();s2[a]=sets[a].filter(x=>x!==j);s2[b]=sets[b].concat(j);const v=cost(s2);
+          if(v<cur-1){sets=s2;cur=v;imp=true;break;}}
+        if(!imp)for(const j of sets[a]){if(fixedSet.has(j)||imp)continue;
+          for(const k of sets[b]){if(fixedSet.has(k))continue;
+            const s2=sets.slice();s2[a]=sets[a].map(x=>x===j?k:x);s2[b]=sets[b].map(x=>x===k?j:x);const v=cost(s2);
+            if(v<cur-1){sets=s2;cur=v;imp=true;break;}}}
+      }}
+    sets.forEach((s,d)=>{dayState[d].route=s;});
+  }
+  // Reihenfolge je Tag exakt optimieren
+  dayState.forEach(st=>{if(st.route.length>1)st.route=solveRoute(D,0,st.route,0);});
+  _tg={aud,kw,days,dayDates,D,src,dur,dayState,pool,idxPool,fixedIds:new Set(fixedAll.map(e=>idxFixed.get(e.id))),nodeEntry:new Map([...fixedAll.map(e=>[idxFixed.get(e.id),e]),...pool.map((x,i)=>[idxPool[i],x.e])]),prefOf:new Map(pool.map((x,i)=>[idxPool[i],x.isPref])),removed:new Set(),remaining:skipped};
+  tgRender();
+}
+function tgDayStats(st){
+  const R=_tg;let s=0,p=0;st.route.forEach(j=>{s+=R.D[p][j];p=j;});if(st.route.length)s+=R.D[p][0];
+  const aud=st.route.reduce((a,j)=>a+R.dur.get(j),0);
+  return{drive:s/60,aud,fx:st.fx,total:s/60+aud+st.fx};
+}
+function tgRender(){
+  const R=_tg;const names=['Mo','Di','Mi','Do','Fr'];
+  const fmt=m=>{m=Math.round(m);return Math.floor(m/60)+':'+String(m%60).padStart(2,'0')+' h';};
+  const stCol={overdue:'#EF4444',due:'#F59E0B',soon:'#EAB308',new:'#7C3AED'};
+  const newCount=R.dayState.reduce((s,st)=>s+st.route.filter(j=>!R.fixedIds.has(j)&&!R.removed.has(j)).length,0);
+  let h=`<div style="font-size:10px;color:${R.src==='ors'?'#10B981':'#F59E0B'};margin-bottom:8px">${R.src==='ors'?'✓ Fahrzeiten über Strassennetz':'⚠ Fahrzeiten geschätzt (Luftlinie)'} · Rundtour ab/bis Startadresse · Arbeitstag 9 h</div>`;
+  R.dayState.forEach((st,d)=>{
+    const stats=tgDayStats({...st,route:st.route.filter(j=>!R.removed.has(j))});
+    const pct=Math.min(100,stats.total/TG_DAY_MIN*100);
+    h+=`<div style="margin-bottom:10px;padding:10px 12px;background:var(--sf2);border-radius:10px;border-left:3px solid var(--blue)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <span style="font-size:13px;font-weight:700;color:var(--blue)">${names[R.days[d]]} ${fd(st.ds)} · ${st.route.filter(j=>!R.removed.has(j)).length} Baustellen</span>
+        <span style="font-size:12px;font-weight:700;color:${stats.total>TG_DAY_MIN?'#EF4444':'var(--tx)'}">≈ ${fmt(stats.total)} / 9:00 h</span>
+      </div>
+      <div style="height:6px;background:var(--bd);border-radius:3px;overflow:hidden;display:flex;margin-bottom:3px">
+        <div style="width:${stats.drive/TG_DAY_MIN*100}%;background:#F59E0B" title="Fahrzeit"></div><div style="width:${stats.aud/TG_DAY_MIN*100}%;background:#3B82F6" title="Audits"></div><div style="width:${stats.fx/TG_DAY_MIN*100}%;background:#0EA5E9" title="Termine"></div>
+      </div>
+      <div style="font-size:10px;color:var(--tx3);margin-bottom:6px">🚗 ${fmt(stats.drive)} · 🏗️ ${fmt(stats.aud)}${stats.fx?` · 📋 ${fmt(stats.fx)} Termine`:''}</div>
+      ${st.route.map(j=>{const e=R.nodeEntry.get(j);const fixed=R.fixedIds.has(j);const rm=R.removed.has(j);const s=status(e);
+        return`<div style="display:flex;align-items:center;gap:6px;padding:4px 0;font-size:12px;border-top:1px solid var(--bd);${rm?'opacity:.4;text-decoration:line-through':''}">
+          <span style="width:8px;height:8px;border-radius:50%;flex-shrink:0;background:${fixed?'#6366F1':stCol[s]||'#10B981'}"></span>
+          <span style="flex:1;min-width:0">${bsLabel(e)}${R.prefOf.get(j)?' <span style="color:#10B981" title="Bevorzugte Abteilung">★</span>':''}${fixed?' <span style="font-size:10px;color:#6366F1">(bereits geplant)</span>':''}</span>
+          <span style="font-size:10px;color:var(--tx3);white-space:nowrap">${R.dur.get(j)} min${e.zeitbedarf?' fix':''}</span>
+          ${fixed?'':`<select onchange="tgMove(${j},+this.value)" style="font-size:10px;padding:1px 3px;border:1px solid var(--bd);border-radius:4px;background:var(--sf);color:var(--tx2)">${R.days.map((di,dd)=>`<option value="${dd}"${dd===d?' selected':''}>${names[di]}</option>`).join('')}</select>
+          <button onclick="tgToggle(${j})" title="${rm?'Wieder aufnehmen':'Entfernen'}" style="background:none;border:none;cursor:pointer;font-size:12px;color:${rm?'#10B981':'#EF4444'}">${rm?'↺':'✕'}</button>`}
+        </div>`;}).join('')||`<div style="font-size:11px;color:var(--tx3);padding:4px 0">${R.remaining.length?'Nichts eingeplant – die übrigen Baustellen passen zeitlich besser auf andere Tage.':'Tag bleibt frei – keine weiteren fälligen Baustellen. Die übrigen Tage sind so effizienter (weniger Anfahrten).'}</div>`}
+    </div>`;
+  });
+  if(R.remaining.length)h+=`<details style="margin-top:4px;font-size:11px;color:var(--tx2)"><summary style="cursor:pointer">Weitere fällige Baustellen, die zeitlich nicht mehr passen (${R.remaining.length})</summary>
+    ${R.remaining.slice(0,25).map(x=>`<div style="padding:3px 0;border-top:1px solid var(--bd)">${bsLabel(x.e)} · ${x.min} min</div>`).join('')}</details>`;
+  document.getElementById('tg-result').innerHTML=h;
+  const btn=document.getElementById('tg-apply');btn.style.display=newCount?'':'none';btn.textContent=`✓ ${newCount} Baustellen einplanen`;
+}
+function tgMove(j,toD){
+  const R=_tg;R.dayState.forEach(st=>{st.route=st.route.filter(x=>x!==j);});
+  const st=R.dayState[toD];st.route.push(j);if(st.route.length>1)st.route=solveRoute(R.D,0,st.route,0);
+  tgRender();
+}
+function tgToggle(j){const R=_tg;if(R.removed.has(j))R.removed.delete(j);else R.removed.add(j);tgRender();}
+function tgApply(){
+  const R=_tg;if(!R)return;let n=0;
+  R.dayState.forEach(st=>st.route.forEach(j=>{
+    if(R.fixedIds.has(j)||R.removed.has(j))return;
+    const e=R.nodeEntry.get(j);
+    if(plans.some(p=>p.bsId===e.id&&p.date===st.ds))return;
+    plans.push({bsId:e.id,auditor:R.aud,date:st.ds,id:Date.now()+Math.random()});n++;
+  }));
+  plans.sort((a,b)=>a.date.localeCompare(b.date));
+  saveNow();renderAll();if(curView==='cal')renderKW();
+  document.getElementById('tg-bg').style.display='none';
+  log('🧭 Tourguide: '+n+' Baustellen eingeplant','KW '+R.kw,'#3B82F6','');
+  showToast(`🧭 ${n} Baustellen in KW ${R.kw} eingeplant`,3000);
+}
+function tgUpdateDays(){
+  const aud=document.getElementById('tg-aud').value,kw=+document.getElementById('tg-kw').value;
+  const names=['Mo','Di','Mi','Do','Fr'];
+  document.querySelectorAll('#tg-days input').forEach(cb=>{
+    const ds=rpAddDays(kwToDate(kw),+cb.value);const fer=distIsFerien(aud,ds);
+    if(fer){cb.checked=false;cb.disabled=true;}else cb.disabled=false;
+    cb.parentElement.style.opacity=fer?'.45':'1';
+    cb.parentElement.querySelector('.dd-lbl').textContent=names[+cb.value]+(fer?' 🌴':'');
+  });
+  const m=auditorMeta[aud]||{};
+  document.getElementById('tg-info').innerHTML=`Startadresse: <b>${escH((aud===currentUser&&localStorage.getItem('audit_start'))||m.home||'– nicht hinterlegt –')}</b>${(m.prefDepts||[]).length?` · ★ ${m.prefDepts.map(escH).join(', ')}`:''}${(m.exclDepts||[]).length?` · ⛔ ${m.exclDepts.map(escH).join(', ')}`:''}`;
+  document.getElementById('tg-result').innerHTML='';document.getElementById('tg-apply').style.display='none';
+}
+function openTourguide(){
+  const isAdmin=document.body.classList.contains('admin-mode');
+  const sel=document.getElementById('tg-aud');
+  const list=isAdmin?auditors:[currentUser].filter(Boolean);
+  sel.innerHTML=list.map(a=>`<option value="${escH(a)}"${a===currentUser?' selected':''}>${escH(a)}</option>`).join('');
+  sel.disabled=!isAdmin;
+  const kwSel=document.getElementById('tg-kw');const cur=dateToKW(today());
+  kwSel.innerHTML=[0,1,2,3,4].map(i=>`<option value="${cur+i}">KW ${cur+i}${i===1?' (nächste)':''}</option>`).join('');
+  kwSel.value=String(typeof getStickyPlanKW==='function'?getStickyPlanKW():cur+1);
+  document.getElementById('tg-bg').style.display='flex';
+  tgUpdateDays();initStickyFooters();
+}
+// ═══ TOURGUIDE: Hilfsfunktionen Auditor-Einstellungen ═══
+function tgChipStyle(st){
+  const base='display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:12px;font-size:11px;cursor:pointer;user-select:none;';
+  return base+(st==='pref'?'background:#D1FAE5;border:1px solid #10B981;color:#065F46;font-weight:600':st==='excl'?'background:#FEE2E2;border:1px solid #EF4444;color:#991B1B;text-decoration:line-through':'background:var(--sf2);border:1px solid var(--bd);color:var(--tx2)');
+}
+function tgChipLbl(st){return st==='pref'?'★ ':st==='excl'?'⛔ ':'';}
+function tgCycleDept(el){
+  const nx={'':'pref',pref:'excl',excl:''}[el.dataset.st||''];
+  el.dataset.st=nx;el.setAttribute('style',tgChipStyle(nx));
+  el.textContent=tgChipLbl(nx)+el.dataset.d;
+}
+async function tgGeocodeHome(aud,addr){
+  try{
+    const r=await fetch(`https://api3.geo.admin.ch/rest/services/api/SearchServer?searchText=${encodeURIComponent(addr)}&type=locations&limit=1&sr=4326&lang=de`);
+    const d=await r.json();const a=d.results&&d.results[0]&&d.results[0].attrs;
+    if(a&&auditorMeta[aud]){auditorMeta[aud].homeLat=a.lat;auditorMeta[aud].homeLng=a.lon;saveAudMeta();}
+    else showToast('⚠ Startadresse von '+aud+' nicht gefunden',3000);
+  }catch(e){}
+}
+// Startadresse für die Planung: eigenes Gerät (falls gesetzt) hat Vorrang, sonst Einstellung beim Auditor
+async function tgHomeFor(aud){
+  if(aud===currentUser){const h=await getHomeCoords();if(h)return h;}
+  const m=auditorMeta[aud]||{};
+  if(m.homeLat&&m.homeLng)return{lat:m.homeLat,lng:m.homeLng};
+  if(m.home){await tgGeocodeHome(aud,m.home);const m2=auditorMeta[aud]||{};if(m2.homeLat)return{lat:m2.homeLat,lng:m2.homeLng};}
+  return null;
+}
+// ═══ PERSONALVERLAUF (aus den wöchentlichen Personal-Importen) ═══
+function personalTrend(e){
+  const h=e.personalHistory||[];if(h.length<2)return null;
+  const last=h[h.length-1].count,prev=h[h.length-2].count;
+  if(last>prev)return{sym:'↗',col:'#10B981',txt:`hochfahrend (${prev} → ${last})`};
+  if(last<prev)return{sym:'↘',col:'#F59E0B',txt:`abnehmend (${prev} → ${last})`};
+  return{sym:'→',col:'#94A3B8',txt:`gleichbleibend (${last})`};
+}
+let _phistOpen=false;
+function renderPersonalHistory(e){
+  const el=document.getElementById('dp-phist');if(!el)return;
+  const h=(e.personalHistory||[]).slice(-26);
+  if(!h.length){el.style.display='none';return;}
+  el.style.display='';
+  const max=Math.max(1,...h.map(x=>x.count));
+  const tr=personalTrend(e);
+  const bars=h.map(x=>`<div title="KW ${x.kw}/${x.year}: ${x.count} Pers." style="flex:1;min-width:4px;display:flex;flex-direction:column;justify-content:flex-end;height:100%">
+      <div style="height:${Math.max(2,x.count/max*100)}%;background:${x.count?'#3B82F6':'rgba(148,163,184,.5)'};border-radius:2px 2px 0 0"></div></div>`).join('');
+  el.innerHTML=`<div onclick="_phistOpen=!_phistOpen;renderPersonalHistory(data.find(x=>x.id===${e.id}))" style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;cursor:pointer;font-size:11px;color:rgba(255,255,255,.75)">
+      <span>📈 Personalverlauf <span style="color:rgba(255,255,255,.45)">(${h.length} Wochen)</span>${tr?` <span style="color:${tr.col};font-weight:700" title="${tr.txt}">${tr.sym}</span>`:''}</span>
+      <span>${_phistOpen?'▾':'▸'}</span></div>
+    ${_phistOpen?`<div style="display:flex;align-items:flex-end;gap:2px;height:70px;padding:4px 0">${bars}</div>
+      <div style="display:flex;justify-content:space-between;font-size:9px;color:rgba(255,255,255,.45);padding-bottom:6px"><span>KW ${h[0].kw}</span><span>max ${max} Pers.</span><span>KW ${h[h.length-1].kw}</span></div>`:''}`;
+}
 // ═══ EINHEITLICHE BAUSTELLEN-BESCHRIFTUNG: PSP · Name · Abteilung ═══
 function escH(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function bsLabelText(e){return[e.psp,e.name,e.dept].filter(Boolean).join(' · ');}
@@ -6118,7 +6380,7 @@ async function runPersonalImport(file){
         if(e.paused)buckets.reactivate.push(item);else buckets.noop.push(item);
       }
     });
-    _piPending={buckets,targetKW,temporaere:Array.isArray(payload.temporaere)?payload.temporaere:[],rawEntries:payload.entries};
+    _piPending={buckets,targetKW,targetYear:+payload.year||new Date().getFullYear(),temporaere:Array.isArray(payload.temporaere)?payload.temporaere:[],rawEntries:payload.entries};
     piComputeMissing();
     piRenderPreview();
   }catch(err){
@@ -6410,6 +6672,12 @@ function confirmPersonalImport(){
     const e=liveEntry(it);
     e.lastPersonalCount=it.count;
     e.lastPersonalKW=targetKW;
+    // Personalverlauf: pro KW ein Wert (erneuter Import derselben KW überschreibt), max. 52 Wochen
+    const yr=_piPending.targetYear||new Date().getFullYear();
+    e.personalHistory=(e.personalHistory||[]).filter(h=>!(h.kw===targetKW&&h.year===yr));
+    e.personalHistory.push({kw:targetKW,year:yr,count:it.count});
+    e.personalHistory.sort((a,b)=>a.year-b.year||a.kw-b.kw);
+    if(e.personalHistory.length>52)e.personalHistory=e.personalHistory.slice(-52);
   });
   // Temporäre Mitarbeitende: PRO EINHEIT ersetzen, nicht global anhängen. Wenn eine Einheit
   // (z.B. "Terratech AG") neu importiert wird, fliegen ihre alten Nummern raus und werden durch
@@ -7365,6 +7633,25 @@ ALTER TABLE audit_state ADD COLUMN IF NOT EXISTS "rapporte" text;</pre>
     <div id="sb-list"></div>
     <div style="display:flex;justify-content:flex-end;margin-top:16px;border-top:1px solid var(--bd);padding-top:12px">
       <button onclick="document.getElementById('pisb-bg').style.display='none'" style="padding:8px 16px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf2);cursor:pointer;font-size:12px;color:var(--tx)">Schliessen</button>
+    </div>
+  </div>
+</div>
+<!-- TOURGUIDE -->
+<div id="tg-bg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:4000;align-items:center;justify-content:center">
+  <div style="background:var(--sf);border-radius:12px;padding:22px;width:720px;max-width:96vw;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)">
+    <h3 style="font-size:16px;font-weight:700;color:var(--tx);margin-bottom:4px"><i class="ti ti-compass" style="color:var(--blue)"></i> Tourguide</h3>
+    <p style="font-size:12px;color:var(--tx2);margin-bottom:14px">Sag mir, an welchen Tagen du Zeit hast – ich stelle dir pro Tag bis zu 6 Baustellen zusammen: dringende zuerst, bevorzugte Abteilungen vor anderen, geografisch sinnvoll, max. 9 h inkl. Fahrzeit. Bereits Geplantes bleibt und wird aufgefüllt.</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:10px">
+      <div><label style="font-size:11px;color:var(--tx2);display:block;margin-bottom:3px">Auditor</label><select id="tg-aud" onchange="tgUpdateDays()" style="padding:6px 8px;border:1px solid var(--bd);border-radius:var(--rs);background:var(--sf2);color:var(--tx);font-size:12px"></select></div>
+      <div><label style="font-size:11px;color:var(--tx2);display:block;margin-bottom:3px">Woche</label><select id="tg-kw" onchange="tgUpdateDays()" style="padding:6px 8px;border:1px solid var(--bd);border-radius:var(--rs);background:var(--sf2);color:var(--tx);font-size:12px"></select></div>
+      <div><label style="font-size:11px;color:var(--tx2);display:block;margin-bottom:3px">Verfügbare Tage</label><div id="tg-days" style="display:flex;gap:6px;flex-wrap:wrap"><label style="display:flex;align-items:center;gap:4px;padding:6px 12px;background:var(--sf2);border:1px solid var(--bd);border-radius:8px;cursor:pointer;font-size:12px;font-weight:600"><input type="checkbox" value="0" checked onchange="document.getElementById('tg-result').innerHTML='';document.getElementById('tg-apply').style.display='none'"><span class="dd-lbl">Mo</span></label><label style="display:flex;align-items:center;gap:4px;padding:6px 12px;background:var(--sf2);border:1px solid var(--bd);border-radius:8px;cursor:pointer;font-size:12px;font-weight:600"><input type="checkbox" value="1" checked onchange="document.getElementById('tg-result').innerHTML='';document.getElementById('tg-apply').style.display='none'"><span class="dd-lbl">Di</span></label><label style="display:flex;align-items:center;gap:4px;padding:6px 12px;background:var(--sf2);border:1px solid var(--bd);border-radius:8px;cursor:pointer;font-size:12px;font-weight:600"><input type="checkbox" value="2" checked onchange="document.getElementById('tg-result').innerHTML='';document.getElementById('tg-apply').style.display='none'"><span class="dd-lbl">Mi</span></label><label style="display:flex;align-items:center;gap:4px;padding:6px 12px;background:var(--sf2);border:1px solid var(--bd);border-radius:8px;cursor:pointer;font-size:12px;font-weight:600"><input type="checkbox" value="3" checked onchange="document.getElementById('tg-result').innerHTML='';document.getElementById('tg-apply').style.display='none'"><span class="dd-lbl">Do</span></label><label style="display:flex;align-items:center;gap:4px;padding:6px 12px;background:var(--sf2);border:1px solid var(--bd);border-radius:8px;cursor:pointer;font-size:12px;font-weight:600"><input type="checkbox" value="4" checked onchange="document.getElementById('tg-result').innerHTML='';document.getElementById('tg-apply').style.display='none'"><span class="dd-lbl">Fr</span></label></div></div>
+      <button onclick="tgCompute()" style="padding:8px 16px;border:none;border-radius:var(--rs);background:var(--blue);color:#fff;font-size:13px;font-weight:600;cursor:pointer">🧭 Vorschlag erstellen</button>
+    </div>
+    <div id="tg-info" style="font-size:11px;color:var(--tx3);margin-bottom:12px"></div>
+    <div id="tg-result"></div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px">
+      <button onclick="document.getElementById('tg-bg').style.display='none'" style="padding:8px 16px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf2);cursor:pointer;font-size:12px;color:var(--tx)">Schliessen</button>
+      <button id="tg-apply" onclick="tgApply()" style="display:none;padding:8px 16px;border:none;border-radius:var(--rs);background:#10B981;color:#fff;font-size:12px;font-weight:600;cursor:pointer"></button>
     </div>
   </div>
 </div>
