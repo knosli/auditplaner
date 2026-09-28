@@ -361,7 +361,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
   <div id="presence-bar" style="display:flex;align-items:center;gap:4px;margin-left:4px"></div>
   <button onclick="toggleDark()" class="hb" title="Dark Mode" style="font-size:14px">🌙</button>
   <button onclick="openGuide()" class="hb" title="Anleitung" style="font-size:14px">❓</button>
-  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.73</span>
+  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.75</span>
   <button onclick="doLogout()" class="hb" title="Abmelden" style="font-size:14px" id="logout-btn">⏻</button>
   <button onclick="toggleMobileView()" id="mobile-btn" class="hb" title="Mobile Ansicht" style="font-size:14px">📱</button>
   <div id="more-w" class="admin-only">
@@ -5795,7 +5795,7 @@ function stickFooter(box){
   box.dataset.stickyDone='1';
 }
 function initStickyFooters(){
-  ['dist-bg','aud-admin-bg','pi-bg','pisb-bg','rpe-bg','tw-bg','dept-bg','rpt-bg','tg-bg','guide-bg'].forEach(id=>{
+  ['dist-bg','aud-admin-bg','pi-bg','pisb-bg','rpe-bg','tw-bg','dept-bg','rpt-bg','guide-bg'].forEach(id=>{
     const ov=document.getElementById(id);if(ov)stickFooter(ov.firstElementChild);
   });
   document.querySelectorAll('.mbg > .modal').forEach(stickFooter);
@@ -5982,7 +5982,9 @@ function tgUpdateDays(){
     cb.parentElement.querySelector('.dd-lbl').textContent=names[+cb.value]+(fer?' 🌴':'');
   });
   const m=auditorMeta[aud]||{};
-  document.getElementById('tg-info').innerHTML=`Startadresse: <b>${escH((aud===currentUser&&localStorage.getItem('audit_start'))||m.home||'– nicht hinterlegt –')}</b>${(m.prefDepts||[]).length?` · ★ ${m.prefDepts.map(escH).join(', ')}`:''}${(m.exclDepts||[]).length?` · ⛔ ${m.exclDepts.map(escH).join(', ')}`:''}`;
+  const _inf=document.getElementById('tg-info');
+  _inf.title=[`Startadresse: ${(aud===currentUser&&localStorage.getItem('audit_start'))||m.home||'–'}`,(m.prefDepts||[]).length?'★ Bevorzugt: '+m.prefDepts.join(', '):'',(m.exclDepts||[]).length?'⛔ Ausgeschlossen: '+m.exclDepts.join(', '):''].filter(Boolean).join('\n');
+  _inf.innerHTML=`Startadresse: <b>${escH((aud===currentUser&&localStorage.getItem('audit_start'))||m.home||'– nicht hinterlegt –')}</b>${(m.prefDepts||[]).length?` · ★ ${m.prefDepts.map(escH).join(', ')}`:''}${(m.exclDepts||[]).length?` · ⛔ ${m.exclDepts.map(escH).join(', ')}`:''}`;
   document.getElementById('tg-result').innerHTML='';document.getElementById('tg-apply').style.display='none';
 }
 function openTourguide(){
@@ -6673,21 +6675,26 @@ function confirmPersonalImport(){
   // Supabase-Sync die data-Liste ausgetauscht hat, würde man sonst ein verwaistes,
   // nicht mehr angezeigtes Objekt verändern (Änderung würde nirgends sichtbar).
   const liveEntry=it=>it.match&&it.match.entry?(data.find(x=>x.id===it.match.entry.id)||it.match.entry):null;
-  // Personal-Zahl aus der Einsatzliste an der Baustelle festhalten - unabhängig von Häkchen,
-  // rein informativ fürs Detail-Panel ("Personal KW X: N"). Baustellen, die NICHT in einer
-  // importierten Einsatzliste geführt werden, bleiben unberücksichtigt (kein Eintrag hier).
-  [...buckets.pause,...buckets.review,...buckets.reactivate,...buckets.noop,...buckets.reactivateInactive,...buckets.inactiveInfo].forEach(it=>{
-    if(!it.match)return;
-    const e=liveEntry(it);
-    e.lastPersonalCount=it.count;
+  // Personal-Zahl an der Baustelle festhalten - unabhängig von Häkchen (Detail-Panel, Verlauf, Tourguide).
+  //  - alle erkannten Baustellen inkl. «dauerhaft ausgeschlossen»: Zahl laut Liste
+  //  - «nicht auf der Liste» (nur vollständig importierte Abteilungen): 0 für diese KW
+  // Werkhöfe und «Unbekannt» erhalten nichts.
+  const yr=_piPending.targetYear||new Date().getFullYear();
+  const recordPersonal=(e,count)=>{
+    if(!e)return;
+    e.lastPersonalCount=count;
     e.lastPersonalKW=targetKW;
     // Personalverlauf: pro KW ein Wert (erneuter Import derselben KW überschreibt), max. 52 Wochen
-    const yr=_piPending.targetYear||new Date().getFullYear();
     e.personalHistory=(e.personalHistory||[]).filter(h=>!(h.kw===targetKW&&h.year===yr));
-    e.personalHistory.push({kw:targetKW,year:yr,count:it.count});
+    e.personalHistory.push({kw:targetKW,year:yr,count});
     e.personalHistory.sort((a,b)=>a.year-b.year||a.kw-b.kw);
     if(e.personalHistory.length>52)e.personalHistory=e.personalHistory.slice(-52);
+  };
+  [...buckets.pause,...buckets.review,...buckets.reactivate,...buckets.noop,...buckets.reactivateInactive,...buckets.inactiveInfo,...(buckets.excluded||[])].forEach(it=>{
+    if(!it.match)return;
+    recordPersonal(liveEntry(it),it.count);
   });
+  (buckets.missing||[]).forEach(it=>recordPersonal(liveEntry(it),0));
   // Temporäre Mitarbeitende: PRO EINHEIT ersetzen, nicht global anhängen. Wenn eine Einheit
   // (z.B. "Terratech AG") neu importiert wird, fliegen ihre alten Nummern raus und werden durch
   // die neuen ersetzt - so verschwinden auch Nummern korrekt wieder, wenn die Person nicht mehr
@@ -6716,7 +6723,7 @@ function confirmPersonalImport(){
     if(nn&&!e.nameAliases.includes(nn)){e.nameAliases.push(nn);added=true;}
     if(added)aliasesSaved++;
   };
-  [...buckets.pause,...buckets.review,...buckets.reactivate,...buckets.noop,...buckets.reactivateInactive,...buckets.inactiveInfo].forEach(persistAlias);
+  [...buckets.pause,...buckets.review,...buckets.reactivate,...buckets.noop,...buckets.reactivateInactive,...buckets.inactiveInfo,...(buckets.excluded||[])].forEach(persistAlias);
   buckets.pause.forEach((it,i)=>{
     if(!checked('pause',i)||!it.match)return;
     const e=liveEntry(it);
@@ -7647,18 +7654,20 @@ ALTER TABLE audit_state ADD COLUMN IF NOT EXISTS "rapporte" text;</pre>
 </div>
 <!-- TOURGUIDE -->
 <div id="tg-bg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:4000;align-items:center;justify-content:center">
-  <div style="background:var(--sf);border-radius:12px;padding:22px;width:720px;max-width:96vw;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)">
+  <div style="background:var(--sf);border-radius:12px;width:720px;max-width:96vw;max-height:94vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3)">
+    <div style="padding:18px 22px 10px;flex-shrink:0;border-bottom:1px solid var(--bd)">
     <h3 style="font-size:16px;font-weight:700;color:var(--tx);margin-bottom:4px"><i class="ti ti-compass" style="color:var(--blue)"></i> Tourguide</h3>
-    <p style="font-size:12px;color:var(--tx2);margin-bottom:14px">Sag mir, an welchen Tagen du Zeit hast – ich stelle dir pro Tag bis zu 6 Baustellen zusammen: dringende zuerst, bei gleicher Dringlichkeit grosse Baustellen (mehr Personal) vor kleinen, dann bevorzugte Abteilungen, geografisch sinnvoll, max. 9 h inkl. Fahrzeit. Bereits Geplantes bleibt und wird aufgefüllt.</p>
+    <p style="font-size:11px;color:var(--tx2);margin-bottom:10px;line-height:1.4">Sag mir, an welchen Tagen du Zeit hast – ich stelle dir pro Tag bis zu 6 Baustellen zusammen: dringende zuerst, bei gleicher Dringlichkeit grosse Baustellen (mehr Personal) vor kleinen, dann bevorzugte Abteilungen, geografisch sinnvoll, max. 9 h inkl. Fahrzeit. Bereits Geplantes bleibt und wird aufgefüllt.</p>
     <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:10px">
       <div><label style="font-size:11px;color:var(--tx2);display:block;margin-bottom:3px">Auditor</label><select id="tg-aud" onchange="tgUpdateDays()" style="padding:6px 8px;border:1px solid var(--bd);border-radius:var(--rs);background:var(--sf2);color:var(--tx);font-size:12px"></select></div>
       <div><label style="font-size:11px;color:var(--tx2);display:block;margin-bottom:3px">Woche</label><select id="tg-kw" onchange="tgUpdateDays()" style="padding:6px 8px;border:1px solid var(--bd);border-radius:var(--rs);background:var(--sf2);color:var(--tx);font-size:12px"></select></div>
       <div><label style="font-size:11px;color:var(--tx2);display:block;margin-bottom:3px">Verfügbare Tage</label><div id="tg-days" style="display:flex;gap:6px;flex-wrap:wrap"><label style="display:flex;align-items:center;gap:4px;padding:6px 12px;background:var(--sf2);border:1px solid var(--bd);border-radius:8px;cursor:pointer;font-size:12px;font-weight:600"><input type="checkbox" value="0" checked onchange="document.getElementById('tg-result').innerHTML='';document.getElementById('tg-apply').style.display='none'"><span class="dd-lbl">Mo</span></label><label style="display:flex;align-items:center;gap:4px;padding:6px 12px;background:var(--sf2);border:1px solid var(--bd);border-radius:8px;cursor:pointer;font-size:12px;font-weight:600"><input type="checkbox" value="1" checked onchange="document.getElementById('tg-result').innerHTML='';document.getElementById('tg-apply').style.display='none'"><span class="dd-lbl">Di</span></label><label style="display:flex;align-items:center;gap:4px;padding:6px 12px;background:var(--sf2);border:1px solid var(--bd);border-radius:8px;cursor:pointer;font-size:12px;font-weight:600"><input type="checkbox" value="2" checked onchange="document.getElementById('tg-result').innerHTML='';document.getElementById('tg-apply').style.display='none'"><span class="dd-lbl">Mi</span></label><label style="display:flex;align-items:center;gap:4px;padding:6px 12px;background:var(--sf2);border:1px solid var(--bd);border-radius:8px;cursor:pointer;font-size:12px;font-weight:600"><input type="checkbox" value="3" checked onchange="document.getElementById('tg-result').innerHTML='';document.getElementById('tg-apply').style.display='none'"><span class="dd-lbl">Do</span></label><label style="display:flex;align-items:center;gap:4px;padding:6px 12px;background:var(--sf2);border:1px solid var(--bd);border-radius:8px;cursor:pointer;font-size:12px;font-weight:600"><input type="checkbox" value="4" checked onchange="document.getElementById('tg-result').innerHTML='';document.getElementById('tg-apply').style.display='none'"><span class="dd-lbl">Fr</span></label></div></div>
       <button onclick="tgCompute()" style="padding:8px 16px;border:none;border-radius:var(--rs);background:var(--blue);color:#fff;font-size:13px;font-weight:600;cursor:pointer">🧭 Vorschlag erstellen</button>
     </div>
-    <div id="tg-info" style="font-size:11px;color:var(--tx3);margin-bottom:12px"></div>
-    <div id="tg-result"></div>
-    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px">
+    <div id="tg-info" style="font-size:11px;color:var(--tx3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
+    </div>
+    <div id="tg-result" style="flex:1;min-height:60px;overflow-y:auto;padding:12px 22px"></div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;padding:12px 22px;border-top:1px solid var(--bd);flex-shrink:0;background:var(--sf)">
       <button onclick="document.getElementById('tg-bg').style.display='none'" style="padding:8px 16px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf2);cursor:pointer;font-size:12px;color:var(--tx)">Schliessen</button>
       <button id="tg-apply" onclick="tgApply()" style="display:none;padding:8px 16px;border:none;border-radius:var(--rs);background:#10B981;color:#fff;font-size:12px;font-weight:600;cursor:pointer"></button>
     </div>
