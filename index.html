@@ -361,7 +361,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
   <div id="presence-bar" style="display:flex;align-items:center;gap:4px;margin-left:4px"></div>
   <button onclick="toggleDark()" class="hb" title="Dark Mode" style="font-size:14px">🌙</button>
   <button onclick="openGuide()" class="hb" title="Anleitung" style="font-size:14px">❓</button>
-  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.66</span>
+  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.67</span>
   <button onclick="doLogout()" class="hb" title="Abmelden" style="font-size:14px" id="logout-btn">⏻</button>
   <button onclick="toggleMobileView()" id="mobile-btn" class="hb" title="Mobile Ansicht" style="font-size:14px">📱</button>
   <div id="more-w" class="admin-only">
@@ -6144,6 +6144,26 @@ function openPersonalImport(){
 }
 
 // --- Hilfsfunktionen: Text/PSP-Normalisierung & Matching gegen bestehende Baustellen ---
+// PSP in Hauptnummer + Unternummer zerlegen: «4226280.13» -> {base:'4226280',suf:'13',full:'4226280.13'}.
+// Unternummern exakt als Text (".1" und ".10" sind verschiedene Baustellen).
+function pspParts(s){
+  if(!s)return null;
+  const str=String(s).trim();const i=str.indexOf('.');
+  const digits=(i>=0?str.slice(0,i):str).replace(/[^0-9]/g,'');
+  const base=digits.length>7?digits.slice(-7):digits;
+  if(!base)return null;
+  const suf=i>=0?str.slice(i+1).replace(/[^0-9]/g,''):'';
+  return{base,suf,full:base+(suf?'.'+suf:'')};
+}
+function piFullPSP(s){const p=pspParts(s);return p?p.full:'';}
+// Planer-Baustelle passt zu Listen-PSP P? 1) exakt inkl. Unternummer (PSP oder Alias)
+// 2) Liste mit Unternummer -> Planer-Hauptbaustelle OHNE Unternummer (Etappen). Nie zwischen verschiedenen Unternummern.
+function pspMatchLevel(e,P){
+  const q=pspParts(e.psp),al=e.pspAliases||[];
+  if((q&&q.full===P.full)||al.includes(P.full))return 1;
+  if(P.suf&&((q&&!q.suf&&q.base===P.base)||al.includes(P.base)))return 2;
+  return 0;
+}
 function piNormPSP(s){
   if(!s)return'';
   const base=String(s).split('.')[0]; // Suffixe wie .1/.2/.3 (Etappen) vor der Ziffernbereinigung abschneiden
@@ -6159,9 +6179,10 @@ function piNormName(s){
 function piMatchBaustelle(psp,name,qDept){
   const inDept=e=>!qDept||deptParts(e.dept).includes(qDept);
   const np=piNormPSP(psp);
-  if(np){
-    let hit=data.find(e=>e.active&&piNormPSP(e.psp)===np);
-    if(!hit)hit=data.find(e=>e.active&&(e.pspAliases||[]).includes(np));
+  const P=pspParts(psp);
+  if(P){
+    let hit=data.find(e=>e.active&&pspMatchLevel(e,P)===1);
+    if(!hit)hit=data.find(e=>e.active&&pspMatchLevel(e,P)===2);
     if(hit)return{entry:hit,how:'psp'};
   }
   if(name){
@@ -6181,7 +6202,8 @@ function piMatchBaustelle(psp,name,qDept){
   // Kein Treffer unter aktiven Baustellen -> zusätzlich unter INAKTIVEN suchen. Wird nie
   // automatisch reaktiviert, sondern nur als eigene Kategorie zur Bestätigung vorgeschlagen.
   if(np){
-    let hitInactive=data.find(e=>!e.active&&(piNormPSP(e.psp)===np||(e.pspAliases||[]).includes(np)));
+    const P2=pspParts(psp);
+    let hitInactive=P2?(data.find(e=>!e.active&&pspMatchLevel(e,P2)===1)||data.find(e=>!e.active&&pspMatchLevel(e,P2)===2)):null;
     if(hitInactive)return{entry:hitInactive,how:'psp',wasInactive:true};
   }
   if(name){
@@ -6523,7 +6545,7 @@ function sbAssign(ci){
   const e=data.find(x=>String(x.id)===String(targetId));
   if(!e)return;
   if(it.psp){
-    const np=piNormPSP(it.psp);
+    const np=piFullPSP(it.psp);
     e.pspAliases=e.pspAliases||[];
     if(!e.pspAliases.includes(np))e.pspAliases.push(np);
   }else{
@@ -6586,7 +6608,7 @@ function confirmPersonalImport(){
   const persistAlias=it=>{
     if(!it.match||it.match.how!=='alias')return;
     const e=liveEntry(it);
-    const np=piNormPSP(it.match.aliasPsp);
+    const np=piFullPSP(it.match.aliasPsp);
     const nn=piNormName(it.match.aliasName);
     e.pspAliases=e.pspAliases||[];
     e.nameAliases=e.nameAliases||[];
