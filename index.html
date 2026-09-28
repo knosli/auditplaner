@@ -361,7 +361,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
   <div id="presence-bar" style="display:flex;align-items:center;gap:4px;margin-left:4px"></div>
   <button onclick="toggleDark()" class="hb" title="Dark Mode" style="font-size:14px">🌙</button>
   <button onclick="openGuide()" class="hb" title="Anleitung" style="font-size:14px">❓</button>
-  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.60</span>
+  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.61</span>
   <button onclick="doLogout()" class="hb" title="Abmelden" style="font-size:14px" id="logout-btn">⏻</button>
   <button onclick="toggleMobileView()" id="mobile-btn" class="hb" title="Mobile Ansicht" style="font-size:14px">📱</button>
   <div id="more-w" class="admin-only">
@@ -1516,15 +1516,23 @@ function status(e){
   if(e.paused)return'paused';
   if(hasP(e))return'planned';
   if(hasBeratPlan(e))return'beratung';
-  if(!e.lastAudit&&!e.resumeFrom)return'new';
+  if(!e.lastAudit&&!e.resumeFrom){
+    if(!e.createdAt)return'new';
+    const dn=dl(e);
+    if(dn<-10)return'overdue';
+    if(dn<=0)return'due';
+    return'new';
+  }
   const d=dl(e);
   if(d<-10)return'overdue';
   if(d<=0)return'due';
   if(d<=10)return'soon';
   return'ok';
 }
+function ensureCreatedAt(){let n=0;data.forEach(e=>{if(!e.createdAt&&!e.lastAudit&&!e.resumeFrom){e.createdAt=today();n++;}});if(n)setTimeout(()=>{try{saveNow();}catch(x){}},800);}
 function dl(e){
-  const ref=e.lastAudit||e.resumeFrom;
+  // Nie auditierte Baustellen: Rhythmus läuft ab Erfassungsdatum
+  const ref=e.lastAudit||e.resumeFrom||e.createdAt;
   if(!ref)return-999;
   return Math.round((parseDate(ref).getTime()+e.rhythm*86400000-Date.now())/86400000);
 }
@@ -1538,7 +1546,7 @@ function saveNow(){
   try{localStorage.setItem('anliker_berat_plan',JSON.stringify(beratPlan));localStorage.setItem(SK,JSON.stringify({data,plans,tlog,auditors,ferien,ferienWunsch,rapporte,ghostAudits:window._ghostAudits||[],personAudits,v:4}));localStorage.setItem('anliker_pi_collectbox',JSON.stringify(window._piCollectBox||[]));localStorage.setItem('anliker_temp_workers',JSON.stringify(window._tempWorkers||[]));}catch(e){}
   sbPush();
 }
-function load(){try{const r=localStorage.getItem(SK);if(!r)return false;const p=JSON.parse(r);if(p.data)data=p.data;if(p.plans)plans=p.plans;if(p.tlog)tlog=p.tlog;if(p.auditors)auditors=p.auditors;if(p.ferien)ferien=p.ferien;if(p.ferienWunsch)ferienWunsch=p.ferienWunsch;if(p.rapporte){rapporte=p.rapporte;normalizeRapporte();}if(p.ghostAudits)window._ghostAudits=p.ghostAudits;if(p.personAudits)personAudits=p.personAudits;try{window._piCollectBox=JSON.parse(localStorage.getItem('anliker_pi_collectbox')||'[]');}catch(e){window._piCollectBox=[];}try{window._tempWorkers=JSON.parse(localStorage.getItem('anliker_temp_workers')||'[]');}catch(e){window._tempWorkers=[];}try{window._orsKey=localStorage.getItem('anliker_ors_key')||'';}catch(e){}return true;}catch(e){return false;}}
+function load(){try{const r=localStorage.getItem(SK);if(!r)return false;const p=JSON.parse(r);if(p.data){data=p.data;ensureCreatedAt();}if(p.plans)plans=p.plans;if(p.tlog)tlog=p.tlog;if(p.auditors)auditors=p.auditors;if(p.ferien)ferien=p.ferien;if(p.ferienWunsch)ferienWunsch=p.ferienWunsch;if(p.rapporte){rapporte=p.rapporte;normalizeRapporte();}if(p.ghostAudits)window._ghostAudits=p.ghostAudits;if(p.personAudits)personAudits=p.personAudits;try{window._piCollectBox=JSON.parse(localStorage.getItem('anliker_pi_collectbox')||'[]');}catch(e){window._piCollectBox=[];}try{window._tempWorkers=JSON.parse(localStorage.getItem('anliker_temp_workers')||'[]');}catch(e){window._tempWorkers=[];}try{window._orsKey=localStorage.getItem('anliker_ors_key')||'';}catch(e){}return true;}catch(e){return false;}}
 function showToast(m,d=2500){const t=document.getElementById('toast');t.textContent=m;t.style.display='block';clearTimeout(t._t);t._t=setTimeout(()=>t.style.display='none',d);}
 function dlJSON(obj,fn){const b=new Blob([JSON.stringify(obj,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=fn;a.click();}
 function teamExport(){dlJSON({data,plans,auditors,ferien,ghostAudits:window._ghostAudits||[],personAudits,savedAt:new Date().toISOString(),type:'team'},'anliker_export_'+today()+'.json');showToast('📤 Export erstellt – auf SharePoint!',3000);}
@@ -4210,8 +4218,8 @@ async function saveEntry(){
   btn.textContent='Speichern';btn.disabled=false;
   let rh=+document.getElementById('f-rh').value;if(type==='werkhof'&&rh===28)rh=182;
   const entry={id:editId||Date.now(),name,addr,psp:document.getElementById('f-psp').value.trim(),sap:name,prv:document.getElementById('f-prv').value.trim(),bc:document.getElementById('f-bc').value.trim(),dept,rhythm:rh,type,lastAudit:document.getElementById('f-last').value||null,lastKW:null,note:document.getElementById('f-note').value.trim(),auditor:editId?data.find(e=>e.id===editId)?.auditor:null,active:true,paused:false,auditHistory:[],plannedKW:[],lat,lng};
-  if(editId){const old=data.find(e=>e.id===editId);if(old){entry.auditor=old.auditor;entry.paused=old.paused;entry.pauseReason=old.pauseReason;entry.auditHistory=old.auditHistory||[];entry.plannedKW=old.plannedKW||[];}data[data.findIndex(e=>e.id===editId)]={...old,...entry};}
-  else data.push(entry);
+  if(editId){const old=data.find(e=>e.id===editId);if(old){entry.active=old.active!==false;entry.lastKW=old.lastKW??null;entry.auditor=old.auditor;entry.paused=old.paused;entry.pauseReason=old.pauseReason;entry.auditHistory=old.auditHistory||[];entry.plannedKW=old.plannedKW||[];}data[data.findIndex(e=>e.id===editId)]={...old,...entry};}
+  else{entry.createdAt=today();data.push(entry);}
   log(editId?'Bearbeitet':'Hinzugefügt',name,editId?'#F59E0B':'#3B82F6','');
   closeModal();renderAll();buildCalBS();buildDF();if(entry.lat)selEntry(entry.id);saveNow();
 }
@@ -5725,6 +5733,62 @@ function unmappedPersonAbts(){
   const vals=[...new Set((typeof persons!=='undefined'?persons:[]).map(p=>(p.abt||'').trim()).filter(Boolean))];
   return vals.filter(v=>!getAllDepts().some(d=>d.toLowerCase()===v.toLowerCase())).sort();
 }
+// ═══ PERSONAL-IMPORT: Baustellen, die NICHT auf der Einsatzliste stehen ═══
+// Jede Einsatzliste (quelle) ist einer Planer-Abteilung zugeordnet (automatisch per Name, änderbar).
+// Eine Abteilung wird nur geprüft, wenn ALLE ihr zugeordneten Einsatzlisten im aktuellen Import sind
+// (z.B. Niederlassung Basel = Basel TB + Basel EB) - so funktioniert 1 Liste genauso wie mehrere.
+function autoMapQuelle(q){
+  const ql=q.toLowerCase();const depts=getAllDepts();
+  const ex=depts.find(d=>d.toLowerCase()===ql);if(ex)return ex;
+  const cont=depts.filter(d=>ql.includes(d.toLowerCase())).sort((a,b)=>b.length-a.length)[0];
+  return cont||'';
+}
+function piComputeMissing(){
+  if(!_piPending)return;
+  const b=_piPending.buckets;
+  const quellen=[...new Set((_piPending.rawEntries||[]).map(r=>r.quelle).filter(Boolean))];
+  deptMeta._quelleMap=deptMeta._quelleMap||{};
+  const qm=deptMeta._quelleMap;let changed=false;
+  quellen.forEach(q=>{if(!(q in qm)){qm[q]=autoMapQuelle(q);changed=true;}});
+  if(changed)saveDepts();
+  const depts=[...new Set(quellen.map(q=>qm[q]).filter(Boolean))];
+  const covered=[],partial=[];
+  depts.forEach(d=>{const all=Object.keys(qm).filter(q=>qm[q]===d);const miss=all.filter(q=>!quellen.includes(q));(miss.length?partial:covered).push({dept:d,miss});});
+  const matched=new Set();
+  ['pause','review','reactivate','noop','reactivateInactive','inactiveInfo','excluded'].forEach(k=>(b[k]||[]).forEach(it=>{if(it.match&&it.match.entry)matched.add(it.match.entry.id);}));
+  const cov=new Set(covered.map(x=>x.dept));
+  b.missing=data.filter(e=>e.active&&!e.paused&&e.type!=='werkhof'&&!e.excludeFromPersonalReview&&!matched.has(e.id)&&deptParts(e.dept).some(d=>cov.has(d)))
+    .sort((x,y)=>(x.dept||'').localeCompare(y.dept||'')||x.name.localeCompare(y.name))
+    .map(e=>({name:e.name,psp:e.psp,count:null,match:{entry:e},isNew:!e.lastAudit&&!e.resumeFrom}));
+  _piPending.coverage={quellen,covered,partial,unmapped:quellen.filter(q=>!qm[q])};
+}
+function setQuelleMap(q,d){
+  deptMeta._quelleMap=deptMeta._quelleMap||{};deptMeta._quelleMap[q]=d;saveDepts();
+  piComputeMissing();piRenderPreview();
+}
+function piMissingHTML(){
+  if(!_piPending||!_piPending.coverage)return'';
+  const{quellen,covered,partial}=_piPending.coverage;const b=_piPending.buckets;
+  const qm=deptMeta._quelleMap||{};const depts=getAllDepts();
+  const sel=q=>`<select data-q="${q.replace(/"/g,'&quot;')}" onchange="setQuelleMap(this.dataset.q,this.value)" style="font-size:11px;padding:3px 5px;border:1px solid ${qm[q]?'var(--bd)':'#F59E0B'};border-radius:5px;background:var(--sf);color:var(--tx);max-width:220px"><option value="">— keine Abteilung (nicht prüfen) —</option>${depts.map(d=>`<option value="${d.replace(/"/g,'&quot;')}"${qm[q]===d?' selected':''}>${d}</option>`).join('')}</select>`;
+  let h=`<details style="margin-bottom:12px;padding:8px 10px;background:var(--sf2);border-radius:8px;font-size:11px;color:var(--tx2)" ${(_piPending.coverage.unmapped.length||partial.length)?'open':''}>
+    <summary style="cursor:pointer;font-weight:600;color:var(--tx)">🗂️ Einsatzlisten → Abteilungen (${covered.length} Abteilung(en) werden auf fehlende Baustellen geprüft)</summary>
+    <div style="margin-top:6px">${quellen.map(q=>`<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:3px 0"><span>${q}</span>${sel(q)}</div>`).join('')}</div>
+    ${partial.length?`<div style="margin-top:6px;color:#92400E">⚠ Nicht geprüft, weil nicht alle Listen der Abteilung importiert wurden: ${partial.map(p=>`<b>${p.dept}</b> (fehlt: ${p.miss.join(', ')})`).join(' · ')}</div>`:''}
+  </details>`;
+  if(b.missing&&b.missing.length){
+    h+=`<div style="margin-bottom:14px">
+      <div style="font-size:12px;font-weight:700;color:#DC2626;margin-bottom:4px">🔍 Nicht auf der Einsatzliste – pausieren? (${b.missing.length})</div>
+      <div style="font-size:11px;color:var(--tx3);margin-bottom:6px">Aktive Baustellen der geprüften Abteilungen, die auf keiner importierten Liste stehen. Angehakt = wird pausiert (taucht die Baustelle später wieder mit Personal auf einer Liste auf, schlägt der Import die Reaktivierung vor). Neu erfasste, noch nie auditierte Baustellen sind nicht vorausgewählt.</div>
+      ${b.missing.map((it,i)=>{const e=it.match.entry;return`<label style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--sf2);border-radius:8px;margin-bottom:4px;font-size:12px;color:var(--tx)">
+        <input type="checkbox" data-key="missing" data-idx="${i}" ${it.isNew?'':'checked'}>
+        <span style="flex:1">${e.psp?e.psp+' · ':''}${e.name}${it.isNew?' <span style="font-size:10px;color:#0284C7">(neu, noch nie auditiert)</span>':''}</span>
+        <span style="font-size:10px;color:var(--tx3)">${e.dept||''}</span>
+      </label>`;}).join('')}
+    </div>`;
+  }
+  return h;
+}
 function setAbtMap(abt,dept){
   deptMeta._abtMap=deptMeta._abtMap||{};
   if(dept)deptMeta._abtMap[abt]=dept;else delete deptMeta._abtMap[abt];
@@ -6101,7 +6165,8 @@ async function runPersonalImport(file){
         if(e.paused)buckets.reactivate.push(item);else buckets.noop.push(item);
       }
     });
-    _piPending={buckets,targetKW,temporaere:Array.isArray(payload.temporaere)?payload.temporaere:[]};
+    _piPending={buckets,targetKW,temporaere:Array.isArray(payload.temporaere)?payload.temporaere:[],rawEntries:payload.entries};
+    piComputeMissing();
     piRenderPreview();
   }catch(err){
     document.getElementById('pi-error').style.display='block';
@@ -6112,6 +6177,7 @@ async function runPersonalImport(file){
 }
 
 function piRenderPreview(){
+  try{piComputeMissing();}catch(e){console.warn(e);}
   if(!_piPending)return;
   const{buckets,targetKW}=_piPending;
   document.getElementById('pi-summary').textContent=
@@ -6159,6 +6225,7 @@ function piRenderPreview(){
     </div>`:'';
   let html='';
   html+=grp('⏸ Pausieren (0 Personen)','#94A3B8',buckets.pause,'pause',true);
+  html+=piMissingHTML();
   // "Prüfen" bekommt einen eigenen Renderer statt des generischen grp() - zusätzlich zum
   // normalen Haken gibt's hier einen Button, um eine Baustelle DAUERHAFT von dieser Prüfung
   // auszuschliessen (z.B. Baustellen in Gefängnissen o.ä., die nie auditiert werden und sonst
@@ -6430,6 +6497,12 @@ function confirmPersonalImport(){
     e.paused=true;e.pauseReason='Import: kein Personal (KW '+_piPending.targetKW+')';e.pauseUntil=null;
     log('Pausiert ⏸ (Import)',e.name,'#94A3B8','');n++;
   });
+  (buckets.missing||[]).forEach((it,i)=>{
+    if(!checked('missing',i))return;
+    const e=liveEntry(it);if(!e||e.paused)return;
+    e.paused=true;e.pauseReason='Import: nicht auf Einsatzliste (KW '+_piPending.targetKW+')';e.pauseUntil=null;
+    log('Pausiert ⏸ (nicht auf Liste)',e.name,'#94A3B8','');n++;
+  });
   buckets.reactivate.forEach((it,i)=>{
     if(!checked('reactivate',i)||!it.match)return;
     const e=liveEntry(it);
@@ -6612,7 +6685,7 @@ async function sbPull(){
   const isFirstPull=sbLastSync===0;
   if(!isFirstPull&&remoteTime<=sbLastSync)return;
   try{
-    if(p.data)data=JSON.parse(p.data);
+    if(p.data){data=JSON.parse(p.data);ensureCreatedAt();}
     if(p.plans){plans=JSON.parse(p.plans);console.log('sbPull: plans loaded=',plans.length);}else{console.log('sbPull: NO plans in response',p);}
     if(p.auditors)auditors=JSON.parse(p.auditors);
     if(p.ferien)ferien=JSON.parse(p.ferien);
