@@ -361,25 +361,25 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
   <div id="presence-bar" style="display:flex;align-items:center;gap:4px;margin-left:4px"></div>
   <button onclick="toggleDark()" class="hb" title="Dark Mode" style="font-size:14px">🌙</button>
   <button onclick="openGuide()" class="hb" title="Anleitung" style="font-size:14px">❓</button>
-  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.69</span>
+  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.70</span>
   <button onclick="doLogout()" class="hb" title="Abmelden" style="font-size:14px" id="logout-btn">⏻</button>
   <button onclick="toggleMobileView()" id="mobile-btn" class="hb" title="Mobile Ansicht" style="font-size:14px">📱</button>
   <div id="more-w" class="admin-only">
     <button class="hb" onclick="toggleMore(event)"><i class="ti ti-dots-vertical"></i> Admin</button>
     <div id="more-m">
-      <button onclick="setPAImportMode();toggleMore()"><i class="ti ti-users"></i> Excel Personen</button>
+      <button onclick="setPAImportMode();toggleMore()"><i class="ti ti-file-import"></i> Excel Personen</button>
       <button onclick="doExport();toggleMore()"><i class="ti ti-file-spreadsheet"></i> Excel Export</button>
       <div style="height:1px;background:var(--bd);margin:4px 0"></div>
       <button onclick="openAudAdmin();toggleMore()"><i class="ti ti-users"></i> Auditoren verwalten</button>
       <button onclick="openDeptManager();toggleMore()"><i class="ti ti-building"></i> Abteilungen verwalten</button>
-      <button onclick="openRapportTypes();toggleMore()"><i class="ti ti-clipboard-list"></i> 📋 Rapport-Arten verwalten</button>
+      <button onclick="openRapportTypes();toggleMore()"><i class="ti ti-clipboard-list"></i> Rapport-Arten verwalten</button>
       <button onclick="openPersonalImport();toggleMore()"><i class="ti ti-user-pause"></i> Personal-Import (Pausieren)</button>
-      <button onclick="openSammelbox();toggleMore()"><i class="ti ti-inbox"></i> 📥 Sammelbox <span id="sb-count-badge"></span></button>
-      <button onclick="openTempWorkers();toggleMore()"><i class="ti ti-user-question"></i> 👤 Temporäre Mitarbeitende <span id="tw-count-badge"></span></button>
+      <button onclick="openSammelbox();toggleMore()"><i class="ti ti-inbox"></i> Sammelbox <span id="sb-count-badge"></span></button>
+      <button onclick="openTempWorkers();toggleMore()"><i class="ti ti-user-question"></i> Temporäre Mitarbeitende <span id="tw-count-badge"></span></button>
       <div style="height:1px;background:var(--bd);margin:4px 0"></div>
       <button onclick="teamExport();toggleMore()"><i class="ti ti-device-floppy"></i> Notfall-Backup</button>
       <label style="display:flex;align-items:center;gap:6px;padding:7px 12px;cursor:pointer;font-size:12px;color:var(--tx);border-bottom:1px solid var(--bd)"><i class="ti ti-upload"></i> Backup laden<input type="file" accept=".json" onchange="loadJSON(this.files[0])" style="display:none"></label>
-      <button onclick="setOrsKey();toggleMore()"><i class="ti ti-route"></i> 🚗 Routen-Schlüssel (Fahrzeit)</button>
+      <button onclick="setOrsKey();toggleMore()"><i class="ti ti-route"></i> Routen-Schlüssel (Fahrzeit)</button>
       <button onclick="openSupabaseConfig();toggleMore()" id="sb-btn"><i class="ti ti-cloud"></i> <span id="sb-status-lbl">Supabase einrichten</span></button>
       <div style="height:1px;background:var(--bd);margin:4px 0"></div>
       <button onclick="clearGhostAudits();toggleMore()" style="color:#EF4444"><i class="ti ti-ghost"></i> Ghost-Audits löschen</button>
@@ -694,7 +694,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
         <button onclick="openDistribute()" style="padding:6px 14px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf);cursor:pointer;font-size:12px;font-weight:600;color:var(--tx)"><i class="ti ti-layout-distribute-horizontal"></i> Verteilen</button>
         <button onclick="openKWPrintDialog()" style="padding:6px 14px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf);cursor:pointer;font-size:12px;font-weight:600;color:var(--tx)"><i class="ti ti-printer"></i> Drucken</button>
         <button onclick="openICSDialog()" style="padding:6px 14px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf);cursor:pointer;font-size:12px;font-weight:600;color:var(--tx)"><i class="ti ti-calendar-plus"></i> Outlook</button>
-        <h3 id="cal-ti" style="flex:1;text-align:center;font-size:13px;font-weight:700;color:var(--tx)">KW-Übersicht</h3>
+        <h3 id="cal-ti" style="flex:1;text-align:center;font-size:13px;font-weight:700;color:var(--tx)"><i class="ti ti-calendar-week" style="color:var(--blue)"></i> KW-Übersicht</h3>
         <div style="display:flex;gap:4px">
           <button id="view-wk-btn" onclick="setCalView('week')" style="padding:5px 10px;border-radius:6px;border:1px solid var(--bd);background:var(--blue);color:#fff;cursor:pointer;font-size:11px;font-weight:600">Wochenansicht</button>
           <button id="mabtn" onclick="toggleMultiAudit()" style="padding:5px 10px;border-radius:6px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx);cursor:pointer;font-size:11px;font-weight:600"><i class="ti ti-checks"></i> Mehrfach auditieren</button>
@@ -729,7 +729,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
       <!-- GESAMTÜBERSICHT: alle Auditoren, alle Audit-Arten, wählbarer Monatsbereich -->
       <div class="card" style="margin-bottom:16px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
-          <h3 style="font-size:14px;font-weight:700;color:var(--tx);margin:0">📊 Gesamtübersicht alle Auditoren</h3>
+          <h3 style="font-size:14px;font-weight:700;color:var(--tx);margin:0"><i class="ti ti-chart-donut" style="color:var(--blue)"></i> Gesamtübersicht alle Auditoren</h3>
           <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--tx2)">
             <span>Von</span>
             <input type="month" id="ov-from" onchange="renderOverview()" style="padding:4px 6px;border:1px solid var(--bd);border-radius:6px;background:var(--sf2);color:var(--tx);font-size:11px">
@@ -764,7 +764,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
       </div>
 
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-        <h3 style="font-size:14px;font-weight:700;color:var(--tx)">Auditor-Karten</h3>
+        <h3 style="font-size:14px;font-weight:700;color:var(--tx)"><i class="ti ti-id-badge-2" style="color:var(--blue)"></i> Auditor-Karten</h3>
         <div style="display:flex;align-items:center;gap:6px">
           <label style="font-size:11px;color:var(--tx2)">Jahr:</label>
           <select id="aud-year" onchange="renderAuditors()" style="padding:4px 8px;border:1px solid var(--bd);border-radius:var(--rs);background:var(--sf2);color:var(--tx);font-size:12px;font-weight:600"></select>
@@ -800,7 +800,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
 
       <!-- BESTÄTIGTE / FIXE FERIEN -->
       <div class="card" style="margin-bottom:16px">
-        <h3>✅ Ferien (fix)</h3>
+        <h3><i class="ti ti-beach" style="color:var(--blue)"></i> Ferien (fix)</h3>
         <div class="frow">
           <div><label>Auditor</label><select id="fer-aud"><option value="">—</option></select></div>
           <div><label>Von</label><input type="date" id="fer-von"></div>
@@ -824,7 +824,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
       <!-- WUNSCHFERIEN: jeder Auditor trägt eigene Wunschtermine ein, alle sehen alle,
            Admin bestätigt einzeln -> wird zu echten Ferien -->
       <div class="card">
-        <h3>🎄 Wunschferien</h3>
+        <h3><i class="ti ti-star" style="color:var(--blue)"></i> Wunschferien</h3>
         <p style="font-size:11px;color:var(--tx2);margin:4px 0 10px">Trag hier deine gewünschten Ferientermine ein. Alle sehen alle Wünsche, damit ihr euch absprechen könnt. Überschneidungen (2+ Personen gleichzeitig) sind im roten Streifen markiert.</p>
         <div class="frow" id="wf-form-row">
           <div id="wf-aud-wrap"></div>
@@ -847,7 +847,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
     <!-- PANEL: RAPPORTE (Bauführer-/Polierrapporte etc. - eigene Terminart, zählt NICHT als Audit) -->
     <div id="aud-panel-rapp" style="display:none">
       <div class="card" style="margin-bottom:16px">
-        <h3>📋 Rapport planen / erfassen</h3>
+        <h3><i class="ti ti-clipboard-list" style="color:var(--blue)"></i> Rapport planen / erfassen</h3>
         <p style="font-size:11px;color:var(--tx2);margin:4px 0 10px">Bauführer-, Polier- oder andere Rapporte. Geplante Rapporte erscheinen im Wochenkalender, im Handy-Tagesplan und im Outlook-Export. Gezählt werden nur bestätigte Teilnahmen – separat, nicht als Audit.</p>
         <div class="frow" style="flex-wrap:wrap">
           <div><label>Art</label><select id="rp-type" onchange="rpPrefillFromType()"></select></div>
@@ -882,7 +882,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
       </div>
       <div class="card">
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px">
-          <h3 style="margin:0">Übersicht</h3>
+          <h3 style="margin:0"><i class="ti ti-list-details" style="color:var(--blue)"></i> Übersicht</h3>
           <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--tx2)">Jahr
             <select id="rp-year" onchange="renderRapporte()" style="padding:4px 8px;border:1px solid var(--bd);border-radius:6px;background:var(--sf2);color:var(--tx);font-size:12px;font-weight:600"></select>
           </div>
@@ -896,7 +896,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
     <div id="aud-panel-dept" style="display:none">
       <div class="card">
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px">
-          <h3 style="margin:0">Audits nach Abteilung</h3>
+          <h3 style="margin:0"><i class="ti ti-building" style="color:var(--blue)"></i> Audits nach Abteilung</h3>
           <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--tx2)">
             <span>Von</span><input type="month" id="dept-from" onchange="renderDeptTable()" style="padding:4px 6px;border:1px solid var(--bd);border-radius:6px;background:var(--sf2);color:var(--tx);font-size:11px">
             <span>bis</span><input type="month" id="dept-to" onchange="renderDeptTable()" style="padding:4px 6px;border:1px solid var(--bd);border-radius:6px;background:var(--sf2);color:var(--tx);font-size:11px">
@@ -941,7 +941,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
 <!-- MODALS -->
 <div class="mbg" id="mbg">
   <div class="modal">
-    <h3 id="m-title">Neue Baustelle</h3>
+    <h3><i class="ti ti-building" style="color:var(--blue)"></i> <span id="m-title">Neue Baustelle</span></h3>
     <div id="form-s">
       <!-- Row 1: Abteilung (Pflichtfeld) + Typ -->
       <div class="fr2">
@@ -993,43 +993,12 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
       <!-- Row 6: Notiz -->
       <div class="fr"><label>Notiz</label><textarea id="f-note" placeholder="Optional..."></textarea></div>
     </div>
-    <div id="imp-s" style="display:none">
-      <div id="dz" onclick="document.getElementById('xl-inp').click()" ondragover="event.preventDefault()" ondrop="handleDrop(event)">
-        <i class="ti ti-file-spreadsheet" style="font-size:26px;color:var(--blue);display:block;margin-bottom:5px"></i>
-        <strong style="font-size:12px;display:block;margin-bottom:2px">Excel importieren</strong>
-        <span style="font-size:10px;color:var(--tx3)">Alle Reiter · B=PSP · C=Name · D=Adresse · E=PrV · F=BC · Ohne Adresse übersprungen</span>
-      </div>
-      <input type="file" id="xl-inp" accept=".xlsx,.xls" style="display:none" onchange="handleFile(this.files[0])">
-      <div id="impst"></div>
-    </div>
-    <div id="json-s" style="display:none">
-      <div style="border:2px dashed var(--green);border-radius:var(--r);padding:18px;text-align:center;cursor:pointer;background:#F0FDF4;margin-bottom:7px" onclick="document.getElementById('json-inp').click()" ondragover="event.preventDefault()" ondrop="handleJsonDrop(event)">
-        <i class="ti ti-file-code" style="font-size:24px;color:var(--green);display:block;margin-bottom:4px"></i>
-        <strong style="font-size:12px;display:block;margin-bottom:2px">Team-Export laden</strong>
-        <span style="font-size:10px;color:var(--tx3)">JSON vom Kollegen / SharePoint</span>
-      </div>
-      <input type="file" id="json-inp" accept=".json" style="display:none" onchange="handleJsonFile(this.files[0])">
-      <div id="json-st" style="font-size:11px;color:var(--tx2)"></div>
-    </div>
+
+
     <div class="macts"><button class="bcan" onclick="closeModal()">Abbrechen</button><button class="bsave" id="m-save" onclick="saveEntry()">Speichern</button></div>
   </div>
 </div>
-<div class="mbg" id="merge-bg">
-  <div class="modal" style="width:480px">
-    <h3><i class="ti ti-git-merge" style="color:var(--orange)"></i> Daten zusammenführen</h3>
-    <p style="font-size:11px;color:var(--tx2);margin-bottom:10px">Lade beliebig viele Export-Dateien. Neuestes Audit-Datum gewinnt immer.</p>
-    <div id="merge-fl"></div>
-    <label onclick="document.getElementById('merge-inp').click()" style="display:block;padding:9px;border:2px dashed var(--orange);border-radius:var(--rs);background:#FFFBEB;color:var(--orange);font-size:11px;font-weight:600;cursor:pointer;text-align:center;margin-bottom:8px"><i class="ti ti-plus"></i> Dateien hinzufügen</label>
-    <input type="file" id="merge-inp" accept=".json" multiple style="display:none" onchange="loadMergeFiles(this.files)">
-    <div id="merge-prev" style="display:none" class="mprev">
-      <div class="mpr"><span class="mpl">Baustellen gesamt</span><span class="mpv" id="mp-tot">—</span></div>
-      <div class="mpr"><span class="mpl">Audits aktualisiert</span><span class="mpv" style="color:var(--green)" id="mp-upd">—</span></div>
-      <div class="mpr"><span class="mpl">Neue Baustellen</span><span class="mpv" style="color:var(--blue)" id="mp-new">—</span></div>
-      <div class="mpr"><span class="mpl">Planungen</span><span class="mpv" style="color:var(--orange)" id="mp-pln">—</span></div>
-    </div>
-    <div class="macts"><button class="bcan" onclick="closeMerge()">Abbrechen</button><button class="bsave" id="merge-go" onclick="execMerge()" disabled style="background:var(--green)">Zusammenführen</button></div>
-  </div>
-</div>
+
 <div id="calpop-bg" onclick="closeCalPop()"></div>
 <div id="calpop">
   <h4 id="pop-n"></h4><div class="pm" id="pop-m"></div>
@@ -1381,7 +1350,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
 <div id="mob-audit-bg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:3000;align-items:flex-end;justify-content:center">
   <div style="background:var(--sf);border-radius:20px 20px 0 0;padding:20px;width:100%;max-width:500px;box-shadow:0 -8px 40px rgba(0,0,0,.3)">
     <div style="width:40px;height:4px;background:var(--bd);border-radius:2px;margin:0 auto 16px"></div>
-    <h3 style="font-size:15px;font-weight:700;color:var(--tx);margin-bottom:14px">✓ Audit erfassen</h3>
+    <h3 style="font-size:15px;font-weight:700;color:var(--tx);margin-bottom:14px"><i class="ti ti-circle-check" style="color:#10B981"></i> Audit erfassen</h3>
     <div style="position:relative;margin-bottom:12px">
       <input id="mob-audit-search" placeholder="Baustelle suchen…" oninput="mobAuditSearch(this.value)"
         style="width:100%;padding:10px 14px;border:1px solid var(--bd);border-radius:10px;font-size:14px;background:var(--sf2);color:var(--tx);box-sizing:border-box">
@@ -1575,12 +1544,12 @@ function load(){try{const r=localStorage.getItem(SK);if(!r)return false;const p=
 function showToast(m,d=2500){const t=document.getElementById('toast');t.textContent=m;t.style.display='block';clearTimeout(t._t);t._t=setTimeout(()=>t.style.display='none',d);}
 function dlJSON(obj,fn){const b=new Blob([JSON.stringify(obj,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=fn;a.click();}
 function teamExport(){dlJSON({data,plans,auditors,ferien,ghostAudits:window._ghostAudits||[],personAudits,savedAt:new Date().toISOString(),type:'team'},'anliker_export_'+today()+'.json');showToast('📤 Export erstellt – auf SharePoint!',3000);}
-function backupSave(){dlJSON({data,plans,tlog,auditors,ferien,savedAt:new Date().toISOString(),type:'backup'},'anliker_backup_'+today()+'.json');}
-function backupLoad(){const i=document.createElement('input');i.type='file';i.accept='.json';i.onchange=e=>loadJSON(e.target.files[0]);i.click();}
+
+
 function loadJSON(file,fromModal=false){if(!file)return;const r=new FileReader();r.onload=e=>{try{const p=JSON.parse(e.target.result);if(p.data)data=p.data;if(p.plans)plans=p.plans;if(p.auditors)auditors=p.auditors;if(p.tlog)tlog=p.tlog;if(p.ferien)ferien=p.ferien;if(p.ghostAudits)window._ghostAudits=p.ghostAudits;if(p.personAudits)personAudits=p.personAudits;const st=document.getElementById('json-st');if(st)st.textContent=`✓ ${data.length} Baustellen, ${plans.length} Planungen`;save();renderAll();buildDF();buildCalBS();if(fromModal)setTimeout(closeModal,1400);else showToast('✓ Geladen',2000);}catch(ex){alert('Fehler: '+ex.message);}};r.readAsText(file);}
-function handleJsonDrop(ev){ev.preventDefault();loadJSON(ev.dataTransfer.files[0],true);}
-function handleJsonFile(f){loadJSON(f,true);}
-function teamImport(){editId=null;document.getElementById('m-title').textContent='Team-Import';document.getElementById('form-s').style.display='none';document.getElementById('imp-s').style.display='none';document.getElementById('json-s').style.display='block';document.getElementById('m-save').style.display='none';document.getElementById('json-st').textContent='';document.getElementById('mbg').classList.add('open');}
+
+
+
 // ═══ MAP ═══
 function initMap(){
   map=L.map('map').setView([47.15,8.1],8);
@@ -1726,7 +1695,7 @@ function showOverlapPicker(group,x,y){
   const vw=window.innerWidth,vh=window.innerHeight;
   pop.style.left=Math.min(x,vw-200)+'px';pop.style.top=Math.min(y,vh-190)+'px';
 }
-function syncDim(){} // No longer needed - filtering done in renderMarkers
+
 // ═══ MAP SEARCH ═══
 function mapSrch(){
   const q=document.getElementById('map-q').value.trim();
@@ -1805,7 +1774,7 @@ function renderList(){
       return dl(a)-dl(b)||a.name.localeCompare(b.name);
     });
   }else list.sort((a,b)=>dl(a)-dl(b));
-  if(!data.length){document.getElementById('bslist').innerHTML=`<div class="empty-s"><h3>Keine Baustellen</h3><p>Excel importieren oder manuell hinzufügen.</p></div>`;return;}
+  if(!data.length){document.getElementById('bslist').innerHTML=`<div class="empty-s"><h3>Keine Baustellen</h3><p>Über «+ Neue Baustelle» erfassen oder ein Backup laden.</p></div>`;return;}
   const tc={overdue:'tov',due:'tdu',soon:'tsn',ok:'tok',new:'tnew',paused:'tpa',inactive:'tin',planned:'tpl',beratung:'tpl'};
   const sl=e=>{const s=status(e);if(s==='planned'){const p=plans.filter(x=>x.bsId===e.id&&x.date>=today()).sort((a,b)=>a.date.localeCompare(b.date))[0];return p?`KW ${dateToKW(p.date)}`:'Geplant';}if(s==='overdue')return`${Math.abs(dl(e))-10}T überfällig`;if(s==='due')return`${Math.abs(dl(e))}T über`;if(s==='soon')return`in ${dl(e)}T`;if(s==='new')return'Neu – kein Audit';if(s==='beratung')return'Beratung geplant';if(s==='paused')return'Pausiert';if(s==='inactive')return'Inaktiv';return`in ${dl(e)}T`;};
   const _cardHTML=e=>{
@@ -2148,7 +2117,7 @@ function renderTL(){
   }).join('');
 }
 // ═══ NAVIGATION ═══
-function setTab(t,el){curTab=t;renderMarkers();renderList();}
+
 function setView(v,el){
   curView=v;document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));el.classList.add('on');
   document.getElementById('map-view').style.display=v==='map'?'flex':'none';
@@ -2322,22 +2291,7 @@ function applyMultiPlan(){
   showToast(`✅ ${count} Baustellen geplant – ${aud}, ${label}`,4000);
 }
 
-function togglePlan(){
-  if(multiPlanMode){clearPlanMode();}
-  planMode=!planMode;
-  const b=document.getElementById('rbtn');
-  b.innerHTML=planMode?'✕ Route beenden':'<i class="ti ti-route"></i> Route';
-  b.className=planMode?'hb act':'hb';
-  if(planMode){
-    document.getElementById('planbar').style.display='flex';
-    document.getElementById('mp-controls').style.display='none';
-    document.querySelectorAll('.route-only').forEach(el=>el.style.display='');
-  } else {
-    planned.clear();
-    document.getElementById('planbar').style.display='none';
-  }
-  renderAll();
-}
+
 function togPI(ev,id){ev.stopPropagation();planned.has(id)?planned.delete(id):planned.add(id);updPB();renderMarkers();renderList();}
 function updPB(){
   const b=document.getElementById('planbar');
@@ -2348,7 +2302,7 @@ function updPB(){
     b.style.display='none';
   }
 }
-function clearPlan(){planned.clear();document.getElementById('planbar').style.display='none';renderMarkers();renderList();}
+
 function nnSort(sel){const wG=sel.filter(e=>e.lat&&e.lng),wO=sel.filter(e=>!e.lat||!e.lng);if(wG.length<2)return sel;let rem=[...wG];rem.sort((a,b)=>b.lat-a.lat||(a.lng-b.lng));let cur=rem.shift();const s=[cur];while(rem.length){let bi=0,bd=999;rem.forEach((e,i)=>{const d=Math.sqrt((e.lat-cur.lat)**2+(e.lng-cur.lng)**2);if(d<bd){bd=d;bi=i;}});cur=rem.splice(bi,1)[0];s.push(cur);}return[...s,...wO];}
 function openMaps(entries){
   let sel=entries||data.filter(e=>planned.has(e.id)&&e.addr);
@@ -2361,8 +2315,8 @@ function openMaps(entries){
   window.open(url,'_blank');
 }
 function setStart(){const c=localStorage.getItem('audit_start')||'';const v=prompt('Startadresse für Routenplanung:',c);if(v!==null){localStorage.setItem('audit_start',v.trim());showToast(v.trim()?`📍 ${v}`:'Startadresse gelöscht',3000);}}
-function showToday(){const tod=today();const tp=plans.filter(p=>p.date===tod);if(!tp.length){showToast('Heute keine Planungen',2000);return;}planned.clear();tp.forEach(p=>planned.add(p.bsId));updPB();renderMarkers();renderList();const pts=data.filter(e=>planned.has(e.id)&&e.lat&&e.lng);if(pts.length){const la=pts.map(e=>e.lat),lo=pts.map(e=>e.lng);map.fitBounds([[Math.min(...la)-.04,Math.min(...lo)-.04],[Math.max(...la)+.04,Math.max(...lo)+.04]]);}showToast(`📅 ${tp.length} Baustellen heute`,3000);}
-function showKW(){const kw=dateToKW(today());const ks=kwToDate(kw),ke=kwToDate(kw+1);const wp=plans.filter(p=>p.date>=ks&&p.date<ke);if(!wp.length){showToast('Diese KW keine Planungen',2000);return;}planned.clear();wp.forEach(p=>planned.add(p.bsId));updPB();renderMarkers();renderList();const pts=data.filter(e=>planned.has(e.id)&&e.lat&&e.lng);if(pts.length){const la=pts.map(e=>e.lat),lo=pts.map(e=>e.lng);map.fitBounds([[Math.min(...la)-.04,Math.min(...lo)-.04],[Math.max(...la)+.04,Math.max(...lo)+.04]]);}showToast(`📅 ${wp.length} Baustellen KW ${kw}`,3000);}
+
+
 // ═══ SELECTS ═══
 function fillFDept(cur){
   const el=document.getElementById('f-dept');if(!el)return;
@@ -2491,14 +2445,7 @@ function renderAudTags(){
     ${a}<button class="atag-x" onclick="rmAud(${i})">×</button>
   </span>`).join('');
 }
-function addAud(){
-  const v=document.getElementById('new-aud').value.trim();
-  if(!v||auditors.includes(v))return;
-  auditors.push(v);
-  document.getElementById('new-aud').value='';
-  buildAudSels();renderAudTags();renderAuditors();saveNow();
-  if(document.getElementById('user-bg').style.display==='flex')openUserSelect();
-}
+
 function rmAud(i){if(!confirm(`${auditors[i]} entfernen?`))return;auditors.splice(i,1);buildAudSels();renderAudTags();renderAuditors();saveNow();}
 // ═══ FERIEN ═══
 let _ferOpen=false;
@@ -2507,7 +2454,7 @@ function toggleFerList(){
   document.getElementById('fer-list-wrap').style.display=_ferOpen?'':'none';
   document.getElementById('fer-toggle-icon').textContent=_ferOpen?'▲ ausblenden':'▼ einblenden';
 }
-function toggleFerCard(){toggleFerList();}
+
 function addFerien(){const aud=document.getElementById('fer-aud').value,von=document.getElementById('fer-von').value,bis=document.getElementById('fer-bis').value,lbl=document.getElementById('fer-lbl').value.trim()||'Ferien';if(!aud||!von||!bis){showToast('Alle Felder erforderlich');return;}if(bis<von){showToast('Bis muss nach Von sein');return;}ferien.push({id:Date.now(),auditor:aud,von,bis,label:lbl});['fer-von','fer-bis','fer-lbl'].forEach(id=>document.getElementById(id).value='');renderFerList();renderFerChart();saveNow();showToast('✓ Ferien erfasst');}
 function rmFerien(id){ferien=ferien.filter(f=>f.id!==id);renderFerList();renderFerChart();saveNow();}
 // ═══ WUNSCHFERIEN ═══
@@ -2679,20 +2626,7 @@ function renderFerChart(){
 }
 function renderFerList(){document.getElementById('fer-list').innerHTML=ferien.length?ferien.sort((a,b)=>a.von.localeCompare(b.von)).map(f=>{const c=aC(f.auditor),ini=f.auditor.split(' ').map(w=>w[0]).join('');return`<div class="fi"><div class="fiav" style="background:${c}">${ini}</div><div class="fiinfo">${f.auditor} – ${f.label}<div class="fid">${fd(f.von)} – ${fd(f.bis)}</div></div><button class="fidel" onclick="rmFerien(${f.id})"><i class="ti ti-trash"></i></button></div>`;}).join(''):'<div style="font-size:11px;color:var(--tx3);padding:6px">Noch keine Ferien.</div>';}
 // ═══ PERSONEN-AUDITS ═══
-function addPersonAudit(){
-  const kat=document.getElementById('pa-kat').value.trim();
-  const person=document.getElementById('pa-person').value.trim();
-  const date=document.getElementById('pa-date').value;
-  const aud=document.getElementById('pa-aud').value;
-  const note=document.getElementById('pa-note').value.trim();
-  if(!kat||!date||!aud){showToast('Kategorie, Datum und Auditor erforderlich');return;}
-  personAudits.push({id:Date.now(),kat,person,date,auditor:aud,note});
-  personAudits.sort((a,b)=>b.date.localeCompare(a.date));
-  ['pa-kat','pa-person','pa-note'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('pa-date').value='';
-  renderPA();renderAuditors();saveNow();
-  showToast('✓ Personen-Audit erfasst');
-}
+
 function rmPA(id){personAudits=personAudits.filter(p=>p.id!==id);renderPA();renderPA2();renderAuditors();saveNow();showToast('🗑 Gelöscht',1500);}
 // ═══ PERSONEN-AUDITS ═══
 let _selectedPerson=null;
@@ -3359,7 +3293,7 @@ function openRapportEdit(id){
   document.getElementById('rpe-series-wrap').style.display=hasFollow?'flex':'none';document.getElementById('rpe-series').checked=false;
   const mine=grp.find(m=>m.auditor===currentUser);
   document.getElementById('rpe-btn-done').style.display=mine&&mine.planned?'':'none';
-  document.getElementById('rpe-title').textContent='📋 '+r.type+(r.seriesId?' 🔁':'')+' – '+fd(r.date);
+  document.getElementById('rpe-title').textContent=r.type+(r.seriesId?' 🔁':'')+' – '+fd(r.date);
   document.getElementById('rpe-bg').style.display='flex';
 }
 function rpeMyId(){const r=rapporte.find(x=>x.id===_rpeId);if(!r)return _rpeId;const m=rpGroup(r).find(x=>x.auditor===currentUser);return m?m.id:_rpeId;}
@@ -3431,16 +3365,7 @@ function confirmRapport(id){
   if(typeof renderMobPlan==='function'&&document.getElementById('mob-plan-list'))renderMobPlan();
   showToast('✓ Teilnahme bestätigt: '+r.type);
 }
-function moveRapport(id){
-  const r=rapporte.find(x=>x.id===id);if(!r)return;
-  const nd=prompt('Neues Datum (JJJJ-MM-TT):',r.date);if(nd===null)return;
-  if(!/^\d{4}-\d{2}-\d{2}$/.test(nd.trim())){showToast('Format: JJJJ-MM-TT');return;}
-  const nt=prompt('Uhrzeit (HH:MM, leer = ohne):',r.time||'');
-  r.date=nd.trim();if(nt!==null)r.time=nt.trim();
-  saveNow();renderRapporte();if(typeof renderKW==='function'&&curView==='cal')renderKW();
-  if(typeof renderMobPlan==='function'&&document.getElementById('mob-plan-list'))renderMobPlan();
-  showToast('📅 Verschoben auf '+fd(r.date));
-}
+
 function rmRapport(id){
   const r=rapporte.find(x=>x.id===id);if(!r)return;
   const sib=r.seriesId?rapporte.filter(x=>x.seriesId===r.seriesId&&x.planned&&x.auditor===r.auditor):[];
@@ -3710,7 +3635,7 @@ function renderWeekView(kw){
         ${dayP.length?`<div style="display:flex;gap:3px"><button onclick="kwRoute_day('${ds}')"><i class="ti ti-map-2"></i></button><button onclick="kwPrint_day('${ds}')"><i class="ti ti-printer"></i></button></div>`:''}
       </div>
       ${fer.map(f=>`<div class="kwfer">🌴 ${f.auditor.split(' ').pop()}: ${f.label}</div>`).join('')}
-      ${(()=>{const gids=[...new Set(rapporte.filter(r=>r.date===ds&&(!audFilter||r.auditor===audFilter)).map(r=>r.groupId))];const gs=gids.map(g=>rapporte.filter(x=>x.groupId===g&&x.date===ds)).filter(m=>m.length).sort((a,b)=>(a[0].time||'').localeCompare(b[0].time||''));return gs.map(mem=>{const r=mem[0];const anyPlan=mem.some(m=>m.planned);return`<div class="kwe" style="border-left:3px solid #0EA5E9;${anyPlan?'':'background:#F0F9FF'}"><div class="kwe-top" onclick="openRapportEdit(${r.id})" style="cursor:pointer"><div class="kwen" style="color:#0369A1">${anyPlan?'':'✓ '}📋 ${r.type}${r.seriesId?' 🔁':''}${r.time?' '+r.time:''}${(r.dept||r.ort)?`<div style="font-size:10px;font-weight:400;color:var(--tx3)">${[r.dept,r.ort].filter(Boolean).join(' · ')}</div>`:''}</div><span style="display:flex;gap:2px;flex-wrap:wrap;justify-content:flex-end">${mem.map(m=>m.planned?`<span class="kwea" title="${m.auditor}: geplant" style="background:transparent;border:1.5px solid ${aC(m.auditor)};color:${aC(m.auditor)}">${m.auditor.split(' ').pop()}</span>`:`<span class="kwea" title="${m.auditor}: teilgenommen" style="background:${aC(m.auditor)}">✓ ${m.auditor.split(' ').pop()}</span>`).join('')}</span></div>${anyPlan?`<div class="kwe-move" style="display:flex;gap:2px;padding:2px 6px 3px;border-top:1px solid var(--bd)"><button onclick="moveRapportTo(${r.id},'${rpAddDays(kwToDate(kw),-3)}')" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">←</button>${days.map((day,dj)=>`<button onclick="moveRapportTo(${r.id},'${rpAddDays(kwToDate(kw),dj)}')" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:${rpAddDays(kwToDate(kw),dj)===ds?'#0EA5E9':'var(--sf2)'};color:${rpAddDays(kwToDate(kw),dj)===ds?'#fff':'var(--tx2)'};font-size:9px;cursor:pointer;line-height:1.4">${day}</button>`).join('')}<button onclick="moveRapportTo(${r.id},'${kwToDate(kw+1)}')" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">→</button></div>`:''}</div>`;}).join('');})()}
+      ${(()=>{const gids=[...new Set(rapporte.filter(r=>r.date===ds&&(!audFilter||r.auditor===audFilter)).map(r=>r.groupId))];const gs=gids.map(g=>rapporte.filter(x=>x.groupId===g&&x.date===ds)).filter(m=>m.length).sort((a,b)=>(a[0].time||'').localeCompare(b[0].time||''));return gs.map(mem=>{const r=mem[0];const anyPlan=mem.some(m=>m.planned);return`<div class="kwe" style="border-left:3px solid #0EA5E9;${anyPlan?'':'background:#F0F9FF'}"><div class="kwe-top" onclick="openRapportEdit(${r.id})" style="cursor:pointer"><div class="kwen" style="color:#0369A1">${anyPlan?'':'✓ '}📋 ${r.type}${r.seriesId?' 🔁':''}${r.time?' '+r.time:''}${(r.dept||r.ort)?`<div style="font-size:10px;font-weight:400;color:var(--tx3)">${[r.dept,r.ort].filter(Boolean).join(' · ')}</div>`:''}</div><span style="display:flex;gap:3px;flex-wrap:wrap;margin-top:2px">${mem.map(m=>m.planned?`<span class="kwea" title="${m.auditor}: geplant" style="background:transparent;border:1.5px solid ${aC(m.auditor)};color:${aC(m.auditor)}">${m.auditor.split(' ').pop()}</span>`:`<span class="kwea" title="${m.auditor}: teilgenommen" style="background:${aC(m.auditor)}">✓ ${m.auditor.split(' ').pop()}</span>`).join('')}</span></div>${anyPlan?`<div class="kwe-move" style="display:flex;gap:2px;padding:2px 6px 3px;border-top:1px solid var(--bd)"><button onclick="moveRapportTo(${r.id},'${rpAddDays(kwToDate(kw),-3)}')" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">←</button>${days.map((day,dj)=>`<button onclick="moveRapportTo(${r.id},'${rpAddDays(kwToDate(kw),dj)}')" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:${rpAddDays(kwToDate(kw),dj)===ds?'#0EA5E9':'var(--sf2)'};color:${rpAddDays(kwToDate(kw),dj)===ds?'#fff':'var(--tx2)'};font-size:9px;cursor:pointer;line-height:1.4">${day}</button>`).join('')}<button onclick="moveRapportTo(${r.id},'${kwToDate(kw+1)}')" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">→</button></div>`:''}</div>`;}).join('');})()}
       ${(()=>{const bp=beratPlan.filter(p=>p.date===ds&&(!audFilter||p.auditor===audFilter));return bp.map(p=>{const e=data.find(x=>x.id===p.bsId);const audCol=aC(p.auditor||'');return`<div class="kwe" style="border-left:3px solid #8B5CF6"><div class="kwe-top" onclick="openBeratPlanPop(${p.id})" style="cursor:pointer"><div class="kwen">💬 ${e?e.name:'(gel.)'}</div><span class="kwea" style="background:${audCol}">${(p.auditor||'?').split(' ').pop()}</span></div>${p.note?`<div style="font-size:10px;color:#7C3AED;padding:2px 6px 3px">${p.note}</div>`:''}<div class="kwe-move" style="display:flex;gap:2px;padding:2px 6px 3px;border-top:1px solid var(--bd)"><button onclick="moveBeratPlan(${p.id},'${kwToDate(kw-1)}',4)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">←</button>${days.map((day,dj)=>`<button onclick="moveBeratPlan(${p.id},'${kwToDate(kw)}',${dj})" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:${dj===di?'var(--blue)':'var(--sf2)'};color:${dj===di?'#fff':'var(--tx2)'};font-size:9px;cursor:pointer;line-height:1.4">${day}</button>`).join('')}<button onclick="moveBeratPlan(${p.id},'${kwToDate(kw+1)}',0)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">→</button></div></div>`;}).join('');})()}
       ${(()=>{const done=data.flatMap(e=>(e.beratungen||[]).filter(b=>b.date===ds).map(b=>({...b,eName:e.name,eId:e.id})));return done.map(b=>{const bAudCol=aC(b.auditor||'');return`<div class="kwe" style="background:#F5F3FF;border-left:3px solid #8B5CF6;cursor:pointer" onclick="openBeratDoneUndo(${b.eId},${b.id})"><div class="kwe-top"><div class="kwen" style="color:#7C3AED">✓ 💬 ${b.eName}</div><span class="kwea" style="background:${bAudCol}">${(b.auditor||'?').split(' ').pop()}</span></div>${b.note?`<div style="font-size:10px;color:#7C3AED;padding:2px 6px 3px">${b.note}</div>`:''}</div>`;}).join('');})()}
       ${dayAudits.map(h=>`<div class="kwe" style="background:#F0FDF4;border-left:3px solid #10B981;cursor:pointer" onclick="openAuditUndo(${h.eId},'${h.date}')"><div class="kwe-top"><div class="kwen" style="color:#065F46">✓ ${h.eName}</div><span class="kwea" style="background:#10B981">${(h.auditor||'?').split(' ').pop()}</span></div></div>`).join('')}
@@ -3865,30 +3790,8 @@ function toggleSidebar(){
   btn.style.left=collapsed?'0px':'275px';
   setTimeout(()=>map.invalidateSize(),280);
 }
-function setCalMode(mode){
-  const lblKW=document.getElementById('lbl-kw');
-  const lblDT=document.getElementById('lbl-dt');
-  if(lblKW)lblKW.style.background=mode==='kw'?'var(--sf2)':'';
-  if(lblDT)lblDT.style.background=mode==='dt'?'var(--sf2)':'';
-  // Clear the other field
-  if(mode==='kw'){document.getElementById('cal-dt').value='';}
-  else{document.getElementById('cal-kw').value='';}
-}
-function addCalPlan(){
-  const bsId=+document.getElementById('cal-bs').value,aud=document.getElementById('cal-aud').value;
-  const mode=document.querySelector('[name=cal-mode]:checked')?.value||'kw';
-  let dt=mode==='dt'?document.getElementById('cal-dt').value:'';
-  const kw=mode==='kw'?document.getElementById('cal-kw').value:'';
-  if(kw&&!dt)dt=kwToDate(+kw);
-  if(!bsId||!aud||!dt){showToast('Baustelle, Auditor und KW/Datum erforderlich');return;}
-  const e=data.find(x=>x.id===bsId);
-  if(onVac(aud,dt))showToast(`⚠️ ${aud.split(' ').pop()} hat Ferien!`,4000);
-  plans.push({bsId,auditor:aud,date:dt});plans.sort((a,b)=>a.date.localeCompare(b.date));
-  if(e)log('Geplant',e.name,'#6366F1',aud);
-  renderCalSB();renderKW();updateStats();saveNow();
-  document.getElementById('cal-kw').value='';document.getElementById('cal-dt').value='';
-  document.querySelector('[name=cal-mode][value=kw]').checked=true;setCalMode('kw');
-}
+
+
 function delPlanIdx(i){plans.splice(i,1);renderCalSB();renderKW();updateStats();saveNow();}
 let _undoBsId=null, _undoDate=null;
 function openAuditUndo(bsId,date){
@@ -4136,7 +4039,7 @@ function doKWPrint(){
   document.getElementById('pv').style.display='block';
 }
 
-function openPrint(){const list=data.filter(e=>e.active&&!e.paused&&['overdue','due','soon'].includes(status(e))).sort((a,b)=>dl(a)-dl(b));document.getElementById('pv-ti').textContent='Tagesplan – Fällige Baustellen';document.getElementById('pv-da').textContent=new Date().toLocaleDateString('de-CH',{weekday:'long',year:'numeric',month:'long',day:'numeric'});document.getElementById('pv-hd').innerHTML='<tr><th>#</th><th>Baustelle</th><th>Adresse</th><th>Abteilung</th><th>Status</th><th>Auditor</th><th>Notiz</th></tr>';document.getElementById('pv-bd').innerHTML=list.map((e,i)=>{const s=status(e);return`<tr><td style="color:var(--tx3)">${i+1}</td><td style="font-weight:600">${e.type==='werkhof'?'🏠 ':''}${e.name}</td><td>${e.addr||'—'}</td><td>${e.dept||'—'}</td><td style="font-weight:600;color:${s==='overdue'?'#EF4444':'#F59E0B'}">${s==='overdue'?Math.abs(dl(e))+'T überfällig':'in '+dl(e)+'T'}</td><td>${e.auditor||'—'}</td><td style="color:var(--tx3);font-style:italic">${e.note||''}</td></tr>`;}).join('');document.getElementById('pv').style.display='block';}
+
 function openPrintSel(){if(!planned.size)return;let sel=nnSort(data.filter(e=>planned.has(e.id)));document.getElementById('pv-ti').textContent='Route / Ausgewählte Baustellen';document.getElementById('pv-da').textContent=new Date().toLocaleDateString('de-CH',{weekday:'long',year:'numeric',month:'long',day:'numeric'});document.getElementById('pv-hd').innerHTML='<tr><th>#</th><th>Baustelle</th><th>Adresse</th><th>Abteilung</th><th>Auditor</th><th>Notiz</th></tr>';document.getElementById('pv-bd').innerHTML=sel.map((e,i)=>`<tr><td style="color:var(--tx3)">${i+1}</td><td style="font-weight:600">${e.type==='werkhof'?'🏠 ':''}${e.name}</td><td>${e.addr||'—'}</td><td>${e.dept||'—'}</td><td>${e.auditor||'—'}</td><td style="color:var(--tx3);font-style:italic">${e.note||''}</td></tr>`).join('');document.getElementById('pv').style.display='block';}
 function closePrint(){document.getElementById('pv').style.display='none';}
 // ═══ MODAL ═══
@@ -4279,8 +4182,8 @@ function setPAImportMode(){
     },200);
   },100);
 }
-function openImport(){editId=null;document.getElementById('m-title').textContent='Excel importieren';document.getElementById('form-s').style.display='none';document.getElementById('imp-s').style.display='block';document.getElementById('json-s').style.display='none';document.getElementById('m-save').style.display='none';document.getElementById('impst').textContent='';document.getElementById('mbg').classList.add('open');}
-function openAdd(){editId=null;window._pendingLat=null;window._pendingLng=null;{const la=document.getElementById('f-lat'),ln=document.getElementById('f-lng');if(la)la.value='';if(ln)ln.value='';}document.getElementById('m-title').textContent='Neue Baustelle';document.getElementById('form-s').style.display='block';document.getElementById('imp-s').style.display='none';document.getElementById('json-s').style.display='none';document.getElementById('m-save').style.display='';['f-name','f-addr','f-psp','f-sap','f-prv','f-bc','f-note'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});fillFDept('');document.getElementById('f-rh').value='28';document.getElementById('f-last').value='';document.getElementById('f-type').value='baustelle';document.getElementById('addr-suggestions').style.display='none';const hint=document.getElementById('f-addr-hint');if(hint)hint.textContent='';document.getElementById('mbg').classList.add('open');}
+
+function openAdd(){editId=null;window._pendingLat=null;window._pendingLng=null;{const la=document.getElementById('f-lat'),ln=document.getElementById('f-lng');if(la)la.value='';if(ln)ln.value='';}document.getElementById('m-title').textContent='Neue Baustelle';document.getElementById('form-s').style.display='block';(document.getElementById('imp-s')||{style:{},classList:{remove(){}}}).style.display='none';(document.getElementById('json-s')||{style:{},classList:{remove(){}}}).style.display='none';document.getElementById('m-save').style.display='';['f-name','f-addr','f-psp','f-sap','f-prv','f-bc','f-note'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});fillFDept('');document.getElementById('f-rh').value='28';document.getElementById('f-last').value='';document.getElementById('f-type').value='baustelle';document.getElementById('addr-suggestions').style.display='none';const hint=document.getElementById('f-addr-hint');if(hint)hint.textContent='';document.getElementById('mbg').classList.add('open');}
 function openEdit(id){
   // Reset manual marker
   const latEl=document.getElementById('f-lat');
@@ -4292,8 +4195,8 @@ function openEdit(id){
   editId=id;window._pendingLat=null;window._pendingLng=null;
   document.getElementById('m-title').textContent='Bearbeiten';
   document.getElementById('form-s').style.display='block';
-  document.getElementById('imp-s').style.display='none';
-  document.getElementById('json-s').style.display='none';
+  (document.getElementById('imp-s')||{style:{},classList:{remove(){}}}).style.display='none';
+  (document.getElementById('json-s')||{style:{},classList:{remove(){}}}).style.display='none';
   document.getElementById('m-save').style.display='';
   document.getElementById('f-name').value=e.name||'';
   document.getElementById('f-addr').value=e.addr||'';
@@ -5115,13 +5018,7 @@ function mobConfirmPersonAudit(id){
   saveNow();renderMobPlan();
   showToast('✓ '+p.person+' auditiert',2500);
 }
-function mobRemovePersonAudit(id){
-  const p=personAudits.find(x=>x.id===id);if(!p)return;
-  if(!confirm(`Geplantes Personen-Audit "${p.person}" entfernen?`))return;
-  log('Entfernt (Personen-Audit)',p.person,'#EF4444',p.auditor||'—');
-  personAudits=personAudits.filter(x=>x.id!==id);
-  saveNow();renderMobPlan();
-}
+
 
 function mobOpenMaps(addr,name){
   const start=localStorage.getItem('audit_start')||'';
@@ -5209,6 +5106,7 @@ function mobRouteBannerHTML(stops){
   }
   return`<div style="padding:12px 14px;background:var(--sf);border:1px solid var(--bd);border-radius:12px;margin-bottom:10px">
     ${info}
+    ${mobRouteValid(stops)?`<button onclick="mobRoute()" style="width:100%;margin-top:8px;padding:9px;background:#F59E0B;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600">🗺️ Ganze Route in Google Maps öffnen</button>`:''}
     <div style="display:flex;align-items:center;gap:6px;margin-top:8px">
       <label style="font-size:11px;color:var(--tx2);white-space:nowrap">Erster Stopp:</label>
       <select onchange="mobSetFirstPin(this.value)" style="flex:1;min-width:0;padding:6px;border:1px solid var(--bd);border-radius:8px;background:var(--sf2);color:var(--tx);font-size:12px">${opts}</select>
@@ -5336,16 +5234,7 @@ function setOrsKey(){
   showToast(window._orsKey?'✓ Routen-Schlüssel gespeichert (für alle synchronisiert)':'Routen-Schlüssel entfernt',3000);
 }
 function haversine(lat1,lng1,lat2,lng2){const R=6371,dLat=(lat2-lat1)*Math.PI/180,dLng=(lng2-lng1)*Math.PI/180,a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));}
-function greedySort(plans,fromLat,fromLng){
-  const rem=[...plans];const sorted=[];let cLat=fromLat,cLng=fromLng;
-  while(rem.length){
-    let best=0,bestD=Infinity;
-    rem.forEach((p,i)=>{const e=data.find(x=>x.id===p.bsId);if(!e||!e.lat||!e.lng)return;const d=haversine(cLat,cLng,e.lat,e.lng);if(d<bestD){bestD=d;best=i;}});
-    const pick=rem.splice(best,1)[0];sorted.push(pick);
-    const e=data.find(x=>x.id===pick.bsId);if(e&&e.lat&&e.lng){cLat=e.lat;cLng=e.lng;}
-  }
-  return sorted;
-}
+
 let _mobMenuBsId=null,_mobMenuDate=null,_mobMenuBeratId=null;
 
 function openMobPlanMenu(bsId,date){
@@ -5449,6 +5338,8 @@ function mobConfirmBerat(id){
   saveNow();renderMobPlan();
   showToast('💬 Beratung erfasst – '+e.name,2500);
 }
+
+
 function mobRoute(){
   const f=x=>x.date===_mobDate&&(!currentUser||x.auditor===currentUser);
   const stops=mobOrderedStops(plans.filter(f),beratPlan.filter(f),personAudits.filter(p=>p.planned&&f(p)));
@@ -5462,7 +5353,6 @@ function mobRoute(){
   const url=`https://www.google.com/maps/dir/${origin?encodeURIComponent(origin):''}/${pts}${start?'/'+encodeURIComponent(start):''}`;
   window.open(url,'_blank');
 }
-
 function mobSearch(q){
   const res=document.getElementById('mob-search-res');
   if(!q||q.length<2){res.style.display='none';return;}
@@ -5494,15 +5384,7 @@ function mobMapGo(lat,lng,label){
   if(_mobMap){_mobMap.setView([lat,lng],15);}
 }
 
-function mobQuickAudit(){
-  _mobSelId=null;
-  document.getElementById('mob-audit-search').value='';
-  document.getElementById('mob-audit-sel').style.display='none';
-  document.getElementById('mob-audit-res').style.display='none';
-  document.getElementById('mob-audit-date').value=_mobDate;
-  document.getElementById('mob-audit-bg').style.display='flex';
-  setTimeout(()=>document.getElementById('mob-audit-search').focus(),100);
-}
+
 function mobQuickAuditFor(id){
   const e=data.find(x=>x.id===id);if(!e)return;
   _mobSelId=id;
@@ -5794,32 +5676,9 @@ function updateUserUI(){
   }
 }
 
-function openUserSelect(){
-  const list=document.getElementById('user-list');
-  if(!list)return;
-  list.innerHTML=auditors.map(a=>{
-    const initials=a.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
-    const isActive=a===currentUser;
-    return`<button onclick="selectUser('${a}')" style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:10px;border:2px solid ${isActive?'var(--blue)':'var(--bd)'};background:${isActive?'#EFF6FF':'var(--sf2)'};cursor:pointer;text-align:left;transition:all .15s">
-      <span style="width:36px;height:36px;border-radius:50%;background:${aC(a)};display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0">${initials}</span>
-      <div>
-        <div style="font-size:14px;font-weight:600;color:var(--tx)">${a}</div>
-        ${isActive?'<div style="font-size:11px;color:var(--blue)">✓ Aktiver Benutzer</div>':''}
-      </div>
-    </button>`;
-  }).join('');
-  document.getElementById('user-bg').style.display='flex';
-}
 
-function selectUser(name){
-  currentUser=name;
-  localStorage.setItem(USER_KEY,name);
-  document.getElementById('user-bg').style.display='none';
-  updateUserUI();
-  showToast(`👤 Angemeldet als ${name}`,2500);
-  prefillAuditor();
-  if(sbConnected)startPresence();
-}
+
+
 
 function prefillAuditor(){
   if(!currentUser)return;
@@ -5912,7 +5771,7 @@ function stickFooter(box){
   box.dataset.stickyDone='1';
 }
 function initStickyFooters(){
-  ['dist-bg','aud-admin-bg','pi-bg','pisb-bg','rpe-bg','tw-bg','dept-bg','rpt-bg','ib-bg','guide-bg'].forEach(id=>{
+  ['dist-bg','aud-admin-bg','pi-bg','pisb-bg','rpe-bg','tw-bg','dept-bg','rpt-bg','guide-bg'].forEach(id=>{
     const ov=document.getElementById(id);if(ov)stickFooter(ov.firstElementChild);
   });
   document.querySelectorAll('.mbg > .modal').forEach(stickFooter);
@@ -6056,17 +5915,7 @@ function renderDeptList(){
 // ═══ ADMIN MODE ═══
 let adminMode=sessionStorage.getItem('admin_mode')==='1';
 
-function toggleAdminMode(){
-  // Admin mode only for authenticated admin user
-  if(_authUser&&_authUser.email&&_authUser.email.toLowerCase()===ADMIN_EMAIL.toLowerCase()){
-    const isAdmin=document.body.classList.toggle('admin-mode');
-    localStorage.setItem('anliker_admin',isAdmin?'1':'');
-    updateAdminUI();
-    showToast(isAdmin?'🔐 Admin-Modus aktiv':'Admin-Modus deaktiviert',2000);
-  } else {
-    showToast('⛔ Kein Zugriff – nur für Admin',2000);
-  }
-}
+
 function updateAdminUI(){
   const isAdmin=document.body.classList.contains('admin-mode');
   const els=document.querySelectorAll('.admin-only');
@@ -6083,177 +5932,18 @@ function updateAdminUI(){
 }
 
 // Kürzel → Auditor-Name mapping (reverse)
-function codeToAuditor(code){
-  const upper=code.toUpperCase();
-  // Check AUD_CODES reverse
-  const found=Object.entries(AUD_CODES).find(([name,c])=>c===upper);
-  if(found)return found[0];
-  // Special: EK
-  if(upper==='EK')return'Edwin Kramis';
-  return null;
-}
+
 
 // Fuzzy name match: find person in register by name
-function fuzzyMatchPerson(excelName){
-  if(!excelName)return null;
-  const nl=excelName.toLowerCase().replace(/[^a-zäöü ]/g,'').trim();
-  // Exact match first
-  let p=persons.find(p=>{
-    const pn=(p.nachname+' '+p.vorname).toLowerCase();
-    const pn2=(p.vorname+' '+p.nachname).toLowerCase();
-    return pn===nl||pn2===nl;
-  });
-  if(p)return{person:p,score:100};
-  // Partial match
-  let best=null,bestScore=0;
-  persons.forEach(p=>{
-    const pn=(p.nachname+' '+p.vorname).toLowerCase();
-    const words=nl.split(' ');
-    const matches=words.filter(w=>w.length>2&&pn.includes(w)).length;
-    const score=matches/words.length*100;
-    if(score>bestScore){bestScore=score;best=p;}
-  });
-  if(bestScore>=60)return{person:best,score:Math.round(bestScore)};
-  return null;
-}
+
 
 let _ibPending=[];
 
-function openIBImport(){
-  _ibPending=[];
-  document.getElementById('ib-file').value='';
-  document.getElementById('ib-preview').style.display='none';
-  document.getElementById('ib-loading').style.display='none';
-  document.getElementById('ib-bg').style.display='flex';
-}
 
-async function previewIBImport(input){
-  const file=input.files[0];if(!file)return;
-  document.getElementById('ib-loading').style.display='block';
-  document.getElementById('ib-preview').style.display='none';
-  const reader=new FileReader();
-  reader.onload=function(e){
-    try{
-      const wb=XLSX.read(e.target.result,{type:'array'});
-      // Process sheets 14 IB and 15 ASP (by name containing IB or ASP)
-      const targetSheets=wb.SheetNames.filter(n=>n.includes('IB')||n.includes('ASP'));
-      if(!targetSheets.length){showToast('Keine IB/ASP Reiter gefunden');document.getElementById('ib-loading').style.display='none';return;}
-      const matched=[];const unmatched=[];
-      targetSheets.forEach(sheetName=>{
-        const ws=wb.Sheets[sheetName];
-        const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
-        // Use cell-by-cell approach to handle merged cells
-        const range=XLSX.utils.decode_range(ws['!ref']||'A1:Z100');
-        const kwCols=[];
-        // Scan all cells in first 10 rows for KW numbers
-        for(let ri=0;ri<=Math.min(9,range.e.r);ri++){
-          const colsInRow=[];
-          for(let ci=range.s.c;ci<=range.e.c;ci++){
-            const addr=XLSX.utils.encode_cell({r:ri,c:ci});
-            const cell=ws[addr];
-            if(!cell)continue;
-            const n=parseInt(cell.v);
-            if(n>=1&&n<=52)colsInRow.push({kw:n,col:ci});
-          }
-          if(colsInRow.length>20){
-            colsInRow.forEach(e=>kwCols.push(e));
-            console.log('KW row found at row',ri,'with',colsInRow.length,'cols');
-            break;
-          }
-        }
-        console.log('KW cols found:',kwCols.length,'first:',kwCols[0],'last:',kwCols[kwCols.length-1]);
-        if(!kwCols.length){console.warn('No KW cols found in',sheetName);return;}
-        // Find name column - scan for text column with person names
-        // Names start a few rows after KW header
-        const nameCol=2; // Column C (index 2)
-        // Scan person rows - all rows after KW header
-        const kwRowNum=kwCols.length?Math.min(...Object.keys(ws).filter(k=>k[0]!=='!').map(k=>XLSX.utils.decode_cell(k).r).filter(r=>{
-          // Find row where most KW cols match
-          return kwCols.some(({kw,col})=>{
-            const cell=ws[XLSX.utils.encode_cell({r,c:col})];
-            return cell&&parseInt(cell.v)===kw;
-          });
-        })):3;
-        for(let ri=kwRowNum+2;ri<=range.e.r;ri++){
-          const nameAddr=XLSX.utils.encode_cell({r:ri,c:nameCol});
-          const nameCell=ws[nameAddr];
-          const nameVal=String(nameCell?nameCell.v||'':'').trim();
-          if(!nameVal||nameVal.length<3)continue;
-          kwCols.forEach(({kw,col})=>{
-            const addr=XLSX.utils.encode_cell({r:ri,c:col});
-            const cell=ws[addr];
-            if(!cell||!cell.v)return;
-            const val=String(cell.v).trim().toUpperCase();
-            if(val.length<2||val==='*'||val==='Z')return;
-            if(!/^[A-ZÄÖÜ]{2,3}$/.test(val))return;
-            const auditor=codeToAuditor(val);
-            const dt=kwToDate(kw,2026);
-            const match=fuzzyMatchPerson(nameVal);
-            const entry={excelName:nameVal,kw,date:dt,auditorCode:val,auditor:auditor||val,sheet:sheetName,match};
-            if(match){matched.push(entry);}
-            else{if(!unmatched.some(u=>u.excelName===nameVal))unmatched.push({excelName:nameVal,sheet:sheetName});}
-          });
-        }
-      });
-      _ibPending={matched,unmatched};
-      // Render preview
-      const matchedByPerson={};
-      matched.forEach(e=>{
-        const key=e.match.person.pnr;
-        if(!matchedByPerson[key])matchedByPerson[key]={person:e.match.person,audits:[],score:e.match.score};
-        matchedByPerson[key].audits.push(e);
-      });
-      document.getElementById('ib-matched').innerHTML=
-        `<div style="font-size:12px;font-weight:600;color:#065F46;margin-bottom:6px">✓ ${matched.length} Audits zugeordnet (${Object.keys(matchedByPerson).length} Personen)</div>`+
-        Object.values(matchedByPerson).slice(0,5).map(({person,audits,score})=>
-          `<div style="font-size:11px;color:var(--tx2);padding:3px 0">
-            <strong>${person.nachname} ${person.vorname}</strong> (${person.pnr}) – ${audits.length} Audits
-            ${score<100?`<span style="color:#F59E0B;font-size:10px">${score}% match</span>`:''}
-          </div>`
-        ).join('')+
-        (Object.keys(matchedByPerson).length>5?`<div style="font-size:11px;color:var(--tx3)">... und ${Object.keys(matchedByPerson).length-5} weitere</div>`:'');
-      const unmatchedNames=[...new Set(unmatched.map(e=>e.excelName))];
-      document.getElementById('ib-unmatched').innerHTML=unmatchedNames.length?
-        `<div style="font-size:12px;font-weight:600;color:#EF4444;margin-bottom:6px">⚠ ${unmatchedNames.length} Namen nicht gefunden:</div>`+
-        unmatchedNames.map(n=>`<div style="font-size:11px;color:var(--tx2);padding:2px 0">${n}</div>`).join(''):
-        '<div style="font-size:12px;color:#065F46">✓ Alle Namen gefunden!</div>';
-      document.getElementById('ib-loading').style.display='none';
-      document.getElementById('ib-preview').style.display='block';
-    }catch(ex){
-      console.error(ex);
-      document.getElementById('ib-loading').style.display='none';
-      showToast('Fehler beim Lesen der Datei: '+ex.message,4000);
-    }
-  };
-  reader.readAsArrayBuffer(file);
-}
 
-function confirmIBImport(){
-  if(!_ibPending||!_ibPending.matched)return;
-  let added=0,skipped=0;
-  _ibPending.matched.forEach(e=>{
-    if(!e.match?.person)return;
-    const pnr=e.match.person.pnr;
-    // Check if already exists
-    const exists=personAudits.some(a=>String(a.pnr)===String(pnr)&&a.kw===e.kw&&a.date===e.date);
-    if(exists){skipped++;return;}
-    personAudits.push({
-      id:Date.now()+Math.random(),
-      pnr,
-      kat:e.match.person.abt||e.sheet,
-      person:e.match.person.nachname+' '+e.match.person.vorname,
-      firma:e.match.person.firma||'',
-      date:e.date,kw:e.kw,
-      auditor:e.auditor,
-      note:'Import '+e.sheet
-    });
-    added++;
-  });
-  personAudits.sort((a,b)=>b.date.localeCompare(a.date));
-  saveNow();
-  document.getElementById('ib-bg').style.display='none';
-  showToast('✓ '+added+' Audits importiert, '+skipped+' bereits vorhanden',4000);
-}
+
+
+
 
 // ═══════════════════════════════════════════════════════════════
 // PERSONAL-IMPORT: Einsatzlisten → Baustellen pausieren/reaktivieren
@@ -6356,11 +6046,7 @@ function piMatchBaustelle(psp,name,qDept){
   }
   return null;
 }
-function piIsAbsence(token,codes){
-  if(!token)return false;
-  const t=String(token).trim().toUpperCase();
-  return codes.some(c=>t===c.toUpperCase());
-}
+
 
 // ═══ Haupteinstieg: liest die anonyme Wochenergebnis-Datei aus dem Konverter ═══
 async function runPersonalImport(file){
@@ -6478,7 +6164,7 @@ function piRenderPreview(){
       ${bsPickerHTML('pi-alias-sel-'+i,'width:320px;max-width:100%;flex-shrink:0')}
       <button onclick="piResolveUnknown(${i})" style="padding:4px 10px;border-radius:6px;border:none;background:#3B82F6;color:#fff;font-size:11px;cursor:pointer">Zuordnen</button>
       <button onclick="piCreateFromUnknown(${i})" style="padding:4px 10px;border-radius:6px;border:1px solid #10B981;background:transparent;color:#10B981;font-size:11px;cursor:pointer">+ Neue Baustelle</button>
-      <button onclick="piCollectUnknown(${i})" style="padding:4px 10px;border-radius:6px;border:1px solid var(--bd);background:transparent;color:var(--tx2);font-size:11px;cursor:pointer">📥 Sammelbox</button>
+      <button onclick="piCollectUnknown(${i})" style="padding:4px 10px;border-radius:6px;border:1px solid var(--bd);background:transparent;color:var(--tx2);font-size:11px;cursor:pointer"><i class="ti ti-inbox" style="color:var(--blue)"></i> Sammelbox</button>
     </div>`;
   };
   const unknownGrp=buckets.unknown.length?`<div style="margin-bottom:14px">
@@ -6854,7 +6540,7 @@ async function getAuthToken(){
   }
   return sbKey;
 }
-function sbHeaders(){return{'Content-Type':'application/json','apikey':sbKey,'Authorization':'Bearer '+sbKey,'Prefer':'resolution=merge-duplicates'};}
+
 async function sbHeadersAuth(){
   const token=await getAuthToken();
   return{'Content-Type':'application/json','apikey':sbKey,'Authorization':'Bearer '+token,'Prefer':'resolution=merge-duplicates'};
@@ -6894,7 +6580,7 @@ async function sbInit(){
 function updateSBStatus(ok){
   const lbl=document.getElementById('sb-status-lbl');
   const btn=document.getElementById('sb-btn');
-  if(lbl)lbl.textContent=ok?'☁ Live-Sync aktiv':'Supabase einrichten';
+  if(lbl)lbl.textContent=ok?'Live-Sync aktiv':'Supabase einrichten';
   if(btn)btn.style.color=ok?'#3ECF8E':'';
   // Update header indicator
   const dot=document.getElementById('sb-dot');
@@ -7082,152 +6768,9 @@ async function nominatimGeocode(addr){
 }
 
 // ═══ EXCEL IMPORT ═══
-function handleDrop(ev){ev.preventDefault();handleFile(ev.dataTransfer.files[0]);}
-function parseSheet(ws,rawSn,forceGhost=false){
-  const sn=mapSN(rawSn),entries=[],ghostAudits=[];
-  // Robustes Zell-Lesen über expliziten Spaltenbuchstaben statt Array-Index,
-  // da sheet_to_json bei leeren/zusammengeführten Zellen die Indizes verschiebt.
-  const range=XLSX.utils.decode_range(ws['!ref']||'A1:A1');
-  function cell(r,c){ // r,c sind 0-basiert
-    const addr=XLSX.utils.encode_cell({r,c});
-    const cellObj=ws[addr];
-    if(!cellObj)return null;
-    return cellObj.v!=null?cellObj.v:null;
-  }
-  const maxRow=range.e.r,maxCol=range.e.c;
-  // KW-Zeile (Zeile 4, 0-basiert = Index 3) – Spalten ab K (Index 10)
-  const kwMap={};
-  for(let c2=10;c2<=maxCol;c2++){
-    const v=cell(3,c2);
-    if(v!=null){const n=+String(v);if(!isNaN(n)&&n>0&&n<=53)kwMap[c2]=n;}
-  }
-  const tod=today();
-  for(let r=4;r<=maxRow;r++){
-    // Spalten: B=PSP(1), C=Name(2), D=Adresse(3), E=PrV(4), F=BC(5), J=Spezielles(9)
-    const pspRaw=cell(r,1);
-    if(pspRaw==null)continue;
-    const psp=String(pspRaw).trim();
-    const name=String(cell(r,2)??'').trim();
-    const addr=String(cell(r,3)??'').trim();
-    if(!psp&&!name)continue;
-    if(['psp','baustelle'].includes(psp.toLowerCase()))continue;
 
-    const specValRaw=cell(r,9);
-    const specVal=specValRaw!=null?String(specValRaw).trim().toLowerCase():'';
-    const isZOnly=forceGhost||specVal==='z';
-    const isPaused_=specVal==='p';
-    const isInaktiv_=specVal==='i';
-    const isNoCount=specVal==='n';
 
-    let lastKW=null,lastAud=null,allKW=[];const auditHistory=[],plannedKW=[];
-    for(const[cs,kw]of Object.entries(kwMap)){
-      const col=+cs;
-      const vRaw=cell(r,col);
-      if(vRaw==null)continue;
-      const v=String(vRaw).trim().toLowerCase();
-      let audName=null,isAudit=false,isPlanned=false;
-      for(const[code,n]of Object.entries(AUDITOR_CODES)){if(v.startsWith(code)){const rest=v.slice(code.length).trim();if(rest===''||rest==='(xx)'||rest==='xx'){audName=n;isAudit=true;}else isPlanned=true;break;}}
-      if(!isAudit&&!isPlanned){if(v==='xx')isAudit=true;else if(v.startsWith('xx')&&(v.includes('*')||v.includes('(')))isPlanned=true;else if(v.startsWith('(*)')||v==='*'||v.startsWith('(*'))isPlanned=true;}
-      if(isAudit){allKW.push(kw);const dt=kwToDate(kw);if(dt<=tod){auditHistory.push({kw,date:dt,auditor:audName});if(!lastKW||kw>lastKW){lastKW=kw;lastAud=audName;}}}
-      else if(isPlanned){allKW.push(kw);const dt=kwToDate(kw);if(dt>tod)plannedKW.push({kw,date:dt,auditor:audName});}
-    }
 
-    if(isZOnly){
-      auditHistory.forEach(h=>{h.dept=sn;h.sourceName=name||psp;});
-      ghostAudits.push(...auditHistory);
-      continue;
-    }
-
-    const historyForStats=isNoCount?[]:auditHistory;
-    if(!addr||addr.length<3)continue;
-
-    const lastAudit2=lastKW?kwToDate(lastKW):null;
-    const geo=geocode(addr,sn);
-    const hasStreetName=addr.match(/[a-zA-Z\u00C0-\u017E]{4,}/);
-    const needsGeocode=!!hasStreetName;
-    const deptType=sn==='Generalunternehmung'?'gu':sn==='Werkhöfe'?'werkhof':'baustelle';
-    entries.push({
-      id:Date.now()+(r*1000)+Math.floor(Math.random()*999),
-      name:name||psp,addr,psp,sap:name,
-      prv:String(cell(r,4)??'').trim(),bc:String(cell(r,5)??'').trim(),
-      dept:sn,rhythm:deptType==='werkhof'?182:deptType==='gu'?42:28,
-      type:deptType,
-      lastAudit:lastAudit2,lastKW,auditor:lastAud||null,
-      auditHistory:historyForStats,auditCount:historyForStats.length,
-      plannedKW,active:!isInaktiv_,
-      paused:isPaused_,pauseReason:isPaused_?'Import (J=p)':null,
-      noCount:isNoCount,note:'',
-      lat:geo?geo.lat:null,lng:geo?geo.lng:null,
-      needsGeocode
-    });
-  }
-  return{entries,ghostAudits};
-}
-async function handleFile(file){
-  if(!file)return;const st=document.getElementById('impst');st.textContent='Wird gelesen…';
-  try{
-    const ab=await file.arrayBuffer(),wb=XLSX.read(ab,{type:'array'});
-    const rawMap={};const GU='Generalunternehmung';
-    let count=0,inact=0,wh=0,guStandalone=0;
-    const allGhosts=[];
-    const sheetLog=[];
-    for(const sn of wb.SheetNames){
-      const mapped=mapSN(sn);
-      sheetLog.push(`${sn} → ${mapped}`);
-      // Check if entire sheet is ghost-only (IB, ASP)
-      const isGhostSheet=GHOST_SHEETS.some(g=>sn.trim().toUpperCase()===g.toUpperCase()||sn.trim().toUpperCase().startsWith(g.toUpperCase()));
-      const {entries,ghostAudits}=parseSheet(wb.Sheets[sn],sn,isGhostSheet);
-      allGhosts.push(...ghostAudits);
-      if(isGhostSheet)continue; // no entries to add
-      // KEIN MERGING MEHR – jede Zeile aus jedem Reiter bleibt eine eigene Baustelle,
-      // auch wenn PSP oder Adresse mit einer anderen Zeile übereinstimmt.
-      for(const e of entries){
-        rawMap[e.id]=e;
-        if(mapped===GU)guStandalone++;
-      }
-    }
-    console.log('Reiter erkannt:',sheetLog.join(' | '));
-    data=[];plans=[];let pfE=0;
-    for(const e of Object.values(rawMap)){count++;if(!e.active)inact++;if(e.type==='werkhof'||e.type==='gu')wh++;data.push(e);(e.plannedKW||[]).forEach(p=>{plans.push({bsId:e.id,auditor:p.auditor||'Unbekannt',date:p.date});pfE++;});}
-    plans.sort((a,b)=>a.date.localeCompare(b.date));
-
-    // Apply ghost audits (z-entries) – just add to a global pool for auditor stats
-    window._ghostAudits=allGhosts;
-
-    const ac=data.reduce((s,e)=>s+(e.auditHistory?.length||0),0)+allGhosts.length;
-    const pausedC=data.filter(e=>e.paused).length;
-    const zC=allGhosts.length;
-    st.innerHTML=`<span style="color:#10B981">✓</span> ${count} Baustellen · ${ac} Audits total · ${zC} nur gezählt · ${pfE} geplant · ${guStandalone} GU · ${inact} inaktiv · ${pausedC} pausiert`;
-    log('Import',`${count} Bs (${ac} Audits, ${zC} nur gezählt)`,'#3B82F6','');
-
-    // Nominatim precision geocoding for all entries with street addresses
-    const needsGeo=data.filter(e=>e.needsGeocode);
-    if(needsGeo.length>0){
-      // First render with PLZ placeholders so map is visible immediately
-      renderAll();buildCalBS();buildDF();
-      const baseMsg=st.innerHTML;
-      st.innerHTML+=`<br><span id="geo-prog" style="color:#F59E0B">⏳ Präzise Geocodierung: 0/${needsGeo.length} Adressen…</span>`;
-      let done=0,fixed=0;
-      for(const e of needsGeo){
-        try{
-          const g=await nominatimGeocode(e.addr);
-          if(g){e.lat=g.lat;e.lng=g.lng;e.needsGeocode=false;fixed++;
-            if(markers[e.id]){markers[e.id].setLatLng([e.lat,e.lng]);markers[e.id].setIcon(makeIcon(e,selId===e.id));}
-          }
-        }catch(ex){console.warn('Geocode:',e.addr,ex);}
-        done++;
-        const prog=document.getElementById('geo-prog');
-        if(prog)prog.textContent=`⏳ Geocodierung: ${done}/${needsGeo.length} (${fixed} präzisiert)`;
-        await new Promise(r2=>setTimeout(r2,1050)); // Nominatim: max 1 req/sec
-      }
-      const prog=document.getElementById('geo-prog');
-      if(prog)prog.innerHTML=`<span style="color:#10B981">✓ ${fixed}/${needsGeo.length} Adressen präzise verortet</span>`;
-      saveNow(); // save with corrected coords
-    }
-
-    renderAll();buildCalBS();buildDF();saveNow();setTimeout(closeModal,3000);
-  }catch(err){st.textContent='Fehler: '+err.message;console.error(err);}
-}
 function doExport(){
   if(!data.length){showToast('Keine Daten');return;}
   const yr=new Date().getFullYear();
@@ -7285,18 +6828,14 @@ function doExport(){
   showToast('✓ Excel exportiert',2000);
 }
 // ═══ MERGE ═══
-function openMerge(){mergeFiles=[];document.getElementById('merge-fl').innerHTML='';document.getElementById('merge-prev').style.display='none';document.getElementById('merge-go').disabled=true;document.getElementById('merge-inp').value='';document.getElementById('merge-bg').classList.add('open');}
-function closeMerge(){document.getElementById('merge-bg').classList.remove('open');mergeFiles=[];}
-function loadMergeFiles(fl){const cols=AC;Array.from(fl).forEach(file=>{const r=new FileReader();r.onload=e=>{try{const p=JSON.parse(e.target.result);if(!p.data){showToast('Ungültige Datei');return;}mergeFiles.push(p);const i=mergeFiles.length-1;const c=cols[i%cols.length];const el=document.getElementById('merge-fl');const div=document.createElement('div');div.className='mfile';div.innerHTML=`<span style="width:8px;height:8px;border-radius:50%;background:${c};flex-shrink:0;display:inline-block"></span><span style="flex:1;font-weight:500;font-size:12px">${file.name}</span><span style="color:var(--tx3);font-size:11px">${p.data.length} Bs</span><button onclick="rmMerge(${i})" style="background:none;border:none;cursor:pointer;color:var(--red)">✕</button>`;el.appendChild(div);if(mergeFiles.length>=2)prevMerge();}catch(ex){showToast('Fehler: '+ex.message);}};r.readAsText(file);});document.getElementById('merge-inp').value='';}
-function rmMerge(idx){mergeFiles.splice(idx,1);document.getElementById('merge-fl').innerHTML='';const tmp=[...mergeFiles];mergeFiles=[];tmp.forEach((p,i2)=>{const div=document.createElement('div');div.className='mfile';div.innerHTML=`<span style="flex:1;font-size:12px;font-weight:500">${p.savedAt?fd(p.savedAt.split('T')[0]):'Datei'}</span><span style="color:var(--tx3);font-size:11px">${p.data.length} Bs</span><button onclick="rmMerge(${i2})" style="background:none;border:none;cursor:pointer;color:var(--red)">✕</button>`;document.getElementById('merge-fl').appendChild(div);mergeFiles.push(p);});if(mergeFiles.length>=2)prevMerge();else{document.getElementById('merge-prev').style.display='none';document.getElementById('merge-go').disabled=true;}}
-function mergeAll(ds){const map2={};let u=0,a=0;ds[0].forEach(e=>{const k=e.psp&&e.psp.length>3?e.psp:normA(e.addr);map2[k]={...e};});for(let i=1;i<ds.length;i++){ds[i].forEach(e=>{const k=e.psp&&e.psp.length>3?e.psp:normA(e.addr);if(map2[k]){const ex=map2[k];const sameAddr=normA(ex.addr)===normA(e.addr);if(!sameAddr){map2[k+':'+e.id]={...e};a++;return;}const dA=ex.lastAudit?new Date(ex.lastAudit).getTime():0,dB=e.lastAudit?new Date(e.lastAudit).getTime():0;if(dB>dA){map2[k]={...ex,lastAudit:e.lastAudit,lastKW:e.lastKW,auditor:e.auditor};u++;}if(!e.active)map2[k].active=false;if(e.paused)map2[k].paused=true;if(e.note&&!ex.note)map2[k].note=e.note;}else{map2[k]={...e};a++;}});}return{result:Object.values(map2),u,a};}
-function mergePlans(sets){const c=[];sets.forEach(ps=>(ps||[]).forEach(p=>{if(!c.some(x=>x.bsId===p.bsId&&x.date===p.date&&x.auditor===p.auditor))c.push(p);}));return c.sort((a,b)=>a.date.localeCompare(b.date));}
-function prevMerge(){const{result,u,a}=mergeAll(mergeFiles.map(f=>f.data));const mp=mergePlans(mergeFiles.map(f=>f.plans||[]));document.getElementById('mp-tot').textContent=result.length;document.getElementById('mp-upd').textContent=u;document.getElementById('mp-new').textContent=a;document.getElementById('mp-pln').textContent=mp.length;document.getElementById('merge-prev').style.display='block';document.getElementById('merge-go').disabled=false;}
-function execMerge(){if(mergeFiles.length<2){showToast('Min. 2 Dateien');return;}const{result,u,a}=mergeAll(mergeFiles.map(f=>f.data));const mp=mergePlans(mergeFiles.map(f=>f.plans||[]));const auds=[...auditors];mergeFiles.forEach(f=>(f.auditors||[]).forEach(x=>{if(!auds.includes(x))auds.push(x);}));const fer=[...ferien];mergeFiles.forEach(f=>(f.ferien||[]).forEach(x=>{if(!fer.some(y=>y.id===x.id))fer.push(x);}));
-// Merge ghostAudits – combine all, deduplicate by date+auditor+kw
-const allGh=[...(window._ghostAudits||[])];mergeFiles.forEach(f=>(f.ghostAudits||[]).forEach(g=>{if(!allGh.some(x=>x.date===g.date&&x.auditor===g.auditor&&x.kw===g.kw))allGh.push(g);}));window._ghostAudits=allGh;
-const allPa=[...personAudits];mergeFiles.forEach(f=>(f.personAudits||[]).forEach(p=>{if(!allPa.some(x=>x.id===p.id))allPa.push(p);}));personAudits=allPa.sort((a,b)=>b.date.localeCompare(a.date));
-data=result;plans=mp;auditors=auds;ferien=fer;log(`Merge (${mergeFiles.length})`,`${result.length} Bs`,'#F59E0B','');saveNow();renderAll();buildSelects();buildDF();buildCalBS();closeMerge();showToast(`✅ ${result.length} Bs · ${u} akt. · ${a} neu`,5000);}
+
+
+
+
+
+
+
+
 // ═══ EXCEL OVERVIEW ═══
 let AUD_CODES=JSON.parse(localStorage.getItem('aud_codes')||'{"Alain Groelly":"AG","René Rottenberger":"RR","Niklaus Meier":"NM","Matthias Knotz":"MK"}');
 function saveAudCodes(){localStorage.setItem('aud_codes',JSON.stringify(AUD_CODES));if(sbConnected)sbPush();}
@@ -7324,7 +6863,7 @@ function renderXL(){
   if(!entries.length){
     document.getElementById('xl-head').innerHTML='';
     document.getElementById('xl-body').innerHTML=`<tr><td colspan="60" style="padding:20px;text-align:center;color:#6B7280">
-      ${data.length===0?'Keine Daten – bitte zuerst Excel importieren oder Backup laden.':'Keine Baustellen für diese Abteilung.'}
+      ${data.length===0?'Keine Daten – Baustelle erfassen oder Backup laden.':'Keine Baustellen für diese Abteilung.'}
     </td></tr>`;
     return;
   }
@@ -7592,18 +7131,7 @@ function exportICSWeek(audFilter,kw){
   showToast(`📅 KW ${curKW} (${events.length} Termine) → Outlook`,2500);
 }
 
-function exportICSDay_old(){
-  // Export today's planned audits as a single calendar event
-  const tod=today();
-  const dayPlans=plans.filter(p=>p.date===tod);
-  if(!dayPlans.length){showToast('Keine Planungen für heute');return;}
-  const items=dayPlans.map(p=>{const e=data.find(x=>x.id===p.bsId);return e?{name:e.name,addr:e.addr||'',dept:e.dept||'',auditor:p.auditor}:null;}).filter(Boolean);
-  const auditor=items[0]?.auditor||'Auditor';
-  const addrs=items.map(i=>i.addr).filter(Boolean);
-  const event={date:tod,title:`Audit-Route ${new Date().toLocaleDateString('de-CH',{weekday:'short',day:'2-digit',month:'2-digit'})} – ${auditor} (${items.length} Baustellen)`,items,addrs};
-  dlICS(makeICS([event]),`audit_route_${tod}.ics`);
-  showToast('📅 Tagesroute → Outlook geöffnet',2500);
-}
+
 
 // exportICSWeek with audFilter defined above
 
@@ -7721,7 +7249,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 <!-- BERAT DONE UNDO POPUP -->
 <div id="berat-done-undo-bg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:4000;align-items:center;justify-content:center" onclick="this.style.display='none'">
   <div style="background:var(--sf);border-radius:12px;padding:20px;width:320px;box-shadow:0 20px 60px rgba(0,0,0,.3)" onclick="event.stopPropagation()">
-    <h3 style="font-size:14px;font-weight:700;color:var(--tx);margin-bottom:4px">💬 Beratung</h3>
+    <h3 style="font-size:14px;font-weight:700;color:var(--tx);margin-bottom:4px"><i class="ti ti-message-circle" style="color:#8B5CF6"></i> Beratung</h3>
     <div id="berat-done-undo-info" style="font-size:11px;color:var(--tx2);margin-bottom:16px"></div>
     <div style="display:flex;gap:8px;justify-content:flex-end">
       <button onclick="document.getElementById('berat-done-undo-bg').style.display='none'" style="padding:8px 16px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf2);cursor:pointer;font-size:12px;color:var(--tx)">Schliessen</button>
@@ -7821,7 +7349,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 <!-- SAMMELBOX MODAL: eigenständiger Bereich für zurückgestellte unbekannte Baustellen aus dem Import -->
 <div id="pisb-bg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:4000;align-items:center;justify-content:center">
   <div style="background:var(--sf);border-radius:12px;padding:24px;width:600px;max-width:95vw;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)">
-    <h3 style="font-size:15px;font-weight:700;color:var(--tx);margin-bottom:8px">📥 Sammelbox</h3>
+    <h3 style="font-size:15px;font-weight:700;color:var(--tx);margin-bottom:8px"><i class="ti ti-inbox" style="color:var(--blue)"></i> Sammelbox</h3>
     <p style="font-size:12px;color:var(--tx2);margin-bottom:12px">Unbekannte Baustellen, die du beim Personal-Import zurückgestellt hast. Wird über Supabase mit dem Team synchronisiert.</p>
     <details style="margin-bottom:16px;font-size:11px;color:var(--tx3)">
       <summary style="cursor:pointer;color:var(--blue)">Einmaliges Setup nötig? (falls Sammelbox nicht synct)</summary>
@@ -7843,7 +7371,7 @@ ALTER TABLE audit_state ADD COLUMN IF NOT EXISTS "rapporte" text;</pre>
 <!-- RAPPORT-ARTEN VERWALTEN -->
 <div id="rpt-bg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:4000;align-items:center;justify-content:center">
   <div style="background:var(--sf);border-radius:12px;padding:24px;width:520px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)">
-    <h3 style="font-size:15px;font-weight:700;color:var(--tx);margin-bottom:6px">📋 Rapport-Arten verwalten</h3>
+    <h3 style="font-size:15px;font-weight:700;color:var(--tx);margin-bottom:6px"><i class="ti ti-clipboard-list" style="color:var(--blue)"></i> Rapport-Arten verwalten</h3>
     <p style="font-size:11px;color:var(--tx3);margin-bottom:12px">Diese Arten stehen beim Planen und Bearbeiten von Rapporten zur Auswahl. Name ändern = umbenennen (bestehende Termine werden mitgezogen). Löschen nur, wenn kein Termin die Art verwendet. Die oberste Art ist die Vorauswahl. Änderungen werden sofort gespeichert.</p>
     <div id="rpt-list" style="border:1px solid var(--bd);border-radius:var(--rs);margin-bottom:12px"></div>
     <div style="display:flex;gap:8px;margin-bottom:14px">
@@ -7858,7 +7386,7 @@ ALTER TABLE audit_state ADD COLUMN IF NOT EXISTS "rapporte" text;</pre>
 <!-- RAPPORT BEARBEITEN -->
 <div id="rpe-bg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:4100;align-items:center;justify-content:center" onclick="if(event.target===this)this.style.display='none'">
   <div style="background:var(--sf);border-radius:12px;padding:20px;width:560px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)">
-    <h3 id="rpe-title" style="font-size:15px;font-weight:700;color:var(--tx);margin-bottom:12px">📋 Rapport bearbeiten</h3>
+    <h3 style="font-size:15px;font-weight:700;color:var(--tx);margin-bottom:12px"><i class="ti ti-clipboard-list" style="color:var(--blue)"></i> <span id="rpe-title">Rapport bearbeiten</span></h3>
     <div class="frow" style="flex-wrap:wrap">
       <div><label>Art</label><select id="rpe-type"></select></div>
       <div><label>Datum</label><input type="date" id="rpe-date"></div>
@@ -7895,7 +7423,7 @@ ALTER TABLE audit_state ADD COLUMN IF NOT EXISTS "rapporte" text;</pre>
      global angehängt, damit nicht mehr aktive temporäre Nummern auch wieder verschwinden. -->
 <div id="tw-bg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:4000;align-items:center;justify-content:center">
   <div style="background:var(--sf);border-radius:12px;padding:24px;width:640px;max-width:95vw;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)">
-    <h3 style="font-size:15px;font-weight:700;color:var(--tx);margin-bottom:8px">👤 Temporäre Mitarbeitende</h3>
+    <h3 style="font-size:15px;font-weight:700;color:var(--tx);margin-bottom:8px"><i class="ti ti-user-question" style="color:var(--blue)"></i> Temporäre Mitarbeitende</h3>
     <p style="font-size:12px;color:var(--tx2);margin-bottom:12px">Aus dem letzten Personal-Import pro Einheit. Wird bei jedem neuen Import für die jeweilige Einheit automatisch ersetzt (kein Verlauf, immer aktueller Stand). Bewusst nur die Personal-Nr, keine Namen (Datenschutz).</p>
     <table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:14px">
       <thead><tr style="text-align:left;border-bottom:1px solid var(--bd)">
@@ -7911,32 +7439,12 @@ ALTER TABLE audit_state ADD COLUMN IF NOT EXISTS "rapporte" text;</pre>
   </div>
 </div>
 </div>
-<!-- IB/ASP IMPORT MODAL -->
-<div id="ib-bg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:4000;align-items:center;justify-content:center">
-  <div style="background:var(--sf);border-radius:12px;padding:24px;width:640px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)">
-    <h3 style="font-size:15px;font-weight:700;color:var(--tx);margin-bottom:8px"><i class="ti ti-file-upload" style="color:var(--blue)"></i> IB/ASP Personen-Audits importieren</h3>
-    <p style="font-size:12px;color:var(--tx2);margin-bottom:16px">Importiert Audits aus den Reitern «14 IB» und «15 ASP» – nur durchgeführte (XX). Gleicht Namen mit dem Personen-Register ab.</p>
-    <div style="margin-bottom:12px">
-      <label style="font-size:11px;font-weight:600;color:var(--tx2);display:block;margin-bottom:4px">Excel-Datei wählen</label>
-      <input type="file" id="ib-file" accept=".xlsx,.xls" onchange="previewIBImport(this)" style="width:100%;padding:8px;border:1px solid var(--bd);border-radius:var(--rs);background:var(--sf2);color:var(--tx);font-size:12px">
-    </div>
-    <div id="ib-preview" style="display:none">
-      <div style="font-size:12px;font-weight:600;color:var(--tx);margin-bottom:8px">Vorschau:</div>
-      <div id="ib-matched" style="margin-bottom:10px"></div>
-      <div id="ib-unmatched" style="margin-bottom:16px"></div>
-      <div style="display:flex;gap:8px;justify-content:flex-end">
-        <button onclick="document.getElementById('ib-bg').style.display='none'" style="padding:8px 16px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf2);cursor:pointer;font-size:12px;color:var(--tx)">Abbrechen</button>
-        <button onclick="confirmIBImport()" id="ib-confirm-btn" style="padding:8px 16px;border-radius:var(--rs);border:none;background:#10B981;color:#fff;cursor:pointer;font-size:12px;font-weight:600">✓ Importieren</button>
-      </div>
-    </div>
-    <div id="ib-loading" style="display:none;text-align:center;padding:20px;color:var(--tx2);font-size:13px">Datei wird verarbeitet...</div>
-  </div>
-</div>
+
 
 <!-- RESET CONFIRM MODAL -->
 <div id="reset-bg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:4000;align-items:center;justify-content:center">
   <div style="background:var(--sf);border-radius:12px;padding:28px;width:360px;box-shadow:0 20px 60px rgba(0,0,0,.4)">
-    <h3 style="font-size:15px;font-weight:700;color:#EF4444;margin-bottom:8px">⚠️ Alles zurücksetzen</h3>
+    <h3 style="font-size:15px;font-weight:700;color:#EF4444;margin-bottom:8px"><i class="ti ti-alert-triangle" style="color:#EF4444"></i> Alles zurücksetzen</h3>
     <p style="font-size:13px;color:var(--tx2);margin-bottom:20px">Alle Baustellen, Planungen und Audits werden <strong>unwiderruflich gelöscht</strong> – lokal und in Supabase.</p>
     <div style="display:flex;gap:8px">
       <button onclick="document.getElementById('reset-bg').style.display='none'" style="flex:1;padding:10px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf2);cursor:pointer;font-size:13px;color:var(--tx)">Abbrechen</button>
