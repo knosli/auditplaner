@@ -361,7 +361,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
   <div id="presence-bar" style="display:flex;align-items:center;gap:4px;margin-left:4px"></div>
   <button onclick="toggleDark()" class="hb" title="Dark Mode" style="font-size:14px">🌙</button>
   <button onclick="openGuide()" class="hb" title="Anleitung" style="font-size:14px">❓</button>
-  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.67</span>
+  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.68</span>
   <button onclick="doLogout()" class="hb" title="Abmelden" style="font-size:14px" id="logout-btn">⏻</button>
   <button onclick="toggleMobileView()" id="mobile-btn" class="hb" title="Mobile Ansicht" style="font-size:14px">📱</button>
   <div id="more-w" class="admin-only">
@@ -1220,19 +1220,26 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
 
 <!-- MARKER ADJUST MODAL -->
 <div id="marker-adj-bg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:5500;align-items:center;justify-content:center">
-  <div style="background:var(--sf);border-radius:12px;padding:0;width:700px;max-width:97vw;max-height:94vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.4);overflow:hidden">
-    <div style="padding:14px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--bd)">
-      <div>
-        <div style="font-size:14px;font-weight:700;color:var(--tx)">📍 Marker manuell setzen</div>
-        <div style="font-size:11px;color:var(--tx2);margin-top:2px">Klick auf die Karte um den Marker zu setzen</div>
+  <div style="background:var(--sf);border-radius:12px;padding:0;width:820px;max-width:97vw;height:92vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.4);overflow:hidden">
+    <div style="padding:12px 16px;border-bottom:1px solid var(--bd)">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px">
+        <div>
+          <div style="font-size:14px;font-weight:700;color:var(--tx)">📍 Marker setzen / verschieben</div>
+          <div id="marker-adj-name" style="font-size:11px;color:var(--tx2);margin-top:2px"></div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span id="marker-adj-coords" style="font-size:11px;color:var(--tx3)"></span>
+          <button onclick="confirmMarkerAdj()" style="padding:7px 14px;border-radius:var(--rs);border:none;background:#10B981;color:#fff;cursor:pointer;font-size:12px;font-weight:600">✓ Übernehmen</button>
+          <button onclick="document.getElementById('marker-adj-bg').style.display='none'" style="padding:7px 12px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf2);cursor:pointer;font-size:12px;color:var(--tx)">Abbrechen</button>
+        </div>
       </div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <span id="marker-adj-coords" style="font-size:11px;color:var(--tx3)"></span>
-        <button onclick="confirmMarkerAdj()" style="padding:7px 14px;border-radius:var(--rs);border:none;background:#10B981;color:#fff;cursor:pointer;font-size:12px;font-weight:600">✓ Übernehmen</button>
-        <button onclick="document.getElementById('marker-adj-bg').style.display='none'" style="padding:7px 12px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf2);cursor:pointer;font-size:12px;color:var(--tx)">Abbrechen</button>
+      <div style="position:relative">
+        <input id="marker-adj-search" type="text" placeholder="🔍 Adresse suchen (Strasse Nr, PLZ Ort) – der Marker springt dorthin, danach nur noch feinjustieren" autocomplete="off" oninput="adjSearch(this.value)" style="width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid var(--bd);border-radius:var(--rs);background:var(--sf2);color:var(--tx);font-size:12px">
+        <div id="marker-adj-sugg" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--sf);border:1px solid var(--bd);border-radius:var(--rs);z-index:9999;max-height:220px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.2)"></div>
       </div>
+      <div style="font-size:10px;color:var(--tx3);margin-top:6px">Marker <b>ziehen</b> zum Verschieben · <b>Doppelklick</b> auf die Karte setzt ihn dorthin · Mausrad zum Zoomen · Luftbild-Umschalter unten rechts</div>
     </div>
-    <div id="marker-adj-map" style="flex:1;min-height:450px"></div>
+    <div id="marker-adj-map" style="flex:1;min-height:300px"></div>
   </div>
 </div>
 <!-- BERAT PLAN POPUP -->
@@ -1765,13 +1772,18 @@ function renderList(){
   const df=document.getElementById('dsel')?.value||'';
   const sf=document.getElementById('stsel')?.value||'';
   let list=[...data];
+  // Übersichtsmodus: sobald gesucht oder eine Abteilung gewählt ist (ohne Status-Einschränkung), zeigt die
+  // Liste ALLE Baustellen dazu - aktive nach Dringlichkeit, dann pausierte, dann inaktive.
+  const overview=!!(q||df)&&!sf&&statFilters.size===0;
   // Default: show active non-paused (unless stat filter shows paused/inactive)
-  if(statFilters.size===0)list=list.filter(e=>e.active&&!e.paused);
+  if(statFilters.size===0&&!overview)list=list.filter(e=>e.active&&!e.paused);
   if(q){
     // When searching: include ALL baustellen (paused, inactive too)
     list=data.filter(e=>(e.name+(e.addr||'')+(e.dept||'')+(e.psp||'')+(e.sap||'')+(e.prv||'')+(e.bc||'')).toLowerCase().includes(q));
+    if(df)list=list.filter(e=>deptParts(e.dept).includes(df));
+    if(sf)list=list.filter(e=>status(e)===sf);
   } else {
-    if(df)list=list.filter(e=>(e.dept||'').includes(df));
+    if(df)list=list.filter(e=>deptParts(e.dept).includes(df));
     if(sf)list=list.filter(e=>status(e)===sf);
     if(statFilters.size>0){
       list=list.filter(e=>{
@@ -1782,11 +1794,20 @@ function renderList(){
       if(df)list=list.filter(e=>(e.dept||'').includes(df));
     }
   }
-  list.sort((a,b)=>dl(a)-dl(b));
+  // Sortierung: aktiv (rot, orange, gelb, grün/ok, blau=geplant, violett=neu) -> pausiert -> inaktiv
+  const _grp=e=>!e.active?2:e.paused?1:0;
+  const _ord={overdue:0,due:1,soon:2,ok:3,planned:4,beratung:4,new:5};
+  if(overview){
+    list.sort((a,b)=>{
+      const ga=_grp(a),gb=_grp(b);if(ga!==gb)return ga-gb;
+      if(ga===0){const oa=_ord[status(a)]??3,ob=_ord[status(b)]??3;if(oa!==ob)return oa-ob;}
+      return dl(a)-dl(b)||a.name.localeCompare(b.name);
+    });
+  }else list.sort((a,b)=>dl(a)-dl(b));
   if(!data.length){document.getElementById('bslist').innerHTML=`<div class="empty-s"><h3>Keine Baustellen</h3><p>Excel importieren oder manuell hinzufügen.</p></div>`;return;}
   const tc={overdue:'tov',due:'tdu',soon:'tsn',ok:'tok',new:'tnew',paused:'tpa',inactive:'tin',planned:'tpl',beratung:'tpl'};
   const sl=e=>{const s=status(e);if(s==='planned'){const p=plans.filter(x=>x.bsId===e.id&&x.date>=today()).sort((a,b)=>a.date.localeCompare(b.date))[0];return p?`KW ${dateToKW(p.date)}`:'Geplant';}if(s==='overdue')return`${Math.abs(dl(e))-10}T überfällig`;if(s==='due')return`${Math.abs(dl(e))}T über`;if(s==='soon')return`in ${dl(e)}T`;if(s==='new')return'Neu – kein Audit';if(s==='beratung')return'Beratung geplant';if(s==='paused')return'Pausiert';if(s==='inactive')return'Inaktiv';return`in ${dl(e)}T`;};
-  document.getElementById('bslist').innerHTML=list.map(e=>{
+  const _cardHTML=e=>{
     const s=status(e),ip=planned.has(e.id);
     const chk=(planMode||multiPlanMode||multiAuditMode)&&e.active&&!e.paused?`<div class="pchk${ip?' on':''}" onclick="togPI(event,${e.id})">${ip?'✓':''}</div>`:'';
     return`<div class="bsc${selId===e.id?' sel':''}${ip?' rsel':''}${!e.active?' inact':''}${e.paused?' paused':''}" onclick="selEntry(${e.id})">
@@ -1804,7 +1825,16 @@ function renderList(){
         </div>
       </div></div>
     </div>`;
-  }).join('')||`<div style="padding:12px;font-size:11px;color:var(--tx3);text-align:center">Keine Einträge.</div>`;
+  };
+  let _html='';
+  if(overview){
+    const cnt=[0,0,0];list.forEach(x=>cnt[_grp(x)]++);
+    const heads=[['🟢 Aktiv – nach Dringlichkeit','#10B981'],['⏸ Pausiert','#94A3B8'],['⛔ Inaktiv','#64748B']];
+    let last=-1;
+    list.forEach(x=>{const g=_grp(x);if(g!==last){last=g;_html+=`<div style="position:sticky;top:0;z-index:2;background:var(--sf);padding:6px 10px;font-size:11px;font-weight:700;color:${heads[g][1]};border-bottom:1px solid var(--bd)">${heads[g][0]} (${cnt[g]})</div>`;}_html+=_cardHTML(x);});
+    _html=`<div style="padding:6px 10px;font-size:11px;color:var(--tx2);background:var(--sf2);border-bottom:1px solid var(--bd)">📋 Übersicht: ${list.length} Baustellen${df?' · '+escH(df):''}${q?' · «'+escH(q)+'»':''}</div>`+_html;
+  }else _html=list.map(_cardHTML).join('');
+  document.getElementById('bslist').innerHTML=_html||`<div style="padding:12px;font-size:11px;color:var(--tx3);text-align:center">Keine Einträge.</div>`;
 }
 // ═══ STATS ═══
 function updateStats(){
@@ -4182,7 +4212,7 @@ function setPAImportMode(){
   },100);
 }
 function openImport(){editId=null;document.getElementById('m-title').textContent='Excel importieren';document.getElementById('form-s').style.display='none';document.getElementById('imp-s').style.display='block';document.getElementById('json-s').style.display='none';document.getElementById('m-save').style.display='none';document.getElementById('impst').textContent='';document.getElementById('mbg').classList.add('open');}
-function openAdd(){editId=null;window._pendingLat=null;window._pendingLng=null;document.getElementById('m-title').textContent='Neue Baustelle';document.getElementById('form-s').style.display='block';document.getElementById('imp-s').style.display='none';document.getElementById('json-s').style.display='none';document.getElementById('m-save').style.display='';['f-name','f-addr','f-psp','f-sap','f-prv','f-bc','f-note'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});fillFDept('');document.getElementById('f-rh').value='28';document.getElementById('f-last').value='';document.getElementById('f-type').value='baustelle';document.getElementById('addr-suggestions').style.display='none';const hint=document.getElementById('f-addr-hint');if(hint)hint.textContent='';document.getElementById('mbg').classList.add('open');}
+function openAdd(){editId=null;window._pendingLat=null;window._pendingLng=null;{const la=document.getElementById('f-lat'),ln=document.getElementById('f-lng');if(la)la.value='';if(ln)ln.value='';}document.getElementById('m-title').textContent='Neue Baustelle';document.getElementById('form-s').style.display='block';document.getElementById('imp-s').style.display='none';document.getElementById('json-s').style.display='none';document.getElementById('m-save').style.display='';['f-name','f-addr','f-psp','f-sap','f-prv','f-bc','f-note'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});fillFDept('');document.getElementById('f-rh').value='28';document.getElementById('f-last').value='';document.getElementById('f-type').value='baustelle';document.getElementById('addr-suggestions').style.display='none';const hint=document.getElementById('f-addr-hint');if(hint)hint.textContent='';document.getElementById('mbg').classList.add('open');}
 function openEdit(id){
   // Reset manual marker
   const latEl=document.getElementById('f-lat');
@@ -4190,7 +4220,6 @@ function openEdit(id){
   if(latEl)latEl.value='';
   if(lngEl)lngEl.value='';
   document.getElementById('f-addr-hint').textContent='';
-  if(_adjMarker&&_adjMap){_adjMap.removeLayer(_adjMarker);_adjMarker=null;_adjLat=null;_adjLng=null;}
   const e=data.find(x=>x.id===id);if(!e)return;
   editId=id;window._pendingLat=null;window._pendingLng=null;
   document.getElementById('m-title').textContent='Bearbeiten';
@@ -4557,48 +4586,87 @@ function confirmDistribute(){
 
 
 
+// ═══ MARKER SETZEN / VERSCHIEBEN ═══
+// Adresse suchen -> Marker springt dorthin und ist sofort sichtbar/ziehbar. Karte wird bei jedem Öffnen
+// neu auf die aktuelle Baustelle (bzw. das Formular) ausgerichtet. Nur Ziehen oder Doppelklick setzen um,
+// ein einfacher Klick verschiebt nichts mehr versehentlich.
+let _adjTimer=null;
+function adjSetMarker(lat,lng,zoom){
+  _adjLat=lat;_adjLng=lng;
+  if(_adjMarker){_adjMarker.setLatLng([lat,lng]);}
+  else{
+    _adjMarker=L.marker([lat,lng],{draggable:true,autoPan:true}).addTo(_adjMap);
+    _adjMarker.on('dragend',ev=>{const p=ev.target.getLatLng();_adjLat=p.lat;_adjLng=p.lng;updAdjCoords();});
+  }
+  if(zoom)_adjMap.setView([lat,lng],zoom);
+  updAdjCoords();
+}
 function openMarkerAdjust(){
   document.getElementById('marker-adj-bg').style.display='flex';
+  const e=editId?data.find(x=>x.id===editId):null;
+  const fLat=parseFloat(document.getElementById('f-lat')?.value),fLng=parseFloat(document.getElementById('f-lng')?.value);
+  const pendLat=window._pendingLat,pendLng=window._pendingLng;
+  // Reihenfolge: manuell im Formular gesetzt > per Adresse gefunden > gespeicherte Baustelle
+  let cur=null;
+  if(fLat&&fLng)cur=[fLat,fLng];
+  else if(pendLat&&pendLng)cur=[pendLat,pendLng];
+  else if(e&&e.lat&&e.lng)cur=[e.lat,e.lng];
+  const name=(document.getElementById('f-name')?.value||'').trim()||(e?e.name:'Neue Baustelle');
+  const addr=(document.getElementById('f-addr')?.value||'').trim()||(e?e.addr||'':'');
+  document.getElementById('marker-adj-name').textContent=[name,addr].filter(Boolean).join(' · ');
+  const search=document.getElementById('marker-adj-search');
+  search.value=addr;document.getElementById('marker-adj-sugg').style.display='none';
   setTimeout(()=>{
     if(!_adjMap){
-      // Get current coords from form if available
-      const curLat=parseFloat(document.getElementById('f-lat')||0);
-      const curLng=parseFloat(document.getElementById('f-lng')||0);
-      const startLat=(curLat&&curLng)?curLat:47.05;
-      const startLng=(curLat&&curLng)?curLng:8.3;
-      _adjMap=L.map('marker-adj-map').setView([startLat,startLng],15);
-      L.tileLayer('https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.pixelkarte-farbe/default/current/3857/{z}/{x}/{y}.jpeg',{attribution:'© swisstopo',maxZoom:19}).addTo(_adjMap);
-      // If current entry has coords, show marker there
-      if(editId){
-        const e=data.find(x=>x.id===editId);
-        if(e&&e.lat&&e.lng){
-          _adjLat=e.lat;_adjLng=e.lng;
-          _adjMarker=L.marker([e.lat,e.lng],{draggable:true}).addTo(_adjMap);
-          _adjMap.setView([e.lat,e.lng],16);
-          _adjMarker.on('dragend',function(ev){const p=ev.target.getLatLng();_adjLat=p.lat;_adjLng=p.lng;updAdjCoords();});
-        }
-      }
-      _adjMap.on('click',function(ev){
-        _adjLat=ev.latlng.lat;_adjLng=ev.latlng.lng;
-        if(_adjMarker)_adjMap.removeLayer(_adjMarker);
-        _adjMarker=L.marker([_adjLat,_adjLng],{draggable:true}).addTo(_adjMap);
-        _adjMarker.on('dragend',function(e2){const p=e2.target.getLatLng();_adjLat=p.lat;_adjLng=p.lng;updAdjCoords();});
-        updAdjCoords();
-      });
-    } else {
-      _adjMap.invalidateSize();
+      _adjMap=L.map('marker-adj-map',{doubleClickZoom:false}).setView([46.85,8.2],8);
+      const base=L.tileLayer('https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.pixelkarte-farbe/default/current/3857/{z}/{x}/{y}.jpeg',{attribution:'© swisstopo',maxZoom:19});
+      const air=L.tileLayer('https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.swissimage/default/current/3857/{z}/{x}/{y}.jpeg',{attribution:'© swisstopo',maxZoom:19});
+      base.addTo(_adjMap);
+      L.control.layers({'Karte':base,'Luftbild':air},null,{position:'bottomright'}).addTo(_adjMap);
+      _adjMap.on('dblclick',ev=>adjSetMarker(ev.latlng.lat,ev.latlng.lng));
     }
-  },200);
+    _adjMap.invalidateSize();
+    if(_adjMarker){_adjMap.removeLayer(_adjMarker);_adjMarker=null;}
+    _adjLat=_adjLng=null;
+    if(cur){adjSetMarker(cur[0],cur[1],17);}
+    else{_adjMap.setView([46.85,8.2],8);updAdjCoords();
+      if(addr.length>4)adjGeocodeFirst(addr);}
+    search.focus();search.select();
+  },150);
 }
-
+async function adjGeocodeFirst(q){
+  try{
+    const r=await fetch(`https://api3.geo.admin.ch/rest/services/api/SearchServer?searchText=${encodeURIComponent(q)}&type=locations&limit=1&sr=4326&lang=de`);
+    const d=await r.json();const a=d.results&&d.results[0]&&d.results[0].attrs;
+    if(a&&a.lat)adjSetMarker(a.lat,a.lon,17);
+  }catch(e){}
+}
+function adjSearch(q){
+  clearTimeout(_adjTimer);
+  const box=document.getElementById('marker-adj-sugg');
+  if(!q||q.trim().length<3){box.style.display='none';return;}
+  _adjTimer=setTimeout(async()=>{
+    try{
+      const r=await fetch(`https://api3.geo.admin.ch/rest/services/api/SearchServer?searchText=${encodeURIComponent(q)}&type=locations&limit=8&sr=4326&lang=de`);
+      const d=await r.json();
+      const hits=(d.results||[]).filter(x=>x.attrs&&x.attrs.lat);
+      if(!hits.length){box.innerHTML='<div style="padding:8px 10px;font-size:12px;color:var(--tx3)">Keine Treffer</div>';box.style.display='block';return;}
+      box.innerHTML=hits.map(h=>{const lbl=(h.attrs.label||'').replace(/<[^>]+>/g,'');return`<div data-lat="${h.attrs.lat}" data-lng="${h.attrs.lon}" data-lbl="${escH(lbl)}" onmousedown="adjPick(this)" style="padding:8px 10px;font-size:12px;color:var(--tx);cursor:pointer;border-bottom:1px solid var(--bd)">${escH(lbl)}</div>`;}).join('');
+      box.style.display='block';
+    }catch(e){box.style.display='none';}
+  },300);
+}
+function adjPick(el){
+  document.getElementById('marker-adj-search').value=el.dataset.lbl;
+  document.getElementById('marker-adj-sugg').style.display='none';
+  adjSetMarker(parseFloat(el.dataset.lat),parseFloat(el.dataset.lng),18);
+}
 function updAdjCoords(){
   const el=document.getElementById('marker-adj-coords');
-  if(el&&_adjLat&&_adjLng)el.textContent=_adjLat.toFixed(5)+', '+_adjLng.toFixed(5);
+  if(el)el.textContent=(_adjLat&&_adjLng)?_adjLat.toFixed(5)+', '+_adjLng.toFixed(5):'noch kein Marker';
 }
-
 function confirmMarkerAdj(){
-  if(!_adjLat||!_adjLng){showToast('Bitte zuerst einen Punkt auf der Karte wählen',2500);return;}
-  // Store in hidden fields for form
+  if(!_adjLat||!_adjLng){showToast('Bitte zuerst eine Adresse suchen oder Doppelklick auf die Karte',3000);return;}
   let latEl=document.getElementById('f-lat');
   let lngEl=document.getElementById('f-lng');
   if(!latEl){latEl=document.createElement('input');latEl.id='f-lat';latEl.type='hidden';document.getElementById('f-addr').parentNode.appendChild(latEl);}
@@ -4606,7 +4674,7 @@ function confirmMarkerAdj(){
   latEl.value=_adjLat;lngEl.value=_adjLng;
   document.getElementById('marker-adj-bg').style.display='none';
   document.getElementById('f-addr-hint').textContent='📍 Koordinaten manuell gesetzt';
-  showToast('✓ Marker-Position gespeichert',2000);
+  showToast('✓ Marker-Position übernommen – jetzt Speichern',2500);
 }
 
 function openBeratungChoice(){
