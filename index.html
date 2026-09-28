@@ -361,7 +361,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
   <div id="presence-bar" style="display:flex;align-items:center;gap:4px;margin-left:4px"></div>
   <button onclick="toggleDark()" class="hb" title="Dark Mode" style="font-size:14px">🌙</button>
   <button onclick="openGuide()" class="hb" title="Anleitung" style="font-size:14px">❓</button>
-  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.63</span>
+  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.65</span>
   <button onclick="doLogout()" class="hb" title="Abmelden" style="font-size:14px" id="logout-btn">⏻</button>
   <button onclick="toggleMobileView()" id="mobile-btn" class="hb" title="Mobile Ansicht" style="font-size:14px">📱</button>
   <div id="more-w" class="admin-only">
@@ -2390,7 +2390,7 @@ function buildAudSels(){
   setTimeout(prefillAuditor,50);
 }
 function buildAudPASel(){const o='<option value="">—</option>'+auditors.map(a=>`<option>${a}</option>`).join('');const el=document.getElementById('pa-aud');if(el)el.innerHTML=o;}
-function buildCalBS(){const s=document.getElementById('cal-bs');if(!s)return;const c=s.value;s.innerHTML='<option value="">Baustelle…</option>'+data.filter(e=>e.active&&!e.paused).sort((a,b)=>a.name.localeCompare(b.name)).map(e=>`<option value="${e.id}">${e.type==='werkhof'?'🏠 ':''}${e.name}</option>`).join('');if(c)s.value=c;}
+function buildCalBS(){const s=document.getElementById('cal-bs');if(!s)return;const c=s.value;s.innerHTML='<option value="">Baustelle…</option>'+data.filter(e=>e.active&&!e.paused).sort((a,b)=>(a.dept||'').localeCompare(b.dept||'')||(a.psp||'~').localeCompare(b.psp||'~')||a.name.localeCompare(b.name)).map(e=>`<option value="${e.id}">${e.type==='werkhof'?'🏠 ':''}${escH(bsLabelText(e))}</option>`).join('');if(c)s.value=c;}
 // ═══ AUDITOREN ═══
 function renderAudCodes(){
   const el=document.getElementById('aud-codes-list');if(!el)return;
@@ -2954,7 +2954,7 @@ function renderPA2(){
   // Sync pa-bs2: Datalist mit aktiven, nicht pausierten Baustellen (Freitext bleibt trotzdem möglich)
   const bsList=document.getElementById('pa-bs2-list');
   if(bsList){
-    bsList.innerHTML=data.filter(e=>e.active&&!e.paused).sort((a,b)=>a.name.localeCompare(b.name)).map(e=>`<option value="${e.name.replace(/"/g,'&quot;')}">`).join('');
+    bsList.innerHTML=data.filter(e=>e.active&&!e.paused).sort((a,b)=>a.name.localeCompare(b.name)).map(e=>`<option value="${e.name.replace(/"/g,'&quot;')}" label="${escH([e.psp,e.dept].filter(Boolean).join(' · '))}">${escH([e.psp,e.dept].filter(Boolean).join(' · '))}</option>`).join('');
   }
   const el=document.getElementById('pa-list2');if(!el)return;
   if(!personAudits.length){el.innerHTML='<div style="font-size:11px;color:var(--tx3);padding:6px">Noch keine Personen-Audits erfasst.</div>';return;}
@@ -5752,6 +5752,68 @@ function unmappedPersonAbts(){
   const vals=[...new Set((typeof persons!=='undefined'?persons:[]).map(p=>(p.abt||'').trim()).filter(Boolean))];
   return vals.filter(v=>!getAllDepts().some(d=>d.toLowerCase()===v.toLowerCase())).sort();
 }
+
+// ═══ FIXIERTE FUSSZEILE IN FENSTERN ═══
+// In langen Fenstern bleibt die Button-Leiste (Speichern/Schliessen/Übernehmen …) am unteren Rand
+// sichtbar, auch beim Scrollen. Erkennt pro Fenster automatisch die letzte reine Button-Leiste.
+function _isBtnBar(x){
+  if(!x||!x.children.length)return false;
+  return[...x.children].every(ch=>ch.tagName==='BUTTON'||((ch.tagName==='DIV'||ch.tagName==='SPAN')&&ch.children.length&&[...ch.children].every(g=>g.tagName==='BUTTON')));
+}
+function stickFooter(box){
+  if(!box||box.dataset.stickyDone)return;
+  const cs=getComputedStyle(box);
+  if(cs.overflowY!=='auto'&&cs.overflowY!=='scroll'){box.style.maxHeight=box.style.maxHeight||'90vh';box.style.overflowY='auto';}
+  let f=box.lastElementChild,guard=0;
+  while(f&&!_isBtnBar(f)&&f.lastElementChild&&guard++<4)f=f.lastElementChild;
+  if(!_isBtnBar(f))return;
+  const pad=parseFloat(getComputedStyle(box).paddingLeft)||20;
+  const padB=parseFloat(getComputedStyle(box).paddingBottom)||pad;
+  Object.assign(f.style,{position:'sticky',bottom:'0',zIndex:'6',background:'var(--sf)',
+    marginLeft:(-pad)+'px',marginRight:(-pad)+'px',marginBottom:(-padB)+'px',
+    paddingLeft:pad+'px',paddingRight:pad+'px',paddingTop:'12px',paddingBottom:'14px',
+    borderTop:'1px solid var(--bd)',boxShadow:'0 -8px 12px -10px rgba(0,0,0,.35)'});
+  box.dataset.stickyDone='1';
+}
+function initStickyFooters(){
+  ['dist-bg','aud-admin-bg','pi-bg','pisb-bg','rpe-bg','tw-bg','dept-bg','ib-bg','guide-bg'].forEach(id=>{
+    const ov=document.getElementById(id);if(ov)stickFooter(ov.firstElementChild);
+  });
+  document.querySelectorAll('.mbg > .modal').forEach(stickFooter);
+}
+document.addEventListener('DOMContentLoaded',()=>setTimeout(initStickyFooters,300));
+// ═══ EINHEITLICHE BAUSTELLEN-BESCHRIFTUNG: PSP · Name · Abteilung ═══
+function escH(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function bsLabelText(e){return[e.psp,e.name,e.dept].filter(Boolean).join(' · ');}
+function bsLabel(e){
+  if(!e)return'';
+  return`${e.psp?`<b style="font-variant-numeric:tabular-nums">${escH(e.psp)}</b> · `:''}${escH(e.name)}${e.dept?` <span style="color:var(--tx3);font-size:11px">· ${escH(e.dept)}</span>`:''}${e.active===false?' <span style="font-size:10px;color:#94A3B8">(inaktiv)</span>':e.paused?' <span style="font-size:10px;color:#94A3B8">(pausiert)</span>':''}`;
+}
+// Listen-Eintrag (aus der Einsatzliste) – PSP · Name · Einheit
+function listLabel(it){return`${it.psp?`<b style="font-variant-numeric:tabular-nums">${escH(it.psp)}</b> · `:''}${escH(it.name)}${it.quelle?` <span style="color:var(--tx3);font-size:11px">· ${escH(it.quelle)}</span>`:''}`;}
+// Auswahlliste aller Baustellen, nach Abteilung gruppiert, Option = «PSP · Name · Abteilung»
+function bsOptionsHTML(){
+  const act=data.filter(e=>e.active!==false),ina=data.filter(e=>e.active===false);
+  const byDept={};act.forEach(e=>{const d=e.dept||'Ohne Abteilung';(byDept[d]=byDept[d]||[]).push(e);});
+  const sortE=(a,b)=>(a.psp||'~').localeCompare(b.psp||'~')||a.name.localeCompare(b.name);
+  return Object.keys(byDept).sort().map(d=>`<optgroup label="${escH(d)}">${byDept[d].sort(sortE).map(e=>`<option value="${e.id}">${escH(bsLabelText(e))}${e.paused?' (pausiert)':''}</option>`).join('')}</optgroup>`).join('')+
+    (ina.length?`<optgroup label="— inaktive Baustellen —">${ina.sort(sortE).map(e=>`<option value="${e.id}">${escH(bsLabelText(e))} (inaktiv)</option>`).join('')}</optgroup>`:'');
+}
+// Suchfeld + Auswahl: Tippen filtert (PSP, Name oder Abteilung, mehrere Wörter); bei genau 1 Treffer wird er gewählt
+function bsPickerHTML(selId,extraStyle){
+  return`<span style="display:inline-flex;flex-direction:column;gap:3px;${extraStyle||''}">
+    <input type="text" placeholder="🔍 PSP, Name oder Abteilung…" oninput="bsFilterSel(this.value,'${selId}')" style="font-size:11px;padding:5px 7px;border:1px solid var(--bd);border-radius:6px;background:var(--sf);color:var(--tx);width:100%;box-sizing:border-box">
+    <select id="${selId}" style="font-size:12px;padding:6px;border-radius:6px;border:1px solid var(--bd);background:var(--sf);color:var(--tx);width:100%"><option value="">— Baustelle wählen —</option>${bsOptionsHTML()}</select>
+  </span>`;
+}
+function bsFilterSel(q,selId){
+  const sel=document.getElementById(selId);if(!sel)return;
+  const toks=q.toLowerCase().split(/\s+/).filter(Boolean);
+  let hits=[];
+  sel.querySelectorAll('option').forEach(o=>{if(!o.value)return;const ok=toks.every(t=>o.textContent.toLowerCase().includes(t)||(o.parentElement.label||'').toLowerCase().includes(t));o.hidden=!ok;if(ok)hits.push(o);});
+  sel.querySelectorAll('optgroup').forEach(g=>{g.hidden=![...g.children].some(o=>!o.hidden);});
+  if(hits.length===1)sel.value=hits[0].value;else if(toks.length&&!hits.some(o=>o.value===sel.value))sel.value='';
+}
 // ═══ PERSONAL-IMPORT: Baustellen, die NICHT auf der Einsatzliste stehen ═══
 // Jede Einsatzliste (quelle) ist einer Planer-Abteilung zugeordnet (automatisch per Name, änderbar).
 // Eine Abteilung wird nur geprüft, wenn ALLE ihr zugeordneten Einsatzlisten im aktuellen Import sind
@@ -5801,8 +5863,7 @@ function piMissingHTML(){
       <div style="font-size:11px;color:var(--tx3);margin-bottom:6px">Aktive Baustellen der geprüften Abteilungen, die auf keiner importierten Liste stehen. Angehakt = wird pausiert (taucht die Baustelle später wieder mit Personal auf einer Liste auf, schlägt der Import die Reaktivierung vor). Neu erfasste, noch nie auditierte Baustellen sind nicht vorausgewählt.</div>
       ${b.missing.map((it,i)=>{const e=it.match.entry;return`<label style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--sf2);border-radius:8px;margin-bottom:4px;font-size:12px;color:var(--tx)">
         <input type="checkbox" data-key="missing" data-idx="${i}" ${it.isNew?'':'checked'}>
-        <span style="flex:1">${e.psp?e.psp+' · ':''}${e.name}${it.isNew?' <span style="font-size:10px;color:#0284C7">(neu, noch nie auditiert)</span>':''}</span>
-        <span style="font-size:10px;color:var(--tx3)">${e.dept||''}</span>
+        <span style="flex:1;min-width:0">${bsLabel(e)}${it.isNew?' <span style="font-size:10px;color:#0284C7">(neu, noch nie auditiert)</span>':''}</span>
       </label>`;}).join('')}
     </div>`;
   }
@@ -6209,7 +6270,7 @@ function piRenderPreview(){
       ${arr.map((it,i)=>`
         <label style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--sf2);border-radius:8px;margin-bottom:4px;font-size:12px;color:var(--tx)">
           <input type="checkbox" ${dc?'checked':''} data-key="${key}" data-idx="${i}">
-          <span style="flex:1">${it.match?it.match.entry.name:(it.name+' — kein Match')}${it.match&&it.match.how==='name'?' <span style="color:var(--tx3);font-size:10px">('+it.match.score+'% Name-Match)</span>':''}${it.match&&it.match.how&&it.match.how.startsWith('alias')?' <span style="color:#3B82F6;font-size:10px">(Alias zugeordnet)</span>':''}</span>
+          <span style="flex:1;min-width:0">${it.match?bsLabel(it.match.entry):(listLabel(it)+' — kein Match')}${it.match&&it.match.how==='name'?' <span style="color:var(--tx3);font-size:10px">('+it.match.score+'% Name-Match)</span>':''}${it.match&&it.match.how&&it.match.how.startsWith('alias')?' <span style="color:#3B82F6;font-size:10px">(Alias zugeordnet)</span>':''}${it.match&&it.match.how!=='psp'?`<div style="font-size:10px;color:var(--tx3);margin-top:1px">📄 Liste: ${listLabel(it)}</div>`:''}</span>
           ${showCount?`<span style="color:var(--tx3)">${it.count} Pers.</span>`:''}
         </label>`).join('')}
     </div>`;
@@ -6226,10 +6287,8 @@ function piRenderPreview(){
   const renderUnknownItem=i=>{
     const it=buckets.unknown[i];
     return`<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--sf2);border-radius:8px;margin-bottom:4px;font-size:12px;color:var(--tx);flex-wrap:wrap">
-      <span style="flex:1;min-width:160px">${it.psp?it.psp+' · ':''}${it.name} <span style="color:var(--tx3)">(${it.count} Pers.)</span></span>
-      <select id="pi-alias-sel-${i}" style="font-size:12px;padding:6px;border-radius:6px;border:1px solid var(--bd);background:var(--sf);color:var(--tx);max-width:280px;flex-shrink:0">
-        <option value="">— Baustelle wählen —</option>${unknownOptions}
-      </select>
+      <span style="flex:1;min-width:200px">📄 ${listLabel(it)} <span style="color:var(--tx3)">(${it.count} Pers.)</span></span>
+      ${bsPickerHTML('pi-alias-sel-'+i,'width:320px;max-width:100%;flex-shrink:0')}
       <button onclick="piResolveUnknown(${i})" style="padding:4px 10px;border-radius:6px;border:none;background:#3B82F6;color:#fff;font-size:11px;cursor:pointer">Zuordnen</button>
       <button onclick="piCreateFromUnknown(${i})" style="padding:4px 10px;border-radius:6px;border:1px solid #10B981;background:transparent;color:#10B981;font-size:11px;cursor:pointer">+ Neue Baustelle</button>
       <button onclick="piCollectUnknown(${i})" style="padding:4px 10px;border-radius:6px;border:1px solid var(--bd);background:transparent;color:var(--tx2);font-size:11px;cursor:pointer">📥 Sammelbox</button>
@@ -6255,7 +6314,7 @@ function piRenderPreview(){
       ${buckets.review.map((it,i)=>`
         <label style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--sf2);border-radius:8px;margin-bottom:4px;font-size:12px;color:var(--tx)">
           <input type="checkbox" data-key="review" data-idx="${i}">
-          <span style="flex:1">${it.match?it.match.entry.name:(it.name+' — kein Match')}</span>
+          <span style="flex:1;min-width:0">${it.match?bsLabel(it.match.entry):(listLabel(it)+' — kein Match')}${it.match&&it.match.how!=='psp'?`<div style="font-size:10px;color:var(--tx3);margin-top:1px">📄 Liste: ${listLabel(it)}</div>`:''}</span>
           <span style="color:var(--tx3)">${it.count} Pers.</span>
           <button type="button" onclick="event.preventDefault();piExcludePermanently(${i})" title="Diese Baustelle nie mehr fragen, immer pausiert lassen" style="padding:3px 8px;border-radius:6px;border:1px solid var(--bd);background:transparent;color:var(--tx2);font-size:10px;cursor:pointer;white-space:nowrap">🔇 Dauerhaft ausschliessen</button>
         </label>`).join('')}
@@ -6267,7 +6326,7 @@ function piRenderPreview(){
     html+=`<div style="margin-bottom:14px">
       <div style="font-size:12px;font-weight:700;color:var(--tx3);margin-bottom:6px">🔇 Dauerhaft ausgeschlossen – keine Aktion (${buckets.excluded.length})</div>
       ${buckets.excluded.map(it=>`<div style="padding:6px 10px;background:var(--sf2);border-radius:8px;margin-bottom:4px;font-size:12px;color:var(--tx3);display:flex;align-items:center;justify-content:space-between">
-        <span>${it.match.entry.name} — ${it.count} Pers.</span>
+        <span>${bsLabel(it.match.entry)} — ${it.count} Pers.</span>
         <button onclick="piUnexclude(${it.match.entry.id})" style="padding:3px 8px;border-radius:6px;border:1px solid var(--bd);background:transparent;color:var(--tx2);font-size:10px;cursor:pointer">Wieder einschliessen</button>
       </div>`).join('')}
     </div>`;
@@ -6275,7 +6334,7 @@ function piRenderPreview(){
   if(buckets.inactiveInfo.length){
     html+=`<div style="margin-bottom:14px">
       <div style="font-size:12px;font-weight:700;color:var(--tx3);margin-bottom:6px">ℹ️ Inaktiv, nur vereinzelt Personal – keine Aktion (${buckets.inactiveInfo.length})</div>
-      ${buckets.inactiveInfo.map(it=>`<div style="padding:6px 10px;background:var(--sf2);border-radius:8px;margin-bottom:4px;font-size:12px;color:var(--tx3)">${it.match.entry.name} — ${it.count} Pers.</div>`).join('')}
+      ${buckets.inactiveInfo.map(it=>`<div style="padding:6px 10px;background:var(--sf2);border-radius:8px;margin-bottom:4px;font-size:12px;color:var(--tx3)">${bsLabel(it.match.entry)} — ${it.count} Pers.</div>`).join('')}
     </div>`;
   }
   html=collectBoxHtml+html;
@@ -6412,11 +6471,9 @@ function openSammelbox(){
   if(list){
     list.innerHTML=box.length?box.map((it,ci)=>`
       <div style="padding:8px 10px;background:var(--sf2);border-radius:8px;margin-bottom:6px;font-size:12px;color:var(--tx)">
-        <div style="margin-bottom:6px">${it.psp?it.psp+' · ':''}${it.name} <span style="color:var(--tx3)">(${it.count} Pers.)</span>${it.quelle?` <span style="color:var(--tx3);font-style:italic">– ${it.quelle}</span>`:''}</div>
+        <div style="margin-bottom:6px">📄 ${listLabel(it)} <span style="color:var(--tx3)">(${it.count} Pers.)</span></div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
-          <select id="sb-sel-${ci}" style="font-size:11px;padding:5px;border-radius:6px;border:1px solid var(--bd);background:var(--sf);color:var(--tx);max-width:220px">
-            <option value="">— Baustelle wählen —</option>${activeOptions}
-          </select>
+          ${bsPickerHTML('sb-sel-'+ci,'width:320px;max-width:100%')}
           <button onclick="sbAssign(${ci})" style="padding:4px 10px;border-radius:6px;border:none;background:#3B82F6;color:#fff;font-size:11px;cursor:pointer">Zuordnen</button>
           <button onclick="sbCreate(${ci})" style="padding:4px 10px;border-radius:6px;border:1px solid #10B981;background:transparent;color:#10B981;font-size:11px;cursor:pointer">+ Neue Baustelle</button>
           <button onclick="sbRemove(${ci})" style="padding:4px 10px;border-radius:6px;border:1px solid var(--bd);background:transparent;color:var(--tx2);font-size:11px;cursor:pointer">✕ Entfernen</button>
