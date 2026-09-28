@@ -361,7 +361,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
   <div id="presence-bar" style="display:flex;align-items:center;gap:4px;margin-left:4px"></div>
   <button onclick="toggleDark()" class="hb" title="Dark Mode" style="font-size:14px">🌙</button>
   <button onclick="openGuide()" class="hb" title="Anleitung" style="font-size:14px">❓</button>
-  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.78</span>
+  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.79</span>
   <button onclick="doLogout()" class="hb" title="Abmelden" style="font-size:14px" id="logout-btn">⏻</button>
   <button onclick="toggleMobileView()" id="mobile-btn" class="hb" title="Mobile Ansicht" style="font-size:14px">📱</button>
   <div id="more-w" class="admin-only">
@@ -5824,7 +5824,9 @@ const SETTINGS_DEF=[
   {k:'rh_werkhof',l:'Werkhof',def:182,min:7,max:730,u:'Tage'}]},
  {grp:'Tourguide',items:[
   {k:'tg_day_start',l:'Tagesbeginn (Abfahrt ab Startadresse)',def:7,min:4,max:12,step:.25,u:'Uhr'},
-  {k:'tg_day_hours',l:'Arbeitstag inkl. Fahrzeit',def:9,min:2,max:14,step:.5,u:'Std.'},
+  {k:'tg_day_hours',l:'Arbeitstag inkl. Fahrzeit (ohne Mittagspause)',def:9,min:2,max:14,step:.5,u:'Std.'},
+  {k:'tg_lunch_start',l:'Mittagspause ab',def:12,min:10,max:15,step:.25,u:'Uhr'},
+  {k:'tg_lunch_dur',l:'Mittagspause Dauer (0 = keine)',def:60,min:0,max:120,step:15,u:'min'},
   {k:'tg_max_per_day',l:'Max. Baustellen pro Tag',def:6,min:1,max:15,u:'Stk.'},
   {k:'tg_min_1_3',l:'Audit-Dauer bei 1–3 Personen',def:30,min:5,max:480,u:'min'},
   {k:'tg_min_4_9',l:'Audit-Dauer bei 4–9 Personen',def:45,min:5,max:480,u:'min'},
@@ -5904,7 +5906,8 @@ function rulesHTML(){
     `Auswahl: 1. Ampel – zuerst werden alle roten Baustellen eingeplant, die noch Platz haben, dann orange, gelb, neu. 2. Innerhalb derselben Farbe entscheidet der kleinste Umweg zur bestehenden Tagesroute (bereits geplante Baustellen und Termine wie Rapporte sind Anker) – so entstehen regionale Tage.`,
     `Grössere Baustellen und bevorzugte Abteilungen dürfen mehr Umweg kosten: 20+ Pers. ${v('tg_bonus_20')} min · 10–19 ${v('tg_bonus_10')} min · 4–9 ${v('tg_bonus_4')} min · bevorzugte Abteilung ★ ${v('tg_bonus_pref')} min (alle 0 = rein geografisch).`,
     `Audit-Dauer: 1–3 Pers. ${v('tg_min_1_3')} · 4–9 ${v('tg_min_4_9')} · 10–19 ${v('tg_min_10_19')} · 20+ ${v('tg_min_20')} · unbekannt ${v('tg_min_unknown')} min (inkl. Schreiben/Rapportieren; Fahrzeit separat).`,
-    `Tag: Abfahrt ab Startadresse um ${tgHM(S('tg_day_start')*60)}, max. ${v('tg_day_hours')} h bis zur Rückkehr (inkl. aller Fahrten und Wartezeiten), max. ${v('tg_max_per_day')} Baustellen.`,
+    `Tag: Abfahrt ab Startadresse um ${tgHM(S('tg_day_start')*60)}, max. ${v('tg_day_hours')} h Arbeitszeit bis zur Rückkehr (inkl. aller Fahrten und Wartezeiten, ohne Mittagspause), max. ${v('tg_max_per_day')} Baustellen.`,
+    `Mittagspause ${tgHM(S('tg_lunch_start')*60)}–${tgHM(S('tg_lunch_start')*60+S('tg_lunch_dur'))} (${v('tg_lunch_dur')} min): keine Baustellen-Audits, Personen-Audits oder Beratungen – ein Audit, das nicht vor der Pause fertig wäre, beginnt nach der Pause. Fahrten werden unterbrochen. Rapporte mit fixer Uhrzeit dürfen in der Pause liegen. Endet der Tag vorher, entfällt die Pause.`,
     `Tagesablauf wird echt simuliert: Fahrt zu jedem Stopp (Baustellen <u>und</u> Termine an ihrer Adresse), Auditzeit, Fahrt zum nächsten, Rückfahrt.`,
     `Rapporte mit Uhrzeit sind fix: rechtzeitig dort sein (früher ankommen = Wartezeit). Ist ein Rapport der erste Termin des Tages und ab Tagesbeginn nicht erreichbar, wird entsprechend früher losgefahren. Baustellen werden nur so eingeplant, dass kein Termin verpasst wird.`,
     `Rapporte ohne Uhrzeit, geplante Personen-Audits (${v('tg_fixed_pa')} min) und Beratungen (${v('tg_fixed_berat')} min) sind Stopps an ihrem Ort, Reihenfolge frei optimiert. Rapporte ohne Adresse zählen nur als Zeit (keine Fahrt).`,
@@ -6004,20 +6007,35 @@ async function tgGeocodeEvents(evs){
 // items: [{t:'bs',node}|{t:'ev',ev}] ; liefert Zeiten, Fahrzeit, Verspätung, Gesamtdauer ab Abfahrt
 function tgSim(items){
   const R=_tgCalc,D=R.D;
+  // Mittagspause: keine Audits/Stopps ohne Uhrzeit darin; Fahrten werden unterbrochen. Fixe Termine (Rapporte
+  // mit Uhrzeit) dürfen in der Pause liegen. Die Pause zählt nicht zur Tageslänge (Arbeitszeit).
+  const LS=S('tg_lunch_start')*60,LD=S('tg_lunch_dur'),LE=LS+LD;
   const run=start=>{
-    let t=start,pos=0,drive=0,wait=0,late=0,aud=0,evt=0;const sched=[];
-    items.forEach(it=>{
+    let t=start,pos=0,drive=0,wait=0,late=0,aud=0,evt=0,lunch=0,lunchAt=-1;const sched=[];
+    const takeLunch=(i)=>{if(LD>0&&lunch===0){lunch=LD;lunchAt=i;}};
+    items.forEach((it,ii)=>{
       const node=it.t==='bs'?it.node:it.ev.node;
-      const tr=node!=null?D[pos][node]/60:0;drive+=tr;const arr=t+tr;
+      const tr=node!=null?D[pos][node]/60:0;drive+=tr;
+      // Fahrt startet in der Pause -> erst nach der Pause losfahren; Fahrt läuft in die Pause -> unterwegs Pause
+      if(LD>0&&tr>0&&lunch===0){if(t>=LS&&t<LE){wait+=LE-t;t=LE;takeLunch(ii);}else if(t<LS&&t+tr>LS){t+=LD;takeLunch(ii);}}
+      let arr=t+tr;
       const tm=it.t==='ev'?it.ev.time:null;let st=arr;
       if(tm!=null){if(arr>tm){late+=arr-tm;st=arr;}else{wait+=tm-arr;st=tm;}}
       const du=it.t==='bs'?R.dur.get(it.node):it.ev.dur;
+      // Audit / Stopp ohne Uhrzeit darf nicht in die Pause fallen -> nach der Pause beginnen
+      if(LD>0&&tm==null&&st<LE&&st+du>LS){
+        if(st<LS)wait+=LS-st;               // Zeit bis Pausenbeginn geht verloren (Audit hätte nicht mehr Platz)
+        else if(lunch>0)wait+=LE-st;        // Pause schon genommen -> nur warten
+        takeLunch(ii);st=LE;
+      }
       if(it.t==='bs')aud+=du;else evt+=du;
       sched.push({arr,start:st,end:st+du,late:tm!=null&&arr>tm?arr-tm:0});
       t=st+du;if(node!=null)pos=node;
     });
-    const back=items.length?D[pos][0]/60:0;drive+=back;t+=back;
-    return{start,end:t,total:t-start,drive,wait,late,aud,evt,sched};
+    const back=items.length?D[pos][0]/60:0;drive+=back;
+    if(LD>0&&lunch===0&&items.length){if(t>=LS&&t<LE){t=LE;takeLunch(items.length);}else if(t<LS&&t+back>LS){t+=LD;takeLunch(items.length);}}
+    t+=back;
+    return{start,end:t,total:t-start-lunch,drive,wait:Math.max(0,wait),late,aud,evt,lunch,lunchAt,sched};
   };
   const day0=S('tg_day_start')*60;let r=run(day0);
   // Nur wenn der ERSTE Stopp des Tages ein Termin mit Uhrzeit ist und ab Tagesbeginn nicht erreichbar:
@@ -6115,7 +6133,7 @@ function tgRender(){
   const stCol={overdue:'#EF4444',due:'#F59E0B',soon:'#EAB308',new:'#7C3AED'};
   const dayLen=S('tg_day_hours')*60;
   let newCount=0;
-  let h=`<div style="font-size:10px;color:${R.src==='ors'?'#10B981':'#F59E0B'};margin-bottom:8px">${R.src==='ors'?'✓ Fahrzeiten über Strassennetz':'⚠ Fahrzeiten geschätzt (Luftlinie)'} · Rundtour ab/bis Startadresse · Arbeitstag ${String(S('tg_day_hours')).replace('.',',')} h · Tagesbeginn ${tgHM(S('tg_day_start')*60)}</div>`;
+  let h=`<div style="font-size:10px;color:${R.src==='ors'?'#10B981':'#F59E0B'};margin-bottom:8px">${R.src==='ors'?'✓ Fahrzeiten über Strassennetz':'⚠ Fahrzeiten geschätzt (Luftlinie)'} · Rundtour ab/bis Startadresse · Arbeitstag ${String(S('tg_day_hours')).replace('.',',')} h · Tagesbeginn ${tgHM(S('tg_day_start')*60)}${S('tg_lunch_dur')>0?` · Mittag ${tgHM(S('tg_lunch_start')*60)}–${tgHM(S('tg_lunch_start')*60+S('tg_lunch_dur'))}`:''}</div>`;
   R.sets.forEach((set,d)=>{
     const active=set.filter(j=>!R.removed.has(j));
     const P=tgPlanDay(d,active),sim=P.sim;
@@ -6129,20 +6147,20 @@ function tgRender(){
       <div style="height:6px;background:var(--bd);border-radius:3px;overflow:hidden;display:flex;margin-bottom:3px">
         <div style="width:${sim.drive/dayLen*100}%;background:#F59E0B" title="Fahrzeit"></div><div style="width:${sim.aud/dayLen*100}%;background:#3B82F6" title="Audits"></div><div style="width:${sim.evt/dayLen*100}%;background:#0EA5E9" title="Termine"></div><div style="width:${sim.wait/dayLen*100}%;background:repeating-linear-gradient(45deg,#CBD5E1,#CBD5E1 3px,transparent 3px,transparent 6px)" title="Wartezeit"></div>
       </div>
-      <div style="font-size:10px;color:var(--tx3);margin-bottom:6px">🚗 ${fmt(sim.drive)} · 🏗️ ${fmt(sim.aud)}${sim.evt?` · 📋 ${fmt(sim.evt)} Termine`:''}${sim.wait>1?` · ⏳ ${fmt(sim.wait)} Wartezeit`:''}</div>
+      <div style="font-size:10px;color:var(--tx3);margin-bottom:6px">🚗 ${fmt(sim.drive)} · 🏗️ ${fmt(sim.aud)}${sim.evt?` · 📋 ${fmt(sim.evt)} Termine`:''}${sim.wait>1?` · ⏳ ${fmt(sim.wait)} Wartezeit`:''}${sim.lunch?` · 🍽 ${fmt(sim.lunch)} Mittag (nicht in der Arbeitszeit)`:''}</div>
       ${sim.late>0.5?`<div style="font-size:11px;color:#DC2626;margin-bottom:6px">⚠ Ein Termin ist so nicht rechtzeitig erreichbar (${Math.round(sim.late)} min zu spät) – bitte Termin oder Tag prüfen.</div>`:''}
-      ${P.items.map((it,ii)=>{const sc=sim.sched[ii];const time=`<span style="font-size:10px;color:var(--tx3);width:74px;flex-shrink:0;font-variant-numeric:tabular-nums">${tgHM(sc.start)}–${tgHM(sc.end)}</span>`;
-        if(it.t==='ev'){const ev=it.ev;return`<div style="display:flex;align-items:center;gap:6px;padding:4px 0;font-size:12px;border-top:1px solid var(--bd)">${time}
+      ${P.items.map((it,ii)=>{const sc=sim.sched[ii];const lunchRow=sim.lunch>0&&sim.lunchAt===ii?tgLunchRow():'';const time=`<span style="font-size:10px;color:var(--tx3);width:74px;flex-shrink:0;font-variant-numeric:tabular-nums">${tgHM(sc.start)}–${tgHM(sc.end)}</span>`;
+        if(it.t==='ev'){const ev=it.ev;return lunchRow+`<div style="display:flex;align-items:center;gap:6px;padding:4px 0;font-size:12px;border-top:1px solid var(--bd)">${time}
           <span style="flex:1;min-width:0">${ev.icon} <b>${escH(ev.label)}</b>${ev.time!=null?` <span style="font-size:10px;color:${sc.late>0.5?'#DC2626':'#0369A1'}">(fix ${tgHM(ev.time)}${sc.late>0.5?', '+Math.round(sc.late)+' min zu spät':''})</span>`:''}${ev.sub?` <span style="font-size:10px;color:var(--tx3)">· ${escH(ev.sub)}</span>`:''}${ev.node==null&&ev.kind==='rp'?' <span style="font-size:10px;color:#B45309">(ohne Adresse – keine Fahrzeit)</span>':''}</span>
           <span style="font-size:10px;color:var(--tx3);white-space:nowrap">${ev.dur} min</span></div>`;}
         const j=it.node,e=R.nodeEntry.get(j),fixed=R.fixedIds.has(j),s=status(e);
-        return`<div style="display:flex;align-items:center;gap:6px;padding:4px 0;font-size:12px;border-top:1px solid var(--bd)">${time}
+        return lunchRow+`<div style="display:flex;align-items:center;gap:6px;padding:4px 0;font-size:12px;border-top:1px solid var(--bd)">${time}
           <span style="width:8px;height:8px;border-radius:50%;flex-shrink:0;background:${fixed?'#6366F1':stCol[s]||'#10B981'}"></span>
           <span style="flex:1;min-width:0">${bsLabel(e)}${R.prefOf.get(j)?' <span style="color:#10B981" title="Bevorzugte Abteilung">★</span>':''}${fixed?' <span style="font-size:10px;color:#6366F1">(bereits geplant)</span>':''}</span>
           <span style="font-size:10px;color:var(--tx3);white-space:nowrap">${C.dur.get(j)} min${e.zeitbedarf?' fix':''}</span>
           ${fixed?'':`<select onchange="tgMove(${j},+this.value)" style="font-size:10px;padding:1px 3px;border:1px solid var(--bd);border-radius:4px;background:var(--sf);color:var(--tx2)">${R.days.map((di,dd)=>`<option value="${dd}"${dd===d?' selected':''}>${names[di]}</option>`).join('')}</select>
           <button onclick="tgToggle(${j})" title="Entfernen" style="background:none;border:none;cursor:pointer;font-size:12px;color:#EF4444">✕</button>`}
-        </div>`;}).join('')||`<div style="font-size:11px;color:var(--tx3);padding:4px 0">${R.remaining.length?'Nichts eingeplant – die übrigen Baustellen passen zeitlich besser auf andere Tage.':'Tag bleibt frei – keine weiteren fälligen Baustellen. Die übrigen Tage sind so effizienter (weniger Anfahrten).'}</div>`}
+        </div>`;}).join('')+(sim.lunch>0&&sim.lunchAt===P.items.length&&P.items.length?tgLunchRow():'')||`<div style="font-size:11px;color:var(--tx3);padding:4px 0">${R.remaining.length?'Nichts eingeplant – die übrigen Baustellen passen zeitlich besser auf andere Tage.':'Tag bleibt frei – keine weiteren fälligen Baustellen. Die übrigen Tage sind so effizienter (weniger Anfahrten).'}</div>`}
       ${set.filter(j=>R.removed.has(j)).map(j=>`<div style="display:flex;align-items:center;gap:6px;padding:4px 0;font-size:12px;border-top:1px solid var(--bd);opacity:.45"><span style="width:74px"></span><span style="flex:1;text-decoration:line-through">${bsLabel(R.nodeEntry.get(j))}</span><button onclick="tgToggle(${j})" title="Wieder aufnehmen" style="background:none;border:none;cursor:pointer;font-size:12px;color:#10B981">↺</button></div>`).join('')}
     </div>`;
   });
@@ -6151,6 +6169,7 @@ function tgRender(){
   document.getElementById('tg-result').innerHTML=h;
   const btn=document.getElementById('tg-apply');btn.style.display=newCount?'':'none';btn.textContent=`✓ ${newCount} Baustellen einplanen`;
 }
+function tgLunchRow(){const ls=S('tg_lunch_start')*60;return`<div style="display:flex;align-items:center;gap:6px;padding:4px 0;font-size:12px;border-top:1px solid var(--bd);color:var(--tx3)"><span style="font-size:10px;width:74px;flex-shrink:0;font-variant-numeric:tabular-nums">${tgHM(ls)}–${tgHM(ls+S('tg_lunch_dur'))}</span><span style="flex:1">🍽 Mittagspause</span></div>`;}
 function tgMove(j,toD){const R=_tg;R.sets=R.sets.map(s=>s.filter(x=>x!==j));R.sets[toD].push(j);tgRender();}
 function tgToggle(j){const R=_tg;if(R.removed.has(j))R.removed.delete(j);else R.removed.add(j);tgRender();}
 function tgApply(){
