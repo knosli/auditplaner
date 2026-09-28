@@ -361,7 +361,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
   <div id="presence-bar" style="display:flex;align-items:center;gap:4px;margin-left:4px"></div>
   <button onclick="toggleDark()" class="hb" title="Dark Mode" style="font-size:14px">🌙</button>
   <button onclick="openGuide()" class="hb" title="Anleitung" style="font-size:14px">❓</button>
-  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.65</span>
+  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.66</span>
   <button onclick="doLogout()" class="hb" title="Abmelden" style="font-size:14px" id="logout-btn">⏻</button>
   <button onclick="toggleMobileView()" id="mobile-btn" class="hb" title="Mobile Ansicht" style="font-size:14px">📱</button>
   <div id="more-w" class="admin-only">
@@ -5790,6 +5790,15 @@ function bsLabel(e){
   return`${e.psp?`<b style="font-variant-numeric:tabular-nums">${escH(e.psp)}</b> · `:''}${escH(e.name)}${e.dept?` <span style="color:var(--tx3);font-size:11px">· ${escH(e.dept)}</span>`:''}${e.active===false?' <span style="font-size:10px;color:#94A3B8">(inaktiv)</span>':e.paused?' <span style="font-size:10px;color:#94A3B8">(pausiert)</span>':''}`;
 }
 // Listen-Eintrag (aus der Einsatzliste) – PSP · Name · Einheit
+// Listen-Herkunft eines Import-Eintrags: bei mehreren Einsatzlisten jede Quelle mit Personenzahl,
+// sonst die Listenzeile nur dann, wenn nicht eindeutig über die PSP erkannt.
+function piSourcesHTML(it){
+  if(!it||!it.match)return'';
+  const src=it.sources||[it];
+  if(src.length>1)return`<div style="font-size:10px;color:#0369A1;margin-top:2px">🔗 ${src.length} Listen zusammengezählt:</div>`+src.map(s=>`<div style="font-size:10px;color:var(--tx3);margin-left:10px">📄 ${listLabel(s)} · <b>${s.count} Pers.</b></div>`).join('');
+  if(it.match.how!=='psp')return`<div style="font-size:10px;color:var(--tx3);margin-top:1px">📄 Liste: ${listLabel(it)}</div>`;
+  return'';
+}
 function listLabel(it){return`${it.psp?`<b style="font-variant-numeric:tabular-nums">${escH(it.psp)}</b> · `:''}${escH(it.name)}${it.quelle?` <span style="color:var(--tx3);font-size:11px">· ${escH(it.quelle)}</span>`:''}`;}
 // Auswahlliste aller Baustellen, nach Abteilung gruppiert, Option = «PSP · Name · Abteilung»
 function bsOptionsHTML(){
@@ -6144,7 +6153,11 @@ function piNormPSP(s){
 function piNormName(s){
   return(s||'').toLowerCase().replace(/[^a-z0-9äöüß]+/g,' ').trim();
 }
-function piMatchBaustelle(psp,name){
+// qDept = Abteilung der Einsatzliste (aus Zuordnung Einsatzliste→Abteilung). Unsichere Namens-Treffer
+// werden nur innerhalb dieser Abteilung gesucht - sonst würde z.B. eine Terratech-Baustelle am selben
+// Ort fälschlich einer Hochbau-Baustelle zugeordnet. PSP- und bewusst gesetzte Alias-Treffer gelten immer.
+function piMatchBaustelle(psp,name,qDept){
+  const inDept=e=>!qDept||deptParts(e.dept).includes(qDept);
   const np=piNormPSP(psp);
   if(np){
     let hit=data.find(e=>e.active&&piNormPSP(e.psp)===np);
@@ -6157,7 +6170,7 @@ function piMatchBaustelle(psp,name){
     if(aliasHit)return{entry:aliasHit,how:'alias-name'};
     const words=nn.split(' ').filter(w=>w.length>2);
     let best=null,bestScore=0;
-    data.filter(e=>e.active).forEach(e=>{
+    data.filter(e=>e.active&&inDept(e)).forEach(e=>{
       const en=piNormName(e.name+' '+(e.addr||''));
       const m=words.filter(w=>en.includes(w)).length;
       const score=words.length?m/words.length:0;
@@ -6175,7 +6188,7 @@ function piMatchBaustelle(psp,name){
     const nn=piNormName(name);
     const words=nn.split(' ').filter(w=>w.length>2);
     let best=null,bestScore=0;
-    data.filter(e=>!e.active).forEach(e=>{
+    data.filter(e=>!e.active&&inDept(e)).forEach(e=>{
       const en=piNormName(e.name+' '+(e.addr||''));
       const m=words.filter(w=>en.includes(w)).length;
       const score=words.length?m/words.length:0;
@@ -6217,10 +6230,26 @@ async function runPersonalImport(file){
     }
 
     const buckets={pause:[],review:[],reactivate:[],unknown:[],noop:[],reactivateInactive:[],inactiveInfo:[],excluded:[]};
+    const qDeptOf=q=>{if(!q)return null;const qm=(deptMeta._quelleMap||{});return(q in qm)?(qm[q]||null):(autoMapQuelle(q)||null);};
+    // 1. Zuordnen; 2. mehrere Listen-Einträge derselben Baustelle zusammenfassen (Personen addieren),
+    // damit z.B. «0 Pers.» auf der Terratech-Liste eine voll laufende Hochbau-Baustelle nicht pausiert.
+    const groups=new Map();
     raw.forEach(r=>{
-      const m=piMatchBaustelle(r.psp,r.name);
+      const m=piMatchBaustelle(r.psp,r.name,qDeptOf(r.quelle));
       const item={...r,match:m};
       if(!m){buckets.unknown.push(item);return;}
+      const k=m.entry.id;
+      if(!groups.has(k))groups.set(k,[]);
+      groups.get(k).push(item);
+    });
+    const merged=[...groups.values()].map(list=>{
+      // bester Treffer (PSP vor Alias vor Name) bestimmt die Anzeige, Personen werden summiert
+      const rank=it=>it.match.how==='psp'?0:(it.match.how||'').startsWith('alias')?1:2;
+      const main=list.slice().sort((a,b)=>rank(a)-rank(b))[0];
+      return{...main,count:list.reduce((s,x)=>s+(+x.count||0),0),sources:list};
+    });
+    merged.forEach(item=>{
+      const r=item,m=item.match;
       const e=m.entry;
       // Werkhöfe dürfen NIE durch den Personal-Import pausiert/reaktiviert werden - komplett
       // überspringen, taucht in keinem Eimer auf (auch nicht als "ausgeschlossen"), hat schlicht
@@ -6270,7 +6299,7 @@ function piRenderPreview(){
       ${arr.map((it,i)=>`
         <label style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--sf2);border-radius:8px;margin-bottom:4px;font-size:12px;color:var(--tx)">
           <input type="checkbox" ${dc?'checked':''} data-key="${key}" data-idx="${i}">
-          <span style="flex:1;min-width:0">${it.match?bsLabel(it.match.entry):(listLabel(it)+' — kein Match')}${it.match&&it.match.how==='name'?' <span style="color:var(--tx3);font-size:10px">('+it.match.score+'% Name-Match)</span>':''}${it.match&&it.match.how&&it.match.how.startsWith('alias')?' <span style="color:#3B82F6;font-size:10px">(Alias zugeordnet)</span>':''}${it.match&&it.match.how!=='psp'?`<div style="font-size:10px;color:var(--tx3);margin-top:1px">📄 Liste: ${listLabel(it)}</div>`:''}</span>
+          <span style="flex:1;min-width:0">${it.match?bsLabel(it.match.entry):(listLabel(it)+' — kein Match')}${it.match&&it.match.how==='name'?' <span style="color:var(--tx3);font-size:10px">('+it.match.score+'% Name-Match)</span>':''}${it.match&&it.match.how&&it.match.how.startsWith('alias')?' <span style="color:#3B82F6;font-size:10px">(Alias zugeordnet)</span>':''}${piSourcesHTML(it)}</span>
           ${showCount?`<span style="color:var(--tx3)">${it.count} Pers.</span>`:''}
         </label>`).join('')}
     </div>`;
@@ -6314,7 +6343,7 @@ function piRenderPreview(){
       ${buckets.review.map((it,i)=>`
         <label style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--sf2);border-radius:8px;margin-bottom:4px;font-size:12px;color:var(--tx)">
           <input type="checkbox" data-key="review" data-idx="${i}">
-          <span style="flex:1;min-width:0">${it.match?bsLabel(it.match.entry):(listLabel(it)+' — kein Match')}${it.match&&it.match.how!=='psp'?`<div style="font-size:10px;color:var(--tx3);margin-top:1px">📄 Liste: ${listLabel(it)}</div>`:''}</span>
+          <span style="flex:1;min-width:0">${it.match?bsLabel(it.match.entry):(listLabel(it)+' — kein Match')}${piSourcesHTML(it)}</span>
           <span style="color:var(--tx3)">${it.count} Pers.</span>
           <button type="button" onclick="event.preventDefault();piExcludePermanently(${i})" title="Diese Baustelle nie mehr fragen, immer pausiert lassen" style="padding:3px 8px;border-radius:6px;border:1px solid var(--bd);background:transparent;color:var(--tx2);font-size:10px;cursor:pointer;white-space:nowrap">🔇 Dauerhaft ausschliessen</button>
         </label>`).join('')}
