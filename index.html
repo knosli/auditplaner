@@ -361,7 +361,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
   <div id="presence-bar" style="display:flex;align-items:center;gap:4px;margin-left:4px"></div>
   <button onclick="toggleDark()" class="hb" title="Dark Mode" style="font-size:14px">🌙</button>
   <button onclick="openGuide()" class="hb" title="Anleitung" style="font-size:14px">❓</button>
-  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.75</span>
+  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.76</span>
   <button onclick="doLogout()" class="hb" title="Abmelden" style="font-size:14px" id="logout-btn">⏻</button>
   <button onclick="toggleMobileView()" id="mobile-btn" class="hb" title="Mobile Ansicht" style="font-size:14px">📱</button>
   <div id="more-w" class="admin-only">
@@ -373,6 +373,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
       <button onclick="openAudAdmin();toggleMore()"><i class="ti ti-users"></i> Auditoren verwalten</button>
       <button onclick="openDeptManager();toggleMore()"><i class="ti ti-building"></i> Abteilungen verwalten</button>
       <button onclick="openRapportTypes();toggleMore()"><i class="ti ti-clipboard-list"></i> Rapport-Arten verwalten</button>
+      <button onclick="openSettings();toggleMore()"><i class="ti ti-settings"></i> Einstellungen & Regeln</button>
       <button onclick="openPersonalImport();toggleMore()"><i class="ti ti-user-pause"></i> Personal-Import (Pausieren)</button>
       <button onclick="openSammelbox();toggleMore()"><i class="ti ti-inbox"></i> Sammelbox <span id="sb-count-badge"></span></button>
       <button onclick="openTempWorkers();toggleMore()"><i class="ti ti-user-question"></i> Temporäre Mitarbeitende <span id="tw-count-badge"></span></button>
@@ -828,7 +829,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
            Admin bestätigt einzeln -> wird zu echten Ferien -->
       <div class="card">
         <h3><i class="ti ti-star" style="color:var(--blue)"></i> Wunschferien</h3>
-        <p style="font-size:11px;color:var(--tx2);margin:4px 0 10px">Trag hier deine gewünschten Ferientermine ein. Alle sehen alle Wünsche, damit ihr euch absprechen könnt. Überschneidungen (2+ Personen gleichzeitig) sind im roten Streifen markiert.</p>
+        <p style="font-size:11px;color:var(--tx2);margin:4px 0 10px">Trag hier deine gewünschten Ferientermine ein. Alle sehen alle Wünsche, damit ihr euch absprechen könnt. Überschneidungen sind im roten Streifen markiert (Schwelle: Admin → Einstellungen).</p>
         <div class="frow" id="wf-form-row">
           <div id="wf-aud-wrap"></div>
           <div><label>Von</label><input type="date" id="wf-von"></div>
@@ -913,7 +914,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
             <th title="Durchgeführte Personen-Audits im Zeitraum">👤 Pers.</th>
             <th title="Durchgeführte Beratungen im Zeitraum">💬 Berat.</th>
             <th title="Total durchgeführt im Zeitraum">Total</th>
-            <th title="Anteil der Audit-Abstände im Zeitraum, die innerhalb des Rhythmus (+25 % Toleranz) lagen; aktuell überfällige Baustellen zählen als verspätet">Termintreue</th>
+            <th title="Anteil der Audit-Abstände im Zeitraum, die innerhalb des Rhythmus (+ Toleranz gemäss Einstellungen) lagen; aktuell überfällige Baustellen zählen als verspätet">Termintreue</th>
             <th title="Durchschnittlicher Abstand zwischen zwei Audits derselben Baustelle im Zeitraum">Ø Abstand</th>
             <th title="Mitarbeitende laut Admin → Abteilungen verwalten (Jahr des Enddatums)">MA</th>
             <th title="Total durchgeführte Audits pro 100 Mitarbeitende">pro 100 MA</th>
@@ -921,7 +922,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
             <th title="Rapport-Teilnahmen (Bauführer-/Polierrapporte) im Zeitraum - nicht im Audit-Total">📋 Rapp.</th>
           </tr></thead><tbody id="dept-tb"></tbody></table>
         </div>
-        <div style="font-size:10px;color:var(--tx3);margin-top:8px"><b>Termintreue:</b> Anteil der Audit-Abstände, die innerhalb des Rhythmus lagen (+25 % Toleranz, z.B. 28 → 35 Tage); aktuell überfällige Baustellen zählen als verspätet. Ampel: grün ab 80 %, orange ab 60 %. <br>Personen-Audits zählen bei der Abteilung der Person laut Personen-Register (sonst bei der Abteilung der Baustelle). Mitarbeitende pflegen: Admin-Menü → Abteilungen verwalten.</div>
+        <div style="font-size:10px;color:var(--tx3);margin-top:8px"><b>Termintreue:</b> Anteil der Audit-Abstände, die innerhalb des Rhythmus lagen (plus Toleranz); aktuell überfällige Baustellen zählen als verspätet. Toleranz und Ampel: Admin → Einstellungen & Regeln. <br>Personen-Audits zählen bei der Abteilung der Person laut Personen-Register (sonst bei der Abteilung der Baustelle). Mitarbeitende pflegen: Admin-Menü → Abteilungen verwalten.</div>
       </div>
     </div>
   </div>
@@ -1500,14 +1501,14 @@ function status(e){
   if(!e.lastAudit&&!e.resumeFrom){
     if(!e.createdAt)return'new';
     const dn=dl(e);
-    if(dn<-10)return'overdue';
+    if(dn<-S('due_overdue_days'))return'overdue';
     if(dn<=0)return'due';
     return'new';
   }
   const d=dl(e);
-  if(d<-10)return'overdue';
+  if(d<-S('due_overdue_days'))return'overdue';
   if(d<=0)return'due';
-  if(d<=10)return'soon';
+  if(d<=S('due_soon_days'))return'soon';
   return'ok';
 }
 // Erfassungsdatum für nie auditierte Baustellen: die interne ID ist der Erfassungs- bzw. Importzeitpunkt
@@ -2608,7 +2609,7 @@ function ferGanttHTML(entries,isWish){
   if(isWish){
     let seg=-1,segs='';
     for(let i=0;i<=nDays;i++){
-      const hit=i<nDays&&dayCounts[i]>=2;
+      const hit=i<nDays&&dayCounts[i]>=S('wf_overlap');
       if(hit&&seg<0)seg=i;
       if(!hit&&seg>=0){segs+=`<div title="Überschneidung: ${fd(ferISO(new Date(yr,m0,1+seg)))} – ${fd(ferISO(new Date(yr,m0,i)))}" style="position:absolute;left:${pct(seg)}%;width:max(${pct(i-seg)}%,3px);top:0;bottom:0;background:#EF4444"></div>`;seg=-1;}
     }
@@ -3425,7 +3426,7 @@ function renderDeptTable(){
     // (offene Lücke) zählen zusätzlich als ein verspäteter Abstand, sofern der Zeitraum bis heute reicht.
     let onTime=0,intervals=0,gapSum=0,gapCount=0;
     data.filter(inD).forEach(e=>{
-      const rh=(+e.rhythm||28)*1.25;
+      const rh=(+e.rhythm||S('rh_baustelle'))*(1+S('tt_tol_pct')/100);
       const ds=(e.auditHistory||[]).map(h=>h.date).filter(Boolean).sort();
       for(let i=1;i<ds.length;i++){
         if(!inR(ds[i]))continue;
@@ -3444,7 +3445,7 @@ function renderDeptTable(){
     const rp=rpTermine(rapporte.filter(r=>!r.planned&&r.dept===d&&inR(r.date)));
     tot.bs+=active.length;tot.a+=a;tot.p+=p;tot.b+=b;tot.ma+=ma;tot.ov+=ov;tot.on+=onTime;tot.iv+=intervals;tot.gs+=gapSum;tot.gn+=gapCount;
     if(!active.length&&!total&&!rp)return'';
-    const covCol=tt===null?'var(--tx3)':tt>=80?'#10B981':tt>=60?'#F59E0B':'#EF4444';
+    const covCol=tt===null?'var(--tx3)':tt>=S('tt_green')?'#10B981':tt>=S('tt_orange')?'#F59E0B':'#EF4444';
     return`<tr><td><strong>${d}</strong></td><td>${active.length}</td><td>${a}</td><td>${p}</td><td>${b}</td>
       <td style="font-weight:700">${total}</td>
       <td style="font-weight:600;color:${covCol}">${tt===null?'—':tt+'%'}</td>
@@ -4205,7 +4206,7 @@ function setPAImportMode(){
   },100);
 }
 
-function openAdd(){editId=null;window._pendingLat=null;window._pendingLng=null;{const z=document.getElementById('f-zb');if(z)z.value='';}{const la=document.getElementById('f-lat'),ln=document.getElementById('f-lng');if(la)la.value='';if(ln)ln.value='';}document.getElementById('m-title').textContent='Neue Baustelle';document.getElementById('form-s').style.display='block';(document.getElementById('imp-s')||{style:{},classList:{remove(){}}}).style.display='none';(document.getElementById('json-s')||{style:{},classList:{remove(){}}}).style.display='none';document.getElementById('m-save').style.display='';['f-name','f-addr','f-psp','f-sap','f-prv','f-bc','f-note'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});fillFDept('');document.getElementById('f-rh').value='28';document.getElementById('f-last').value='';document.getElementById('f-type').value='baustelle';document.getElementById('addr-suggestions').style.display='none';const hint=document.getElementById('f-addr-hint');if(hint)hint.textContent='';document.getElementById('mbg').classList.add('open');}
+function openAdd(){editId=null;window._pendingLat=null;window._pendingLng=null;{const z=document.getElementById('f-zb');if(z)z.value='';}{const la=document.getElementById('f-lat'),ln=document.getElementById('f-lng');if(la)la.value='';if(ln)ln.value='';}document.getElementById('m-title').textContent='Neue Baustelle';document.getElementById('form-s').style.display='block';(document.getElementById('imp-s')||{style:{},classList:{remove(){}}}).style.display='none';(document.getElementById('json-s')||{style:{},classList:{remove(){}}}).style.display='none';document.getElementById('m-save').style.display='';['f-name','f-addr','f-psp','f-sap','f-prv','f-bc','f-note'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});fillFDept('');setDefaultRhythm('baustelle');document.getElementById('f-last').value='';document.getElementById('f-type').value='baustelle';document.getElementById('addr-suggestions').style.display='none';const hint=document.getElementById('f-addr-hint');if(hint)hint.textContent='';document.getElementById('mbg').classList.add('open');}
 function openEdit(id){
   // Reset manual marker
   const latEl=document.getElementById('f-lat');
@@ -4258,7 +4259,7 @@ async function saveEntry(){
     try{const gPrecise=await nominatimGeocode(addr);if(gPrecise){lat=gPrecise.lat;lng=gPrecise.lng;}}catch(ex){}
   }
   btn.textContent='Speichern';btn.disabled=false;
-  let rh=+document.getElementById('f-rh').value;if(type==='werkhof'&&rh===28)rh=182;
+  let rh=+document.getElementById('f-rh').value;if(type==='werkhof'&&rh===S('rh_baustelle'))rh=S('rh_werkhof');
   const _zb=+document.getElementById('f-zb').value||0;
   const entry={id:editId||Date.now(),name,addr,zeitbedarf:_zb>0?_zb:undefined,psp:document.getElementById('f-psp').value.trim(),sap:name,prv:document.getElementById('f-prv').value.trim(),bc:document.getElementById('f-bc').value.trim(),dept,rhythm:rh,type,lastAudit:document.getElementById('f-last').value||null,lastKW:null,note:document.getElementById('f-note').value.trim(),auditor:editId?data.find(e=>e.id===editId)?.auditor:null,active:true,paused:false,auditHistory:[],plannedKW:[],lat,lng};
   if(editId){const old=data.find(e=>e.id===editId);if(old){entry.active=old.active!==false;entry.lastKW=old.lastKW??null;entry.auditor=old.auditor;entry.paused=old.paused;entry.pauseReason=old.pauseReason;entry.auditHistory=old.auditHistory||[];entry.plannedKW=old.plannedKW||[];}data[data.findIndex(e=>e.id===editId)]={...old,...entry};}
@@ -4426,7 +4427,7 @@ function updateDistInfo(){
   const aud=document.getElementById('dist-aud').value;
   const kw=+document.getElementById('dist-kw').value;
   const amEl=document.getElementById('dist-auditmin');
-  if(amEl&&!amEl.value)amEl.value=localStorage.getItem('dist_audit_min_v3')||'60';
+  if(amEl&&!amEl.value)amEl.value=localStorage.getItem('dist_audit_min_v3')||String(S('dist_audit_min'));
   const ks=kwToDate(kw),ke=kwToDate(kw+1);
   const kwPlans=plans.filter(p=>p.date>=ks&&p.date<ke&&p.auditor===aud);
   const withCoords=kwPlans.filter(p=>{const e=data.find(x=>x.id===p.bsId);return e&&e.lat&&e.lng;});
@@ -4438,7 +4439,7 @@ function updateDistInfo(){
     if(fer){cb.checked=false;cb.disabled=true;}else cb.disabled=false;
     cb.parentElement.style.opacity=fer?'.45':'1';
     const sp=cb.parentElement.querySelector('.dd-lbl');if(sp)sp.textContent=names[di]+(fer?' 🌴 Ferien':'');
-    const fx=distFixedMin(aud,ds,+amEl.value||60);
+    const fx=distFixedMin(aud,ds,+amEl.value||S('dist_audit_min'));
     if(!fer&&fx)notes.push(`${names[di]}: ${Math.round(fx)} min belegt`);
   });
   document.getElementById('dist-info').innerHTML=
@@ -4466,7 +4467,7 @@ async function previewDistribute(){
   const aud=document.getElementById('dist-aud').value;
   const kw=+document.getElementById('dist-kw').value;
   const days=getCheckedDays();
-  const auditMin=Math.max(5,+document.getElementById('dist-auditmin').value||60);
+  const auditMin=Math.max(5,+document.getElementById('dist-auditmin').value||S('dist_audit_min'));
   try{localStorage.setItem('dist_audit_min_v3',String(auditMin));}catch(e){}
   if(!days.length){showToast('Bitte mindestens einen Tag wählen');return;}
   const ks=kwToDate(kw),ke=kwToDate(kw+1);
@@ -4484,7 +4485,7 @@ async function previewDistribute(){
   const k=days.length,N=withCoords.length;
   const fixed=days.map(di=>distFixedMin(aud,distDayDate(kw,di),auditMin));
   // Zielanzahl pro Tag: gleichmässig; bei ungleich belegten Tagen anteilig nach freier Zeit (±1)
-  const DAYMIN=510;
+  const DAYMIN=S('dist_day_hours')*60;
   const free=fixed.map(f=>Math.max(60,DAYMIN-f));
   const hasFixed=fixed.some(f=>f>0);
   let target=hasFixed?free.map(f=>N*f/free.reduce((a,b)=>a+b,0)):days.map(()=>N/k);
@@ -5801,17 +5802,141 @@ function initStickyFooters(){
   document.querySelectorAll('.mbg > .modal').forEach(stickFooter);
 }
 document.addEventListener('DOMContentLoaded',()=>setTimeout(initStickyFooters,300));
+// ═══ EINSTELLUNGEN (Admin → Einstellungen & Regeln) ═══
+// Alle definierten Werte an einer Stelle; gespeichert in deptMeta._settings (über Supabase synchronisiert).
+const SETTINGS_DEF=[
+ {grp:'Fälligkeit (Ampel)',items:[
+  {k:'due_soon_days',l:'«Bald fällig» (gelb) ab … Tage vor Fälligkeit',def:10,min:0,max:60,u:'Tage'},
+  {k:'due_overdue_days',l:'«Überfällig» (rot) ab … Tage nach Fälligkeit',def:10,min:0,max:90,u:'Tage'}]},
+ {grp:'Standard-Rhythmus beim Erfassen',items:[
+  {k:'rh_baustelle',l:'Baustelle',def:28,min:7,max:365,u:'Tage'},
+  {k:'rh_gu',l:'Generalunternehmung (GU)',def:42,min:7,max:365,u:'Tage'},
+  {k:'rh_werkhof',l:'Werkhof',def:182,min:7,max:730,u:'Tage'}]},
+ {grp:'Tourguide',items:[
+  {k:'tg_day_hours',l:'Arbeitstag inkl. Fahrzeit',def:9,min:2,max:14,step:.5,u:'Std.'},
+  {k:'tg_max_per_day',l:'Max. Baustellen pro Tag',def:6,min:1,max:15,u:'Stk.'},
+  {k:'tg_min_1_3',l:'Audit-Dauer bei 1–3 Personen',def:30,min:5,max:480,u:'min'},
+  {k:'tg_min_4_9',l:'Audit-Dauer bei 4–9 Personen',def:45,min:5,max:480,u:'min'},
+  {k:'tg_min_10_19',l:'Audit-Dauer bei 10–19 Personen',def:60,min:5,max:480,u:'min'},
+  {k:'tg_min_20',l:'Audit-Dauer bei 20+ Personen',def:75,min:5,max:480,u:'min'},
+  {k:'tg_min_unknown',l:'Audit-Dauer, Personal unbekannt',def:45,min:5,max:480,u:'min'},
+  {k:'tg_fixed_pa',l:'Geplantes Personen-Audit belegt',def:45,min:0,max:480,u:'min'},
+  {k:'tg_fixed_berat',l:'Geplante Beratung belegt',def:45,min:0,max:480,u:'min'}]},
+ {grp:'Verteilen (KW-Planung)',items:[
+  {k:'dist_audit_min',l:'Ø Dauer pro Audit (Vorschlag)',def:60,min:5,max:480,u:'min'},
+  {k:'dist_day_hours',l:'Tageslänge für Anteilsberechnung',def:8.5,min:2,max:14,step:.5,u:'Std.'}]},
+ {grp:'Personal-Import',items:[
+  {k:'pi_review_max',l:'«Prüfen» bis … Personen (darüber: läuft)',def:2,min:0,max:20,u:'Pers.'},
+  {k:'pi_react_inactive_min',l:'Inaktive Baustelle: Reaktivierung vorschlagen ab',def:2,min:1,max:50,u:'Pers.'},
+  {k:'pi_history_weeks',l:'Personalverlauf aufbewahren',def:52,min:4,max:260,u:'Wochen'}]},
+ {grp:'Auswertung Abteilungen',items:[
+  {k:'tt_tol_pct',l:'Termintreue: Toleranz auf den Rhythmus',def:25,min:0,max:200,u:'%'},
+  {k:'tt_green',l:'Termintreue grün ab',def:80,min:0,max:100,u:'%'},
+  {k:'tt_orange',l:'Termintreue orange ab',def:60,min:0,max:100,u:'%'}]},
+ {grp:'Ferienplanung',items:[
+  {k:'wf_overlap',l:'Wunschferien: Überschneidung markieren ab',def:2,min:2,max:10,u:'Pers.'}]}
+];
+const SETTINGS_MAP=Object.fromEntries(SETTINGS_DEF.flatMap(g=>g.items).map(i=>[i.k,i]));
+function S(k){
+  const s=(typeof deptMeta!=='undefined'&&deptMeta&&deptMeta._settings)||{};
+  const v=s[k];
+  return(v===undefined||v===null||v==='')?SETTINGS_MAP[k].def:+v;
+}
+function setSetting(k,v){
+  const d=SETTINGS_MAP[k];deptMeta._settings=deptMeta._settings||{};
+  if(v===''||v===null||v===undefined){delete deptMeta._settings[k];}
+  else{let n=+v;if(isNaN(n)){showToast('Ungültiger Wert');renderSettings();return;}
+    n=Math.min(d.max,Math.max(d.min,n));
+    if(n===d.def)delete deptMeta._settings[k];else deptMeta._settings[k]=n;}
+  saveDepts();renderSettings();renderAll();
+  if(typeof renderDeptTable==='function')renderDeptTable();
+}
+function resetAllSettings(){
+  if(!confirm('Alle Einstellungen auf die Standardwerte zurücksetzen?'))return;
+  deptMeta._settings={};saveDepts();renderSettings();renderAll();showToast('↺ Standardwerte wiederhergestellt');
+}
+function ensureRhOpt(v){
+  const sel=document.getElementById('f-rh');if(!sel)return;
+  if(![...sel.options].some(o=>+o.value===+v))sel.insertAdjacentHTML('beforeend',`<option value="${v}">${v} Tage</option>`);
+}
+function setDefaultRhythm(type){
+  const v=type==='werkhof'?S('rh_werkhof'):type==='gu'?S('rh_gu'):S('rh_baustelle');
+  ensureRhOpt(v);document.getElementById('f-rh').value=String(v);
+}
+// Regel-Beschreibung - Zahlen kommen live aus den Einstellungen, damit Text und Verhalten übereinstimmen
+function rulesHTML(){
+  const v=k=>`<b style="color:var(--blue)">${String(S(k)).replace('.',',')}</b>`;
+  const sec=(ic,t,items)=>`<div style="margin-bottom:14px"><div style="font-size:13px;font-weight:700;color:var(--tx);margin-bottom:6px"><i class="ti ti-${ic}" style="color:var(--blue)"></i> ${t}</div><ul style="margin:0;padding-left:18px;font-size:12px;color:var(--tx2);line-height:1.55">${items.map(i=>`<li>${i}</li>`).join('')}</ul></div>`;
+  return`<div style="font-size:11px;color:var(--tx3);margin-bottom:12px">Übersicht der Regeln, nach denen der Planer arbeitet. Blaue Zahlen sind im Tab «Werte» einstellbar.</div>`+
+  sec('traffic-lights','Status & Ampel',[
+    `Fälligkeit = letztes Audit + Rhythmus der Baustelle.`,
+    `<span style="color:#EAB308">●</span> Bald fällig ab ${v('due_soon_days')} Tagen vor Fälligkeit · <span style="color:#F59E0B">●</span> fällig ab Fälligkeitstag · <span style="color:#EF4444">●</span> überfällig ab ${v('due_overdue_days')} Tagen danach.`,
+    `Noch nie auditierte Baustellen (★ auf der Karte): Frist läuft ab Erfassung – violett = neu, orange = fällig, rot = überfällig.`,
+    `Geplante Baustellen (blau) und geplante Beratungen (violett) werden nicht als fällig gezählt; pausierte und inaktive gar nicht.`]) +
+  sec('refresh','Rhythmus',[
+    `Standard beim Erfassen: Baustelle ${v('rh_baustelle')} Tage, GU ${v('rh_gu')} Tage, Werkhof ${v('rh_werkhof')} Tage. Pro Baustelle individuell änderbar.`,
+    `Feld «Zeitbedarf» (nur Spezialbaustellen): feste Audit-Dauer, übersteuert die Schätzung nach Personal.`]) +
+  sec('user-pause','Personal-Import (Einsatzlisten)',[
+    `0 Personen → «Pausieren» (vorausgewählt). 1–${v('pi_review_max')} Personen → «Prüfen» (nicht vorausgewählt; «Dauerhaft ausschliessen» möglich, z.B. Gefängnis-Baustellen). Mehr → läuft; war sie pausiert → «Reaktivieren».`,
+    `Inaktive Baustelle mit mind. ${v('pi_react_inactive_min')} Personen → Reaktivierung wird vorgeschlagen (nicht vorausgewählt).`,
+    `Zuordnung: PSP exakt inkl. Unternummer (4226280.13 ≠ 4226280.01); Etappen (3025325.1/.2) → Hauptnummer 3025325; Namens-Treffer nur innerhalb der Abteilung der Einsatzliste; mehrere Listen für dieselbe Baustelle werden zusammengezählt.`,
+    `«Nicht auf der Liste»: aktive Baustellen einer Abteilung, deren Einsatzlisten <u>alle</u> importiert wurden, die aber auf keiner stehen → Pausieren vorgeschlagen (neu erfasste nicht vorausgewählt).`,
+    `Gespeichert wird die Personalzahl bei allen erkannten Baustellen (auch dauerhaft ausgeschlossene), «nicht auf der Liste» erhält 0. Verlauf: ${v('pi_history_weeks')} Wochen.`,
+    `Werkhöfe sind vom Import komplett ausgenommen. Unbekannte Einträge: zuordnen (Alias wird gemerkt), neu anlegen oder in die Sammelbox.`,
+    `Temporäre Mitarbeitende: nur Personal-Nummern (keine Namen), pro Einheit bei jedem Import ersetzt.`]) +
+  sec('compass','Tourguide',[
+    `Vorschläge nur für fällige Baustellen mit Koordinaten; nie: pausiert, inaktiv, 0 Personal laut Import, ausgeschlossene Abteilungen, diese KW bereits (von irgendwem) eingeplant.`,
+    `Priorität: 1. Ampel (überfällig → fällig → bald fällig → neu) · 2. Personal (20+ → 10–19 → 4–9 → 1–3 → unbekannt) · 3. bevorzugte Abteilung ★ · 4. am längsten fällig.`,
+    `Audit-Dauer: 1–3 Pers. ${v('tg_min_1_3')} · 4–9 ${v('tg_min_4_9')} · 10–19 ${v('tg_min_10_19')} · 20+ ${v('tg_min_20')} · unbekannt ${v('tg_min_unknown')} min (inkl. Schreiben/Rapportieren; Fahrzeit separat).`,
+    `Tag: max. ${v('tg_day_hours')} h inkl. Fahrzeit (Rundtour ab/bis Startadresse), max. ${v('tg_max_per_day')} Baustellen. Abgezogen: Rapporte (ihre Dauer), geplante Personen-Audits ${v('tg_fixed_pa')} min, Beratungen ${v('tg_fixed_berat')} min.`,
+    `Füllt nur auf – bereits Geplantes bleibt. Reicht die Arbeit nicht für alle Tage, bleibt ein Tag frei statt überall halbe Tage.`,
+    `Startadresse: auf dem eigenen Gerät gesetzte hat Vorrang, sonst die in «Auditoren verwalten».`]) +
+  sec('layout-distribute-horizontal','Verteilen (KW-Planung)',[
+    `Verteilt die bereits geplanten Baustellen einer KW auf die gewählten Tage: max. 1 Baustelle Unterschied pro Tag, möglichst gleich lange Tage (Fahrzeit + Ø ${v('dist_audit_min')} min pro Audit + bestehende Termine).`,
+    `Ferientage werden automatisch ausgelassen.`]) +
+  sec('route','Routen (Handy)',[
+    `Reihenfolge nach echter Fahrzeit (openrouteservice), Start am Standort, Ende an der Startadresse; bis 12 Stopps exakt optimal. Ohne Schlüssel/Netz: Schätzung nach Luftlinie.`,
+    `Google Maps übernimmt max. 9 Stopps pro Link.`]) +
+  sec('clipboard-list','Rapporte',[
+    `Ein Termin, Status pro Person: Absagen/Bestätigen betrifft nur die jeweilige Person; Verschieben verschiebt den Termin für alle.`,
+    `Zählung: Termine (1 Rapport mit 3 Personen = 1 Termin) und Teilnahmen (= 3). Rapporte zählen nie als Audit.`]) +
+  sec('chart-donut','Zählung & Auswertung',[
+    `Soll/Jahr gesamt = Summe der Soll-Werte der Auditoren. Aufs Soll zählen Baustellen- und Personen-Audits; Beratungen und Rapporte separat.`,
+    `Termintreue: Audit-Abstände innerhalb Rhythmus + ${v('tt_tol_pct')} % zählen als rechtzeitig; aktuell überfällige als verspätet. Grün ab ${v('tt_green')} %, orange ab ${v('tt_orange')} %.`,
+    `Pro 100 MA: Audits im Zeitraum ÷ Mitarbeitende der Abteilung (Abteilungen verwalten) × 100.`,
+    `Personen-Audits zählen bei der Abteilung der Person laut Personen-Register (sonst bei der Abteilung der Baustelle).`]) +
+  sec('beach','Ferien',[
+    `Wunschferien: jeder trägt eigene ein, alle sehen alle; Admins bestätigen → werden fixe Ferien.`,
+    `Überschneidung wird ab ${v('wf_overlap')} Personen gleichzeitig rot markiert. Fixe Ferien sperren Tage in Tourguide und Verteilen.`]);
+}
+let _setTab='werte';
+function openSettings(){_setTab='werte';renderSettings();document.getElementById('set-bg').style.display='flex';}
+function setSettingsTab(t){_setTab=t;renderSettings();}
+function renderSettings(){
+  const box=document.getElementById('set-body');if(!box)return;
+  ['werte','regeln'].forEach(t=>{const b=document.getElementById('set-tab-'+t);if(b){b.style.borderBottomColor=t===_setTab?'var(--blue)':'transparent';b.style.color=t===_setTab?'var(--blue)':'var(--tx2)';}});
+  if(_setTab==='regeln'){box.innerHTML=rulesHTML();return;}
+  const s=deptMeta._settings||{};
+  box.innerHTML=SETTINGS_DEF.map(g=>`<div style="margin-bottom:16px">
+    <div style="font-size:12px;font-weight:700;color:var(--tx);margin-bottom:6px">${escH(g.grp)}</div>
+    <div style="border:1px solid var(--bd);border-radius:8px">${g.items.map(i=>{const changed=s[i.k]!==undefined;return`<div style="display:flex;align-items:center;gap:10px;padding:7px 10px;border-bottom:1px solid var(--bd)">
+      <span style="flex:1;font-size:12px;color:var(--tx)">${escH(i.l)}${changed?` <span style="font-size:10px;color:#F59E0B">(geändert, Standard ${i.def})</span>`:''}</span>
+      <input type="number" value="${S(i.k)}" min="${i.min}" max="${i.max}" step="${i.step||1}" onchange="setSetting('${i.k}',this.value)" style="width:80px;padding:5px 7px;border:1px solid ${changed?'#F59E0B':'var(--bd)'};border-radius:5px;background:var(--sf);color:var(--tx);font-size:12px;text-align:right">
+      <span style="width:46px;font-size:11px;color:var(--tx3)">${i.u}</span>
+      <button onclick="setSetting('${i.k}','')" title="Auf Standard (${i.def}) zurücksetzen" style="background:none;border:none;cursor:pointer;color:${changed?'var(--blue)':'var(--bd)'};font-size:14px" ${changed?'':'disabled'}>↺</button>
+    </div>`;}).join('')}</div></div>`).join('')+
+    `<div style="text-align:right"><button onclick="resetAllSettings()" style="padding:6px 12px;border:1px solid var(--bd);border-radius:var(--rs);background:var(--sf2);font-size:11px;cursor:pointer;color:var(--tx2)">↺ Alle auf Standard</button></div>`;
+}
 // ═══ TOURGUIDE ═══
 // Schlägt für einen Auditor und die gewählten Tage einer KW passende Baustellen vor (Richtwert 4-6, max. 6
 // pro Tag inkl. bereits geplanter). Tag = 9 h inkl. Fahrzeit (Rundtour ab/bis Startadresse); bereits geplante
 // Baustellen, Rapporte, Personen-Audits und Beratungen werden berücksichtigt. Dringlichkeit: überfällig >
 // fällig > bald fällig > neu; bevorzugte Abteilungen zuerst, ausgeschlossene nie. Füllt nur auf.
-const TG_DAY_MIN=540,TG_MAX_PER_DAY=6;
 function tgAuditMin(e){
   if(e.zeitbedarf)return +e.zeitbedarf;
   const n=e.lastPersonalKW!==undefined?e.lastPersonalCount:null;
-  if(n===null||n===undefined)return 45;
-  if(n<=3)return 30;if(n<=9)return 45;if(n<=19)return 60;return 75;
+  if(n===null||n===undefined)return S('tg_min_unknown');
+  if(n<=3)return S('tg_min_1_3');if(n<=9)return S('tg_min_4_9');if(n<=19)return S('tg_min_10_19');return S('tg_min_20');
 }
 // Personal-Klasse für die Priorität: 0 = 20+, 1 = 10-19, 2 = 4-9, 3 = 1-3, 4 = unbekannt (kein Import)
 function tgPersClass(e){
@@ -5837,8 +5962,8 @@ function tgCandidates(aud,kw){
 }
 function tgFixedMin(aud,ds){
   const rp=rapporte.filter(r=>r.date===ds&&r.auditor===aud).reduce((s,r)=>s+(r.dur||60),0);
-  const pa=personAudits.filter(p=>p.planned&&p.date===ds&&p.auditor===aud).length*45;
-  const bp=beratPlan.filter(p=>p.date===ds&&p.auditor===aud).length*45;
+  const pa=personAudits.filter(p=>p.planned&&p.date===ds&&p.auditor===aud).length*S('tg_fixed_pa');
+  const bp=beratPlan.filter(p=>p.date===ds&&p.auditor===aud).length*S('tg_fixed_berat');
   return rp+pa+bp;
 }
 let _tg=null;
@@ -5874,12 +5999,12 @@ async function tgCompute(){
   pool.forEach((x,i)=>{
     const j=idxPool[i];let best=null;
     dayState.forEach((st,d)=>{
-      if(st.route.length>=TG_MAX_PER_DAY)return;
+      if(st.route.length>=S('tg_max_per_day'))return;
       const base=dayMin(st);
       for(let pos=0;pos<=st.route.length;pos++){
         const r=st.route.slice(0,pos).concat(j,st.route.slice(pos));
         const t=tourSec(r)/60+r.reduce((s,k)=>s+dur.get(k),0)+st.fx;
-        if(t>TG_DAY_MIN)continue;
+        if(t>(S('tg_day_hours')*60))continue;
         const add=t-base;
         if(!best||add<best.add)best={d,r,add};
       }
@@ -5895,7 +6020,7 @@ async function tgCompute(){
     const dm=(d,set)=>{const k=d+':'+set.slice().sort((a,b)=>a-b).join(',');if(cache.has(k))return cache.get(k);
       const v=distTourSec(D,set)/60+set.reduce((s,j)=>s+dur.get(j),0)+dayState[d].fx;cache.set(k,v);return v;};
     let sets=dayState.map(st=>st.route.slice());
-    const cost=ss=>{const t=ss.map((s,d)=>dm(d,s));if(t.some(x=>x>TG_DAY_MIN)||ss.some(s=>s.length>TG_MAX_PER_DAY))return Infinity;return Math.max(...t)*3+t.reduce((a,b)=>a+b,0);};
+    const cost=ss=>{const t=ss.map((s,d)=>dm(d,s));if(t.some(x=>x>(S('tg_day_hours')*60))||ss.some(s=>s.length>S('tg_max_per_day')))return Infinity;return Math.max(...t)*3+t.reduce((a,b)=>a+b,0);};
     let cur=cost(sets),t0=Date.now(),imp=true;
     while(imp&&Date.now()-t0<5000){imp=false;
       for(let a=0;a<sets.length&&!imp;a++)for(let b=0;b<sets.length&&!imp;b++){if(a===b)continue;
@@ -5924,17 +6049,17 @@ function tgRender(){
   const fmt=m=>{m=Math.round(m);return Math.floor(m/60)+':'+String(m%60).padStart(2,'0')+' h';};
   const stCol={overdue:'#EF4444',due:'#F59E0B',soon:'#EAB308',new:'#7C3AED'};
   const newCount=R.dayState.reduce((s,st)=>s+st.route.filter(j=>!R.fixedIds.has(j)&&!R.removed.has(j)).length,0);
-  let h=`<div style="font-size:10px;color:${R.src==='ors'?'#10B981':'#F59E0B'};margin-bottom:8px">${R.src==='ors'?'✓ Fahrzeiten über Strassennetz':'⚠ Fahrzeiten geschätzt (Luftlinie)'} · Rundtour ab/bis Startadresse · Arbeitstag 9 h</div>`;
+  let h=`<div style="font-size:10px;color:${R.src==='ors'?'#10B981':'#F59E0B'};margin-bottom:8px">${R.src==='ors'?'✓ Fahrzeiten über Strassennetz':'⚠ Fahrzeiten geschätzt (Luftlinie)'} · Rundtour ab/bis Startadresse · Arbeitstag ${String(S('tg_day_hours')).replace('.',',')} h</div>`;
   R.dayState.forEach((st,d)=>{
     const stats=tgDayStats({...st,route:st.route.filter(j=>!R.removed.has(j))});
-    const pct=Math.min(100,stats.total/TG_DAY_MIN*100);
+    const pct=Math.min(100,stats.total/(S('tg_day_hours')*60)*100);
     h+=`<div style="margin-bottom:10px;padding:10px 12px;background:var(--sf2);border-radius:10px;border-left:3px solid var(--blue)">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
         <span style="font-size:13px;font-weight:700;color:var(--blue)">${names[R.days[d]]} ${fd(st.ds)} · ${st.route.filter(j=>!R.removed.has(j)).length} Baustellen</span>
-        <span style="font-size:12px;font-weight:700;color:${stats.total>TG_DAY_MIN?'#EF4444':'var(--tx)'}">≈ ${fmt(stats.total)} / 9:00 h</span>
+        <span style="font-size:12px;font-weight:700;color:${stats.total>(S('tg_day_hours')*60)?'#EF4444':'var(--tx)'}">≈ ${fmt(stats.total)} / ${fmt(S('tg_day_hours')*60)}</span>
       </div>
       <div style="height:6px;background:var(--bd);border-radius:3px;overflow:hidden;display:flex;margin-bottom:3px">
-        <div style="width:${stats.drive/TG_DAY_MIN*100}%;background:#F59E0B" title="Fahrzeit"></div><div style="width:${stats.aud/TG_DAY_MIN*100}%;background:#3B82F6" title="Audits"></div><div style="width:${stats.fx/TG_DAY_MIN*100}%;background:#0EA5E9" title="Termine"></div>
+        <div style="width:${stats.drive/(S('tg_day_hours')*60)*100}%;background:#F59E0B" title="Fahrzeit"></div><div style="width:${stats.aud/(S('tg_day_hours')*60)*100}%;background:#3B82F6" title="Audits"></div><div style="width:${stats.fx/(S('tg_day_hours')*60)*100}%;background:#0EA5E9" title="Termine"></div>
       </div>
       <div style="font-size:10px;color:var(--tx3);margin-bottom:6px">🚗 ${fmt(stats.drive)} · 🏗️ ${fmt(stats.aud)}${stats.fx?` · 📋 ${fmt(stats.fx)} Termine`:''}</div>
       ${st.route.map(j=>{const e=R.nodeEntry.get(j);const fixed=R.fixedIds.has(j);const rm=R.removed.has(j);const s=status(e);
@@ -5996,6 +6121,7 @@ function openTourguide(){
   const kwSel=document.getElementById('tg-kw');const cur=dateToKW(today());
   kwSel.innerHTML=[0,1,2,3,4].map(i=>`<option value="${cur+i}">KW ${cur+i}${i===1?' (nächste)':''}</option>`).join('');
   kwSel.value=String(typeof getStickyPlanKW==='function'?getStickyPlanKW():cur+1);
+  document.getElementById('tg-desc').textContent=`Sag mir, an welchen Tagen du Zeit hast – ich stelle dir pro Tag bis zu ${S('tg_max_per_day')} Baustellen zusammen: dringende zuerst, bei gleicher Dringlichkeit grosse Baustellen (mehr Personal) vor kleinen, dann bevorzugte Abteilungen, geografisch sinnvoll, max. ${String(S('tg_day_hours')).replace('.',',')} h inkl. Fahrzeit. Bereits Geplantes bleibt und wird aufgefüllt.`;
   document.getElementById('tg-bg').style.display='flex';
   tgUpdateDays();initStickyFooters();
 }
@@ -6226,7 +6352,6 @@ let _ibPending=[];
 // können dasselbe Profil teilen). markStyle bestimmt, wie "wie viele Personen
 // sind in der Zielwoche zugeteilt" aus dem Rohmaterial berechnet wird.
 //
-const REVIEW_MAX=2; // 1-2 Personen -> "Pruefen"-Kategorie; konfigurierbar
 // Die eigentliche Format-Auswertung (Excel/PDF -> Anzahl Personen je Baustelle) laeuft
 // jetzt im separaten Einsatzlisten-Konverter (siehe Einsatzlisten_Konverter.html).
 // Hier im Planer wird nur noch dessen anonymer JSON-Export eingelesen und gematcht.
@@ -6379,13 +6504,13 @@ async function runPersonalImport(file){
       if(m.wasInactive){
         // Inaktive Baustelle taucht auf einer Einsatzliste auf -> eigene Kategorie, nie
         // automatisch reaktiviert. Nur bei mehr als 1 Person schlagen wir Reaktivierung vor.
-        if(r.count>1)buckets.reactivateInactive.push(item);
+        if(r.count>=S('pi_react_inactive_min'))buckets.reactivateInactive.push(item);
         else buckets.inactiveInfo.push(item);
         return;
       }
       if(r.count===0){
         if(!e.paused)buckets.pause.push(item);else buckets.noop.push(item);
-      }else if(r.count<=REVIEW_MAX){
+      }else if(r.count<=S('pi_review_max')){
         buckets.review.push(item);
       }else{
         if(e.paused)buckets.reactivate.push(item);else buckets.noop.push(item);
@@ -6456,7 +6581,7 @@ function piRenderPreview(){
   // jede Woche wieder in "Prüfen" auftauchen würden).
   if(buckets.review.length){
     html+=`<div style="margin-bottom:14px">
-      <div style="font-size:12px;font-weight:700;color:#F59E0B;margin-bottom:6px">⚠️ Prüfen – anhaken um trotzdem zu pausieren (1–2 Personen) (${buckets.review.length})</div>
+      <div style="font-size:12px;font-weight:700;color:#F59E0B;margin-bottom:6px">⚠️ Prüfen – anhaken um trotzdem zu pausieren (1–${S('pi_review_max')} Personen) (${buckets.review.length})</div>
       ${buckets.review.map((it,i)=>`
         <label style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--sf2);border-radius:8px;margin-bottom:4px;font-size:12px;color:var(--tx)">
           <input type="checkbox" data-key="review" data-idx="${i}">
@@ -6532,7 +6657,7 @@ function piResolveUnknown(idx){
     if(item.count>1)_piPending.buckets.reactivateInactive.push(item);
     else _piPending.buckets.inactiveInfo.push(item);
   }else if(item.count===0){if(!entry.paused)_piPending.buckets.pause.push(item);else _piPending.buckets.noop.push(item);}
-  else if(item.count<=REVIEW_MAX){_piPending.buckets.review.push(item);}
+  else if(item.count<=S('pi_review_max')){_piPending.buckets.review.push(item);}
   else{if(entry.paused)_piPending.buckets.reactivate.push(item);else _piPending.buckets.noop.push(item);}
   piRenderPreview();
 }
@@ -6649,7 +6774,7 @@ function sbAssign(ci){
     if(!e.nameAliases.includes(nn))e.nameAliases.push(nn);
   }
   if(it.count===0){if(!e.paused){e.paused=true;e.pauseReason='Import (Sammelbox): kein Personal';e.pauseUntil=null;log('Pausiert ⏸ (Sammelbox)',e.name,'#94A3B8','');}}
-  else if(it.count>REVIEW_MAX){if(e.paused){e.paused=false;e.pauseReason=null;e.pauseUntil=null;log('Reaktiviert ▶ (Sammelbox)',e.name,'#10B981','');}}
+  else if(it.count>S('pi_review_max')){if(e.paused){e.paused=false;e.pauseReason=null;e.pauseUntil=null;log('Reaktiviert ▶ (Sammelbox)',e.name,'#10B981','');}}
   window._piCollectBox.splice(ci,1);
   saveNow();renderAll();
   showToast('✓ Zugeordnet: '+e.name,2000);
@@ -6688,7 +6813,7 @@ function confirmPersonalImport(){
     e.personalHistory=(e.personalHistory||[]).filter(h=>!(h.kw===targetKW&&h.year===yr));
     e.personalHistory.push({kw:targetKW,year:yr,count});
     e.personalHistory.sort((a,b)=>a.year-b.year||a.kw-b.kw);
-    if(e.personalHistory.length>52)e.personalHistory=e.personalHistory.slice(-52);
+    if(e.personalHistory.length>S('pi_history_weeks'))e.personalHistory=e.personalHistory.slice(-S('pi_history_weeks'));
   };
   [...buckets.pause,...buckets.review,...buckets.reactivate,...buckets.noop,...buckets.reactivateInactive,...buckets.inactiveInfo,...(buckets.excluded||[])].forEach(it=>{
     if(!it.match)return;
@@ -7207,9 +7332,7 @@ function renderXL(){
 function onTypeChange(){
   const t=document.getElementById('f-type').value;
   const rh=document.getElementById('f-rh');
-  if(t==='werkhof'){rh.value='182';}
-  else if(t==='gu'){rh.value='42';}
-  else{rh.value='28';}
+  setDefaultRhythm(t);
   // Auto-set dept if type changed
   if(t==='werkhof'){
     const deptEl=document.getElementById('f-dept');
@@ -7652,12 +7775,29 @@ ALTER TABLE audit_state ADD COLUMN IF NOT EXISTS "rapporte" text;</pre>
     </div>
   </div>
 </div>
+<!-- EINSTELLUNGEN & REGELN -->
+<div id="set-bg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:4000;align-items:center;justify-content:center">
+  <div style="background:var(--sf);border-radius:12px;width:680px;max-width:96vw;max-height:92vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3)">
+    <div style="padding:16px 22px 0;flex-shrink:0">
+      <h3 style="font-size:15px;font-weight:700;color:var(--tx);margin-bottom:8px"><i class="ti ti-settings" style="color:var(--blue)"></i> Einstellungen & Regeln</h3>
+      <div style="display:flex;border-bottom:1px solid var(--bd)">
+        <button id="set-tab-werte" onclick="setSettingsTab('werte')" style="padding:8px 14px;border:none;border-bottom:2px solid var(--blue);background:none;cursor:pointer;font-size:12px;font-weight:600;color:var(--blue)"><i class="ti ti-adjustments"></i> Werte</button>
+        <button id="set-tab-regeln" onclick="setSettingsTab('regeln')" style="padding:8px 14px;border:none;border-bottom:2px solid transparent;background:none;cursor:pointer;font-size:12px;font-weight:600;color:var(--tx2)"><i class="ti ti-book"></i> Regeln</button>
+      </div>
+    </div>
+    <div id="set-body" style="flex:1;min-height:80px;overflow-y:auto;padding:14px 22px"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:12px 22px;border-top:1px solid var(--bd);flex-shrink:0">
+      <span style="font-size:10px;color:var(--tx3)">Änderungen gelten sofort und für alle (synchronisiert).</span>
+      <button onclick="document.getElementById('set-bg').style.display='none'" style="padding:8px 16px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf2);cursor:pointer;font-size:12px;color:var(--tx)">Schliessen</button>
+    </div>
+  </div>
+</div>
 <!-- TOURGUIDE -->
 <div id="tg-bg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:4000;align-items:center;justify-content:center">
   <div style="background:var(--sf);border-radius:12px;width:720px;max-width:96vw;max-height:94vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3)">
     <div style="padding:18px 22px 10px;flex-shrink:0;border-bottom:1px solid var(--bd)">
     <h3 style="font-size:16px;font-weight:700;color:var(--tx);margin-bottom:4px"><i class="ti ti-compass" style="color:var(--blue)"></i> Tourguide</h3>
-    <p style="font-size:11px;color:var(--tx2);margin-bottom:10px;line-height:1.4">Sag mir, an welchen Tagen du Zeit hast – ich stelle dir pro Tag bis zu 6 Baustellen zusammen: dringende zuerst, bei gleicher Dringlichkeit grosse Baustellen (mehr Personal) vor kleinen, dann bevorzugte Abteilungen, geografisch sinnvoll, max. 9 h inkl. Fahrzeit. Bereits Geplantes bleibt und wird aufgefüllt.</p>
+    <p id="tg-desc" style="font-size:11px;color:var(--tx2);margin-bottom:10px;line-height:1.4"></p>
     <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:10px">
       <div><label style="font-size:11px;color:var(--tx2);display:block;margin-bottom:3px">Auditor</label><select id="tg-aud" onchange="tgUpdateDays()" style="padding:6px 8px;border:1px solid var(--bd);border-radius:var(--rs);background:var(--sf2);color:var(--tx);font-size:12px"></select></div>
       <div><label style="font-size:11px;color:var(--tx2);display:block;margin-bottom:3px">Woche</label><select id="tg-kw" onchange="tgUpdateDays()" style="padding:6px 8px;border:1px solid var(--bd);border-radius:var(--rs);background:var(--sf2);color:var(--tx);font-size:12px"></select></div>
