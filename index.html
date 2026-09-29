@@ -361,7 +361,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
   <div id="presence-bar" style="display:flex;align-items:center;gap:4px;margin-left:4px"></div>
   <button onclick="toggleDark()" class="hb" title="Dark Mode" style="font-size:14px">🌙</button>
   <button onclick="openGuide()" class="hb" title="Anleitung" style="font-size:14px">❓</button>
-  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.80</span>
+  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.81</span>
   <button onclick="doLogout()" class="hb" title="Abmelden" style="font-size:14px" id="logout-btn">⏻</button>
   <button onclick="toggleMobileView()" id="mobile-btn" class="hb" title="Mobile Ansicht" style="font-size:14px">📱</button>
   <div id="more-w" class="admin-only">
@@ -377,6 +377,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
       <button onclick="openPersonalImport();toggleMore()"><i class="ti ti-user-pause"></i> Personal-Import (Pausieren)</button>
       <button onclick="openSammelbox();toggleMore()"><i class="ti ti-inbox"></i> Sammelbox <span id="sb-count-badge"></span></button>
       <button onclick="openTempWorkers();toggleMore()"><i class="ti ti-user-question"></i> Temporäre Mitarbeitende <span id="tw-count-badge"></span></button>
+      <button onclick="openPersonalBulk();toggleMore()"><i class="ti ti-user-edit"></i> Personal manuell erfassen</button>
       <div style="height:1px;background:var(--bd);margin:4px 0"></div>
       <button onclick="teamExport();toggleMore()"><i class="ti ti-device-floppy"></i> Notfall-Backup</button>
       <label style="display:flex;align-items:center;gap:6px;padding:7px 12px;cursor:pointer;font-size:12px;color:var(--tx);border-bottom:1px solid var(--bd)"><i class="ti ti-upload"></i> Backup laden<input type="file" accept=".json" onchange="loadJSON(this.files[0])" style="display:none"></label>
@@ -464,7 +465,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
         <div class="dp-r"><span class="dp-l">Abteilung</span><span class="dp-v" id="dp-dept"></span></div>
         <div class="dp-r"><span class="dp-l">Rhythmus</span><span class="dp-v" id="dp-rh"></span></div>
         <div class="dp-r" id="dp-zb-row" style="display:none"><span class="dp-l">Zeitbedarf</span><span class="dp-v" id="dp-zb"></span></div>
-        <div class="dp-r" id="dp-personal-row" style="display:none"><span class="dp-l">Personal KW <span id="dp-personal-kw"></span></span><span class="dp-v" id="dp-personal-cnt"></span></div>
+        <div class="dp-r" id="dp-personal-row"><span class="dp-l" id="dp-personal-lbl">Personal</span><span class="dp-v"><span id="dp-personal-cnt"></span> <button id="dp-personal-edit" title="Personal dieser KW manuell eintragen" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,.7);font-size:12px;padding:0 0 0 4px">✏️</button></span></div>
         <div class="dp-r"><span class="dp-l">Letztes Audit</span><span class="dp-v" id="dp-last"></span><button id="dp-last-clr" onclick="clearLastAudit()" style="display:none;background:none;border:none;cursor:pointer;color:#EF4444;font-size:11px;margin-left:4px" title="Datum löschen">×</button></div>
         <div class="dp-r"><span class="dp-l">Auditor</span><span class="dp-v" id="dp-aud"></span></div>
         <div class="dp-r"><span class="dp-l">Nächstes Audit</span><span class="dp-v" id="dp-next"></span></div>
@@ -1889,11 +1890,12 @@ function selEntry(id){
   // wenn diese Baustelle je in einem Import geführt wurde (kein Wert = nie importiert).
   const perRow=document.getElementById('dp-personal-row');
   if(perRow){
-    if(e.lastPersonalKW!==undefined&&e.lastPersonalCount!==undefined){
-      document.getElementById('dp-personal-kw').textContent=e.lastPersonalKW;
-      document.getElementById('dp-personal-cnt').textContent=e.lastPersonalCount;
-      perRow.style.display='flex';
-    }else perRow.style.display='none';
+    const has=e.lastPersonalKW!==undefined&&e.lastPersonalCount!==undefined;
+    const man=(e.personalHistory||[]).some(h=>h.kw===e.lastPersonalKW&&h.manual);
+    document.getElementById('dp-personal-lbl').textContent=has?'Personal KW '+e.lastPersonalKW:'Personal';
+    document.getElementById('dp-personal-cnt').textContent=has?e.lastPersonalCount+(man?' (manuell)':''):'– keine Angabe';
+    document.getElementById('dp-personal-edit').onclick=()=>openPersonalManual(e.id);
+    perRow.style.display=e.type==='werkhof'?'none':'flex';
   }
   // lastAudit always derived from auditHistory - never from resumeFrom
   const lastAuditEntry=(e.auditHistory||[]).sort((a,b)=>b.date.localeCompare(a.date))[0];
@@ -5845,6 +5847,7 @@ const SETTINGS_DEF=[
   {k:'tg_lunch_start',l:'Mittagspause ab',def:12,min:10,max:15,step:.25,u:'Uhr'},
   {k:'tg_lunch_dur',l:'Mittagspause Dauer (0 = keine)',def:60,min:0,max:120,step:15,u:'min'},
   {k:'tg_max_per_day',l:'Max. Baustellen pro Tag',def:6,min:1,max:15,u:'Stk.'},
+  {k:'tg_pers_max_age',l:'Personalangabe darf höchstens so alt sein (Wochen vor der geplanten KW)',def:3,min:0,max:26,u:'Wochen'},
   {k:'tg_min_1_3',l:'Audit-Dauer bei 1–3 Personen',def:30,min:5,max:480,u:'min'},
   {k:'tg_min_4_9',l:'Audit-Dauer bei 4–9 Personen',def:45,min:5,max:480,u:'min'},
   {k:'tg_min_10_19',l:'Audit-Dauer bei 10–19 Personen',def:60,min:5,max:480,u:'min'},
@@ -5917,9 +5920,11 @@ function rulesHTML(){
     `«Nicht auf der Liste»: aktive Baustellen einer Abteilung, deren Einsatzlisten <u>alle</u> importiert wurden, die aber auf keiner stehen → Pausieren vorgeschlagen (neu erfasste nicht vorausgewählt).`,
     `Gespeichert wird die Personalzahl bei allen erkannten Baustellen (auch dauerhaft ausgeschlossene), «nicht auf der Liste» erhält 0. Verlauf: ${v('pi_history_weeks')} Wochen.`,
     `Werkhöfe sind vom Import komplett ausgenommen. Unbekannte Einträge: zuordnen (Alias wird gemerkt), neu anlegen oder in die Sammelbox.`,
-    `Temporäre Mitarbeitende: nur Personal-Nummern (keine Namen), pro Einheit bei jedem Import ersetzt.`]) +
+    `Temporäre Mitarbeitende: nur Personal-Nummern (keine Namen), pro Einheit bei jedem Import ersetzt.`,
+    `Manuelle Erfassung (für Einheiten ohne brauchbare Einsatzliste): im Detail-Panel ✏️ bei «Personal» oder Admin → «Personal manuell erfassen» (mehrere Baustellen einer Abteilung). Wirkt wie ein Import-Wert (Verlauf, Trend, Tourguide), ersetzt einen vorhandenen Wert derselben KW und ändert den Status der Baustelle nicht (kein Pausieren/Reaktivieren).`]) +
   sec('compass','Tourguide',[
-    `Vorschläge nur für fällige Baustellen mit Koordinaten; nie: pausiert, inaktiv, 0 Personal laut Import, ausgeschlossene Abteilungen, diese KW bereits (von irgendwem) eingeplant.`,
+    `Vorschläge nur für fällige Baustellen mit Koordinaten <b>und bekanntem Personal vor Ort (mehr als 0)</b>. Die Personalangabe (Import oder manuell) darf höchstens ${v('tg_pers_max_age')} Wochen älter sein als die geplante KW – sonst gilt das Personal als unbekannt. Solche Baustellen werden nie vorgeschlagen, aber unter dem Vorschlag aufgelistet.`,
+    `Nie: pausiert, inaktiv, ausgeschlossene Abteilungen, diese KW bereits (von irgendwem) eingeplant, 0 Personal oder keine/zu alte Personalangabe.`,
     `Auswahl: 1. Ampel – zuerst werden alle roten Baustellen eingeplant, die noch Platz haben, dann orange, gelb, neu. 2. Innerhalb derselben Farbe entscheidet der kleinste Umweg zur bestehenden Tagesroute (bereits geplante Baustellen und Termine wie Rapporte sind Anker) – so entstehen regionale Tage.`,
     `Grössere Baustellen und bevorzugte Abteilungen dürfen mehr Umweg kosten: 20+ Pers. ${v('tg_bonus_20')} min · 10–19 ${v('tg_bonus_10')} min · 4–9 ${v('tg_bonus_4')} min · bevorzugte Abteilung ★ ${v('tg_bonus_pref')} min (alle 0 = rein geografisch).`,
     `Audit-Dauer: 1–3 Pers. ${v('tg_min_1_3')} · 4–9 ${v('tg_min_4_9')} · 10–19 ${v('tg_min_10_19')} · 20+ ${v('tg_min_20')} · unbekannt ${v('tg_min_unknown')} min (inkl. Schreiben/Rapportieren; Fahrzeit separat).`,
@@ -5985,7 +5990,23 @@ function tgPersClass(e){
   if(n>=20)return 0;if(n>=10)return 1;if(n>=4)return 2;return 3;
 }
 function tgUrgency(e){const s=status(e);return{overdue:0,due:1,soon:2,new:3}[s];}
-function tgCandidates(aud,kw){
+// «Personal vor Ort» für Tourguide: bekannter Wert grösser 0, und die Angabe ist nicht älter als eingestellt
+// (relativ zur geplanten KW). Ohne Angabe oder mit veraltetem Wert gilt das Personal als unbekannt -> nie vorschlagen.
+function tgYearForKW(kw){return pmYearFor(kw);}
+function isoMonday(kw,yr){const j=new Date(yr,0,4);const sw=new Date(j.getTime()-((j.getDay()||7)-1)*86400000);return new Date(sw.getTime()+(kw-1)*7*86400000);}
+function persYear(e){
+  const h=(e.personalHistory||[]).find(x=>x.kw===e.lastPersonalKW&&(x.count===e.lastPersonalCount));
+  if(h)return h.year;
+  const y=new Date().getFullYear(),kw=e.lastPersonalKW;
+  return isoMonday(kw,y).getTime()>Date.now()+60*86400000?y-1:y;   // ältere Angaben ohne Jahr: nächstliegendes Jahr
+}
+function tgPersonalState(e,targetKW,targetYear){
+  if(e.lastPersonalKW===undefined||e.lastPersonalCount===undefined||e.lastPersonalCount===null)return'unknown';
+  const wk=(isoMonday(targetKW,targetYear).getTime()-isoMonday(e.lastPersonalKW,persYear(e)).getTime())/(7*86400000);
+  if(wk>S('tg_pers_max_age'))return'stale';
+  return e.lastPersonalCount>0?'ok':'zero';
+}
+function tgCandidates(aud,kw,noPers){
   const m=auditorMeta[aud]||{};const pref=new Set(m.prefDepts||[]),excl=new Set(m.exclDepts||[]);
   const ks=kwToDate(kw),ke=kwToDate(kw+1);
   const plannedThisKW=new Set(plans.filter(p=>p.date>=ks&&p.date<ke).map(p=>p.bsId));
@@ -5993,8 +6014,10 @@ function tgCandidates(aud,kw){
     if(!e.active||e.paused||!e.lat||!e.lng)return false;
     if(tgUrgency(e)===undefined)return false;                 // ok / geplant / Beratung -> nicht vorschlagen
     if(plannedThisKW.has(e.id))return false;                  // von irgendwem diese KW eingeplant
-    if(e.lastPersonalKW!==undefined&&e.lastPersonalCount===0)return false; // laut Import kein Personal
     if(deptParts(e.dept).some(d=>excl.has(d)))return false;   // ausgeschlossen (hart)
+    // Nur mit Personal vor Ort: bekannt, > 0 und aktuell. Sonst NIE vorschlagen (unbekannt/veraltet werden aufgelistet).
+    const ps=tgPersonalState(e,kw,tgYearForKW(kw));
+    if(ps!=='ok'){if(noPers&&(ps==='unknown'||ps==='stale'))noPers.push({e,state:ps});return false;}
     return true;
   }).map(e=>{const isPref=deptParts(e.dept).some(d=>pref.has(d));return{e,isPref,urg:tgUrgency(e),pers:tgPersClass(e),min:tgAuditMin(e)};})
     // Priorität: 1) Ampel  2) Personal-Grösse (mehr Personal = höheres Risiko)  3) bevorzugte Abteilung  4) am längsten fällig
@@ -6095,7 +6118,8 @@ async function tgCompute(){
   const fixedPlans=dayDates.map(ds=>plans.filter(p=>p.date===ds&&p.auditor===aud).map(p=>data.find(x=>x.id===p.bsId)).filter(e=>e&&e.lat&&e.lng));
   const events=dayDates.map(ds=>tgDayEvents(aud,ds));
   await tgGeocodeEvents(events.flat());
-  const cands=tgCandidates(aud,kw);
+  const noPers=[];
+  const cands=tgCandidates(aud,kw,noPers);
   const fixedAll=[...new Set(fixedPlans.flat())];
   const evPts=events.flat().filter(ev=>ev.lat&&ev.lng);
   const pool=cands.slice(0,Math.max(0,54-fixedAll.length-evPts.length));
@@ -6141,7 +6165,7 @@ async function tgCompute(){
       for(const j of sets[a]){if(fixedSet.has(j))continue;const s2=sets.slice();s2[a]=sets[a].filter(x=>x!==j);s2[b]=sets[b].concat(j);const v=cost(s2);if(v<cur-1){sets=s2;cur=v;imp=true;break;}}
       if(!imp)for(const j of sets[a]){if(fixedSet.has(j)||imp)continue;for(const k of sets[b]){if(fixedSet.has(k))continue;
         const s2=sets.slice();s2[a]=sets[a].map(x=>x===j?k:x);s2[b]=sets[b].map(x=>x===k?j:x);const v=cost(s2);if(v<cur-1){sets=s2;cur=v;imp=true;break;}}}}}
-  _tg={aud,kw,days,dayDates,src,sets,fixedIds:fixedSet,removed:new Set(),remaining:skipped,
+  _tg={aud,kw,days,dayDates,src,sets,fixedIds:fixedSet,removed:new Set(),remaining:skipped,noPers,
     nodeEntry:new Map([...fixedAll.map(e=>[idxFixed.get(e.id),e]),...pool.map((x,i)=>[idxPool[i],x.e])]),prefOf:new Map(pool.map((x,i)=>[idxPool[i],x.isPref]))};
   tgRender();
 }
@@ -6184,6 +6208,12 @@ function tgRender(){
   });
   if(R.remaining.length)h+=`<details style="margin-top:4px;font-size:11px;color:var(--tx2)"><summary style="cursor:pointer">Weitere fällige Baustellen, die zeitlich nicht mehr passen (${R.remaining.length})</summary>
     ${R.remaining.slice(0,25).map(x=>`<div style="padding:3px 0;border-top:1px solid var(--bd)">${bsLabel(x.e)} · ${x.min} min</div>`).join('')}</details>`;
+  if(R.noPers&&R.noPers.length){
+    const rows=R.noPers.sort((a,b)=>tgUrgency(a.e)-tgUrgency(b.e)||dl(a.e)-dl(b.e));
+    h+=`<details style="margin-top:8px;padding:8px 10px;background:#FFFBEB;border:1px solid #FCD34D;border-radius:8px;font-size:11px;color:#92400E"><summary style="cursor:pointer;font-weight:600">⚠ ${rows.length} fällige Baustelle(n) nicht berücksichtigt – kein aktuelles Personal bekannt</summary>
+      <div style="margin:6px 0;color:var(--tx2)">Tourguide plant nur Baustellen mit bekanntem Personal vor Ort (Angabe höchstens ${S('tg_pers_max_age')} Wochen alt). Personal trägst du im Detail-Panel (✏️ bei «Personal») oder unter Admin → «Personal manuell erfassen» ein.</div>
+      ${rows.slice(0,40).map(x=>`<div style="padding:3px 0;border-top:1px solid #FDE68A;display:flex;justify-content:space-between;gap:8px"><span>${bsLabel(x.e)}</span><span style="white-space:nowrap;color:var(--tx3)">${x.state==='stale'?'Angabe KW '+x.e.lastPersonalKW+' (zu alt)':'keine Angabe'}</span></div>`).join('')}</details>`;
+  }
   document.getElementById('tg-result').innerHTML=h;
   const btn=document.getElementById('tg-apply');btn.style.display=newCount?'':'none';btn.textContent=`✓ ${newCount} Baustellen einplanen`;
 }
@@ -6258,6 +6288,88 @@ async function tgHomeFor(aud){
   if(m.homeLat&&m.homeLng)return{lat:m.homeLat,lng:m.homeLng};
   if(m.home){await tgGeocodeHome(aud,m.home);const m2=auditorMeta[aud]||{};if(m2.homeLat)return{lat:m2.homeLat,lng:m2.homeLng};}
   return null;
+}
+// ═══ PERSONAL MANUELL ERFASSEN ═══
+// Für Einheiten ohne (brauchbare) Einsatzliste. Wirkt wie ein Import-Wert: Detail-Panel, Verlauf, Trend,
+// Tourguide (Dauer, Priorität, «Personal vor Ort»). Ein Wert für dieselbe KW wird ersetzt.
+// Ändert nichts am Status der Baustelle (kein Pausieren/Reaktivieren).
+function pmYearFor(kw){
+  const cur=dateToKW(today()),y=new Date().getFullYear();
+  if(kw-cur>40)return y-1;if(cur-kw>40)return y+1;return y;
+}
+function recordPersonalManual(e,kw,yr,count){
+  e.personalHistory=(e.personalHistory||[]).filter(h=>!(h.kw===kw&&h.year===yr));
+  e.personalHistory.push({kw,year:yr,count,manual:true});
+  e.personalHistory.sort((a,b)=>a.year-b.year||a.kw-b.kw);
+  const maxW=S('pi_history_weeks');
+  if(e.personalHistory.length>maxW)e.personalHistory=e.personalHistory.slice(-maxW);
+  const last=e.personalHistory[e.personalHistory.length-1];   // neuester Eintrag bestimmt den «letzten Wert»
+  e.lastPersonalKW=last.kw;e.lastPersonalCount=last.count;
+}
+function pmKwOptions(sel){
+  const cur=dateToKW(today());
+  return[-4,-3,-2,-1,0,1,2,3,4].map(i=>{const k=cur+i;return`<option value="${k}"${k===(sel??cur)?' selected':''}>KW ${k}${i===0?' (aktuell)':i===1?' (nächste)':''}</option>`;}).join('');
+}
+// --- einzelne Baustelle (Detail-Panel) ---
+let _pmId=null;
+function openPersonalManual(id){
+  const e=data.find(x=>x.id===id);if(!e)return;_pmId=id;
+  document.getElementById('pm-name').innerHTML=bsLabel(e);
+  document.getElementById('pm-kw').innerHTML=pmKwOptions();
+  pmFill();
+  document.getElementById('pm-bg').style.display='flex';
+  setTimeout(()=>{const i=document.getElementById('pm-cnt');i.focus();i.select();},50);
+}
+function pmFill(){
+  const e=data.find(x=>x.id===_pmId);if(!e)return;
+  const kw=+document.getElementById('pm-kw').value,yr=pmYearFor(kw);
+  const h=(e.personalHistory||[]).find(x=>x.kw===kw&&x.year===yr);
+  document.getElementById('pm-cnt').value=h?h.count:'';
+  document.getElementById('pm-hint').textContent=h?`Vorhandener Wert (${h.manual?'manuell':'Import'}): ${h.count} – wird ersetzt.`:'Für diese KW ist noch kein Wert vorhanden.';
+}
+function savePersonalManual(){
+  const e=data.find(x=>x.id===_pmId);if(!e)return;
+  const v=document.getElementById('pm-cnt').value.trim();
+  if(v===''||isNaN(+v)||+v<0){showToast('Bitte eine Personenzahl (0 oder mehr) eingeben');return;}
+  const kw=+document.getElementById('pm-kw').value,n=Math.round(+v);
+  recordPersonalManual(e,kw,pmYearFor(kw),n);
+  saveNow();renderAll();if(document.getElementById('dp')&&e.id===selId)selEntry(e.id);
+  document.getElementById('pm-bg').style.display='none';
+  showToast(n===0?`✓ KW ${kw}: 0 Personen gespeichert – Tourguide schlägt die Baustelle nicht mehr vor`:`✓ KW ${kw}: ${n} Personen gespeichert`,3200);
+}
+// --- mehrere Baustellen einer Abteilung (Admin-Menü) ---
+function openPersonalBulk(){
+  const sel=document.getElementById('pmb-dept');
+  const cur=sel.value;
+  sel.innerHTML=getAllDepts().map(d=>`<option value="${escH(d)}">${escH(d)}</option>`).join('');
+  if(cur)sel.value=cur;
+  document.getElementById('pmb-kw').innerHTML=pmKwOptions();
+  renderPersonalBulk();
+  document.getElementById('pmb-bg').style.display='flex';
+}
+function renderPersonalBulk(){
+  const dept=document.getElementById('pmb-dept').value,kw=+document.getElementById('pmb-kw').value,yr=pmYearFor(kw);
+  const list=data.filter(e=>e.active&&e.type!=='werkhof'&&deptParts(e.dept).includes(dept)).sort((a,b)=>(a.psp||'~').localeCompare(b.psp||'~')||a.name.localeCompare(b.name));
+  document.getElementById('pmb-list').innerHTML=list.length?list.map(e=>{
+    const h=(e.personalHistory||[]).find(x=>x.kw===kw&&x.year===yr);
+    const lastTxt=e.lastPersonalKW!==undefined?`zuletzt KW ${e.lastPersonalKW}: ${e.lastPersonalCount}`:'noch keine Angabe';
+    return`<div style="display:flex;align-items:center;gap:10px;padding:6px 10px;border-bottom:1px solid var(--bd)">
+      <span style="flex:1;min-width:0;font-size:12px">${bsLabel(e)}${e.paused?'':''}<div style="font-size:10px;color:var(--tx3)">${lastTxt}${h?` · KW ${kw}: <b>${h.count}</b>${h.manual?' (manuell)':''}`:''}</div></span>
+      <input type="number" min="0" step="1" data-id="${e.id}" data-old="${h?h.count:''}" value="${h?h.count:''}" placeholder="–" style="width:80px;padding:6px 8px;border:1px solid var(--bd);border-radius:6px;background:var(--sf2);color:var(--tx);font-size:13px;text-align:right">
+    </div>`;}).join(''):'<div style="padding:14px;font-size:12px;color:var(--tx3)">Keine aktiven Baustellen in dieser Abteilung.</div>';
+}
+function savePersonalBulk(){
+  const kw=+document.getElementById('pmb-kw').value,yr=pmYearFor(kw);let n=0,zeros=0;
+  document.querySelectorAll('#pmb-list input[data-id]').forEach(inp=>{
+    const v=inp.value.trim();if(v===''||isNaN(+v)||+v<0)return;
+    if(v===inp.dataset.old)return;                       // unverändert
+    const e=data.find(x=>x.id===+inp.dataset.id);if(!e)return;
+    recordPersonalManual(e,kw,yr,Math.round(+v));n++;if(+v===0)zeros++;
+  });
+  if(!n){showToast('Keine Änderungen eingegeben');return;}
+  saveNow();renderAll();
+  document.getElementById('pmb-bg').style.display='none';
+  showToast(`✓ Personal KW ${kw} für ${n} Baustelle(n) gespeichert${zeros?` (${zeros}× 0 Personen – nicht für Tourguide)`:''}`,3500);
 }
 // ═══ PERSONALVERLAUF (aus den wöchentlichen Personal-Importen) ═══
 function personalTrend(e){
@@ -7879,6 +7991,40 @@ ALTER TABLE audit_state ADD COLUMN IF NOT EXISTS "rapporte" text;</pre>
     <div id="sb-list"></div>
     <div style="display:flex;justify-content:flex-end;margin-top:16px;border-top:1px solid var(--bd);padding-top:12px">
       <button onclick="document.getElementById('pisb-bg').style.display='none'" style="padding:8px 16px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf2);cursor:pointer;font-size:12px;color:var(--tx)">Schliessen</button>
+    </div>
+  </div>
+</div>
+<!-- PERSONAL MANUELL: einzelne Baustelle -->
+<div id="pm-bg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:4200;align-items:center;justify-content:center" onclick="if(event.target===this)this.style.display='none'">
+  <div style="background:var(--sf);border-radius:12px;padding:20px;width:400px;max-width:94vw;box-shadow:0 20px 60px rgba(0,0,0,.3)">
+    <h3 style="font-size:15px;font-weight:700;color:var(--tx);margin-bottom:6px"><i class="ti ti-user-edit" style="color:var(--blue)"></i> Personal eintragen</h3>
+    <div id="pm-name" style="font-size:12px;color:var(--tx2);margin-bottom:12px"></div>
+    <div style="display:flex;gap:10px;margin-bottom:6px">
+      <div style="flex:1"><label style="font-size:11px;color:var(--tx2);display:block;margin-bottom:3px">Kalenderwoche</label><select id="pm-kw" onchange="pmFill()" style="width:100%;padding:8px;border:1px solid var(--bd);border-radius:var(--rs);background:var(--sf2);color:var(--tx);font-size:13px"></select></div>
+      <div style="width:120px"><label style="font-size:11px;color:var(--tx2);display:block;margin-bottom:3px">Personen vor Ort</label><input id="pm-cnt" type="number" min="0" step="1" onkeydown="if(event.key==='Enter')savePersonalManual()" style="width:100%;box-sizing:border-box;padding:8px;border:1px solid var(--bd);border-radius:var(--rs);background:var(--sf2);color:var(--tx);font-size:13px;text-align:right"></div>
+    </div>
+    <div id="pm-hint" style="font-size:11px;color:var(--tx3);margin-bottom:14px"></div>
+    <div style="display:flex;justify-content:flex-end;gap:8px">
+      <button onclick="document.getElementById('pm-bg').style.display='none'" style="padding:8px 14px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf2);cursor:pointer;font-size:12px;color:var(--tx)">Abbrechen</button>
+      <button onclick="savePersonalManual()" style="padding:8px 16px;border:none;border-radius:var(--rs);background:var(--blue);color:#fff;font-size:12px;font-weight:600;cursor:pointer">Speichern</button>
+    </div>
+  </div>
+</div>
+<!-- PERSONAL MANUELL: mehrere Baustellen einer Abteilung -->
+<div id="pmb-bg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:4000;align-items:center;justify-content:center">
+  <div style="background:var(--sf);border-radius:12px;width:640px;max-width:96vw;max-height:92vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3)">
+    <div style="padding:16px 22px 12px;flex-shrink:0;border-bottom:1px solid var(--bd)">
+      <h3 style="font-size:15px;font-weight:700;color:var(--tx);margin-bottom:4px"><i class="ti ti-user-edit" style="color:var(--blue)"></i> Personal manuell erfassen</h3>
+      <p style="font-size:11px;color:var(--tx3);margin-bottom:10px">Für Einheiten ohne brauchbare Einsatzliste. Nur ausgefüllte Felder werden gespeichert (leer = unverändert). Ein vorhandener Wert derselben KW wird ersetzt. Der Status der Baustelle ändert sich nicht.</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <div style="flex:1;min-width:200px"><label style="font-size:11px;color:var(--tx2);display:block;margin-bottom:3px">Abteilung</label><select id="pmb-dept" onchange="renderPersonalBulk()" style="width:100%;padding:7px 8px;border:1px solid var(--bd);border-radius:var(--rs);background:var(--sf2);color:var(--tx);font-size:12px"></select></div>
+        <div style="width:170px"><label style="font-size:11px;color:var(--tx2);display:block;margin-bottom:3px">Kalenderwoche</label><select id="pmb-kw" onchange="renderPersonalBulk()" style="width:100%;padding:7px 8px;border:1px solid var(--bd);border-radius:var(--rs);background:var(--sf2);color:var(--tx);font-size:12px"></select></div>
+      </div>
+    </div>
+    <div id="pmb-list" style="flex:1;min-height:80px;overflow-y:auto"></div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;padding:12px 22px;border-top:1px solid var(--bd);flex-shrink:0">
+      <button onclick="document.getElementById('pmb-bg').style.display='none'" style="padding:8px 16px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf2);cursor:pointer;font-size:12px;color:var(--tx)">Schliessen</button>
+      <button onclick="savePersonalBulk()" style="padding:8px 16px;border:none;border-radius:var(--rs);background:#10B981;color:#fff;font-size:12px;font-weight:600;cursor:pointer">✓ Speichern</button>
     </div>
   </div>
 </div>
