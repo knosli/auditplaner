@@ -361,7 +361,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
   <div id="presence-bar" style="display:flex;align-items:center;gap:4px;margin-left:4px"></div>
   <button onclick="toggleDark()" class="hb" title="Dark Mode" style="font-size:14px">🌙</button>
   <button onclick="openGuide()" class="hb" title="Anleitung" style="font-size:14px">❓</button>
-  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.79</span>
+  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.80</span>
   <button onclick="doLogout()" class="hb" title="Abmelden" style="font-size:14px" id="logout-btn">⏻</button>
   <button onclick="toggleMobileView()" id="mobile-btn" class="hb" title="Mobile Ansicht" style="font-size:14px">📱</button>
   <div id="more-w" class="admin-only">
@@ -5035,6 +5035,7 @@ function renderMobPlan(){
     </div>`;
   });
     el.innerHTML=html;
+  mobAutoRouteSoon();
 }
 function mobConfirmPersonAudit(id){
   const p=personAudits.find(x=>x.id===id);if(!p)return;
@@ -5072,7 +5073,7 @@ function mobSortByGPS(){
   if(btn){btn.textContent='⏳ GPS…';btn.disabled=true;btn.style.background='#EFF6FF';}
   navigator.geolocation.getCurrentPosition(
     pos=>{
-      _mobGPSPos={lat:pos.coords.latitude,lng:pos.coords.longitude};
+      _mobGPSPos={lat:pos.coords.latitude,lng:pos.coords.longitude};_mobGPSTime=Date.now();_mobAutoTried='';
       if(btn){btn.textContent='⏳ Route…';}
       computeMobRoute().finally(()=>{if(btn){btn.textContent='📍 ✓';btn.disabled=false;btn.style.background='#D1FAE5';}});
     },
@@ -5087,6 +5088,32 @@ function mobSortByGPS(){
     {timeout:10000,maximumAge:30000,enableHighAccuracy:true}
   );
 }
+// ═══ AUTOMATISCHE SORTIERUNG (Handy-Tagesplan) ═══
+// Der Tagesplan ist immer sortiert: beim Öffnen eines Tages und sobald sich die offenen Stopps ändern
+// (Audit erledigt, neu geplant, verschoben, abgesagt). Nach einem erledigten Stopp startet die Route ab
+// dieser Baustelle (dort steht man gerade); sonst ab aktuellem GPS-Standort (falls frisch) bzw. Startadresse.
+let _mobAutoTimer=null,_mobAutoTried='';
+function mobAutoRouteSoon(){clearTimeout(_mobAutoTimer);_mobAutoTimer=setTimeout(mobAutoRoute,60);}
+function mobAutoRoute(){
+  if(_mobRouteBusy||!document.getElementById('mob-plan-list'))return;
+  const stops=mobCurrentDayStops().filter(s=>s.lat&&s.lng);
+  if(stops.length<2)return;
+  const cur=stops.map(s=>s.key).sort().join('|');
+  const old=_mobRoute&&_mobRoute.date===_mobDate?_mobRoute:null;
+  const oldSet=old?old.keys.filter(k=>old.coords&&old.coords[k]).slice().sort().join('|'):'';
+  if(old&&oldSet===cur)return;                                  // Route passt zu den offenen Stopps
+  const sig=_mobDate+'#'+cur;if(_mobAutoTried===sig)return;     // gleiche Lage schon versucht (z.B. keine Startadresse)
+  _mobAutoTried=sig;
+  let start=null,startName=null;
+  if(old&&old.coords){
+    const removed=old.keys.filter(k=>old.coords[k]&&!stops.some(s=>s.key===k));
+    if(removed.length){const last=removed.sort((a,b)=>old.keys.indexOf(b)-old.keys.indexOf(a))[0];start=old.coords[last];startName=(old.coords[last].name||'').replace(/^[^A-Za-zÀ-ÿ0-9]+/,'');}
+  }
+  if(!start&&_mobGPSPos&&_mobGPSTime&&Date.now()-_mobGPSTime<15*60000)start=null; // frischer GPS-Standort wird in computeMobRoute genutzt
+  else if(!start)_mobGPSPos=null;                                // alter GPS-Standort -> Startadresse verwenden
+  computeMobRoute({silent:true,start,startName});
+}
+let _mobGPSTime=0;
 // ═══ ROUTEN-OPTIMIERUNG NACH FAHRZEIT ═══
 // Start = aktueller GPS-Standort (sonst Startadresse), Ende = Startadresse (Rundtour).
 // Fahrzeiten kommen als Matrix von openrouteservice (Strassennetz). Ohne Schlüssel oder ohne
@@ -5127,11 +5154,10 @@ function mobRouteBannerHTML(stops){
     info=`<div style="font-size:13px;font-weight:700;color:var(--tx)">🚗 ${fmtDur(r.total)} Fahrzeit${r.back?' <span style="font-weight:400;color:var(--tx2);font-size:11px">(inkl. Rückfahrt)</span>':''}</div>
       <div style="font-size:10px;color:${r.src==='ors'?'#10B981':'#F59E0B'};margin-top:2px">${r.src==='ors'?'✓ Berechnet über Strassennetz':'⚠ Schätzung nach Luftlinie (kein Routen-Schlüssel oder offline)'}</div>`;
   }else{
-    info=`<div style="font-size:12px;color:var(--tx2)">Tipp: <b>📍 Sortieren</b> berechnet die schnellste Reihenfolge ab deinem Standort${localStorage.getItem('audit_start')?' mit Rückfahrt zur Startadresse':''}.</div>`;
+    info=`<div style="font-size:12px;color:var(--tx2)">⏳ Reihenfolge wird automatisch berechnet… <span style="color:var(--tx3)">(📍 Sortieren = neu ab aktuellem Standort)</span></div>`;
   }
   return`<div style="padding:12px 14px;background:var(--sf);border:1px solid var(--bd);border-radius:12px;margin-bottom:10px">
     ${info}
-    ${mobRouteValid(stops)?`<button onclick="mobRoute()" style="width:100%;margin-top:8px;padding:9px;background:#F59E0B;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600">🗺️ Ganze Route in Google Maps öffnen</button>`:''}
     <div style="display:flex;align-items:center;gap:6px;margin-top:8px">
       <label style="font-size:11px;color:var(--tx2);white-space:nowrap">Erster Stopp:</label>
       <select onchange="mobSetFirstPin(this.value)" style="flex:1;min-width:0;padding:6px;border:1px solid var(--bd);border-radius:8px;background:var(--sf2);color:var(--tx);font-size:12px">${opts}</select>
@@ -5141,7 +5167,7 @@ function mobRouteBannerHTML(stops){
 function mobLegHTML(st){
   if(!_mobRoute||_mobRoute.date!==_mobDate)return'';
   const i=_mobRoute.keys.indexOf(st.key);if(i<0||_mobRoute.legs[i]==null)return'';
-  return`<div style="display:flex;align-items:center;gap:6px;margin:-2px 0 6px 10px;font-size:11px;color:var(--tx3)"><span>↓</span><span>🚗 ${fmtDur(_mobRoute.legs[i])}${i===0?(_mobRoute.fromGPS?' ab Standort':' ab Startadresse'):''}</span></div>`;
+  return`<div style="display:flex;align-items:center;gap:6px;margin:-2px 0 6px 10px;font-size:11px;color:var(--tx3)"><span>↓</span><span>🚗 ${fmtDur(_mobRoute.legs[i])}${i===0?' '+(_mobRoute.fromLabel||(_mobRoute.fromGPS?'ab Standort':'ab Startadresse')):''}</span></div>`;
 }
 function mobReturnLegHTML(stops){
   if(!mobRouteValid(stops)||!_mobRoute.back)return'';
@@ -5217,7 +5243,8 @@ function solveRoute(D,s,nodes,e){
   return seq;
 }
 let _mobRouteBusy=false;
-async function computeMobRoute(){
+async function computeMobRoute(opts){
+  opts=opts||{};
   if(_mobRouteBusy)return;
   const stops=mobCurrentDayStops().filter(s=>s.lat&&s.lng);
   const noCoord=mobCurrentDayStops().filter(s=>!s.lat||!s.lng);
@@ -5225,8 +5252,9 @@ async function computeMobRoute(){
   _mobRouteBusy=true;
   try{
     const home=await getHomeCoords();
-    const startPt=_mobGPSPos||home;
-    if(!startPt){showToast('Kein Standort und keine Startadresse – bitte GPS erlauben oder Startadresse setzen',4000);return;}
+    const startPt=opts.start||_mobGPSPos||home;
+    const fromLabel=opts.start?('ab '+(opts.startName||'letzter Baustelle')):_mobGPSPos?'ab Standort':'ab Startadresse';
+    if(!startPt){if(!opts.silent)showToast('Kein Standort und keine Startadresse – bitte GPS erlauben oder Startadresse setzen',4000);return;}
     // Punkte: [Start, Stopp1..n, (Heim)]
     const pts=[startPt,...stops,...(home?[home]:[])];
     const{D,src}=await getDurationMatrix(pts);
@@ -5243,11 +5271,13 @@ async function computeMobRoute(){
     order.forEach(i=>{legs.push(D[cur][i]);cur=i;});
     const back=E!=null?D[cur][E]:0;
     _mobRoute={date:_mobDate,keys:[...order.map(i=>stops[i-1].key),...noCoord.map(s=>s.key)],
-      legs:[...legs,...noCoord.map(()=>null)],back,total:legs.reduce((a,b)=>a+b,0)+back,src,fromGPS:!!_mobGPSPos};
-    if(src==='air'&&!window._orsKey)showToast('Sortiert nach Luftlinie – für echte Fahrzeiten Routen-Schlüssel im Admin-Menü hinterlegen',4000);
+      legs:[...legs,...noCoord.map(()=>null)],back,total:legs.reduce((a,b)=>a+b,0)+back,src,fromGPS:!!_mobGPSPos,fromLabel,
+      coords:Object.fromEntries(stops.map(s=>[s.key,{lat:s.lat,lng:s.lng,name:s.name}]))};
+    if(opts.silent){}
+    else if(src==='air'&&!window._orsKey)showToast('Sortiert nach Luftlinie – für echte Fahrzeiten Routen-Schlüssel im Admin-Menü hinterlegen',4000);
     else if(src==='air')showToast('⚠ Routen-Dienst nicht erreichbar – Schätzung nach Luftlinie',3500);
     else showToast('✓ Schnellste Route berechnet: '+fmtDur(_mobRoute.total),2500);
-    if(noCoord.length)showToast(`⚠ ${noCoord.length} Stopp(s) ohne Koordinaten – ans Ende gestellt`,3500);
+    if(noCoord.length&&!opts.silent)showToast(`⚠ ${noCoord.length} Stopp(s) ohne Koordinaten – ans Ende gestellt`,3500);
   }finally{_mobRouteBusy=false;renderMobPlan();}
 }
 function setOrsKey(){
@@ -5365,19 +5395,6 @@ function mobConfirmBerat(id){
 }
 
 
-function mobRoute(){
-  const f=x=>x.date===_mobDate&&(!currentUser||x.auditor===currentUser);
-  const stops=mobOrderedStops(plans.filter(f),beratPlan.filter(f),personAudits.filter(p=>p.planned&&f(p)));
-  if(!stops.length){showToast('Keine Planungen für diesen Tag');return;}
-  let addrs=stops.map(s=>s.addr).filter(Boolean);
-  // Google Maps übernimmt in Links max. 9 Zwischenstopps - Rest muss nachher separat geöffnet werden
-  if(addrs.length>9){showToast(`Google Maps zeigt max. 9 Stopps – die ersten 9 werden geöffnet (${addrs.length-9} danach separat)`,4500);addrs=addrs.slice(0,9);}
-  const start=localStorage.getItem('audit_start')||'';
-  const origin=_mobGPSPos?`${_mobGPSPos.lat},${_mobGPSPos.lng}`:start;
-  const pts=addrs.map(a=>encodeURIComponent(a)).join('/');
-  const url=`https://www.google.com/maps/dir/${origin?encodeURIComponent(origin):''}/${pts}${start?'/'+encodeURIComponent(start):''}`;
-  window.open(url,'_blank');
-}
 function mobSearch(q){
   const res=document.getElementById('mob-search-res');
   if(!q||q.length<2){res.style.display='none';return;}
@@ -5917,8 +5934,9 @@ function rulesHTML(){
     `Verteilt die bereits geplanten Baustellen einer KW auf die gewählten Tage: max. 1 Baustelle Unterschied pro Tag, möglichst gleich lange Tage (Fahrzeit + Ø ${v('dist_audit_min')} min pro Audit + bestehende Termine).`,
     `Ferientage werden automatisch ausgelassen. Termine (Rapporte etc.) zählen beim Verteilen nur als belegte Zeit – für einen Tagesablauf mit Uhrzeiten und Adressen den Tourguide verwenden.`]) +
   sec('route','Routen (Handy)',[
-    `Reihenfolge nach echter Fahrzeit (openrouteservice), Start am Standort, Ende an der Startadresse; bis 12 Stopps exakt optimal. Ohne Schlüssel/Netz: Schätzung nach Luftlinie.`,
-    `Google Maps übernimmt max. 9 Stopps pro Link.`]) +
+    `Der Tagesplan ist immer sortiert: automatisch beim Öffnen eines Tages und sobald sich die offenen Stopps ändern (erledigt, neu geplant, verschoben, abgesagt).`,
+    `Start: nach einem erledigten Stopp ab dieser Baustelle, sonst ab aktuellem GPS-Standort (wenn höchstens 15 min alt) bzw. ab Startadresse; Ende an der Startadresse. «📍 Sortieren» berechnet neu ab dem aktuellen Standort.`,
+    `Reihenfolge nach echter Fahrzeit (openrouteservice), bis 12 Stopps exakt optimal. Ohne Schlüssel/Netz: Schätzung nach Luftlinie. Navigation pro Stopp über 🗺️ auf der Karte.`]) +
   sec('clipboard-list','Rapporte',[
     `Ein Termin, Status pro Person: Absagen/Bestätigen betrifft nur die jeweilige Person; Verschieben verschiebt den Termin für alle.`,
     `Zählung: Termine (1 Rapport mit 3 Personen = 1 Termin) und Teilnahmen (= 3). Rapporte zählen nie als Audit.`]) +
