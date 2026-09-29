@@ -361,7 +361,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
   <div id="presence-bar" style="display:flex;align-items:center;gap:4px;margin-left:4px"></div>
   <button onclick="toggleDark()" class="hb" title="Dark Mode" style="font-size:14px">🌙</button>
   <button onclick="openGuide()" class="hb" title="Anleitung" style="font-size:14px">❓</button>
-  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.83</span>
+  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.84</span>
   <button onclick="doLogout()" class="hb" title="Abmelden" style="font-size:14px" id="logout-btn">⏻</button>
   <button onclick="toggleMobileView()" id="mobile-btn" class="hb" title="Mobile Ansicht" style="font-size:14px">📱</button>
   <div id="more-w" class="admin-only">
@@ -3653,7 +3653,7 @@ function renderWeekView(kw){
     const ds=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
     const dayP=plans.map((p,i)=>({...p,_i:i})).filter(p=>p.date===ds&&(!audFilter||p.auditor===audFilter)).sort((a,b)=>a.date.localeCompare(b.date));
     // Also show completed audits for this day
-    const dayAudits=data.flatMap(e=>(e.auditHistory||[]).filter(h=>h.date===ds&&(!audFilter||h.auditor===audFilter)).map(h=>({...h,eName:e.name,eType:e.type,eDept:e.dept,eId:e.id})));
+    const dayAudits=data.flatMap(e=>(e.auditHistory||[]).filter(h=>h.date===ds&&(!audFilter||h.auditor===audFilter)).map(h=>({...h,eName:e.name,ePsp:e.psp,eType:e.type,eDept:e.dept,eId:e.id})));
     const isT=ds===today();
     const fer=ferien.filter(f=>f.bis>=ds&&f.von<=ds);
     return`<td class="kwcol">
@@ -3663,12 +3663,12 @@ function renderWeekView(kw){
       </div>
       ${fer.map(f=>`<div class="kwfer">🌴 ${f.auditor.split(' ').pop()}: ${f.label}</div>`).join('')}
       ${(()=>{const gids=[...new Set(rapporte.filter(r=>r.date===ds&&(!audFilter||r.auditor===audFilter)).map(r=>r.groupId))];const gs=gids.map(g=>rapporte.filter(x=>x.groupId===g&&x.date===ds)).filter(m=>m.length).sort((a,b)=>(a[0].time||'').localeCompare(b[0].time||''));return gs.map(mem=>{const r=mem[0];const anyPlan=mem.some(m=>m.planned);return`<div class="kwe" style="border-left:3px solid #0EA5E9;${anyPlan?'':'background:#F0F9FF'}"><div class="kwe-top" onclick="openRapportEdit(${r.id})" style="cursor:pointer"><div class="kwen" style="color:#0369A1">${anyPlan?'':'✓ '}📋 ${r.type}${r.seriesId?' 🔁':''}${r.time?' '+r.time:''}${(r.dept||r.ort)?`<div style="font-size:10px;font-weight:400;color:var(--tx3)">${[r.dept,r.ort].filter(Boolean).join(' · ')}</div>`:''}</div><span style="display:flex;gap:3px;flex-wrap:wrap;margin-top:2px">${mem.map(m=>m.planned?`<span class="kwea" title="${m.auditor}: geplant" style="background:transparent;border:1.5px solid ${aC(m.auditor)};color:${aC(m.auditor)}">${m.auditor.split(' ').pop()}</span>`:`<span class="kwea" title="${m.auditor}: teilgenommen" style="background:${aC(m.auditor)}">✓ ${m.auditor.split(' ').pop()}</span>`).join('')}</span></div>${anyPlan?`<div class="kwe-move" style="display:flex;gap:2px;padding:2px 6px 3px;border-top:1px solid var(--bd)"><button onclick="moveRapportTo(${r.id},'${rpAddDays(kwToDate(kw),-3)}')" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">←</button>${days.map((day,dj)=>`<button onclick="moveRapportTo(${r.id},'${rpAddDays(kwToDate(kw),dj)}')" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:${rpAddDays(kwToDate(kw),dj)===ds?'#0EA5E9':'var(--sf2)'};color:${rpAddDays(kwToDate(kw),dj)===ds?'#fff':'var(--tx2)'};font-size:9px;cursor:pointer;line-height:1.4">${day}</button>`).join('')}<button onclick="moveRapportTo(${r.id},'${kwToDate(kw+1)}')" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">→</button></div>`:''}</div>`;}).join('');})()}
-      ${(()=>{const bp=beratPlan.filter(p=>p.date===ds&&(!audFilter||p.auditor===audFilter));return bp.map(p=>{const e=data.find(x=>x.id===p.bsId);const audCol=aC(p.auditor||'');return`<div class="kwe" style="border-left:3px solid #8B5CF6"><div class="kwe-top" onclick="openBeratPlanPop(${p.id})" style="cursor:pointer"><div class="kwen">💬 ${e?e.name:'(gel.)'}</div><span class="kwea" style="background:${audCol}">${(p.auditor||'?').split(' ').pop()}</span></div>${p.note?`<div style="font-size:10px;color:#7C3AED;padding:2px 6px 3px">${p.note}</div>`:''}<div class="kwe-move" style="display:flex;gap:2px;padding:2px 6px 3px;border-top:1px solid var(--bd)"><button onclick="moveBeratPlan(${p.id},'${kwToDate(kw-1)}',4)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">←</button>${days.map((day,dj)=>`<button onclick="moveBeratPlan(${p.id},'${kwToDate(kw)}',${dj})" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:${dj===di?'var(--blue)':'var(--sf2)'};color:${dj===di?'#fff':'var(--tx2)'};font-size:9px;cursor:pointer;line-height:1.4">${day}</button>`).join('')}<button onclick="moveBeratPlan(${p.id},'${kwToDate(kw+1)}',0)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">→</button></div></div>`;}).join('');})()}
-      ${(()=>{const done=data.flatMap(e=>(e.beratungen||[]).filter(b=>b.date===ds).map(b=>({...b,eName:e.name,eId:e.id})));return done.map(b=>{const bAudCol=aC(b.auditor||'');return`<div class="kwe" style="background:#F5F3FF;border-left:3px solid #8B5CF6;cursor:pointer" onclick="openBeratDoneUndo(${b.eId},${b.id})"><div class="kwe-top"><div class="kwen" style="color:#7C3AED">✓ 💬 ${b.eName}</div><span class="kwea" style="background:${bAudCol}">${(b.auditor||'?').split(' ').pop()}</span></div>${b.note?`<div style="font-size:10px;color:#7C3AED;padding:2px 6px 3px">${b.note}</div>`:''}</div>`;}).join('');})()}
-      ${dayAudits.map(h=>`<div class="kwe" style="background:#F0FDF4;border-left:3px solid #10B981;cursor:pointer" onclick="openAuditUndo(${h.eId},'${h.date}')"><div class="kwe-top"><div class="kwen" style="color:#065F46">✓ ${h.eName}</div><span class="kwea" style="background:#10B981">${(h.auditor||'?').split(' ').pop()}</span></div></div>`).join('')}
+      ${(()=>{const bp=beratPlan.filter(p=>p.date===ds&&(!audFilter||p.auditor===audFilter));return bp.map(p=>{const e=data.find(x=>x.id===p.bsId);const audCol=aC(p.auditor||'');return`<div class="kwe" style="border-left:3px solid #8B5CF6"><div class="kwe-top" onclick="openBeratPlanPop(${p.id})" style="cursor:pointer"><div class="kwen">💬 ${e?pspPre(e.psp)+e.name:'(gel.)'}</div><span class="kwea" style="background:${audCol}">${(p.auditor||'?').split(' ').pop()}</span></div>${p.note?`<div style="font-size:10px;color:#7C3AED;padding:2px 6px 3px">${p.note}</div>`:''}<div class="kwe-move" style="display:flex;gap:2px;padding:2px 6px 3px;border-top:1px solid var(--bd)"><button onclick="moveBeratPlan(${p.id},'${kwToDate(kw-1)}',4)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">←</button>${days.map((day,dj)=>`<button onclick="moveBeratPlan(${p.id},'${kwToDate(kw)}',${dj})" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:${dj===di?'var(--blue)':'var(--sf2)'};color:${dj===di?'#fff':'var(--tx2)'};font-size:9px;cursor:pointer;line-height:1.4">${day}</button>`).join('')}<button onclick="moveBeratPlan(${p.id},'${kwToDate(kw+1)}',0)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">→</button></div></div>`;}).join('');})()}
+      ${(()=>{const done=data.flatMap(e=>(e.beratungen||[]).filter(b=>b.date===ds).map(b=>({...b,eName:e.name,ePsp:e.psp,eId:e.id})));return done.map(b=>{const bAudCol=aC(b.auditor||'');return`<div class="kwe" style="background:#F5F3FF;border-left:3px solid #8B5CF6;cursor:pointer" onclick="openBeratDoneUndo(${b.eId},${b.id})"><div class="kwe-top"><div class="kwen" style="color:#7C3AED">✓ 💬 ${pspPre(b.ePsp)}${b.eName}</div><span class="kwea" style="background:${bAudCol}">${(b.auditor||'?').split(' ').pop()}</span></div>${b.note?`<div style="font-size:10px;color:#7C3AED;padding:2px 6px 3px">${b.note}</div>`:''}</div>`;}).join('');})()}
+      ${dayAudits.map(h=>`<div class="kwe" style="background:#F0FDF4;border-left:3px solid #10B981;cursor:pointer" onclick="openAuditUndo(${h.eId},'${h.date}')"><div class="kwe-top"><div class="kwen" style="color:#065F46">✓ ${pspPre(h.ePsp)}${h.eName}</div><span class="kwea" style="background:#10B981">${(h.auditor||'?').split(' ').pop()}</span></div></div>`).join('')}
       ${(()=>{const paP=personAudits.filter(p=>p.planned&&p.date===ds&&(!audFilter||p.auditor===audFilter));return paP.map(p=>{const col=p.auditor?aC(p.auditor):'#9CA3AF';return`<div class="kwe"><div class="kwe-top" onclick="openPersonAuditPop(${p.id})" style="cursor:pointer"><div class="kwen">👤 ${p.person}${p.bs?' · '+p.bs:''}</div><span class="kwea" style="background:${col}">${p.auditor?p.auditor.split(' ').pop():'? Zuteilen'}</span></div><div class="kwe-move" style="display:flex;gap:2px;padding:2px 6px 3px;border-top:1px solid var(--bd)"><button onclick="movePersonAudit(${p.id},'${kwToDate(kw-1)}',4)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">←</button>${days.map((day,dj)=>`<button onclick="movePersonAudit(${p.id},'${kwToDate(kw)}',${dj})" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:${dj===di?'var(--blue)':'var(--sf2)'};color:${dj===di?'#fff':'var(--tx2)'};font-size:9px;cursor:pointer;line-height:1.4">${day}</button>`).join('')}<button onclick="movePersonAudit(${p.id},'${kwToDate(kw+1)}',0)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">→</button></div></div>`;}).join('');})()}
       ${(()=>{const paDone=personAudits.filter(p=>!p.planned&&p.date===ds&&(!audFilter||p.auditor===audFilter));return paDone.map(p=>{const audCol=aC(p.auditor||'');return`<div class="kwe" style="background:#FFFBEB;border-left:3px solid #F59E0B;cursor:pointer" onclick="openPersonAuditDoneUndo(${p.id})"><div class="kwe-top"><div class="kwen" style="color:#B45309">✓ 👤 ${p.person}${p.bs?' · '+p.bs:''}</div><span class="kwea" style="background:${audCol}">${(p.auditor||'?').split(' ').pop()}</span></div></div>`;}).join('');})()}
-      ${dayP.length?dayP.map(p=>{const e=data.find(x=>x.id===p.bsId);const col=p.auditor&&p.auditor!=='Unbekannt'?aC(p.auditor):'#9CA3AF';const isSel=multiAuditMode&&planned.has(p.bsId);return`<div class="kwe" style="${isSel?'background:#EFF6FF;border-left:3px solid var(--blue)':''}"><div class="kwe-top" onclick="${multiAuditMode?`toggleKWAuditSel(${p.bsId})`:`openCalPop(${p._i})`}" style="cursor:pointer"><div class="kwen">${isSel?'☑ ':''}${e?((e.type==='werkhof'?'🏠 ':'')+e.name):'(gel.)'}</div>${kwMetaLine(e,kw,'0 0 1px')}<span class="kwea" style="background:${col}">${p.auditor==='Unbekannt'||!p.auditor?'? Zuteilen':p.auditor.split(' ').pop()}</span></div>${!multiAuditMode?`<div class="kwe-move" style="display:flex;gap:2px;padding:2px 6px 3px;border-top:1px solid var(--bd)"><button onclick="movePlan(${p._i},'${kwToDate(kw-1)}',4)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4" title="Vorwoche Fr">←</button>${days.map((day,dj)=>`<button onclick="movePlan(${p._i},'${kwToDate(kw)}',${dj})" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:${dj===di?'var(--blue)':'var(--sf2)'};color:${dj===di?'#fff':'var(--tx2)'};font-size:9px;cursor:pointer;line-height:1.4">${day}</button>`).join('')}<button onclick="movePlan(${p._i},'${kwToDate(kw+1)}',0)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4" title="Nächste Woche Mo">→</button></div>`:''}
+      ${dayP.length?dayP.map(p=>{const e=data.find(x=>x.id===p.bsId);const col=p.auditor&&p.auditor!=='Unbekannt'?aC(p.auditor):'#9CA3AF';const isSel=multiAuditMode&&planned.has(p.bsId);return`<div class="kwe" style="${isSel?'background:#EFF6FF;border-left:3px solid var(--blue)':''}"><div class="kwe-top" onclick="${multiAuditMode?`toggleKWAuditSel(${p.bsId})`:`openCalPop(${p._i})`}" style="cursor:pointer"><div class="kwen">${isSel?'☑ ':''}${e?((e.type==='werkhof'?'🏠 ':'')+pspPre(e.psp)+e.name):'(gel.)'}</div>${kwMetaLine(e,kw,'0 0 1px')}<span class="kwea" style="background:${col}">${p.auditor==='Unbekannt'||!p.auditor?'? Zuteilen':p.auditor.split(' ').pop()}</span></div>${!multiAuditMode?`<div class="kwe-move" style="display:flex;gap:2px;padding:2px 6px 3px;border-top:1px solid var(--bd)"><button onclick="movePlan(${p._i},'${kwToDate(kw-1)}',4)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4" title="Vorwoche Fr">←</button>${days.map((day,dj)=>`<button onclick="movePlan(${p._i},'${kwToDate(kw)}',${dj})" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:${dj===di?'var(--blue)':'var(--sf2)'};color:${dj===di?'#fff':'var(--tx2)'};font-size:9px;cursor:pointer;line-height:1.4">${day}</button>`).join('')}<button onclick="movePlan(${p._i},'${kwToDate(kw+1)}',0)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4" title="Nächste Woche Mo">→</button></div>`:''}
 </div>`;}).join(''):`<div class="kwemp">Frei</div>`}
     </td>`;
   });
@@ -4809,7 +4809,8 @@ function renderMobMapMarkers(){
   if(_mobBeratLayer){_mobMap.removeLayer(_mobBeratLayer);_mobBeratLayer=null;}
   _mobSiteLayer=L.layerGroup();
   const siteAudPopup=e=>`<div style="min-width:180px">
-      <div style="font-weight:700;font-size:13px;margin-bottom:3px">${e.name}</div>
+      <div style="font-weight:700;font-size:13px;margin-bottom:3px">${pspPre(e.psp)}${e.name}</div>
+      ${mobPersHTML(e)?`<div style="margin-bottom:4px">${mobPersHTML(e)}</div>`:''}
       <div style="font-size:11px;color:#6B7280;margin-bottom:10px">${e.addr||''}</div>
       <div style="display:flex;flex-direction:column;gap:6px">
         <button onclick="_mobMap.closePopup();setMobTab('plan');mobPlanFor(${e.id})" style="padding:7px;background:#6366F1;color:#fff;border:none;border-radius:7px;cursor:pointer;font-size:12px;font-weight:600;width:100%">📅 Planen</button>
@@ -4935,8 +4936,9 @@ function renderMobPlan(){
         <span style="font-size:10px;font-weight:700;color:${col}">GEPLANT</span>
         <span style="font-size:11px;color:var(--tx3)">${e.dept||''}</span>
       </div>
-      <div style="font-size:16px;font-weight:700;color:var(--tx);margin-bottom:4px;line-height:1.3">${e.name}</div>
+      <div style="font-size:16px;font-weight:700;color:var(--tx);margin-bottom:4px;line-height:1.3">${pspPre(e.psp)}${e.name}</div>
       <div style="font-size:12px;color:var(--tx2)">${e.addr||''}</div>
+      ${mobPersHTML(e)?`<div style="margin-top:5px">${mobPersHTML(e)}</div>`:''}
       ${e.bc?`<div style="font-size:11px;color:var(--tx3);margin-bottom:10px">BC: ${e.bc}</div>`:'<div style="margin-bottom:10px"></div>'}
       <div style="display:flex;gap:8px">
         <button onclick="mobQuickAuditFor(${e.id})" style="flex:1;padding:9px;background:#10B981;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600">✓ Auditiert</button>
@@ -4952,7 +4954,8 @@ function renderMobPlan(){
         <span style="font-size:10px;font-weight:700;color:#8B5CF6">💬 BERATUNG GEPLANT</span>
         <span style="font-size:11px;color:var(--tx3)">${e.dept||''}</span>
       </div>
-      <div style="font-size:16px;font-weight:700;color:var(--tx);margin-bottom:4px;line-height:1.3">${e.name}</div>
+      <div style="font-size:16px;font-weight:700;color:var(--tx);margin-bottom:4px;line-height:1.3">${pspPre(e.psp)}${e.name}</div>
+      ${mobPersHTML(e)?`<div style="margin-bottom:5px">${mobPersHTML(e)}</div>`:''}
       <div style="font-size:12px;color:var(--tx2);margin-bottom:${p.note?'4px':'10px'}">${e.addr||''}</div>
       ${p.note?`<div style="font-size:12px;color:#8B5CF6;margin-bottom:10px">📝 ${p.note}</div>`:''}
       <div style="display:flex;gap:8px">
@@ -5013,7 +5016,7 @@ function renderMobPlan(){
         <span style="font-size:10px;color:#10B981;font-weight:700">✓ ERLEDIGT</span>
         <span style="font-size:10px;color:var(--tx3)">${h?h.auditor:''}</span>
       </div>
-      <div style="font-size:15px;font-weight:700;color:var(--tx);margin-bottom:4px">${e.name}</div>
+      <div style="font-size:15px;font-weight:700;color:var(--tx);margin-bottom:4px">${pspPre(e.psp)}${e.name}</div>
       <div style="font-size:12px;color:var(--tx2)">${e.addr||''}</div>
     </div>`;
   });
@@ -5025,7 +5028,7 @@ function renderMobPlan(){
         <span style="font-size:10px;color:#8B5CF6;font-weight:700">💬 BERATUNG</span>
         <span style="font-size:10px;color:var(--tx3)">${b?b.auditor:''}</span>
       </div>
-      <div style="font-size:15px;font-weight:700;color:var(--tx);margin-bottom:4px">${e.name}</div>
+      <div style="font-size:15px;font-weight:700;color:var(--tx);margin-bottom:4px">${pspPre(e.psp)}${e.name}</div>
       <div style="font-size:12px;color:var(--tx2)">${e.addr||''}${b&&b.note?' · '+b.note:''}</div>
     </div>`;
   });
@@ -6448,6 +6451,13 @@ function piSourcesHTML(it){
   if(src.length>1)return`<div style="font-size:10px;color:#0369A1;margin-top:2px">🔗 ${src.length} Listen zusammengezählt:</div>`+src.map(s=>`<div style="font-size:10px;color:var(--tx3);margin-left:10px">📄 ${listLabel(s)} · <b>${s.count} Pers.</b></div>`).join('');
   if(it.match.how!=='psp')return`<div style="font-size:10px;color:var(--tx3);margin-top:1px">📄 Liste: ${listLabel(it)}</div>`;
   return'';
+}
+// PSP-Präfix für Karten (fett, gleichbreite Ziffern) und Personal-Anzeige fürs Handy
+function pspPre(psp){return psp?`<span style="font-weight:700;font-variant-numeric:tabular-nums">${escH(psp)}</span> · `:'';}
+function mobPersHTML(e){
+  if(!e||e.lastPersonalKW===undefined)return'';
+  const t=personalTrend(e);
+  return`<span style="display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:600;color:${e.lastPersonalCount?'var(--tx2)':'#B45309'};background:var(--sf2);border:1px solid var(--bd);border-radius:10px;padding:1px 7px">👷 ${e.lastPersonalCount} Pers.<span style="font-weight:400;color:var(--tx3)"> KW ${e.lastPersonalKW}</span>${t?`<span style="color:${t.col};font-weight:700" title="${t.txt}">${t.sym}</span>`:''}</span>`;
 }
 function listLabel(it){return`${it.psp?`<b style="font-variant-numeric:tabular-nums">${escH(it.psp)}</b> · `:''}${escH(it.name)}${it.quelle?` <span style="color:var(--tx3);font-size:11px">· ${escH(it.quelle)}</span>`:''}`;}
 // Auswahlliste aller Baustellen, nach Abteilung gruppiert, Option = «PSP · Name · Abteilung»
