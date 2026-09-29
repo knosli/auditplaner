@@ -361,7 +361,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
   <div id="presence-bar" style="display:flex;align-items:center;gap:4px;margin-left:4px"></div>
   <button onclick="toggleDark()" class="hb" title="Dark Mode" style="font-size:14px">🌙</button>
   <button onclick="openGuide()" class="hb" title="Anleitung" style="font-size:14px">❓</button>
-  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.82</span>
+  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.83</span>
   <button onclick="doLogout()" class="hb" title="Abmelden" style="font-size:14px" id="logout-btn">⏻</button>
   <button onclick="toggleMobileView()" id="mobile-btn" class="hb" title="Mobile Ansicht" style="font-size:14px">📱</button>
   <div id="more-w" class="admin-only">
@@ -1546,7 +1546,7 @@ function saveNow(){
   try{localStorage.setItem('anliker_berat_plan',JSON.stringify(beratPlan));localStorage.setItem(SK,JSON.stringify({data,plans,tlog,auditors,ferien,ferienWunsch,rapporte,ghostAudits:window._ghostAudits||[],personAudits,v:4}));localStorage.setItem('anliker_pi_collectbox',JSON.stringify(window._piCollectBox||[]));localStorage.setItem('anliker_temp_workers',JSON.stringify(window._tempWorkers||[]));}catch(e){}
   sbPush();
 }
-function load(){try{const r=localStorage.getItem(SK);if(!r)return false;const p=JSON.parse(r);if(p.data){data=p.data;ensureCreatedAt();}if(p.plans)plans=p.plans;if(p.tlog)tlog=p.tlog;if(p.auditors)auditors=p.auditors;if(p.ferien)ferien=p.ferien;if(p.ferienWunsch)ferienWunsch=p.ferienWunsch;if(p.rapporte){rapporte=p.rapporte;normalizeRapporte();}if(p.ghostAudits)window._ghostAudits=p.ghostAudits;if(p.personAudits)personAudits=p.personAudits;try{window._piCollectBox=JSON.parse(localStorage.getItem('anliker_pi_collectbox')||'[]');}catch(e){window._piCollectBox=[];}try{window._tempWorkers=JSON.parse(localStorage.getItem('anliker_temp_workers')||'[]');}catch(e){window._tempWorkers=[];}try{window._orsKey=localStorage.getItem('anliker_ors_key')||'';}catch(e){}return true;}catch(e){return false;}}
+function load(){try{const r=localStorage.getItem(SK);if(!r)return false;const p=JSON.parse(r);if(p.data){data=p.data;ensureCreatedAt();ensurePersonalHistory();}if(p.plans)plans=p.plans;if(p.tlog)tlog=p.tlog;if(p.auditors)auditors=p.auditors;if(p.ferien)ferien=p.ferien;if(p.ferienWunsch)ferienWunsch=p.ferienWunsch;if(p.rapporte){rapporte=p.rapporte;normalizeRapporte();}if(p.ghostAudits)window._ghostAudits=p.ghostAudits;if(p.personAudits)personAudits=p.personAudits;try{window._piCollectBox=JSON.parse(localStorage.getItem('anliker_pi_collectbox')||'[]');}catch(e){window._piCollectBox=[];}try{window._tempWorkers=JSON.parse(localStorage.getItem('anliker_temp_workers')||'[]');}catch(e){window._tempWorkers=[];}try{window._orsKey=localStorage.getItem('anliker_ors_key')||'';}catch(e){}return true;}catch(e){return false;}}
 function showToast(m,d=2500){const t=document.getElementById('toast');t.textContent=m;t.style.display='block';clearTimeout(t._t);t._t=setTimeout(()=>t.style.display='none',d);}
 function dlJSON(obj,fn){const b=new Blob([JSON.stringify(obj,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=fn;a.click();}
 function teamExport(){dlJSON({data,plans,auditors,ferien,ghostAudits:window._ghostAudits||[],personAudits,savedAt:new Date().toISOString(),type:'team'},'anliker_export_'+today()+'.json');showToast('📤 Export erstellt – auf SharePoint!',3000);}
@@ -3569,7 +3569,7 @@ function getKWs(){
 function kwPersBadge(e,kw){
   if(!e||e.type==='werkhof')return'';
   const yr=pmYearFor(kw);
-  const h=(e.personalHistory||[]).find(x=>x.kw===kw&&x.year===yr);
+  const h=persForKW(e,kw,yr);
   if(h)return`<span title="Personal KW ${kw}: ${h.count} (${h.manual?'manuell':'Import'})" style="font-weight:700;color:${h.count?'var(--tx2)':'#DC2626'}">👷 ${h.count}</span>`;
   if(e.lastPersonalKW!==undefined&&e.lastPersonalCount!==undefined)return`<span title="Kein Wert für KW ${kw} – zuletzt KW ${e.lastPersonalKW}: ${e.lastPersonalCount}" style="opacity:.65;font-style:italic">👷 ${e.lastPersonalCount} <span style="font-size:9px">(KW ${e.lastPersonalKW})</span></span>`;
   return`<span title="Keine Personalangabe" style="opacity:.55">👷 –</span>`;
@@ -6309,6 +6309,27 @@ async function tgHomeFor(aud){
 // Für Einheiten ohne (brauchbare) Einsatzliste. Wirkt wie ein Import-Wert: Detail-Panel, Verlauf, Trend,
 // Tourguide (Dauer, Priorität, «Personal vor Ort»). Ein Wert für dieselbe KW wird ersetzt.
 // Ändert nichts am Status der Baustelle (kein Pausieren/Reaktivieren).
+// Personalwert für eine bestimmte KW: aus dem Verlauf, sonst aus dem «letzten Wert», falls dieser zu genau dieser KW gehört
+// (ältere Importe vor Einführung des Verlaufs haben nur letzten Wert + KW).
+function persForKW(e,kw,yr){
+  const h=(e.personalHistory||[]).find(x=>x.kw===kw&&x.year===yr);
+  if(h)return{count:h.count,manual:!!h.manual};
+  if(e.lastPersonalKW===kw&&e.lastPersonalCount!==undefined&&e.lastPersonalCount!==null&&persYear(e)===yr)return{count:e.lastPersonalCount,manual:false};
+  return null;
+}
+// Einmalige Ergänzung: Verlauf um den «letzten Wert» ergänzen, falls dort noch nicht enthalten
+function ensurePersonalHistory(){
+  let n=0;
+  data.forEach(e=>{
+    if(e.lastPersonalKW===undefined||e.lastPersonalCount===undefined||e.lastPersonalCount===null)return;
+    const yr=persYear(e);
+    if((e.personalHistory||[]).some(h=>h.kw===e.lastPersonalKW&&h.year===yr))return;
+    e.personalHistory=(e.personalHistory||[]);
+    e.personalHistory.push({kw:e.lastPersonalKW,year:yr,count:e.lastPersonalCount});
+    e.personalHistory.sort((a,b)=>a.year-b.year||a.kw-b.kw);n++;
+  });
+  if(n)setTimeout(()=>{try{saveNow();}catch(x){}},900);
+}
 function pmYearFor(kw){
   const cur=dateToKW(today()),y=new Date().getFullYear();
   if(kw-cur>40)return y-1;if(cur-kw>40)return y+1;return y;
@@ -6339,7 +6360,7 @@ function openPersonalManual(id){
 function pmFill(){
   const e=data.find(x=>x.id===_pmId);if(!e)return;
   const kw=+document.getElementById('pm-kw').value,yr=pmYearFor(kw);
-  const h=(e.personalHistory||[]).find(x=>x.kw===kw&&x.year===yr);
+  const h=persForKW(e,kw,yr);
   document.getElementById('pm-cnt').value=h?h.count:'';
   document.getElementById('pm-hint').textContent=h?`Vorhandener Wert (${h.manual?'manuell':'Import'}): ${h.count} – wird ersetzt.`:'Für diese KW ist noch kein Wert vorhanden.';
 }
@@ -6367,7 +6388,7 @@ function renderPersonalBulk(){
   const dept=document.getElementById('pmb-dept').value,kw=+document.getElementById('pmb-kw').value,yr=pmYearFor(kw);
   const list=data.filter(e=>e.active&&e.type!=='werkhof'&&deptParts(e.dept).includes(dept)).sort((a,b)=>(a.psp||'~').localeCompare(b.psp||'~')||a.name.localeCompare(b.name));
   document.getElementById('pmb-list').innerHTML=list.length?list.map(e=>{
-    const h=(e.personalHistory||[]).find(x=>x.kw===kw&&x.year===yr);
+    const h=persForKW(e,kw,yr);
     const lastTxt=e.lastPersonalKW!==undefined?`zuletzt KW ${e.lastPersonalKW}: ${e.lastPersonalCount}`:'noch keine Angabe';
     return`<div style="display:flex;align-items:center;gap:10px;padding:6px 10px;border-bottom:1px solid var(--bd)">
       <span style="flex:1;min-width:0;font-size:12px">${bsLabel(e)}${e.paused?'':''}<div style="font-size:10px;color:var(--tx3)">${lastTxt}${h?` · KW ${kw}: <b>${h.count}</b>${h.manual?' (manuell)':''}`:''}</div></span>
@@ -7278,7 +7299,7 @@ async function sbPull(){
   const isFirstPull=sbLastSync===0;
   if(!isFirstPull&&remoteTime<=sbLastSync)return;
   try{
-    if(p.data){data=JSON.parse(p.data);ensureCreatedAt();}
+    if(p.data){data=JSON.parse(p.data);ensureCreatedAt();ensurePersonalHistory();}
     if(p.plans){plans=JSON.parse(p.plans);console.log('sbPull: plans loaded=',plans.length);}else{console.log('sbPull: NO plans in response',p);}
     if(p.auditors)auditors=JSON.parse(p.auditors);
     if(p.ferien)ferien=JSON.parse(p.ferien);
