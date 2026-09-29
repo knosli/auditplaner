@@ -361,7 +361,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
   <div id="presence-bar" style="display:flex;align-items:center;gap:4px;margin-left:4px"></div>
   <button onclick="toggleDark()" class="hb" title="Dark Mode" style="font-size:14px">🌙</button>
   <button onclick="openGuide()" class="hb" title="Anleitung" style="font-size:14px">❓</button>
-  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.81</span>
+  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.82</span>
   <button onclick="doLogout()" class="hb" title="Abmelden" style="font-size:14px" id="logout-btn">⏻</button>
   <button onclick="toggleMobileView()" id="mobile-btn" class="hb" title="Mobile Ansicht" style="font-size:14px">📱</button>
   <div id="more-w" class="admin-only">
@@ -3565,6 +3565,21 @@ function getKWs(){
     return kw;
   });
 }
+// Untere Zeile der KW-Karten: BC + Personal der KW, in der die Baustelle geplant ist
+function kwPersBadge(e,kw){
+  if(!e||e.type==='werkhof')return'';
+  const yr=pmYearFor(kw);
+  const h=(e.personalHistory||[]).find(x=>x.kw===kw&&x.year===yr);
+  if(h)return`<span title="Personal KW ${kw}: ${h.count} (${h.manual?'manuell':'Import'})" style="font-weight:700;color:${h.count?'var(--tx2)':'#DC2626'}">👷 ${h.count}</span>`;
+  if(e.lastPersonalKW!==undefined&&e.lastPersonalCount!==undefined)return`<span title="Kein Wert für KW ${kw} – zuletzt KW ${e.lastPersonalKW}: ${e.lastPersonalCount}" style="opacity:.65;font-style:italic">👷 ${e.lastPersonalCount} <span style="font-size:9px">(KW ${e.lastPersonalKW})</span></span>`;
+  return`<span title="Keine Personalangabe" style="opacity:.55">👷 –</span>`;
+}
+function kwMetaLine(e,kw,pad){
+  if(!e)return'';
+  const bc=e.bc?`BC: ${e.bc}`:'',pb=kwPersBadge(e,kw);
+  if(!bc&&!pb)return'';
+  return`<div style="font-size:10px;color:var(--tx3);padding:${pad}">${bc}${bc&&pb?' · ':''}${pb}</div>`;
+}
 function renderKW(){
   if(calViewMode==='week'){
     const curKW=dateToKW(today());
@@ -3600,7 +3615,7 @@ function renderKW(){
         ${kwP.length?`<div style="display:flex;gap:3px"><button onclick="kwRoute(${kw})"><i class="ti ti-map-2"></i></button><button onclick="kwPrint(${kw})"><i class="ti ti-printer"></i></button></div>`:''}
       </div>
       ${fer.map(f=>`<div class="kwfer">🌴 ${f.auditor.split(' ').pop()}: ${f.label}</div>`).join('')}
-      ${kwP.length?kwP.map(p=>{const e=data.find(x=>x.id===p.bsId);const c=p.auditor&&p.auditor!=='Unbekannt'?aC(p.auditor):'#9CA3AF';const dn=['So','Mo','Di','Mi','Do','Fr','Sa'][parseDate(p.date).getDay()];return`<div class="kwe" onclick="openCalPop(${p._i})"><div class="kwen">${e?((e.type==='werkhof'?'🏠 ':'')+e.name):'(gel.)'}</div>${e&&e.bc?`<div style="font-size:10px;color:var(--tx3);padding:1px 0">BC: ${e.bc}</div>`:''}<span class="kwea" style="background:${c}">${p.auditor==='Unbekannt'?'? Zuteilen':p.auditor.split(' ').pop()}</span><div class="kwed">${dn} ${fd(p.date)}</div></div>`;}).join(''):`<div class="kwemp">Keine Planungen</div>`}
+      ${kwP.length?kwP.map(p=>{const e=data.find(x=>x.id===p.bsId);const c=p.auditor&&p.auditor!=='Unbekannt'?aC(p.auditor):'#9CA3AF';const dn=['So','Mo','Di','Mi','Do','Fr','Sa'][parseDate(p.date).getDay()];return`<div class="kwe" onclick="openCalPop(${p._i})"><div class="kwen">${e?((e.type==='werkhof'?'🏠 ':'')+e.name):'(gel.)'}</div>${kwMetaLine(e,kw,'1px 0')}<span class="kwea" style="background:${c}">${p.auditor==='Unbekannt'?'? Zuteilen':p.auditor.split(' ').pop()}</span><div class="kwed">${dn} ${fd(p.date)}</div></div>`;}).join(''):`<div class="kwemp">Keine Planungen</div>`}
     </div>`;
   }).join('');
 }
@@ -3653,7 +3668,7 @@ function renderWeekView(kw){
       ${dayAudits.map(h=>`<div class="kwe" style="background:#F0FDF4;border-left:3px solid #10B981;cursor:pointer" onclick="openAuditUndo(${h.eId},'${h.date}')"><div class="kwe-top"><div class="kwen" style="color:#065F46">✓ ${h.eName}</div><span class="kwea" style="background:#10B981">${(h.auditor||'?').split(' ').pop()}</span></div></div>`).join('')}
       ${(()=>{const paP=personAudits.filter(p=>p.planned&&p.date===ds&&(!audFilter||p.auditor===audFilter));return paP.map(p=>{const col=p.auditor?aC(p.auditor):'#9CA3AF';return`<div class="kwe"><div class="kwe-top" onclick="openPersonAuditPop(${p.id})" style="cursor:pointer"><div class="kwen">👤 ${p.person}${p.bs?' · '+p.bs:''}</div><span class="kwea" style="background:${col}">${p.auditor?p.auditor.split(' ').pop():'? Zuteilen'}</span></div><div class="kwe-move" style="display:flex;gap:2px;padding:2px 6px 3px;border-top:1px solid var(--bd)"><button onclick="movePersonAudit(${p.id},'${kwToDate(kw-1)}',4)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">←</button>${days.map((day,dj)=>`<button onclick="movePersonAudit(${p.id},'${kwToDate(kw)}',${dj})" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:${dj===di?'var(--blue)':'var(--sf2)'};color:${dj===di?'#fff':'var(--tx2)'};font-size:9px;cursor:pointer;line-height:1.4">${day}</button>`).join('')}<button onclick="movePersonAudit(${p.id},'${kwToDate(kw+1)}',0)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">→</button></div></div>`;}).join('');})()}
       ${(()=>{const paDone=personAudits.filter(p=>!p.planned&&p.date===ds&&(!audFilter||p.auditor===audFilter));return paDone.map(p=>{const audCol=aC(p.auditor||'');return`<div class="kwe" style="background:#FFFBEB;border-left:3px solid #F59E0B;cursor:pointer" onclick="openPersonAuditDoneUndo(${p.id})"><div class="kwe-top"><div class="kwen" style="color:#B45309">✓ 👤 ${p.person}${p.bs?' · '+p.bs:''}</div><span class="kwea" style="background:${audCol}">${(p.auditor||'?').split(' ').pop()}</span></div></div>`;}).join('');})()}
-      ${dayP.length?dayP.map(p=>{const e=data.find(x=>x.id===p.bsId);const col=p.auditor&&p.auditor!=='Unbekannt'?aC(p.auditor):'#9CA3AF';const isSel=multiAuditMode&&planned.has(p.bsId);return`<div class="kwe" style="${isSel?'background:#EFF6FF;border-left:3px solid var(--blue)':''}"><div class="kwe-top" onclick="${multiAuditMode?`toggleKWAuditSel(${p.bsId})`:`openCalPop(${p._i})`}" style="cursor:pointer"><div class="kwen">${isSel?'☑ ':''}${e?((e.type==='werkhof'?'🏠 ':'')+e.name):'(gel.)'}</div>${e&&e.bc?`<div style="font-size:10px;color:var(--tx3);padding:0 0 1px">BC: ${e.bc}</div>`:``}<span class="kwea" style="background:${col}">${p.auditor==='Unbekannt'||!p.auditor?'? Zuteilen':p.auditor.split(' ').pop()}</span></div>${!multiAuditMode?`<div class="kwe-move" style="display:flex;gap:2px;padding:2px 6px 3px;border-top:1px solid var(--bd)"><button onclick="movePlan(${p._i},'${kwToDate(kw-1)}',4)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4" title="Vorwoche Fr">←</button>${days.map((day,dj)=>`<button onclick="movePlan(${p._i},'${kwToDate(kw)}',${dj})" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:${dj===di?'var(--blue)':'var(--sf2)'};color:${dj===di?'#fff':'var(--tx2)'};font-size:9px;cursor:pointer;line-height:1.4">${day}</button>`).join('')}<button onclick="movePlan(${p._i},'${kwToDate(kw+1)}',0)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4" title="Nächste Woche Mo">→</button></div>`:''}
+      ${dayP.length?dayP.map(p=>{const e=data.find(x=>x.id===p.bsId);const col=p.auditor&&p.auditor!=='Unbekannt'?aC(p.auditor):'#9CA3AF';const isSel=multiAuditMode&&planned.has(p.bsId);return`<div class="kwe" style="${isSel?'background:#EFF6FF;border-left:3px solid var(--blue)':''}"><div class="kwe-top" onclick="${multiAuditMode?`toggleKWAuditSel(${p.bsId})`:`openCalPop(${p._i})`}" style="cursor:pointer"><div class="kwen">${isSel?'☑ ':''}${e?((e.type==='werkhof'?'🏠 ':'')+e.name):'(gel.)'}</div>${kwMetaLine(e,kw,'0 0 1px')}<span class="kwea" style="background:${col}">${p.auditor==='Unbekannt'||!p.auditor?'? Zuteilen':p.auditor.split(' ').pop()}</span></div>${!multiAuditMode?`<div class="kwe-move" style="display:flex;gap:2px;padding:2px 6px 3px;border-top:1px solid var(--bd)"><button onclick="movePlan(${p._i},'${kwToDate(kw-1)}',4)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4" title="Vorwoche Fr">←</button>${days.map((day,dj)=>`<button onclick="movePlan(${p._i},'${kwToDate(kw)}',${dj})" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:${dj===di?'var(--blue)':'var(--sf2)'};color:${dj===di?'#fff':'var(--tx2)'};font-size:9px;cursor:pointer;line-height:1.4">${day}</button>`).join('')}<button onclick="movePlan(${p._i},'${kwToDate(kw+1)}',0)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4" title="Nächste Woche Mo">→</button></div>`:''}
 </div>`;}).join(''):`<div class="kwemp">Frei</div>`}
     </td>`;
   });
@@ -5920,6 +5935,7 @@ function rulesHTML(){
     `«Nicht auf der Liste»: aktive Baustellen einer Abteilung, deren Einsatzlisten <u>alle</u> importiert wurden, die aber auf keiner stehen → Pausieren vorgeschlagen (neu erfasste nicht vorausgewählt).`,
     `Gespeichert wird die Personalzahl bei allen erkannten Baustellen (auch dauerhaft ausgeschlossene), «nicht auf der Liste» erhält 0. Verlauf: ${v('pi_history_weeks')} Wochen.`,
     `Werkhöfe sind vom Import komplett ausgenommen. Unbekannte Einträge: zuordnen (Alias wird gemerkt), neu anlegen oder in die Sammelbox.`,
+    `KW-Planung: Jede Baustellen-Karte zeigt 👷 das Personal der KW, in der sie geplant ist (Import oder manuell). Gibt es dafür keinen Wert, steht grau kursiv der zuletzt bekannte Wert mit seiner KW, ohne Angabe «–». Eine 0 ist rot. Werkhöfe zeigen nichts.`,
     `Temporäre Mitarbeitende: nur Personal-Nummern (keine Namen), pro Einheit bei jedem Import ersetzt.`,
     `Manuelle Erfassung (für Einheiten ohne brauchbare Einsatzliste): im Detail-Panel ✏️ bei «Personal» oder Admin → «Personal manuell erfassen» (mehrere Baustellen einer Abteilung). Wirkt wie ein Import-Wert (Verlauf, Trend, Tourguide), ersetzt einen vorhandenen Wert derselben KW und ändert den Status der Baustelle nicht (kein Pausieren/Reaktivieren).`]) +
   sec('compass','Tourguide',[
