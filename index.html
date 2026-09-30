@@ -31,7 +31,7 @@ if('serviceWorker' in navigator){
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
-<link rel="stylesheet" href="css/style.css?v=2.87">
+<link rel="stylesheet" href="css/style.css?v=2.88">
 </head>
 <body>
 <div id="app" style="display:none">
@@ -39,7 +39,7 @@ if('serviceWorker' in navigator){
 <div id="hdr" style="display:none">
   <div class="logo">A</div>
   <h1>Audit Planer</h1>
-  <div id="sb-indicator" onclick="openSupabaseConfig()" title="Supabase Live-Sync Status" style="display:flex;align-items:center;gap:5px;padding:3px 8px;border-radius:20px;background:rgba(255,255,255,.1);cursor:pointer;margin-left:4px;font-size:11px;font-weight:600;color:rgba(255,255,255,.5);transition:all .2s" onmouseover="this.style.background='rgba(255,255,255,.2)'" onmouseout="this.style.background='rgba(255,255,255,.1)'">
+  <div id="sb-indicator" onclick="sbIndicatorClick()" title="Speicher-Status" style="display:flex;align-items:center;gap:5px;padding:3px 8px;border-radius:20px;background:rgba(255,255,255,.1);cursor:pointer;margin-left:4px;font-size:11px;font-weight:600;color:rgba(255,255,255,.5);transition:all .2s" onmouseover="this.style.background='rgba(255,255,255,.2)'" onmouseout="this.style.background='rgba(255,255,255,.1)'">
     <span id="sb-dot" style="width:7px;height:7px;border-radius:50%;background:#6B7280;flex-shrink:0"></span>
     <span id="sb-indicator-lbl">Offline</span>
   </div>
@@ -58,13 +58,12 @@ if('serviceWorker' in navigator){
   <div id="presence-bar" style="display:flex;align-items:center;gap:4px;margin-left:4px"></div>
   <button onclick="toggleDark()" class="hb" title="Dark Mode" style="font-size:14px">🌙</button>
   <button onclick="openGuide()" class="hb" title="Anleitung" style="font-size:14px">❓</button>
-  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.87</span>
+  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.88</span>
   <button onclick="doLogout()" class="hb" title="Abmelden" style="font-size:14px" id="logout-btn">⏻</button>
   <button onclick="toggleMobileView()" id="mobile-btn" class="hb" title="Mobile Ansicht" style="font-size:14px">📱</button>
   <div id="more-w" class="admin-only">
     <button class="hb" onclick="toggleMore(event)"><i class="ti ti-dots-vertical"></i> Admin</button>
     <div id="more-m">
-      <button onclick="setPAImportMode();toggleMore()"><i class="ti ti-file-import"></i> Excel Personen</button>
       <button onclick="doExport();toggleMore()"><i class="ti ti-file-spreadsheet"></i> Excel Export</button>
       <div style="height:1px;background:var(--bd);margin:4px 0"></div>
       <button onclick="openAudAdmin();toggleMore()"><i class="ti ti-users"></i> Auditoren verwalten</button>
@@ -76,6 +75,10 @@ if('serviceWorker' in navigator){
       <button onclick="openSammelbox();toggleMore()"><i class="ti ti-inbox"></i> Sammelbox <span id="sb-count-badge"></span></button>
       <button onclick="openTempWorkers();toggleMore()"><i class="ti ti-user-question"></i> Temporäre Mitarbeitende <span id="tw-count-badge"></span></button>
       <button onclick="openPersonalBulk();toggleMore()"><i class="ti ti-user-edit"></i> Personal manuell erfassen</button>
+      <div style="height:1px;background:var(--bd);margin:4px 0"></div>
+      <button onclick="openHistory();toggleMore()"><i class="ti ti-history"></i> Verlauf & Wiederherstellen</button>
+      <button onclick="openAuditLog();toggleMore()"><i class="ti ti-list-details"></i> Änderungsprotokoll</button>
+      <button onclick="openAdminGuide();toggleMore()"><i class="ti ti-help"></i> Anleitung & SQL</button>
       <div style="height:1px;background:var(--bd);margin:4px 0"></div>
       <button onclick="teamExport();toggleMore()"><i class="ti ti-device-floppy"></i> Notfall-Backup</button>
       <label style="display:flex;align-items:center;gap:6px;padding:7px 12px;cursor:pointer;font-size:12px;color:var(--tx);border-bottom:1px solid var(--bd)"><i class="ti ti-upload"></i> Backup laden<input type="file" accept=".json" onchange="loadJSON(this.files[0])" style="display:none"></label>
@@ -311,10 +314,6 @@ if('serviceWorker' in navigator){
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
         <h3><i class="ti ti-users" style="color:var(--blue)"></i> Personen-Register <span id="pa-reg-count" style="font-size:11px;font-weight:400;color:var(--tx2)"></span></h3>
         <div style="display:flex;gap:8px">
-          <label class="admin-only" style="padding:6px 12px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf2);cursor:pointer;font-size:12px;color:var(--tx);display:inline-flex;align-items:center;gap:4px">
-            <i class="ti ti-upload"></i> Excel Import
-            <input type="file" accept=".xlsx,.xls" onchange="importPersons(this)" style="display:none">
-          </label>
           <button onclick="openAddPerson()" style="padding:6px 12px;border-radius:var(--rs);border:none;background:var(--blue);color:#fff;cursor:pointer;font-size:12px;font-weight:600"><i class="ti ti-plus"></i> Hinzufügen</button>
         </div>
       </div>
@@ -799,6 +798,7 @@ if('serviceWorker' in navigator){
       <span style="color:#fff;font-size:13px;font-weight:600">Audit Planer</span>
     </div>
     <div style="display:flex;align-items:center;gap:8px">
+      <span id="mob-sync" onclick="sbIndicatorClick()" style="font-size:10px;font-weight:600;cursor:pointer"></span>
       <span id="mob-user" style="color:rgba(255,255,255,.7);font-size:11px"></span>
       <button onclick="toggleMobileView()" style="background:rgba(255,255,255,.15);border:none;color:#fff;cursor:pointer;border-radius:6px;padding:5px 8px;font-size:11px">✕ Normal</button>
     </div>
@@ -1076,11 +1076,12 @@ if('serviceWorker' in navigator){
     </div>
   </div>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script src="js/app.js?v=2.87"></script>
+<script src="js/merge.js?v=2.88"></script>
+<script src="js/app.js?v=2.88"></script>
 <!-- ONBOARDING GUIDE MODAL -->
 <div id="guide-bg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:5000;align-items:center;justify-content:center">
   <div style="background:var(--sf);border-radius:16px;width:560px;max-width:95vw;max-height:90vh;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.4);display:flex;flex-direction:column">

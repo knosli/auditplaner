@@ -300,3 +300,30 @@ body.dark .anb{background:var(--bg)}
 .marker-cluster-custom{background:none !important;border:none !important;}
 .marker-cluster-custom div{margin:0 !important;}
 body.dark #calpop,body.dark .modal{background:var(--sf)}
+/* Dialoge (ersetzen confirm/prompt) */
+.ui-dlg-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px}
+.ui-dlg{background:var(--sf);color:var(--tx);border-radius:12px;box-shadow:var(--shl);width:420px;max-width:100%;padding:20px}
+.ui-dlg-msg{font-size:14px;line-height:1.45;white-space:pre-line;margin-bottom:16px}
+.ui-dlg-inp{width:100%;padding:9px 10px;border:1px solid var(--bd);border-radius:var(--rs);background:var(--sf2);color:var(--tx);font-size:14px;margin-bottom:16px;box-sizing:border-box}
+.ui-dlg-btns{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+.ui-btn{padding:8px 14px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf2);color:var(--tx);font-size:13px;font-weight:500;cursor:pointer;font-family:inherit}
+.ui-btn-pri{background:var(--blue);border-color:var(--blue);color:#fff}
+.ui-btn-danger{background:var(--red);border-color:var(--red)}
+/* Hinweis mit «Rückgängig» */
+#undo-toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--hdr);color:#fff;padding:6px 6px 6px 16px;border-radius:22px;font-size:12px;z-index:9999;display:none;align-items:center;gap:12px;box-shadow:var(--shl);max-width:calc(100vw - 32px)}
+#undo-toast span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#undo-toast button{background:rgba(255,255,255,.15);color:#fff;border:none;border-radius:16px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit}
+/* Admin-Anleitung */
+.adm-guide h3{font-size:14px;margin:18px 0 6px;color:var(--tx)}
+.adm-guide p,.adm-guide li{font-size:12.5px;line-height:1.5;color:var(--tx2)}
+.adm-guide ol{padding-left:18px;margin:4px 0}
+.adm-sql{position:relative;margin:6px 0 10px}
+.adm-sql pre{background:var(--sf2);border:1px solid var(--bd);border-radius:var(--rs);padding:10px 12px;font-size:11.5px;line-height:1.45;overflow:auto;max-height:260px;margin:0;white-space:pre;color:var(--tx)}
+.adm-sql button{position:absolute;top:6px;right:6px}
+.adm-note{background:#FEF3C7;color:#92400E;border-radius:var(--rs);padding:8px 10px;font-size:12px;margin:8px 0}
+body.dark .adm-note{background:#422006;color:#FDE68A}
+.adm-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;margin:8px 0}
+.adm-fields input{width:100%;padding:7px 9px;border:1px solid var(--bd);border-radius:var(--rs);background:var(--sf2);color:var(--tx);font-size:12px;box-sizing:border-box}
+.adm-tbl{width:100%;border-collapse:collapse;font-size:12px}
+.adm-tbl td,.adm-tbl th{border-bottom:1px solid var(--bd);padding:6px;text-align:left;vertical-align:top;color:var(--tx)}
+.adm-tbl td.sum{white-space:pre-line;color:var(--tx2)}
