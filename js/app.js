@@ -363,9 +363,10 @@ function mapSrch(){
         if(!d.results||!d.results.length)return;
         const addrHits=d.results.map(r=>{
           const a=r.attrs;
-          return`<div class="msr" onclick="mapGoTo(${a.lat},${a.lon},'${(a.label||'').replace(/'/g,'').replace(/<[^>]+>/g,'')}')">
-            <div class="msrn" style="color:var(--blue)">📍 ${(a.label||'').replace(/<[^>]+>/g,'')}</div>
-            <div class="msrs">${a.detail||''}</div>
+          const lbl=mgSafe((a.label||'').replace(/<[^>]+>/g,''));
+          return`<div class="msr" onclick="mapGoTo(${+a.lat||0},${+a.lon||0},'${lbl}')">
+            <div class="msrn" style="color:var(--blue)">📍 ${lbl}</div>
+            <div class="msrs">${mgSafe(String(a.detail||''))}</div>
           </div>`;
         }).join('');
         const cur=document.getElementById('msrch-res');
@@ -2886,7 +2887,7 @@ function saveAudMeta2(name){
   const roleEl=document.getElementById('am-role-'+name.replace(/ /g,'_'));
   const role=roleEl?roleEl.value:'normal';
   meta.secondaryAdmin=role==='secondary';
-  meta.fullAdmin=role==='full';
+  delete meta.fullAdmin; // Voll-Admin wird nur noch in der Datenbank vergeben
   const code=document.getElementById('am-code-'+name.replace(/ /g,'_'))?.value||'';
   if(code){AUD_CODES[name]=code.toUpperCase().slice(0,4);saveAudCodes();}
   const col=document.getElementById('am-col-'+name.replace(/ /g,'_'))?.value||'';
@@ -2947,10 +2948,10 @@ function renderAudAdminList(){
         <div>
           <label style="font-size:10px;color:var(--tx2);display:block;margin-bottom:4px">Berechtigungsstufe</label>
           <select id="am-role-${id}" style="width:100%;padding:5px 7px;border:1px solid var(--bd);border-radius:5px;background:var(--sf);color:var(--tx);font-size:12px">
-            <option value="normal" ${!(auditorMeta[a]||{}).secondaryAdmin&&!(auditorMeta[a]||{}).fullAdmin?'selected':''}>⚪ Normal</option>
+            <option value="normal" ${!(auditorMeta[a]||{}).secondaryAdmin?'selected':''}>⚪ Normal</option>
             <option value="secondary" ${(auditorMeta[a]||{}).secondaryAdmin?'selected':''}>🔵 Sekundär-Admin (Statistiken)</option>
-            <option value="full" ${(auditorMeta[a]||{}).fullAdmin?'selected':''}>🔴 Voll-Admin (alles)</option>
           </select>
+          <div style="font-size:10px;color:var(--tx3);margin-top:3px">🔴 Voll-Admin wird in der Datenbank vergeben: Admin → Anleitung & SQL → Abschnitt 7</div>
         </div>
       </div>
       <div style="border-top:1px solid var(--bd);padding-top:10px;margin-bottom:10px">
@@ -4177,9 +4178,9 @@ function mobSearch(q){
     fetch(`https://api3.geo.admin.ch/rest/services/api/SearchServer?searchText=${encodeURIComponent(q)}&type=locations&limit=3&sr=4326&lang=de`)
       .then(r=>r.json()).then(d=>{
         if(!d.results)return;
-        const extra=d.results.map(r=>`<div onclick="mobMapGo(${r.attrs.lat},${r.attrs.lon},'${(r.attrs.label||'').replace(/<[^>]+>/g,'').replace(/'/g,'')}');document.getElementById('mob-search').value='';document.getElementById('mob-search-res').style.display='none'"
+        const extra=d.results.map(r=>`<div onclick="mobMapGo(${+r.attrs.lat||0},${+r.attrs.lon||0},'${mgSafe((r.attrs.label||'').replace(/<[^>]+>/g,''))}');document.getElementById('mob-search').value='';document.getElementById('mob-search-res').style.display='none'"
           style="padding:10px 14px;border-bottom:1px solid var(--bd);cursor:pointer;font-size:13px">
-          <div style="font-weight:600;color:var(--blue)">📍 ${(r.attrs.label||'').replace(/<[^>]+>/g,'')}</div>
+          <div style="font-weight:600;color:var(--blue)">📍 ${mgSafe((r.attrs.label||'').replace(/<[^>]+>/g,''))}</div>
         </div>`).join('');
         const cur=document.getElementById('mob-search-res');
         cur.innerHTML=(hits.length?cur.innerHTML:'')+extra;
@@ -4296,7 +4297,7 @@ function hideLoginModal(){
 async function onAuthSuccess(user){
   _authUser=user;
   const meta=user.user_metadata||{};
-  const displayName=meta.display_name||meta.full_name||user.email.split('@')[0];
+  const displayName=mgSafe(meta.display_name||meta.full_name||user.email.split('@')[0]);
   // Check if must change password
   if(meta.must_change_password){
     document.getElementById('login-bg').style.display='flex';
@@ -4332,12 +4333,11 @@ async function onAuthSuccess(user){
   }
   // Check secondary/full admin from auditorMeta
   const meta2=auditorMeta[matched]||{};
-  const isFullAdmin=!isAdmin&&meta2.fullAdmin===true;
-  const isSecondaryAdmin=!isAdmin&&!isFullAdmin&&meta2.secondaryAdmin===true;
-  if(isFullAdmin){
-    document.body.classList.add('admin-mode');
+  // Voll-Admin nur über ADMIN_EMAILS oder die Datenbank-Liste app_admins (siehe oben);
+  // ein alter Eintrag «fullAdmin» in den Auditor-Angaben wird ignoriert (dort änderbar für alle).
+  const isSecondaryAdmin=!isAdmin&&meta2.secondaryAdmin===true;
+  if(isAdmin){
     document.body.classList.remove('secondary-admin');
-    localStorage.setItem('anliker_admin','1');
     localStorage.removeItem('anliker_sec_admin');
   } else if(isSecondaryAdmin){
     document.body.classList.add('secondary-admin');
@@ -4448,6 +4448,7 @@ function renderPresence(online){
   const bar=document.getElementById('presence-bar');
   if(!bar)return;
   if(!online.length){bar.innerHTML='';return;}
+  online=online.map(r=>({...r,user:mgSafe(String(r.user||''))}));
   bar.innerHTML=online.map(r=>{
     const isMe=r.user===currentUser;
     const col=aC(r.user);
@@ -6062,7 +6063,7 @@ function sbParseRow(row){
     if(v==='')continue;
     try{o[f]=typeof v==='string'?JSON.parse(v):v;}catch(e){console.warn('Spalte '+f+' nicht lesbar',e);}
   }
-  return o;
+  return mgSafe(o);
 }
 function sbRowFrom(vals){
   const row={};
@@ -6075,6 +6076,7 @@ function sbRowFrom(vals){
 }
 // Werte in den App-Zustand übernehmen (nur geänderte Felder), lokal sichern
 function sbApply(vals){
+  vals=mgSafe(vals);
   for(const f in vals){
     if(!SB_FIELDS[f]||vals[f]===undefined)continue;
     if(mgEq(vals[f],SB_FIELDS[f].get()))continue;
@@ -6097,6 +6099,10 @@ function saveLocal(){
     localStorage.setItem('anliker_ors_key',window._orsKey||'');
     localStorage.setItem('anliker_audit_target',String(window._auditTarget||0));
   }catch(e){}
+}
+// Eigene Daten von gefährlichen Zeichen befreien (siehe mgSafe in js/merge.js)
+function sbSanitizeState(){
+  for(const f in SB_FIELDS){const v=SB_FIELDS[f].get(),c=mgSafe(v);if(!mgEq(v,c))SB_FIELDS[f].set(c);}
 }
 // Daten-Schlüssel im Browser (werden beim Abmelden gelöscht)
 const LOCAL_DATA_KEYS=[SK,'anliker_persons','anliker_berat_plan','anliker_pi_collectbox','anliker_temp_workers','anliker_aud_meta','auditorColors','anliker_depts','anliker_dept_meta','anliker_ors_key','anliker_audit_target'];
@@ -6136,6 +6142,7 @@ async function sbPush(){
   if(!sbConnected||!sbBase)return;
   if(sbBusy){sbPushAgain=true;return;}
   sbBusy=true;clearTimeout(sbRetryT);
+  sbSanitizeState();
   const mine=sbCollect(),baseBefore=sbBase;
   if(!sbHasPending()){sbBusy=false;setSyncState('saved');return;}
   setSyncState('saving');
@@ -6697,8 +6704,8 @@ async function addrAutocomplete(q,prefix){
       const j=await resp.json();
       if(!j.results||!j.results.length){if(sug)sug.style.display='none';return;}
       sug.innerHTML=j.results.map(r=>{
-        const label=r.attrs.label?.replace(/<[^>]+>/g,'')||r.attrs.detail||q;
-        return`<div onclick="selectAddr('${label.replace(/'/g,"\'")}',${r.attrs.lat||0},${r.attrs.lon||0},'${prefix}')" style="padding:8px 12px;cursor:pointer;font-size:12px;border-bottom:1px solid var(--bd);hover:background:var(--sf2)"
+        const label=mgSafe(r.attrs.label?.replace(/<[^>]+>/g,'')||r.attrs.detail||q);
+        return`<div onclick="selectAddr('${label}',${+r.attrs.lat||0},${+r.attrs.lon||0},'${prefix}')" style="padding:8px 12px;cursor:pointer;font-size:12px;border-bottom:1px solid var(--bd);hover:background:var(--sf2)"
           onmouseover="this.style.background='var(--sf2)'" onmouseout="this.style.background=''">${label}</div>`;
       }).join('');
       sug.style.display='block';
@@ -6893,6 +6900,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   document.getElementById('login-bg').style.display='flex';
   buildSelects();
   const loaded=load();
+  if(loaded)sbSanitizeState();
   if(loaded&&data.length>0)buildDF();
   renderAudTags();renderAll();buildCalBS();
   document.getElementById('srch').oninput=()=>{renderMarkers();renderList();};

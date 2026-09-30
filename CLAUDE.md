@@ -11,8 +11,8 @@ Beratungen, Rapporten und Ferien der Auditoren. Sprache der Oberfläche: Deutsch
 - Vor jedem PR: App im Browser laden (Desktop- und Mobile-Breite) und in der Konsole
   prüfen, dass keine JavaScript-Fehler auftreten.
 - Bei jeder Änderung an der App die Versionsnummer erhöhen, und zwar überall in
-  `index.html`: im Header (`<span ... title="Version">v2.88</span>`) und in den Links
-  `css/style.css?v=2.88`, `js/merge.js?v=2.88` und `js/app.js?v=2.88`. Der `?v=`-Zusatz
+  `index.html`: im Header (`<span ... title="Version">v2.89</span>`) und in den Links
+  `css/style.css?v=2.89`, `js/merge.js?v=2.89` und `js/app.js?v=2.89`. Der `?v=`-Zusatz
   sorgt dafür, dass Browser nach einem Update keine alte Datei aus dem Cache verwenden.
 - Tests für die Zusammenführung: `node tests/merge.test.js` (muss grün sein).
 - Keine Browser-Dialoge (`confirm`, `prompt`, `alert`): `askConfirm()`, `askText()`,
@@ -29,19 +29,20 @@ Beratungen, Rapporten und Ferien der Auditoren. Sprache der Oberfläche: Deutsch
 | `js/app.js` | Die ganze übrige Logik (~6'900 Zeilen) |
 | `supabase/setup.sql` | Einmalige Datenbank-Einrichtung (Admins, Verlauf, Protokoll); wird in der App unter Admin → Anleitung & SQL angezeigt |
 | `tests/merge.test.js` | Tests für `js/merge.js` |
+| `vendor/` | Bibliotheken (Leaflet, MarkerCluster, Supabase JS, SheetJS) als feste Kopien, siehe `vendor/README.md` |
 | `sw.js` | Service Worker: kein Caching, lädt immer frisch vom Netz |
 | `manifest.json` | PWA-Manifest (Name, Icons, `start_url`) |
 | `icon-*.png`, `apple-touch-icon.png` | App-Icons |
 
-Kein Build-Schritt, kein npm. Externe Bibliotheken kommen per CDN:
-Supabase JS, Leaflet (+ MarkerCluster), SheetJS (`xlsx`), Tabler Icons, Google Font Inter.
+Kein Build-Schritt, kein npm. Bibliotheken liegen in `vendor/` (nicht per CDN laden);
+nur Tabler Icons und die Schrift Inter kommen noch von aussen (nur CSS/Schriften).
 
 ## Aufbau
 
 `index.html`:
 - `<head>`: Mobile-Erkennung und Service-Worker-Registrierung (kleine Inline-Scripts,
   müssen früh laufen), CDN-Styles, dann `css/style.css`
-- `<body>`: HTML-Markup, dann CDN-Scripts (feste Versionen), dann `js/merge.js` und
+- `<body>`: HTML-Markup, dann Bibliotheken aus `vendor/`, dann `js/merge.js` und
   `js/app.js`, danach weiteres HTML
   (u.a. Anleitungs-Modal)
 
@@ -95,6 +96,19 @@ global; das HTML ruft sie direkt über `onclick="..."` auf.
   (Änderungsprotokoll, von der App nach jedem Speichern geschrieben), `presence`.
 - RLS ist auf allen Tabellen aktiv; Zugriff nur für angemeldete Benutzer, Verlauf und
   Protokoll nur für Admins. Löschen der Zeile `audit_state` ist nicht erlaubt.
+
+## Sicherheit
+
+- Rollen: Voll-Admin = `ADMIN_EMAILS` im Code oder Tabelle `app_admins` (Funktion
+  `is_app_admin()`). Nur diese Prüfung zählt; `auditorMeta[..].fullAdmin` wird ignoriert,
+  weil alle angemeldeten Benutzer die Auditor-Angaben ändern können.
+  Sekundär-Admin (`secondaryAdmin`, nur Statistik-Anzeige) wird im Planer vergeben.
+- Texte aus Datenbank, Dateien, Login-Namen, Präsenz und Adress-Suche laufen durch
+  `mgSafe()` (js/merge.js): spitze Klammern, Anführungszeichen, Apostroph, Backtick und
+  Backslash werden durch harmlose, ähnlich aussehende Zeichen ersetzt. Grund: Die App baut HTML mit Template-Strings und `innerHTML`.
+  Neue Datenquellen ebenfalls durch `mgSafe()` schicken (bei HTML-Ausgabe sonst `escH()`).
+- Selbst-Registrierung in Supabase muss ausgeschaltet bleiben (Authentication →
+  Sign In / Providers).
 
 ## Vorsicht
 

@@ -126,4 +126,16 @@ function mgDescribe(before,after){
   return lines;
 }
 
-if(typeof module!=='undefined')module.exports={mgClone,mgEq,mgMerge,mgMergeAll,mgMergeSet,mgMergeById,mgDescribe};
+// Schutz vor eingeschleustem HTML/JavaScript (Cross-Site-Scripting): Zeichen, mit denen sich
+// in der Anzeige HTML-Tags oder Code bilden liessen, werden durch gleich aussehende, harmlose
+// Zeichen ersetzt. Gilt für alle Texte (auch Schlüssel), die aus der Datenbank, aus Dateien
+// oder von anderen Benutzern kommen.
+const MG_SAFE={'<':'‹','>':'›','"':'”',"'":'’','`':'´','\\':'∖'};
+function mgSafe(v){
+  if(typeof v==='string')return v.replace(/[<>"'`\\]/g,c=>MG_SAFE[c]).replace(/&(?=#|[a-zA-Z][a-zA-Z0-9]*;)/g,'＆');
+  if(Array.isArray(v))return v.map(mgSafe);
+  if(mgIsObj(v)){const o={};for(const k in v)o[mgSafe(k)]=mgSafe(v[k]);return o;}
+  return v;
+}
+
+if(typeof module!=='undefined')module.exports={mgSafe,mgClone,mgEq,mgMerge,mgMergeAll,mgMergeSet,mgMergeById,mgDescribe};
