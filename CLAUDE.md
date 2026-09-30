@@ -10,14 +10,18 @@ Beratungen, Rapporten und Ferien der Auditoren. Sprache der Oberfläche: Deutsch
 - Änderungen immer auf einem Branch machen und per Pull Request übernehmen.
 - Vor jedem PR: App im Browser laden (Desktop- und Mobile-Breite) und in der Konsole
   prüfen, dass keine JavaScript-Fehler auftreten.
-- Bei jeder Änderung an der App die Versionsnummer im Header erhöhen
-  (`<span ... title="Version">v2.86</span>` in `index.html`).
+- Bei jeder Änderung an der App die Versionsnummer erhöhen, und zwar an drei Stellen
+  in `index.html`: im Header (`<span ... title="Version">v2.87</span>`) und in den
+  Links `css/style.css?v=2.87` und `js/app.js?v=2.87`. Der `?v=`-Zusatz sorgt dafür,
+  dass Browser nach einem Update nicht eine alte CSS/JS-Datei aus dem Cache verwenden.
 
 ## Dateien
 
 | Datei | Inhalt |
 |---|---|
-| `index.html` | Die ganze App: HTML, CSS und JavaScript in einer Datei (~8'400 Zeilen) |
+| `index.html` | HTML-Gerüst: Header, Tabs, Ansichten, Modals (~1'500 Zeilen) |
+| `css/style.css` | Alle Styles inkl. Dark Mode (~300 Zeilen) |
+| `js/app.js` | Die ganze Logik (~6'600 Zeilen) |
 | `sw.js` | Service Worker: kein Caching, lädt immer frisch vom Netz |
 | `manifest.json` | PWA-Manifest (Name, Icons, `start_url`) |
 | `icon-*.png`, `apple-touch-icon.png` | App-Icons |
@@ -25,38 +29,39 @@ Beratungen, Rapporten und Ferien der Auditoren. Sprache der Oberfläche: Deutsch
 Kein Build-Schritt, kein npm. Externe Bibliotheken kommen per CDN:
 Supabase JS, Leaflet (+ MarkerCluster), SheetJS (`xlsx`), Tabler Icons, Google Font Inter.
 
-## Aufbau von `index.html`
+## Aufbau
 
-- Zeilen ~1–337: `<head>`, Mobile-Erkennung, Service-Worker-Registrierung, `<style>` (CSS)
-- Zeilen ~339–1381: HTML-Markup (Header mit Admin-Menü, Tabs, Statistik-Leiste,
-  Ansichten, Modals)
-- Zeilen ~1386–8014: ein grosser `<script>`-Block mit der ganzen Logik
-- Zeilen ~8015–8400: weiteres HTML (u.a. Anleitungs-Modal)
+`index.html`:
+- `<head>`: Mobile-Erkennung und Service-Worker-Registrierung (kleine Inline-Scripts,
+  müssen früh laufen), CDN-Styles, dann `css/style.css`
+- `<body>`: HTML-Markup, dann CDN-Scripts, dann `js/app.js`, danach weiteres HTML
+  (u.a. Anleitungs-Modal)
 
-Alle Funktionen sind global; das HTML ruft sie direkt über `onclick="..."` auf.
+`js/app.js` ist ein normales (klassisches) Script, kein Modul. Alle Funktionen sind
+global; das HTML ruft sie direkt über `onclick="..."` auf.
 
-### Wichtige Bereiche im Script (ungefähre Zeilen)
+### Wichtige Bereiche in `js/app.js` (ungefähre Zeilen)
 
-- ~1387 Konstanten: Abteilungen (`DEPT_MAP`, `ALL_DEPTS`, `DC`), Auditor-Kürzel,
+- ~1 Konstanten: Abteilungen (`DEPT_MAP`, `ALL_DEPTS`, `DC`), Auditor-Kürzel,
   PLZ-Koordinaten (`PLZ`, `CFB`) für die Geokodierung
-- ~1499 `status(e)`: berechnet den Status einer Baustelle
+- ~113 `status(e)`: berechnet den Status einer Baustelle
   (inactive, paused, planned, beratung, new, overdue, due, soon, ok)
-- ~1544 `save()` / `saveNow()` / `load()`: Speichern in localStorage + Supabase-Push
-- ~1562 Karte (Leaflet): `initMap`, `renderMarkers`, `renderList`, `selEntry` (Detail-Panel)
-- ~2131 `setView`: Tabs Karte / KW-Planung / Auditoren / Übersicht / Personen-Audits
-- ~2462 Ferien und Wunschferien (Gantt)
-- ~2640 Personen-Audits und Personenregister
-- ~3185 Rapporte (inkl. ICS-Export)
-- ~3698 KW-Planung / Kalender (`renderKW`, Wochenansicht)
-- ~4547 Automatische Verteilung (`openDistribute`)
-- ~4889 Mobile-Ansicht (`toggleMobileView`, `renderMobPlan`, Routen via OpenRouteService)
-- ~5647 Login/Auth (Supabase Auth), Präsenz-Anzeige
-- ~6041 Einstellungen & Regeln (`S(k)` liest eine Einstellung)
-- ~6199 Tourguide / Tagesablauf-Simulation (`tg*`)
-- ~6791 Personal-Import aus Excel, Sammelbox, temporäre Mitarbeitende
-- ~7368 Supabase-Sync (`sbFetch`, `sbPush`, `sbPull`, Polling alle 30 s)
-- ~7612 Excel-Export, ~7690 Übersichtstabelle, ~7823 ICS-Export
-- ~7975 `renderAll()`, ~7988 Initialisierung (`DOMContentLoaded`)
+- ~158 `save()` / `saveNow()` / `load()`: Speichern in localStorage + Supabase-Push
+- ~176 Karte (Leaflet): `initMap`, `renderMarkers`, `renderList`, `selEntry` (Detail-Panel)
+- ~745 `setView`: Tabs Karte / KW-Planung / Auditoren / Übersicht / Personen-Audits
+- ~1076 Ferien und Wunschferien (Gantt)
+- ~1254 Personen-Audits und Personenregister
+- ~1799 Rapporte (inkl. ICS-Export)
+- ~2312 KW-Planung / Kalender (`renderKW`, Wochenansicht)
+- ~3161 Automatische Verteilung (`openDistribute`)
+- ~3503 Mobile-Ansicht (`toggleMobileView`, `renderMobPlan`, Routen via OpenRouteService)
+- ~4261 Login/Auth (Supabase Auth), Präsenz-Anzeige
+- ~4655 Einstellungen & Regeln (`S(k)` liest eine Einstellung)
+- ~4813 Tourguide / Tagesablauf-Simulation (`tg*`)
+- ~5405 Personal-Import aus Excel, Sammelbox, temporäre Mitarbeitende
+- ~5982 Supabase-Sync (`sbFetch`, `sbPush`, `sbPull`, Polling alle 30 s)
+- ~6226 Excel-Export, ~6304 Übersichtstabelle, ~6437 ICS-Export
+- ~6589 `renderAll()`, ~6602 Initialisierung (`DOMContentLoaded`)
 
 ## Daten und Speicherung
 
