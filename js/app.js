@@ -20,23 +20,7 @@ function saveAudColor(name,col){
   localStorage.setItem('auditorColors',JSON.stringify(auditorColors));
   renderAudTags();renderAuditors();
   // Sync to Supabase so all users see same colors
-  if(sbConnected)sbPushColors();
-}
-async function sbPushColors(){
-  // Store colors as part of audit_state
-  const rows=await sbFetch('audit_state?id=eq.1&select=*');
-  if(rows&&rows.length){
-    await sbFetch('audit_state?id=eq.1',{method:'PATCH',body:JSON.stringify({auditorColors:JSON.stringify(auditorColors)})});
-  }
-}
-async function sbPullColors(){
-  const rows=await sbFetch('audit_state?id=eq.1&select=auditorColors');
-  if(rows&&rows.length&&rows[0].auditorColors){
-    try{
-      auditorColors=JSON.parse(rows[0].auditorColors);
-      localStorage.setItem('auditorColors',JSON.stringify(auditorColors));
-    }catch(e){}
-  }
+  save();
 }
 const DC={'Tiefbau Luzern':'#1D4ED8','Erneuerungsbau Luzern':'#0369A1','Hochbau Luzern':'#0F766E','Erneuerungsbau Zürich':'#15803D','Hochbau Zürich':'#16A34A','Hochbau Mittelland':'#4D7C0F','Abdichtungen':'#7E22CE','Niederlassung Basel':'#BE185D','Niederlassung Langenthal':'#B91C1C','Niederlassung Olten':'#C2410C','Niederlassung Winterthur':'#D97706','Läderrach Weibel AG':'#5B21B6','Interbohr AG':'#0F766E','Anliker Spezialitäten AG':'#854D0E','Terratech AG':'#374151','Generalunternehmung':'#44403C'};
 const AUDITOR_CODES={'ag':'Alain Groelly','mk':'Matthias Knotz','rr':'René Rottenberger','nm':'Niklaus Meier'};
@@ -155,20 +139,62 @@ function dl(e){
 function dotC(e){if(planned.has(e.id))return'#10B981';if(e.type==='werkhof')return'#EA580C';const s=status(e);if(s==='paused')return'rgba(148,163,184,.75)';if(s==='planned')return'#6366F1';if(s==='beratung')return'#8B5CF6';if(s==='overdue')return'#EF4444';if(s==='due')return'#F59E0B';if(s==='soon')return'#FDE047';return'#10B981';}
 // ═══ STORAGE ═══
 let saveT=null;
-function save(){clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem('anliker_persons',JSON.stringify(persons));localStorage.setItem(SK,JSON.stringify({data,plans,tlog,auditors,ferien,ferienWunsch,rapporte,ghostAudits:window._ghostAudits||[],personAudits,v:4}));showToast(sbConnected?'☁':'💾',1200);}catch(e){}sbPush();},900);}
+function save(){clearTimeout(saveT);try{if(sbConnected&&sbBase)setSyncState('saving');}catch(e){}saveT=setTimeout(()=>{saveT=null;saveLocal();if(!sbConnected)showToast('💾',1200);sbPush();},900);}
 // Immediate save for critical actions (no debounce)
-function saveNow(){
-  clearTimeout(saveT);
-  try{localStorage.setItem('anliker_berat_plan',JSON.stringify(beratPlan));localStorage.setItem(SK,JSON.stringify({data,plans,tlog,auditors,ferien,ferienWunsch,rapporte,ghostAudits:window._ghostAudits||[],personAudits,v:4}));localStorage.setItem('anliker_pi_collectbox',JSON.stringify(window._piCollectBox||[]));localStorage.setItem('anliker_temp_workers',JSON.stringify(window._tempWorkers||[]));}catch(e){}
-  sbPush();
-}
+function saveNow(){clearTimeout(saveT);saveT=null;saveLocal();sbPush();}
 function load(){try{const r=localStorage.getItem(SK);if(!r)return false;const p=JSON.parse(r);if(p.data){data=p.data;ensureCreatedAt();ensurePersonalHistory();}if(p.plans)plans=p.plans;if(p.tlog)tlog=p.tlog;if(p.auditors)auditors=p.auditors;if(p.ferien)ferien=p.ferien;if(p.ferienWunsch)ferienWunsch=p.ferienWunsch;if(p.rapporte){rapporte=p.rapporte;normalizeRapporte();}if(p.ghostAudits)window._ghostAudits=p.ghostAudits;if(p.personAudits)personAudits=p.personAudits;try{window._piCollectBox=JSON.parse(localStorage.getItem('anliker_pi_collectbox')||'[]');}catch(e){window._piCollectBox=[];}try{window._tempWorkers=JSON.parse(localStorage.getItem('anliker_temp_workers')||'[]');}catch(e){window._tempWorkers=[];}try{window._orsKey=localStorage.getItem('anliker_ors_key')||'';}catch(e){}return true;}catch(e){return false;}}
 function showToast(m,d=2500){const t=document.getElementById('toast');t.textContent=m;t.style.display='block';clearTimeout(t._t);t._t=setTimeout(()=>t.style.display='none',d);}
+// ═══ DIALOGE & RÜCKGÄNGIG ═══
+// Ersetzt die Browser-Fenster confirm()/prompt(). Rückgabe: true/false, beim Textfeld der Text
+// bzw. null, bei einem dritten Knopf (extra) den Wert 'extra'.
+function uiDialog({msg,input=false,def='',ok='OK',cancel='Abbrechen',extra=null,danger=false}){
+  return new Promise(res=>{
+    const bg=document.createElement('div');bg.className='ui-dlg-bg';
+    bg.innerHTML=`<div class="ui-dlg" role="dialog" aria-modal="true"><div class="ui-dlg-msg"></div>${input?'<input class="ui-dlg-inp" type="text">':''}<div class="ui-dlg-btns">${extra?'<button type="button" class="ui-btn" data-v="extra"></button>':''}<button type="button" class="ui-btn" data-v="cancel"></button><button type="button" class="ui-btn ui-btn-pri${danger?' ui-btn-danger':''}" data-v="ok"></button></div></div>`;
+    bg.querySelector('.ui-dlg-msg').textContent=msg;
+    bg.querySelector('[data-v=ok]').textContent=ok;
+    bg.querySelector('[data-v=cancel]').textContent=cancel;
+    if(extra)bg.querySelector('[data-v=extra]').textContent=extra;
+    const inp=bg.querySelector('.ui-dlg-inp');if(inp)inp.value=def||'';
+    const done=v=>{document.removeEventListener('keydown',key,true);bg.remove();res(v==='ok'?(input?inp.value:true):v==='extra'?'extra':(input?null:false));};
+    const key=e=>{if(e.key==='Escape'){e.preventDefault();done('cancel');}else if(e.key==='Enter'&&(inp||document.activeElement?.dataset?.v!=='cancel')){e.preventDefault();done('ok');}};
+    bg.addEventListener('click',e=>{const v=e.target.dataset&&e.target.dataset.v;if(v)done(v);else if(e.target===bg)done('cancel');});
+    document.addEventListener('keydown',key,true);
+    document.body.appendChild(bg);
+    setTimeout(()=>{if(inp){inp.focus();inp.select();}else bg.querySelector('[data-v=ok]').focus();},30);
+  });
+}
+function askConfirm(msg,o={}){return uiDialog({msg,...o});}
+function askText(msg,def='',o={}){return uiDialog({msg,input:true,def,ok:'Speichern',...o});}
+// Rückgängig: vor einer Änderung aufrufen. Nach der Änderung erscheint unten ein Hinweis mit
+// «Rückgängig». Rückgängig nimmt nur die eigene Änderung zurück (Merge), Änderungen anderer
+// Benutzer, die inzwischen dazugekommen sind, bleiben erhalten.
+function undoPoint(label,refresh){
+  const before=mgClone(sbCollect());
+  setTimeout(()=>{
+    const after=mgClone(sbCollect());
+    if(mgEq(before,after))return;
+    showUndo(label,()=>{
+      sbApply(mgMergeAll(after,before,sbCollect()));
+      saveNow();sbRefreshUI();
+      try{if(refresh)refresh();}catch(e){console.warn(e);}
+      showToast('↩ Rückgängig gemacht',2000);
+    });
+  },0);
+}
+function showUndo(label,onUndo){
+  let el=document.getElementById('undo-toast');
+  if(!el){el=document.createElement('div');el.id='undo-toast';el.innerHTML='<span></span><button type="button">Rückgängig</button>';document.body.appendChild(el);}
+  const t=document.getElementById('toast');if(t)t.style.display='none';
+  el.querySelector('span').textContent='🗑 '+label;
+  el.querySelector('button').onclick=()=>{el.style.display='none';clearTimeout(el._t);onUndo();};
+  el.style.display='flex';clearTimeout(el._t);el._t=setTimeout(()=>{el.style.display='none';},8000);
+}
 function dlJSON(obj,fn){const b=new Blob([JSON.stringify(obj,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=fn;a.click();}
-function teamExport(){dlJSON({data,plans,auditors,ferien,ghostAudits:window._ghostAudits||[],personAudits,savedAt:new Date().toISOString(),type:'team'},'anliker_export_'+today()+'.json');showToast('📤 Export erstellt – auf SharePoint!',3000);}
+function teamExport(){dlJSON({...sbCollect(),tlog,savedAt:new Date().toISOString(),type:'team',v:2},'anliker_backup_'+today()+'.json');showToast('📤 Sicherung heruntergeladen',3000);}
 
 
-function loadJSON(file,fromModal=false){if(!file)return;const r=new FileReader();r.onload=e=>{try{const p=JSON.parse(e.target.result);if(p.data)data=p.data;if(p.plans)plans=p.plans;if(p.auditors)auditors=p.auditors;if(p.tlog)tlog=p.tlog;if(p.ferien)ferien=p.ferien;if(p.ghostAudits)window._ghostAudits=p.ghostAudits;if(p.personAudits)personAudits=p.personAudits;const st=document.getElementById('json-st');if(st)st.textContent=`✓ ${data.length} Baustellen, ${plans.length} Planungen`;save();renderAll();buildDF();buildCalBS();if(fromModal)setTimeout(closeModal,1400);else showToast('✓ Geladen',2000);}catch(ex){alert('Fehler: '+ex.message);}};r.readAsText(file);}
+function loadJSON(file,fromModal=false){if(!file)return;const r=new FileReader();r.onload=e=>{try{const p=JSON.parse(e.target.result);const vals={};for(const f in SB_FIELDS)if(p[f]!==undefined)vals[f]=p[f];if(!vals.data)throw new Error('Keine Baustellen in der Datei');if(p.tlog)tlog=p.tlog;sbApply(vals);const st=document.getElementById('json-st');if(st)st.textContent=`✓ ${data.length} Baustellen, ${plans.length} Planungen`;saveNow();sbRefreshUI();buildCalBS();if(fromModal)setTimeout(closeModal,1400);else showToast('✓ Sicherung geladen',2500);}catch(ex){showToast('⚠ Fehler: '+ex.message,4000);}};r.readAsText(file);}
 
 
 
@@ -448,7 +474,7 @@ function statFlt(f){
 }
 // ═══ DETAIL PANEL ═══
 function delPlan(planId,bsId,date){
-  if(!confirm(`Planung vom ${fd(date)} wirklich löschen?`))return;
+  undoPoint(`Planung vom ${fd(date)} gelöscht`,()=>{buildCalBS();if(selId==+bsId)selEntry(+bsId);});
   plans=plans.filter(p=>!(p.bsId==bsId&&p.date===date));
   const bs=data.find(x=>x.id==bsId);
   saveNow();renderAll();buildCalBS();
@@ -474,7 +500,7 @@ function toggleHistExpand(id){
   selEntry(id);
 }
 function delAudit(bsId,date,kw){
-  if(!confirm(`Audit vom ${fd(date)} wirklich löschen?`))return;
+  undoPoint(`Audit vom ${fd(date)} gelöscht`,()=>{if(selId===bsId)selEntry(bsId);});
   const e=data.find(x=>x.id===bsId);if(!e)return;
   e.auditHistory=(e.auditHistory||[]).filter(h=>!(h.date===date&&(h.kw||0)===(kw||0)));
   // Recalculate lastAudit from remaining history
@@ -934,11 +960,11 @@ function openMaps(entries){
   sel=nnSort(sel);
   const start=localStorage.getItem('audit_start')||'';
   const pts=sel.map(e=>encodeURIComponent(e.addr));
-  if(pts.length>10){if(!confirm(`Max. 10 Stopps. Erste 10 von ${pts.length}?`))return;pts.splice(10);}
+  if(pts.length>10){showToast(`Google Maps erlaubt max. 10 Stopps – die ersten 10 von ${pts.length} werden geöffnet`,4000);pts.splice(10);}
   const url=start?`https://www.google.com/maps/dir/${encodeURIComponent(start)}/${pts.join('/')}`:`https://www.google.com/maps/dir/${pts.join('/')}`;
   window.open(url,'_blank');
 }
-function setStart(){const c=localStorage.getItem('audit_start')||'';const v=prompt('Startadresse für Routenplanung:',c);if(v!==null){localStorage.setItem('audit_start',v.trim());showToast(v.trim()?`📍 ${v}`:'Startadresse gelöscht',3000);}}
+async function setStart(){const c=localStorage.getItem('audit_start')||'';const v=await askText('Startadresse für Routenplanung:',c);if(v!==null){localStorage.setItem('audit_start',v.trim());showToast(v.trim()?`📍 ${v}`:'Startadresse gelöscht',3000);}}
 
 
 // ═══ SELECTS ═══
@@ -1070,7 +1096,7 @@ function renderAudTags(){
   </span>`).join('');
 }
 
-function rmAud(i){if(!confirm(`${auditors[i]} entfernen?`))return;auditors.splice(i,1);buildAudSels();renderAudTags();renderAuditors();saveNow();}
+function rmAud(i){undoPoint(`${auditors[i]} entfernt`,()=>{renderAudTags();renderAuditors();});auditors.splice(i,1);buildAudSels();renderAudTags();renderAuditors();saveNow();}
 // ═══ FERIEN ═══
 let _ferOpen=false;
 function toggleFerList(){
@@ -1342,9 +1368,9 @@ function fillPersonSelects(vals){
     el.value=canon||'';
   });
 }
-function pfSelChange(kind,el){
+async function pfSelChange(kind,el){
   if(el.value!=='__new__')return;
-  const v=(prompt(`Neue ${PL_KINDS[kind].l} (steht danach für alle zur Auswahl):`)||'').trim();
+  const v=((await askText(`Neue ${PL_KINDS[kind].l} (steht danach für alle zur Auswahl):`,'',{ok:'Hinzufügen'}))||'').trim();
   if(!v){el.value='';return;}
   const pl=personLists();
   const ex=pl[kind].find(x=>x.toLowerCase()===v.toLowerCase());
@@ -1432,12 +1458,12 @@ function addPersonListItem(k){
   if(pl[k].some(x=>x.toLowerCase()===v.toLowerCase())){showToast('Eintrag existiert bereits',2500);return;}
   pl[k].push(v);pl[k].sort((a,b)=>a.localeCompare(b));saveDepts();renderPersonLists();fillPersonSelects();
 }
-function renamePersonListItem(k,oldV,newV){
+async function renamePersonListItem(k,oldV,newV){
   newV=(newV||'').trim();
   if(!newV||newV===oldV){renderPersonLists();return;}
   const pl=personLists();
   const ex=pl[k].find(x=>x!==oldV&&x.toLowerCase()===newV.toLowerCase());
-  if(ex&&!confirm(`«${ex}» existiert bereits. «${oldV}» damit zusammenführen?`)){renderPersonLists();return;}
+  if(ex&&!await askConfirm(`«${ex}» existiert bereits. «${oldV}» damit zusammenführen?`,{ok:'Zusammenführen'})){renderPersonLists();return;}
   const tgt=ex||newV;let n=0;
   persons.forEach(p=>{if((p[k]||'').trim().toLowerCase()===oldV.toLowerCase()){p[k]=tgt;n++;}});
   if(k==='abt'){
@@ -1453,45 +1479,14 @@ function renamePersonListItem(k,oldV,newV){
 function removePersonListItem(k,v){
   const n=persons.filter(p=>(p[k]||'').trim().toLowerCase()===v.toLowerCase()).length;
   if(n){showToast(`«${v}» wird von ${n} Person(en) verwendet – erst umbenennen oder Personen ändern`,4500);return;}
-  if(!confirm(`«${v}» aus der Liste löschen?`))return;
+  undoPoint(`«${v}» aus der Liste gelöscht`,()=>{renderPersonLists();fillPersonSelects();});
   const pl=personLists();pl[k]=pl[k].filter(x=>x!==v);saveDepts();renderPersonLists();fillPersonSelects();
 }
 function deletePerson(id){
-  if(!confirm('Person löschen?'))return;
+  undoPoint('Person gelöscht',()=>renderPersonRegister());
   persons=persons.filter(p=>p.id!==id);
   saveNow();renderPersonRegister();
   showToast('🗑 Person gelöscht');
-}
-
-function importPersons(input){
-  const file=input.files[0];if(!file)return;
-  const reader=new FileReader();
-  reader.onload=function(e){
-    const wb=XLSX.read(e.target.result,{type:'array'});
-    const ws=wb.Sheets[wb.SheetNames[0]];
-    const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
-    let added=0,skipped=0;
-    rows.slice(1).forEach(r=>{
-      if(!r[0]&&!r[1])return; // skip empty
-      const pnr=String(r[0]||'').trim();
-      const nach=String(r[1]||'').trim();
-      if(!pnr||!nach){skipped++;return;}
-      if(persons.find(p=>String(p.pnr)===pnr)){skipped++;return;}
-      persons.push({
-        id:Date.now()+Math.random(),pnr,
-        nachname:nach,
-        vorname:String(r[2]||'').trim(),
-        abt:String(r[3]||'').trim(),
-        ort:String(r[4]||'').trim(),
-        firma:String(r[5]||'').trim()
-      });
-      added++;
-    });
-    saveNow();renderPersonRegister();
-    showToast('✓ '+added+' Personen importiert, '+skipped+' übersprungen',4000);
-  };
-  reader.readAsArrayBuffer(file);
-  input.value='';
 }
 
 function renderPersonRegister(){
@@ -1865,7 +1860,7 @@ function removeRapportType(t){
   const n=rapporte.filter(r=>r.type===t).length;
   if(n){showToast(`«${t}» wird von ${n} Termin(en) verwendet – erst umbenennen oder die Termine ändern`,4500);return;}
   if(rapportTypes().length<=1){showToast('Mindestens eine Art muss bleiben',2500);return;}
-  if(!confirm(`Rapport-Art «${t}» löschen?`))return;
+  undoPoint(`Rapport-Art «${t}» gelöscht`,()=>{fillRapportTypeSelects();renderRapportTypes();});
   saveRapportTypes(rapportTypes().filter(x=>x!==t));
 }
 function moveRapportType(i,d){
@@ -2069,7 +2064,7 @@ function rpeRefresh(){
   if(typeof renderKW==='function'&&curView==='cal')renderKW();
   if(document.getElementById('mob-plan-list'))renderMobPlan();
 }
-function rpeAction(action){
+async function rpeAction(action){
   const r=rapporte.find(x=>x.id===_rpeId);if(!r)return;
   const close=()=>{document.getElementById('rpe-bg').style.display='none';};
   if(action==='cancelAll'){close();cancelRapportTermin(r.id);return;}
@@ -2084,7 +2079,7 @@ function rpeAction(action){
   const status={};grp.forEach(m=>{const s=document.querySelector(`input[name="rpe-st-${m.id}"]:checked`);status[m.id]=s?s.value:(m.planned?'planned':'done');});
   const addNew=[...document.querySelectorAll('#rpe-add input:checked')].map(x=>x.value);
   const remaining=grp.filter(m=>status[m.id]!=='remove').length+addNew.length;
-  if(!remaining){if(!confirm('Alle Teilnehmenden abgesagt – ganzen Termin löschen?'))return;}
+  if(!remaining){if(!await askConfirm('Alle Teilnehmenden abgesagt – ganzen Termin löschen?',{ok:'Termin löschen',danger:true}))return;}
   grp.forEach(m=>{Object.assign(m,shared,{date:g('date')});if(status[m.id]!=='remove')m.planned=status[m.id]==='planned';});
   const removed=grp.filter(m=>status[m.id]==='remove').map(m=>m.auditor);
   rapporte=rapporte.filter(x=>!(x.groupId===gid&&status[x.id]==='remove'));
@@ -2109,15 +2104,18 @@ function rpeAction(action){
   showToast('✓ Gespeichert'+(parts?' ('+parts+')':''),3000);
 }
 // Ganzen Termin für alle absagen (bei Serien: nur dieser oder alle folgenden geplanten)
-function cancelRapportTermin(id){
+async function cancelRapportTermin(id){
   const r=rapporte.find(x=>x.id===id);if(!r)return;
   const later=r.seriesId?[...new Set(rapporte.filter(x=>x.seriesId===r.seriesId&&x.planned&&x.date>=r.date).map(x=>x.groupId))]:[];
   if(later.length>1){
-    if(confirm(`Serientermin für ALLE Teilnehmenden absagen.\n\nOK = diesen und alle folgenden geplanten Termine der Serie (${later.length})\nAbbrechen = weiter zur Auswahl «nur diesen Termin»`)){
+    const c=await uiDialog({msg:`Serientermin für ALLE Teilnehmenden absagen.\n\nNur diesen Termin oder auch alle folgenden geplanten Termine der Serie (${later.length})?`,ok:`Alle folgenden (${later.length})`,extra:'Nur diesen Termin'});
+    if(c!==true&&c!=='extra')return;
+    if(c===true){
+      undoPoint('Serie ab '+fd(r.date)+' abgesagt',rpeRefresh);
       rapporte=rapporte.filter(x=>!(x.seriesId===r.seriesId&&x.planned&&x.date>=r.date));rpeRefresh();showToast('✕ Serie ab '+fd(r.date)+' abgesagt');return;
     }
   }
-  if(!confirm(`Termin ${r.type} vom ${fd(r.date)} für alle Teilnehmenden absagen?`))return;
+  undoPoint(`Termin ${r.type} vom ${fd(r.date)} abgesagt`,rpeRefresh);
   rapporte=rapporte.filter(x=>x.groupId!==r.groupId);rpeRefresh();showToast('✕ Termin abgesagt');
 }
 function moveRapportTo(id,ds){
@@ -2133,19 +2131,18 @@ function confirmRapport(id){
   showToast('✓ Teilnahme bestätigt: '+r.type);
 }
 
-function rmRapport(id){
+async function rmRapport(id){
   const r=rapporte.find(x=>x.id===id);if(!r)return;
   const sib=r.seriesId?rapporte.filter(x=>x.seriesId===r.seriesId&&x.planned&&x.auditor===r.auditor):[];
   if(r.planned&&sib.length>1){
-    if(confirm(`Absage für ${r.auditor}.\nDieser Termin gehört zu einer Serie (${sib.length} geplante Termine).\n\nOK = alle noch geplanten Serientermine von ${r.auditor} absagen\nAbbrechen = weiter zur Auswahl «nur diesen Termin»\n\n(Andere Teilnehmende sind nicht betroffen.)`)){
-      rapporte=rapporte.filter(x=>!(x.seriesId===r.seriesId&&x.planned&&x.auditor===r.auditor));
-    }else{
-      if(!confirm(`Nur diesen einen Termin für ${r.auditor} absagen?`))return;
-      rapporte=rapporte.filter(x=>x.id!==id);
-    }
+    const c=await uiDialog({msg:`Absage für ${r.auditor}.\nDieser Termin gehört zu einer Serie (${sib.length} geplante Termine).\n\n(Andere Teilnehmende sind nicht betroffen.)`,ok:`Alle Serientermine (${sib.length})`,extra:'Nur diesen Termin'});
+    if(c!==true&&c!=='extra')return;
+    undoPoint(`Rapport für ${r.auditor} abgesagt`,rpeRefresh);
+    if(c===true)rapporte=rapporte.filter(x=>!(x.seriesId===r.seriesId&&x.planned&&x.auditor===r.auditor));
+    else rapporte=rapporte.filter(x=>x.id!==id);
   }else{
     const others=rpGroup(r).length-1;
-    if(!confirm(r.planned?`Rapport für ${r.auditor} absagen?${others?`\n(${others} weitere Teilnehmende bleiben eingetragen.)`:''}`:`Teilnahme von ${r.auditor} löschen?`))return;
+    undoPoint(r.planned?`Rapport für ${r.auditor} abgesagt${others?` (${others} weitere bleiben eingetragen)`:''}`:`Teilnahme von ${r.auditor} gelöscht`,rpeRefresh);
     rapporte=rapporte.filter(x=>x.id!==id);
   }
   saveNow();renderRapporte();renderOverview();renderDeptTable();
@@ -2444,10 +2441,10 @@ function openPersonAuditDoneUndo(id){
   const p=personAudits.find(x=>x.id===id);
   if(!p)return;
   if(p.planned){
-    if(!confirm(`"${p.person}" als erledigt markieren?`))return;
+    undoPoint(`«${p.person}» als erledigt markiert`,()=>{renderKW();renderPA2();renderAuditors();});
     p.planned=false;
   }else{
-    if(!confirm(`"${p.person}" wieder als geplant markieren?`))return;
+    undoPoint(`«${p.person}» wieder als geplant markiert`,()=>{renderKW();renderPA2();renderAuditors();});
     p.planned=true;
   }
   saveNow();renderKW();renderPA2();renderAuditors();
@@ -2871,7 +2868,7 @@ function doRenameAuditor(oldName,newName){
   return true;
 }
 function removeAudAdmin(name){
-  if(!confirm('Auditor «'+name+'» löschen? Audits bleiben erhalten.'))return;
+  undoPoint('Auditor «'+name+'» gelöscht (Audits bleiben erhalten)',()=>{renderAudTags();renderAuditors();renderAudAdminList();});
   auditors=auditors.filter(a=>a!==name);
   buildAudSels();renderAudTags();renderAuditors();saveNow();
   renderAudAdminList();
@@ -2966,17 +2963,6 @@ function renderAudAdminList(){
       <button onclick="saveAudMeta2('${a}')" style="width:100%;padding:7px;border-radius:var(--rs);border:none;background:var(--blue);color:#fff;cursor:pointer;font-size:12px;font-weight:600">✓ Speichern</button>
     </div>`;
   }).join('');
-}
-function setPAImportMode(){
-  // Switch to PA tab → Register sub-tab → trigger file input
-  setView('pa',document.querySelector('.tab[onclick*="pa"]'));
-  setTimeout(()=>{
-    setPATab('register');
-    setTimeout(()=>{
-      const inp=document.querySelector('#pa-panel-register input[type=file]');
-      if(inp)inp.click();
-    },200);
-  },100);
 }
 
 function openAdd(){editId=null;window._pendingLat=null;window._pendingLng=null;{const z=document.getElementById('f-zb');if(z)z.value='';}{const la=document.getElementById('f-lat'),ln=document.getElementById('f-lng');if(la)la.value='';if(ln)ln.value='';}document.getElementById('m-title').textContent='Neue Baustelle';document.getElementById('form-s').style.display='block';(document.getElementById('imp-s')||{style:{},classList:{remove(){}}}).style.display='none';(document.getElementById('json-s')||{style:{},classList:{remove(){}}}).style.display='none';document.getElementById('m-save').style.display='';['f-name','f-addr','f-psp','f-sap','f-prv','f-bc','f-note'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});fillFDept('');setDefaultRhythm('baustelle');document.getElementById('f-last').value='';document.getElementById('f-type').value='baustelle';document.getElementById('addr-suggestions').style.display='none';const hint=document.getElementById('f-addr-hint');if(hint)hint.textContent='';document.getElementById('mbg').classList.add('open');}
@@ -3107,7 +3093,7 @@ function saveBeratPlanNote(){
   showToast('✓ Notiz gespeichert',1500);
 }
 function deleteBeratPlanPop(){
-  if(!confirm('Beratungs-Planung löschen?'))return;
+  undoPoint('Beratungs-Planung gelöscht',()=>renderKW());
   beratPlan=beratPlan.filter(x=>x.id!==_beratPopId);
   saveNow();renderKW();
   document.getElementById('berat-pop-bg').style.display='none';
@@ -4060,8 +4046,8 @@ async function computeMobRoute(opts){
     if(noCoord.length&&!opts.silent)showToast(`⚠ ${noCoord.length} Stopp(s) ohne Koordinaten – ans Ende gestellt`,3500);
   }finally{_mobRouteBusy=false;renderMobPlan();}
 }
-function setOrsKey(){
-  const v=prompt('openrouteservice API-Schlüssel (kostenlos unter openrouteservice.org → Sign up → API Key).\nLeer lassen = Routen nach Luftlinie.',window._orsKey||'');
+async function setOrsKey(){
+  const v=await askText('openrouteservice API-Schlüssel (kostenlos unter openrouteservice.org → Sign up → API Key).\nLeer lassen = Routen nach Luftlinie.',window._orsKey||'');
   if(v===null)return;
   window._orsKey=v.trim();
   try{localStorage.setItem('anliker_ors_key',window._orsKey);}catch(e){}
@@ -4326,7 +4312,7 @@ async function onAuthSuccess(user){
   currentUser=matched;
   localStorage.setItem(USER_KEY,matched);
   // Set admin if email matches
-  const isAdmin=ADMIN_EMAILS.includes(user.email.toLowerCase());
+  let isAdmin=ADMIN_EMAILS.includes(user.email.toLowerCase());
   if(isAdmin){
     document.body.classList.add('admin-mode');
     localStorage.setItem('anliker_admin','1');
@@ -4336,13 +4322,14 @@ async function onAuthSuccess(user){
   }
   // Load auditorMeta from Supabase before checking role
   try{
-    const url2=localStorage.getItem('sb_url')||SB_DEFAULT_URL;
-    const key2=localStorage.getItem('sb_key')||SB_DEFAULT_KEY;
-    const r=await fetch(url2+'/rest/v1/audit_state?select=auditorMeta&limit=1',{
-      headers:{'apikey':key2,'Authorization':'Bearer '+user.access_token||key2}
-    });
-    if(r.ok){const d=await r.json();if(d[0]?.auditorMeta){try{auditorMeta=JSON.parse(d[0].auditorMeta);localStorage.setItem('anliker_aud_meta',JSON.stringify(auditorMeta));}catch(e){}}}
+    const d=await sbFetch('audit_state?select=auditorMeta&limit=1');
+    if(Array.isArray(d)&&d[0]?.auditorMeta){try{auditorMeta=JSON.parse(d[0].auditorMeta);localStorage.setItem('anliker_aud_meta',JSON.stringify(auditorMeta));}catch(e){}}
   }catch(e){}
+  // Admins können zusätzlich in Supabase (Tabelle app_admins) hinterlegt werden
+  if(!isAdmin){
+    const r=await sbFetch('rpc/is_app_admin',{method:'POST',body:'{}'});
+    if(r===true){isAdmin=true;document.body.classList.add('admin-mode');localStorage.setItem('anliker_admin','1');}
+  }
   // Check secondary/full admin from auditorMeta
   const meta2=auditorMeta[matched]||{};
   const isFullAdmin=!isAdmin&&meta2.fullAdmin===true;
@@ -4419,20 +4406,20 @@ async function doChangePw(){
 }
 
 async function doLogout(){
-  if(!confirm('Wirklich abmelden?'))return;
-  // Immediately hide app before async signOut
+  if(!await askConfirm('Wirklich abmelden?',{ok:'Abmelden'}))return;
+  if(sbConnected&&(saveT||sbHasPending()||sbSync.state==='error')){
+    saveNow();
+    await new Promise(r=>setTimeout(r,1500));
+    if(sbHasPending()&&!await askConfirm('Einige Änderungen konnten noch nicht gespeichert werden. Beim Abmelden gehen sie verloren. Trotzdem abmelden?',{ok:'Trotzdem abmelden',danger:true}))return;
+  }
   document.getElementById('app').style.display='none';
   document.getElementById('hdr').style.display='none';
-  document.getElementById('login-bg').style.display='flex';
-  document.getElementById('login-form').style.display='block';
-  document.getElementById('changepw-form').style.display='none';
-  document.getElementById('login-email').value='';
-  document.getElementById('login-pw').value='';
-  document.getElementById('login-err').style.display='none';
   if(sbAuth)await sbAuth.auth.signOut();
+  // Daten nicht auf dem Gerät zurücklassen (nach dem nächsten Login kommen sie vom Server)
+  try{LOCAL_DATA_KEYS.forEach(k=>localStorage.removeItem(k));}catch(e){}
   currentUser='';localStorage.removeItem(USER_KEY);
-  document.body.classList.remove('admin-mode');localStorage.removeItem('anliker_admin');
-  updateUserUI();updateAdminUI();
+  localStorage.removeItem('anliker_admin');localStorage.removeItem('anliker_sec_admin');
+  location.reload();
 }
 
 // ═══ PRESENCE (Online-Anzeige) ═══
@@ -4532,16 +4519,16 @@ function addDept(){
 function removeDept(dept){
   const used=data.filter(e=>deptParts(e.dept).includes(dept)).length;
   if(used){showToast(`«${dept}» wird von ${used} Baustelle(n) verwendet – umbenennen oder dort ändern, dann löschen`,4500);return;}
-  if(!confirm(`Abteilung «${dept}» löschen?`))return;
+  undoPoint(`Abteilung «${dept}» gelöscht`,()=>{renderDeptList();buildDF();renderAuditors();});
   customDepts=customDepts.filter(d=>d!==dept);delete deptMeta[dept];
   saveDepts();renderDeptList();buildDF();renderAuditors();
 }
 // Umbenennen zieht alle Baustellen mit; Umbenennen auf einen bestehenden Namen = zusammenführen
-function renameDept(oldD,newD){
+async function renameDept(oldD,newD){
   newD=(newD||'').trim();
   if(!newD||newD===oldD)return;
   const exists=getAllDepts().includes(newD);
-  if(exists&&!confirm(`«${newD}» existiert bereits. «${oldD}» damit zusammenführen?`)){renderDeptList();return;}
+  if(exists&&!await askConfirm(`«${newD}» existiert bereits. «${oldD}» damit zusammenführen?`,{ok:'Zusammenführen'})){renderDeptList();return;}
   let n=0;
   data.forEach(e=>{const p=deptParts(e.dept);if(p.includes(oldD)){e.dept=[...new Set(p.map(x=>x===oldD?newD:x))].join(' + ');n++;}});
   customDepts=[...new Set(customDepts.map(d=>d===oldD?newD:d))].sort();
@@ -4666,8 +4653,9 @@ function setSetting(k,v){
   saveDepts();renderSettings();renderAll();
   if(typeof renderDeptTable==='function')renderDeptTable();
 }
-function resetAllSettings(){
-  if(!confirm('Alle Einstellungen auf die Standardwerte zurücksetzen?'))return;
+async function resetAllSettings(){
+  if(!await askConfirm('Alle Einstellungen auf die Standardwerte zurücksetzen?',{ok:'Zurücksetzen',danger:true}))return;
+  undoPoint('Einstellungen zurückgesetzt',()=>renderSettings());
   deptMeta._settings={};saveDepts();renderSettings();renderAll();showToast('↺ Standardwerte wiederhergestellt');
 }
 function ensureRhOpt(v){
@@ -5661,13 +5649,13 @@ function piRenderPreview(){
 // Baustelle DAUERHAFT von der Personal-Import-Prüfung ausschliessen (z.B. Baustellen in
 // Gefängnissen o.ä., die nie auditiert werden) - wird sofort pausiert und taucht ab sofort in
 // KEINEM Import mehr in einem Entscheidungs-Eimer auf, unabhängig von der Personenzahl.
-function piExcludePermanently(idx){
+async function piExcludePermanently(idx){
   if(!_piPending)return;
   const item=_piPending.buckets.review[idx];
   if(!item||!item.match)return;
   const e=data.find(x=>x.id===item.match.entry.id);
   if(!e)return;
-  if(!confirm(`"${e.name}" dauerhaft von der Personal-Import-Prüfung ausschliessen?\n\nWird sofort pausiert und taucht künftig nie mehr in "Prüfen" auf, egal wie viele Personen dort laut Einsatzliste eingeteilt sind. Kann jederzeit wieder rückgängig gemacht werden.`))return;
+  if(!await askConfirm(`«${e.name}» dauerhaft von der Personal-Import-Prüfung ausschliessen?\n\nWird sofort pausiert und taucht künftig nie mehr in "Prüfen" auf, egal wie viele Personen dort laut Einsatzliste eingeteilt sind. Kann jederzeit wieder rückgängig gemacht werden.`,{ok:'Ausschliessen'}))return;
   e.excludeFromPersonalReview=true;
   e.paused=true;e.pauseReason='Dauerhaft ausgeschlossen (Personal-Import)';e.pauseUntil=null;
   log('Dauerhaft ausgeschlossen 🔇 (Personal-Import)',e.name,'#6B7280','');
@@ -5929,15 +5917,17 @@ function confirmPersonalImport(){
   showToast(`✓ ${n} Baustellen aktualisiert`+(aliasesSaved?`, ${aliasesSaved} Alias-Zuordnung(en) gespeichert`:''),4000);
 }
 
-function clearGhostAudits(){
+async function clearGhostAudits(){
   const count=(window._ghostAudits||[]).length;
-  if(!confirm(`${count} Ghost-Audits (IB/ASP Zählungen) löschen?`))return;
+  if(!await askConfirm(`${count} Ghost-Audits (IB/ASP Zählungen) löschen?`,{ok:'Löschen',danger:true}))return;
+  undoPoint(`${count} Ghost-Audits gelöscht`);
   window._ghostAudits=[];
   saveNow();
   showToast('🗑 Ghost-Audits gelöscht',2000);
 }
-function clearAllPersons(){
-  if(!confirm('Alle '+persons.length+' Personen löschen? Personen-Audits bleiben erhalten.'))return;
+async function clearAllPersons(){
+  if(!await askConfirm('Alle '+persons.length+' Personen löschen? Personen-Audits bleiben erhalten.',{ok:'Alle löschen',danger:true}))return;
+  undoPoint('Alle Personen gelöscht',()=>renderPersonRegister());
   persons=[];
   localStorage.setItem('anliker_persons',JSON.stringify(persons));
   saveNow();
@@ -5950,17 +5940,14 @@ function openReset(){
 
 async function confirmReset(){
   document.getElementById('reset-bg').style.display='none';
-  // Clear local
+  // Vor dem Löschen automatisch eine Sicherung herunterladen
+  teamExport();
   data=[];plans=[];ferien=[];auditors=['Alain Groelly','René Rottenberger','Niklaus Meier','Matthias Knotz'];
   personAudits=[];window._ghostAudits=[];tlog=[];
-  localStorage.removeItem(SK);
-  // Clear Supabase
-  if(sbConnected){
-    await sbFetch('audit_state?id=eq.1',{method:'DELETE'});
-    showToast('🗑 Alles gelöscht – Supabase + lokal',3000);
-  } else {
-    showToast('🗑 Lokal gelöscht',2000);
-  }
+  // Über den normalen Speicherweg: die Löschung wird wie jede Änderung synchronisiert.
+  // Der alte Stand bleibt im Verlauf (Admin → Verlauf & Wiederherstellen) erhalten.
+  saveNow();
+  showToast(sbConnected?'🗑 Alles gelöscht – Sicherung wurde heruntergeladen':'🗑 Lokal gelöscht',3000);
   renderAll();buildDF();buildAudSels();updateAdminUI();
 }
 
@@ -5983,7 +5970,7 @@ let sbUrl=localStorage.getItem(SB_URL_KEY)||SB_DEFAULT_URL;
 let sbKey=localStorage.getItem(SB_KEY_KEY)||SB_DEFAULT_KEY;
 let sbConnected=false;
 let sbPollTimer=null;
-let sbLastSync=0;
+let sbLastStatus=0;
 
 async function getAuthToken(){
   if(sbAuth){
@@ -6003,12 +5990,13 @@ async function sbFetch(path,opts={}){
   try{
     const headers=await sbHeadersAuth();
     const r=await fetch(sbUrl+'/rest/v1/'+path,{...opts,headers:{...headers,...(opts.headers||{})}});
+    sbLastStatus=r.status;
     if(!r.ok){console.warn('Supabase error:',r.status,await r.text());return null;}
     if(r.status===204||r.headers.get('content-length')==='0')return true;
     const text=await r.text();
     if(!text||!text.trim())return true;
     return JSON.parse(text);
-  }catch(ex){console.warn('Supabase fetch error:',ex);return null;}
+  }catch(ex){sbLastStatus=0;console.warn('Supabase fetch error:',ex);return null;}
 }
 
 async function sbInit(){
@@ -6018,8 +6006,6 @@ async function sbInit(){
   if(test!==null){
     sbConnected=true;
     updateSBStatus(true);
-    // Note: audit_state needs 'persons' column (text)
-    await sbPullColors();
     await sbPull();
     startSBPoll();
     if(currentUser)startPresence();
@@ -6034,90 +6020,390 @@ function updateSBStatus(ok){
   const btn=document.getElementById('sb-btn');
   if(lbl)lbl.textContent=ok?'Live-Sync aktiv':'Supabase einrichten';
   if(btn)btn.style.color=ok?'#3ECF8E':'';
-  // Update header indicator
-  const dot=document.getElementById('sb-dot');
-  const ilbl=document.getElementById('sb-indicator-lbl');
-  if(dot)dot.style.background=ok?'#3ECF8E':'#6B7280';
-  if(ilbl)ilbl.style.color=ok?'#3ECF8E':'rgba(255,255,255,.5)';
-  if(ilbl)ilbl.textContent=ok?'Live':'Offline';
+  renderSyncState();
+}
+
+// ═══ SYNC: Zusammenführen statt Überschreiben ═══
+// Alle Daten liegen in audit_state (Zeile id=1). Jeder Client merkt sich den zuletzt vom
+// Server gelesenen Stand (sbBase). Beim Speichern wird nur geschrieben, wenn der Server noch
+// auf diesem Stand ist (updated_at unverändert). Hat inzwischen jemand anderes gespeichert,
+// werden die Änderungen beider Seiten zusammengeführt (js/merge.js) und erneut gespeichert.
+let sbBase=null,sbBaseUpdatedAt=null,sbBusy=false,sbPushAgain=false,sbRetryT=null;
+let sbSync={state:'idle',at:0,msg:''};
+let sbNoUpdatedBy=false,sbNoOptional=false,sbLogMissing=false;
+// Datenfelder = Spalten in audit_state. raw: Spalte enthält den Wert direkt (nicht als JSON-Text).
+const SB_FIELDS={
+  data:{get:()=>data,set:v=>{data=v;ensureCreatedAt();ensurePersonalHistory();}},
+  plans:{get:()=>plans,set:v=>{plans=v;}},
+  auditors:{get:()=>auditors,set:v=>{auditors=v;}},
+  ferien:{get:()=>ferien,set:v=>{ferien=v;}},
+  ghostAudits:{get:()=>window._ghostAudits||[],set:v=>{window._ghostAudits=v;}},
+  personAudits:{get:()=>personAudits,set:v=>{personAudits=v;}},
+  beratPlan:{get:()=>beratPlan,set:v=>{beratPlan=v;}},
+  persons:{get:()=>persons,set:v=>{persons=v;}},
+  auditorMeta:{get:()=>auditorMeta,set:v=>{auditorMeta=v;}},
+  auditorColors:{get:()=>auditorColors,set:v=>{auditorColors=v;}},
+  piCollectBox:{get:()=>window._piCollectBox||[],set:v=>{window._piCollectBox=v;},opt:1},
+  auditTarget:{get:()=>window._auditTarget||0,set:v=>{window._auditTarget=+v||0;},raw:1,opt:1},
+  tempWorkers:{get:()=>window._tempWorkers||[],set:v=>{window._tempWorkers=v;},opt:1},
+  ferienWunsch:{get:()=>ferienWunsch||[],set:v=>{ferienWunsch=v;},opt:1},
+  orsKey:{get:()=>window._orsKey||'',set:v=>{window._orsKey=v||'';},raw:1,opt:1},
+  deptMeta:{get:()=>({customDepts,deptMeta}),set:v=>{if(v&&Array.isArray(v.customDepts))customDepts=v.customDepts;if(v&&v.deptMeta)deptMeta=v.deptMeta;},opt:1},
+  rapporte:{get:()=>rapporte||[],set:v=>{rapporte=v;normalizeRapporte();},opt:1}
+};
+function sbCollect(){const o={};for(const f in SB_FIELDS)o[f]=SB_FIELDS[f].get();return o;}
+// Server-Zeile → Werte (fehlende oder unlesbare Spalten bleiben undefined)
+function sbParseRow(row){
+  const o={};
+  for(const f in SB_FIELDS){
+    const v=row[f];
+    if(v===undefined||v===null)continue;
+    if(SB_FIELDS[f].raw){o[f]=f==='auditTarget'?(+v||0):v;continue;}
+    if(v==='')continue;
+    try{o[f]=typeof v==='string'?JSON.parse(v):v;}catch(e){console.warn('Spalte '+f+' nicht lesbar',e);}
+  }
+  return o;
+}
+function sbRowFrom(vals){
+  const row={};
+  for(const f in vals){
+    if(!SB_FIELDS[f])continue;
+    if(sbNoOptional&&SB_FIELDS[f].opt)continue;
+    row[f]=SB_FIELDS[f].raw?vals[f]:JSON.stringify(vals[f]);
+  }
+  return row;
+}
+// Werte in den App-Zustand übernehmen (nur geänderte Felder), lokal sichern
+function sbApply(vals){
+  for(const f in vals){
+    if(!SB_FIELDS[f]||vals[f]===undefined)continue;
+    if(mgEq(vals[f],SB_FIELDS[f].get()))continue;
+    SB_FIELDS[f].set(mgClone(vals[f]));
+  }
+  saveLocal();
+}
+// Lokale Kopie (für schnellen Start), immer vollständig
+function saveLocal(){
+  try{
+    localStorage.setItem(SK,JSON.stringify({data,plans,tlog,auditors,ferien,ferienWunsch,rapporte,ghostAudits:window._ghostAudits||[],personAudits,v:4}));
+    localStorage.setItem('anliker_persons',JSON.stringify(persons));
+    localStorage.setItem('anliker_berat_plan',JSON.stringify(beratPlan));
+    localStorage.setItem('anliker_pi_collectbox',JSON.stringify(window._piCollectBox||[]));
+    localStorage.setItem('anliker_temp_workers',JSON.stringify(window._tempWorkers||[]));
+    localStorage.setItem('anliker_aud_meta',JSON.stringify(auditorMeta));
+    localStorage.setItem('auditorColors',JSON.stringify(auditorColors));
+    localStorage.setItem('anliker_depts',JSON.stringify(customDepts));
+    localStorage.setItem('anliker_dept_meta',JSON.stringify(deptMeta));
+    localStorage.setItem('anliker_ors_key',window._orsKey||'');
+    localStorage.setItem('anliker_audit_target',String(window._auditTarget||0));
+  }catch(e){}
+}
+// Daten-Schlüssel im Browser (werden beim Abmelden gelöscht)
+const LOCAL_DATA_KEYS=[SK,'anliker_persons','anliker_berat_plan','anliker_pi_collectbox','anliker_temp_workers','anliker_aud_meta','auditorColors','anliker_depts','anliker_dept_meta','anliker_ors_key','anliker_audit_target'];
+// Gibt es eigene Änderungen, die noch nicht auf dem Server sind?
+function sbHasPending(){
+  if(!sbBase)return false;
+  const cur=sbCollect();
+  for(const f in cur){if(sbNoOptional&&SB_FIELDS[f].opt)continue;if(!mgEq(cur[f],sbBase[f]))return true;}
+  return false;
+}
+function sbRefreshUI(){
+  renderAll();buildDF();buildAudSels();
+  if(curView==='aud'){renderAuditors();renderAudTotals();}
+  if(curView==='pa'){renderPersonRegister();renderPersonMatrix();}
+}
+
+// Schreiben mit Konflikt-Erkennung. Rückgabe: Zeile | 'conflict' | null (Fehler)
+async function sbWrite(vals,expectAt){
+  const tries=[];
+  for(let i=0;i<3;i++){
+    const row=sbRowFrom(vals);
+    row.updated_at=new Date().toISOString();
+    if(!sbNoUpdatedBy)row.updated_by=currentUser||'';
+    const filter=expectAt?'updated_at=eq.'+encodeURIComponent(expectAt):'updated_at=is.null';
+    const res=await sbFetch('audit_state?id=eq.1&'+filter,{method:'PATCH',body:JSON.stringify(row),headers:{'Prefer':'return=representation'}});
+    if(Array.isArray(res))return res.length?res[0]:'conflict';
+    // Fehler 400: evtl. fehlen neuere Spalten in Supabase → ohne diese nochmals versuchen
+    if(sbLastStatus!==400)return null;
+    if(!sbNoUpdatedBy){sbNoUpdatedBy=true;continue;}
+    if(!sbNoOptional){sbNoOptional=true;console.warn('sbPush: neuere Spalten fehlen in Supabase – ohne sie gespeichert. Siehe Admin → Anleitung & SQL.');continue;}
+    return null;
+  }
+  return null;
 }
 
 async function sbPush(){
-  if(!sbConnected)return;
-  console.log('sbPush: plans count=',plans.length,'first plan=',plans[0]);
-  const payload={id:1,data:JSON.stringify(data),plans:JSON.stringify(plans),
-    auditors:JSON.stringify(auditors),ferien:JSON.stringify(ferien),
-    ghostAudits:JSON.stringify(window._ghostAudits||[]),
-    personAudits:JSON.stringify(personAudits),
-    beratPlan:JSON.stringify(beratPlan),
-    persons:JSON.stringify(persons),
-    auditorMeta:JSON.stringify(auditorMeta),
-    auditorColors:JSON.stringify(auditorColors),
-    piCollectBox:JSON.stringify(window._piCollectBox||[]),
-    auditTarget:window._auditTarget||0,
-    tempWorkers:JSON.stringify(window._tempWorkers||[]),
-    ferienWunsch:JSON.stringify(ferienWunsch||[]),
-    orsKey:window._orsKey||'',
-    deptMeta:JSON.stringify({customDepts,deptMeta}),
-    rapporte:JSON.stringify(rapporte||[]),
-    updated_at:new Date().toISOString()};
-  let result=await sbFetch('audit_state',{method:'POST',body:JSON.stringify(payload),
-    headers:{'Prefer':'resolution=merge-duplicates'}});
-  if(!result){
-    // Fallback: falls Spalten in Supabase noch nicht existieren (alte Tabelle, Spalte noch
-    // nicht per SQL ergänzt) -> ohne diese Felder nochmal versuchen, damit der Rest der
-    // Synchronisation nicht komplett blockiert wird.
-    const{piCollectBox,auditTarget,tempWorkers,ferienWunsch,orsKey,deptMeta:_dm,rapporte:_rp,...fallbackPayload}=payload;
-    result=await sbFetch('audit_state',{method:'POST',body:JSON.stringify(fallbackPayload),
-      headers:{'Prefer':'resolution=merge-duplicates'}});
-    if(result)console.warn('sbPush: piCollectBox/auditTarget-Spalten fehlen in Supabase - siehe Admin-Menü "Sammelbox" für Setup-SQL. Restliche Daten wurden trotzdem synchronisiert.');
+  if(!sbConnected||!sbBase)return;
+  if(sbBusy){sbPushAgain=true;return;}
+  sbBusy=true;clearTimeout(sbRetryT);
+  const mine=sbCollect(),baseBefore=sbBase;
+  if(!sbHasPending()){sbBusy=false;setSyncState('saved');return;}
+  setSyncState('saving');
+  let ok=false;
+  try{
+    for(let attempt=0;attempt<5&&!ok;attempt++){
+      const vals=sbCollect();
+      const res=await sbWrite(vals,sbBaseUpdatedAt);
+      if(res===null)break;
+      if(res!=='conflict'){
+        sbBase=mgClone(vals);sbBaseUpdatedAt=res.updated_at;ok=true;break;
+      }
+      // Jemand anderes hat gespeichert → neuesten Stand holen und zusammenführen
+      const rows=await sbFetch('audit_state?id=eq.1&select=*');
+      if(rows===null)break;
+      if(!rows.length){ // Zeile fehlt → neu anlegen
+        const row=sbRowFrom(vals);row.id=1;row.updated_at=new Date().toISOString();
+        const ins=await sbFetch('audit_state',{method:'POST',body:JSON.stringify(row),headers:{'Prefer':'return=representation'}});
+        if(Array.isArray(ins)&&ins.length){sbBase=mgClone(vals);sbBaseUpdatedAt=ins[0].updated_at;ok=true;}
+        break;
+      }
+      sbMergeRemote(rows[0]);
+    }
+  }catch(ex){console.warn('sbPush:',ex);}
+  if(ok){
+    setSyncState('saved');
+    sbWriteLog(mgDescribe(baseBefore,mine));
+  }else{
+    setSyncState('error');
+    sbRetryT=setTimeout(sbPush,15000);
   }
-  if(result)sbLastSync=Date.now();
-  else console.warn('sbPush failed');
+  sbBusy=false;
+  if(sbPushAgain){sbPushAgain=false;sbPush();}
+}
+
+// Server-Stand übernehmen und mit eigenen, noch nicht gespeicherten Änderungen zusammenführen
+function sbMergeRemote(row){
+  const remote=sbParseRow(row);
+  const first=!sbBase;
+  const local=sbCollect();
+  // Erster Abgleich nach dem Login: Server-Stand gilt (wie bisher), lokale Kopie nur für fehlende Felder
+  const next=first?{...local,...remote}:mgMergeAll(sbBase,local,remote);
+  const changes=first?[]:mgDescribe(sbBase,remote);
+  const selBefore=selId?JSON.stringify(data.find(e=>e.id===selId)||null):null;
+  sbBase=mgClone(remote);sbBaseUpdatedAt=row.updated_at;
+  sbApply(next);
+  sbRefreshUI();
+  if(changes.length)sbNotifyRemote(changes,row.updated_by,selBefore);
 }
 
 async function sbPull(){
-  if(!sbConnected)return;
-  const rows=await sbFetch('audit_state?id=eq.1&select=*');
-  if(!rows||!rows.length)return;
-  const p=rows[0];
-  // Always load on first pull (sbLastSync=0 after refresh)
-  const remoteTime=new Date(p.updated_at||0).getTime();
-  const isFirstPull=sbLastSync===0;
-  if(!isFirstPull&&remoteTime<=sbLastSync)return;
+  if(!sbConnected||sbBusy)return;
+  // Zuerst nur den Zeitstempel prüfen (klein), ganze Zeile nur bei Änderungen laden
+  if(sbBase){
+    const t=await sbFetch('audit_state?id=eq.1&select=updated_at');
+    if(!Array.isArray(t)||!t.length||t[0].updated_at===sbBaseUpdatedAt)return;
+  }
+  if(sbBusy)return;
+  sbBusy=true;
   try{
-    if(p.data){data=JSON.parse(p.data);ensureCreatedAt();ensurePersonalHistory();}
-    if(p.plans){plans=JSON.parse(p.plans);console.log('sbPull: plans loaded=',plans.length);}else{console.log('sbPull: NO plans in response',p);}
-    if(p.auditors)auditors=JSON.parse(p.auditors);
-    if(p.ferien)ferien=JSON.parse(p.ferien);
-    if(p.ghostAudits)window._ghostAudits=JSON.parse(p.ghostAudits);
-    if(p.personAudits)personAudits=JSON.parse(p.personAudits);
-    if(p.piCollectBox){try{window._piCollectBox=JSON.parse(p.piCollectBox);}catch(e){}}
-    if(p.auditTarget!==undefined&&p.auditTarget!==null)window._auditTarget=+p.auditTarget;
-    if(p.tempWorkers){try{window._tempWorkers=JSON.parse(p.tempWorkers);}catch(e){}}
-    if(p.ferienWunsch){try{ferienWunsch=JSON.parse(p.ferienWunsch);}catch(e){}}
-    if(p.rapporte){try{rapporte=JSON.parse(p.rapporte);normalizeRapporte();}catch(e){}}
-    if(p.deptMeta){try{const dm=JSON.parse(p.deptMeta);if(Array.isArray(dm.customDepts))customDepts=dm.customDepts;if(dm.deptMeta)deptMeta=dm.deptMeta;localStorage.setItem('anliker_depts',JSON.stringify(customDepts));localStorage.setItem('anliker_dept_meta',JSON.stringify(deptMeta));}catch(e){}}
-    if(typeof p.orsKey==='string'){window._orsKey=p.orsKey;try{localStorage.setItem('anliker_ors_key',p.orsKey);}catch(e){}}
-    if(p.persons){try{persons=JSON.parse(p.persons);localStorage.setItem('anliker_persons',JSON.stringify(persons));}catch(e){}}
-    if(p.beratPlan){try{beratPlan=JSON.parse(p.beratPlan);localStorage.setItem('anliker_berat_plan',JSON.stringify(beratPlan));}catch(e){}}
-    if(p.auditorMeta){try{auditorMeta=JSON.parse(p.auditorMeta);localStorage.setItem('anliker_aud_meta',JSON.stringify(auditorMeta));}catch(e){}}
-    if(p.auditorColors){try{
-      const remote=JSON.parse(p.auditorColors);
-      // Always use Supabase colors as source of truth
-      if(Object.keys(remote).length>0){
-        auditorColors=remote;
-        localStorage.setItem('auditorColors',JSON.stringify(auditorColors));
-      }
-    }catch(e){}}
-    sbLastSync=remoteTime||Date.now();
-    localStorage.setItem(SK,JSON.stringify({data,plans,tlog,auditors,ferien,ghostAudits:window._ghostAudits||[],personAudits,v:4}));
-    renderAll();buildDF();buildAudSels();
-    // Re-render tabs that have their own data
-    if(curView==='aud'){renderAuditors();renderAudTotals();}
-    if(curView==='pa'){renderPersonRegister();renderPersonMatrix();}
-    if(!isFirstPull)showToast('☁ Sync: '+new Date(remoteTime).toLocaleTimeString('de-CH'),1800);
-  }catch(ex){console.warn('sbPull parse error:',ex);}
+    const rows=await sbFetch('audit_state?id=eq.1&select=*');
+    if(Array.isArray(rows)&&rows.length){
+      const first=!sbBase;
+      sbMergeRemote(rows[0]);
+      if(first)setSyncState('saved');
+    }else if(Array.isArray(rows)&&!sbBase){
+      // Noch keine Daten auf dem Server: eigener Stand wird der erste
+      sbBase={};sbBaseUpdatedAt=null;
+    }
+  }catch(ex){console.warn('sbPull:',ex);}
+  sbBusy=false;
+  if(sbPushAgain||sbHasPending()){sbPushAgain=false;sbPush();}
+}
+
+// Hinweis, wenn jemand anderes etwas geändert hat
+function sbNotifyRemote(changes,who,selBefore){
+  const name=who&&who!==currentUser?who:'Jemand';
+  if(who&&who===currentUser)return; // eigene Änderung von einem anderen Gerät
+  const more=changes.length>1?` (+${changes.length-1} weitere)`:'';
+  showToast(`☁ ${name}: ${changes[0]}${more}`,4500);
+  if(selId&&selBefore!==null){
+    const now=JSON.stringify(data.find(e=>e.id===selId)||null);
+    if(now!==selBefore){
+      const dp=document.getElementById('dp');
+      const typing=dp&&dp.contains(document.activeElement)&&/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName);
+      if(!typing&&data.some(e=>e.id===selId))selEntry(selId);
+      setTimeout(()=>showToast(`⚠ Diese Baustelle wurde soeben von ${name} geändert`,4500),4600);
+    }
+  }
+}
+
+// Änderungsprotokoll (für Admins sichtbar, Tabelle audit_log)
+async function sbWriteLog(lines){
+  if(sbLogMissing||!lines||!lines.length)return;
+  const summary=lines.slice(0,15).join('\n')+(lines.length>15?`\n… und ${lines.length-15} weitere`:'');
+  const r=await sbFetch('audit_log',{method:'POST',body:JSON.stringify({user_name:currentUser||'',summary}),headers:{'Prefer':'return=minimal'}});
+  if(r===null)sbLogMissing=true;
+}
+
+// Speicher-Status im Header
+function setSyncState(state){sbSync.state=state;if(state==='saved')sbSync.at=Date.now();renderSyncState();}
+function renderSyncState(){
+  const dot=document.getElementById('sb-dot'),lbl=document.getElementById('sb-indicator-lbl'),box=document.getElementById('sb-indicator');
+  const mob=document.getElementById('mob-sync');
+  let txt,col,tip;
+  if(!sbConnected){txt='Offline';col='#6B7280';tip='Keine Verbindung zur Datenbank – Änderungen nur auf diesem Gerät';}
+  else if(sbSync.state==='saving'){txt='Speichert…';col='#FBBF24';tip='Änderungen werden gespeichert';}
+  else if(sbSync.state==='error'){txt='⚠ Nicht gespeichert';col='#F87171';tip='Speichern fehlgeschlagen – neuer Versuch läuft automatisch. Klicken = jetzt erneut versuchen';}
+  else if(sbSync.at){const s=Math.round((Date.now()-sbSync.at)/1000);txt='Gespeichert ✓';col='#3ECF8E';tip='Zuletzt gespeichert '+(s<60?'vor '+s+' Sek.':new Date(sbSync.at).toLocaleTimeString('de-CH'));}
+  else{txt='Live';col='#3ECF8E';tip='Live-Sync aktiv';}
+  if(dot)dot.style.background=col;
+  if(lbl){lbl.textContent=txt;lbl.style.color=col;}
+  if(box)box.title=tip;
+  if(mob){mob.textContent=txt;mob.style.color=col;mob.title=tip;}
+}
+function sbIndicatorClick(){
+  if(sbConnected&&sbSync.state==='error'){sbPush();return;}
+  if(document.body.classList.contains('admin-mode'))openSupabaseConfig();
+  else showToast(document.getElementById('sb-indicator')?.title||'',3000);
+}
+setInterval(()=>{if(sbSync.state==='saved')renderSyncState();},15000);
+window.addEventListener('online',()=>{if(sbConnected)sbPush();});
+window.addEventListener('beforeunload',e=>{
+  if(sbConnected&&(sbSync.state==='saving'||sbSync.state==='error'||saveT||sbHasPending())){e.preventDefault();e.returnValue='';}
+});
+
+// ═══ ADMIN: Anleitung & SQL, Änderungsprotokoll, Verlauf ═══
+function admModal(title,html,wide){
+  document.getElementById('adm-bg')?.remove();
+  const bg=document.createElement('div');bg.id='adm-bg';bg.className='ui-dlg-bg';
+  bg.innerHTML=`<div class="ui-dlg adm-guide" style="width:${wide?860:640}px;max-height:90vh;display:flex;flex-direction:column;padding:0">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--bd)"><b style="font-size:16px"></b><button type="button" class="ui-btn" onclick="document.getElementById('adm-bg').remove()">Schliessen</button></div>
+    <div id="adm-body" style="overflow:auto;padding:4px 20px 20px">${html}</div></div>`;
+  bg.querySelector('b').textContent=title;
+  bg.addEventListener('click',e=>{if(e.target===bg)bg.remove();});
+  document.body.appendChild(bg);
+  return bg.querySelector('#adm-body');
+}
+function sqlStr(v){return "'"+String(v||'').replace(/'/g,"''")+"'";}
+function admSqlBox(id,sql){return`<div class="adm-sql"><pre id="${id}">${escH(sql)}</pre><button type="button" class="ui-btn" onclick="admCopy('${id}',this)">Kopieren</button></div>`;}
+async function admCopy(id,btn){
+  const txt=document.getElementById(id).textContent;
+  try{await navigator.clipboard.writeText(txt);}
+  catch(e){const r=document.createRange();r.selectNodeContents(document.getElementById(id));const s=getSelection();s.removeAllRanges();s.addRange(r);document.execCommand('copy');}
+  const o=btn.textContent;btn.textContent='✓ Kopiert';setTimeout(()=>btn.textContent=o,1500);
+}
+function admSnippets(){
+  const v=k=>(document.getElementById('adm-'+k)?.value||'').trim();
+  const E=sqlStr(v('email')||'vorname.nachname@anliker.ch'),N=sqlStr(v('name')||'Vorname Nachname'),P=sqlStr(v('pw')||'Start-Passwort-2026');
+  return{
+    create:`update auth.users\nset raw_user_meta_data = coalesce(raw_user_meta_data, '{}'::jsonb)\n  || jsonb_build_object('display_name', ${N}, 'must_change_password', true)\nwhere email = ${E};`,
+    reset:`update auth.users\nset encrypted_password = extensions.crypt(${P}, extensions.gen_salt('bf')),\n    raw_user_meta_data = coalesce(raw_user_meta_data, '{}'::jsonb)\n      || '{"must_change_password": true}'::jsonb\nwhere email = ${E};`,
+    rename:`update auth.users\nset raw_user_meta_data = coalesce(raw_user_meta_data, '{}'::jsonb)\n  || jsonb_build_object('display_name', ${N})\nwhere email = ${E};`,
+    ban:`update auth.users set banned_until = 'infinity' where email = ${E};`,
+    unban:`update auth.users set banned_until = null where email = ${E};`,
+    list:`select email,\n       raw_user_meta_data ->> 'display_name' as name,\n       last_sign_in_at as letzter_login,\n       banned_until as gesperrt_bis\nfrom auth.users\norder by email;`,
+    addAdmin:`insert into public.app_admins (email) values (${E}) on conflict do nothing;`,
+    removeAdmin:`delete from public.app_admins where email = ${E};`,
+    listAdmins:`select email from public.app_admins order by email;`,
+    size:`select pg_size_pretty(pg_total_relation_size('public.audit_state')) as daten,\n       pg_size_pretty(pg_total_relation_size('public.audit_state_history')) as verlauf,\n       pg_size_pretty(pg_total_relation_size('public.audit_log')) as protokoll;`
+  };
+}
+function admUpdateSnippets(){const s=admSnippets();for(const k in s){const el=document.getElementById('adm-sql-'+k);if(el)el.textContent=s[k];}}
+async function openAdminGuide(){
+  const s=admSnippets();
+  const body=admModal('Anleitung & SQL (Admin)',`
+    <p>Die SQL-Befehle werden in Supabase ausgeführt: Projekt öffnen → links <b>SQL Editor</b> → <b>New query</b> → Befehl einfügen → <b>Run</b>.</p>
+    <h3>1. Einmalige Einrichtung <span id="adm-setup-st" style="font-weight:400;font-size:12px"></span></h3>
+    <ol>
+      <li><b>Registrierung abschalten</b> (wichtig): Supabase → <b>Authentication</b> → <b>Sign In / Providers</b> → «Allow new users to sign up» <b>ausschalten</b> → Save. Sonst könnte sich jede Person selbst ein Konto anlegen und hätte damit Zugriff auf alle Daten.</li>
+      <li><b>Datenbank einrichten</b>: folgendes Skript einmal ausführen (Admins, automatischer Verlauf, Änderungsprotokoll). Bestehende Daten bleiben unverändert; mehrmaliges Ausführen schadet nicht.</li>
+    </ol>
+    <div id="adm-setup-sql"><p>Lade Skript…</p></div>
+    <h3>Angaben für die Befehle unten</h3>
+    <p>Hier ausfüllen – die Befehle passen sich automatisch an.</p>
+    <div class="adm-fields">
+      <input id="adm-email" placeholder="E-Mail, z.B. vorname.nachname@anliker.ch" oninput="admUpdateSnippets()">
+      <input id="adm-name" placeholder="Name genau wie im Planer, z.B. Niklaus Meier" oninput="admUpdateSnippets()">
+      <input id="adm-pw" placeholder="Start-Passwort (mind. 8 Zeichen)" oninput="admUpdateSnippets()">
+    </div>
+    <h3>2. Neuen Benutzer anlegen</h3>
+    <ol>
+      <li>Im Planer: Admin → <b>Auditoren verwalten</b> → Person mit vollem Namen erfassen (falls noch nicht vorhanden).</li>
+      <li>Supabase → <b>Authentication</b> → <b>Users</b> → <b>Add user</b> → <b>Create new user</b> → E-Mail und Start-Passwort eingeben, «Auto Confirm User» anhaken → Create user.</li>
+      <li>Dann diesen Befehl ausführen. Er setzt den Namen (muss genau dem Namen im Planer entsprechen) und verlangt beim ersten Login ein neues Passwort:</li>
+    </ol>
+    ${admSqlBox('adm-sql-create',s.create)}
+    <h3>3. Passwort zurücksetzen</h3>
+    <p>Setzt ein neues Start-Passwort. Beim nächsten Login muss die Person ein eigenes Passwort wählen. Das Start-Passwort persönlich oder per Telefon mitteilen, nicht per E-Mail.</p>
+    ${admSqlBox('adm-sql-reset',s.reset)}
+    <h3>4. Namen ändern</h3>
+    ${admSqlBox('adm-sql-rename',s.rename)}
+    <h3>5. Benutzer sperren / entsperren / löschen</h3>
+    <p>Sperren (z.B. bei Austritt). Eine bereits angemeldete Person wird spätestens nach einer Stunde abgemeldet.</p>
+    ${admSqlBox('adm-sql-ban',s.ban)}
+    <p>Wieder entsperren:</p>
+    ${admSqlBox('adm-sql-unban',s.unban)}
+    <p>Endgültig löschen: Supabase → <b>Authentication</b> → <b>Users</b> → bei der Person auf <b>…</b> → <b>Delete user</b>. Die Planungsdaten bleiben erhalten.</p>
+    <h3>6. Alle Benutzer anzeigen</h3>
+    ${admSqlBox('adm-sql-list',s.list)}
+    <h3>7. Admins verwalten</h3>
+    <p>Admins sehen das Admin-Menü, das Änderungsprotokoll und den Verlauf. Admin hinzufügen (E-Mail oben ausfüllen):</p>
+    ${admSqlBox('adm-sql-addAdmin',s.addAdmin)}
+    <p>Admin entfernen:</p>
+    ${admSqlBox('adm-sql-removeAdmin',s.removeAdmin)}
+    <p>Alle Admins anzeigen:</p>
+    ${admSqlBox('adm-sql-listAdmins',s.listAdmins)}
+    <h3>8. Speicherplatz prüfen</h3>
+    <p>Im kostenlosen Supabase-Plan stehen 500 MB zur Verfügung.</p>
+    ${admSqlBox('adm-sql-size',s.size)}
+    <h3>Sicherung & Wiederherstellung</h3>
+    <p>Der Planer sichert frühere Stände automatisch (stündlich und vor grösseren Löschungen, 30 Tage lang). Zurückholen: Admin → <b>Verlauf & Wiederherstellen</b>. Zusätzlich kann jederzeit unter Admin → <b>Notfall-Backup</b> eine Sicherungsdatei heruntergeladen werden.</p>
+  `);
+  // Setup-Skript aus dem Repository laden und Status prüfen
+  try{
+    const r=await fetch('supabase/setup.sql',{cache:'no-store'});
+    if(!r.ok)throw new Error(r.status);
+    const sql=await r.text();
+    document.getElementById('adm-setup-sql').innerHTML=admSqlBox('adm-sql-setup',sql);
+  }catch(e){document.getElementById('adm-setup-sql').innerHTML='<p class="adm-note">Skript konnte nicht geladen werden. Es liegt im Repository unter supabase/setup.sql.</p>';}
+  const ok=sbConnected?await sbFetch('rpc/is_app_admin',{method:'POST',body:'{}'}):null;
+  const st=document.getElementById('adm-setup-st');
+  if(st)st.innerHTML=ok===null?'<span style="color:#D97706">– noch nicht eingerichtet</span>':'<span style="color:#10B981">✓ Datenbank eingerichtet</span>';
+}
+
+async function openAuditLog(){
+  const body=admModal('Änderungsprotokoll','<p>Lade…</p>',true);
+  const rows=await sbFetch('audit_log?select=ts,user_name,user_email,summary&order=ts.desc&limit=500');
+  if(!Array.isArray(rows)){body.innerHTML='<p class="adm-note">Das Protokoll ist noch nicht verfügbar. Bitte zuerst die einmalige Einrichtung ausführen (Admin → Anleitung & SQL).</p>';return;}
+  body.innerHTML=`<p>Wer hat wann was geändert (letzte 500 Einträge).</p><input id="adm-log-q" class="ui-dlg-inp" placeholder="Suchen (Name, Baustelle …)" oninput="admRenderLog()"><div id="adm-log-list"></div>`;
+  window._admLog=rows;admRenderLog();
+}
+function admRenderLog(){
+  const q=(document.getElementById('adm-log-q')?.value||'').toLowerCase();
+  const rows=(window._admLog||[]).filter(r=>!q||(r.user_name+' '+r.user_email+' '+r.summary).toLowerCase().includes(q));
+  document.getElementById('adm-log-list').innerHTML=rows.length?`<table class="adm-tbl"><tr><th>Zeit</th><th>Wer</th><th>Was</th></tr>${rows.map(r=>`<tr><td style="white-space:nowrap">${escH(new Date(r.ts).toLocaleString('de-CH'))}</td><td>${escH(r.user_name||r.user_email||'?')}</td><td class="sum">${escH(r.summary)}</td></tr>`).join('')}</table>`:'<p>Keine Einträge.</p>';
+}
+
+async function openHistory(){
+  const body=admModal('Verlauf & Wiederherstellen','<p>Lade…</p>',true);
+  const rows=await sbFetch('audit_state_history?select=hid,changed_at,changed_by&order=changed_at.desc&limit=300');
+  if(!Array.isArray(rows)){body.innerHTML='<p class="adm-note">Der Verlauf ist noch nicht verfügbar. Bitte zuerst die einmalige Einrichtung ausführen (Admin → Anleitung & SQL).</p>';return;}
+  body.innerHTML=`<p>Frühere Stände der Daten (automatisch gespeichert: stündlich und vor grösseren Löschungen, 30 Tage lang). Jeder Eintrag ist der Stand <b>vor</b> einer Änderung.</p>
+    ${rows.length?`<table class="adm-tbl"><tr><th>Stand vom</th><th>Danach geändert von</th><th></th></tr>${rows.map(r=>`<tr><td>${escH(new Date(r.changed_at).toLocaleString('de-CH'))}</td><td>${escH(r.changed_by||'?')}</td><td style="text-align:right"><button type="button" class="ui-btn" onclick="admShowSnapshot(${+r.hid})">Ansehen</button></td></tr>`).join('')}</table>`:'<p>Noch keine gespeicherten Stände – der erste entsteht bei der nächsten Änderung.</p>'}
+    <div id="adm-snap"></div>`;
+}
+async function admShowSnapshot(hid){
+  const box=document.getElementById('adm-snap');box.innerHTML='<p>Lade…</p>';
+  const rows=await sbFetch('audit_state_history?select=hid,changed_at,snapshot&hid=eq.'+hid);
+  if(!Array.isArray(rows)||!rows.length){box.innerHTML='<p class="adm-note">Konnte nicht geladen werden.</p>';return;}
+  const vals=sbParseRow(rows[0].snapshot||{}),cur=sbCollect();
+  const cnt=v=>Array.isArray(v)?v.length:(v&&typeof v==='object'?Object.keys(v).length:'–');
+  const lines=Object.keys(vals).filter(f=>Array.isArray(vals[f])).map(f=>`<tr><td>${f==='data'?'Baustellen':(MG_LABELS[f]||f)}</td><td>${cnt(vals[f])}</td><td>${cnt(cur[f])}</td></tr>`).join('');
+  const diff=mgDescribe(vals,cur);
+  window._admSnap={vals,at:rows[0].changed_at};
+  box.innerHTML=`<h3>Stand vom ${escH(new Date(rows[0].changed_at).toLocaleString('de-CH'))}</h3>
+    <table class="adm-tbl"><tr><th></th><th>Damals</th><th>Heute</th></tr>${lines}</table>
+    <p style="margin-top:10px"><b>Seither geändert:</b></p><div class="adm-tbl"><div class="sum" style="white-space:pre-line;font-size:12px;color:var(--tx2);max-height:160px;overflow:auto">${escH(diff.slice(0,60).join('\n')||'keine Unterschiede')}${diff.length>60?`\n… und ${diff.length-60} weitere`:''}</div></div>
+    <p style="margin-top:12px"><button type="button" class="ui-btn ui-btn-pri ui-btn-danger" onclick="admRestoreSnapshot()">Diesen Stand wiederherstellen</button></p>`;
+  box.scrollIntoView({behavior:'smooth'});
+}
+async function admRestoreSnapshot(){
+  const s=window._admSnap;if(!s)return;
+  if(!await askConfirm(`Stand vom ${new Date(s.at).toLocaleString('de-CH')} wiederherstellen?\n\nAlle Änderungen seither werden für alle Benutzer zurückgenommen. Vorher wird automatisch eine Sicherung des aktuellen Stands heruntergeladen.`,{ok:'Wiederherstellen',danger:true}))return;
+  teamExport();
+  undoPoint('Stand vom '+new Date(s.at).toLocaleString('de-CH')+' wiederhergestellt');
+  sbApply(s.vals);saveNow();sbRefreshUI();
+  document.getElementById('adm-bg')?.remove();
 }
 
 function startSBPoll(){
@@ -6156,6 +6442,7 @@ async function saveSupabaseConfig(){
   localStorage.setItem(SB_URL_KEY,sbUrl);
   localStorage.setItem(SB_KEY_KEY,sbKey);
   document.getElementById('sb-bg').style.display='none';
+  sbBase=null;sbBaseUpdatedAt=null; // neue Verbindung: Server-Stand neu übernehmen
   await sbInit();
   if(sbConnected){
     showToast('☁ Supabase verbunden – Live-Sync aktiv!',3000);

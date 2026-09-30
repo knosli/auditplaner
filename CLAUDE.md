@@ -10,10 +10,14 @@ Beratungen, Rapporten und Ferien der Auditoren. Sprache der Oberfläche: Deutsch
 - Änderungen immer auf einem Branch machen und per Pull Request übernehmen.
 - Vor jedem PR: App im Browser laden (Desktop- und Mobile-Breite) und in der Konsole
   prüfen, dass keine JavaScript-Fehler auftreten.
-- Bei jeder Änderung an der App die Versionsnummer erhöhen, und zwar an drei Stellen
-  in `index.html`: im Header (`<span ... title="Version">v2.87</span>`) und in den
-  Links `css/style.css?v=2.87` und `js/app.js?v=2.87`. Der `?v=`-Zusatz sorgt dafür,
-  dass Browser nach einem Update nicht eine alte CSS/JS-Datei aus dem Cache verwenden.
+- Bei jeder Änderung an der App die Versionsnummer erhöhen, und zwar überall in
+  `index.html`: im Header (`<span ... title="Version">v2.88</span>`) und in den Links
+  `css/style.css?v=2.88`, `js/merge.js?v=2.88` und `js/app.js?v=2.88`. Der `?v=`-Zusatz
+  sorgt dafür, dass Browser nach einem Update keine alte Datei aus dem Cache verwenden.
+- Tests für die Zusammenführung: `node tests/merge.test.js` (muss grün sein).
+- Keine Browser-Dialoge (`confirm`, `prompt`, `alert`): `askConfirm()`, `askText()`,
+  `uiDialog()` verwenden. Beim Löschen einzelner Einträge statt Rückfrage `undoPoint()`
+  aufrufen (zeigt «Rückgängig»).
 
 ## Dateien
 
@@ -21,7 +25,10 @@ Beratungen, Rapporten und Ferien der Auditoren. Sprache der Oberfläche: Deutsch
 |---|---|
 | `index.html` | HTML-Gerüst: Header, Tabs, Ansichten, Modals (~1'500 Zeilen) |
 | `css/style.css` | Alle Styles inkl. Dark Mode (~300 Zeilen) |
-| `js/app.js` | Die ganze Logik (~6'600 Zeilen) |
+| `js/merge.js` | Zusammenführen gleichzeitiger Änderungen (reine Funktionen, getestet) |
+| `js/app.js` | Die ganze übrige Logik (~6'900 Zeilen) |
+| `supabase/setup.sql` | Einmalige Datenbank-Einrichtung (Admins, Verlauf, Protokoll); wird in der App unter Admin → Anleitung & SQL angezeigt |
+| `tests/merge.test.js` | Tests für `js/merge.js` |
 | `sw.js` | Service Worker: kein Caching, lädt immer frisch vom Netz |
 | `manifest.json` | PWA-Manifest (Name, Icons, `start_url`) |
 | `icon-*.png`, `apple-touch-icon.png` | App-Icons |
@@ -34,7 +41,8 @@ Supabase JS, Leaflet (+ MarkerCluster), SheetJS (`xlsx`), Tabler Icons, Google F
 `index.html`:
 - `<head>`: Mobile-Erkennung und Service-Worker-Registrierung (kleine Inline-Scripts,
   müssen früh laufen), CDN-Styles, dann `css/style.css`
-- `<body>`: HTML-Markup, dann CDN-Scripts, dann `js/app.js`, danach weiteres HTML
+- `<body>`: HTML-Markup, dann CDN-Scripts (feste Versionen), dann `js/merge.js` und
+  `js/app.js`, danach weiteres HTML
   (u.a. Anleitungs-Modal)
 
 `js/app.js` ist ein normales (klassisches) Script, kein Modul. Alle Funktionen sind
@@ -44,41 +52,55 @@ global; das HTML ruft sie direkt über `onclick="..."` auf.
 
 - ~1 Konstanten: Abteilungen (`DEPT_MAP`, `ALL_DEPTS`, `DC`), Auditor-Kürzel,
   PLZ-Koordinaten (`PLZ`, `CFB`) für die Geokodierung
-- ~113 `status(e)`: berechnet den Status einer Baustelle
+- ~97 `status(e)`: berechnet den Status einer Baustelle
   (inactive, paused, planned, beratung, new, overdue, due, soon, ok)
-- ~158 `save()` / `saveNow()` / `load()`: Speichern in localStorage + Supabase-Push
-- ~176 Karte (Leaflet): `initMap`, `renderMarkers`, `renderList`, `selEntry` (Detail-Panel)
-- ~745 `setView`: Tabs Karte / KW-Planung / Auditoren / Übersicht / Personen-Audits
-- ~1076 Ferien und Wunschferien (Gantt)
-- ~1254 Personen-Audits und Personenregister
-- ~1799 Rapporte (inkl. ICS-Export)
-- ~2312 KW-Planung / Kalender (`renderKW`, Wochenansicht)
-- ~3161 Automatische Verteilung (`openDistribute`)
-- ~3503 Mobile-Ansicht (`toggleMobileView`, `renderMobPlan`, Routen via OpenRouteService)
-- ~4261 Login/Auth (Supabase Auth), Präsenz-Anzeige
-- ~4655 Einstellungen & Regeln (`S(k)` liest eine Einstellung)
-- ~4813 Tourguide / Tagesablauf-Simulation (`tg*`)
-- ~5405 Personal-Import aus Excel, Sammelbox, temporäre Mitarbeitende
-- ~5982 Supabase-Sync (`sbFetch`, `sbPush`, `sbPull`, Polling alle 30 s)
-- ~6226 Excel-Export, ~6304 Übersichtstabelle, ~6437 ICS-Export
-- ~6589 `renderAll()`, ~6602 Initialisierung (`DOMContentLoaded`)
+- ~142 `save()` (verzögert) / `saveNow()` / `load()`
+- ~147 Dialoge (`uiDialog`, `askConfirm`, `askText`) und Rückgängig (`undoPoint`)
+- ~202 Karte (Leaflet): `initMap`, `renderMarkers`, `renderList`, `selEntry` (Detail-Panel)
+- ~771 `setView`: Tabs Karte / KW-Planung / Auditoren / Übersicht / Personen-Audits
+- ~1102 Ferien und Wunschferien (Gantt)
+- ~1280 Personen-Audits und Personenregister
+- ~1794 Rapporte (inkl. ICS-Export)
+- ~2309 KW-Planung / Kalender (`renderKW`, Wochenansicht)
+- ~3147 Automatische Verteilung (`openDistribute`)
+- ~3489 Mobile-Ansicht (`toggleMobileView`, `renderMobPlan`, Routen via OpenRouteService)
+- ~4247 Login/Auth (Supabase Auth), Präsenz-Anzeige
+- ~4642 Einstellungen & Regeln (`S(k)` liest eine Einstellung)
+- ~4801 Tourguide / Tagesablauf-Simulation (`tg*`)
+- ~5393 Personal-Import (JSON), Sammelbox, temporäre Mitarbeitende
+- ~5969 Supabase-Verbindung (`sbFetch`, `sbInit`)
+- ~6026 Sync (`SB_FIELDS`, `sbPush`, `sbPull`, `sbMergeRemote`, Speicher-Status)
+- ~6265 Admin: Anleitung & SQL, Änderungsprotokoll, Verlauf & Wiederherstellen
+- ~6513 Excel-Export, ~6591 Übersichtstabelle, ~6724 ICS-Export
+- ~6876 `renderAll()`, ~6889 Initialisierung (`DOMContentLoaded`)
 
 ## Daten und Speicherung
 
 - Zentrale Variablen: `data` (Baustellen), `plans`, `auditors`, `ferien`,
   `ferienWunsch`, `personAudits`, `persons`, `beratPlan`, `rapporte`, `tlog` (Verlauf),
   `auditorMeta`, `auditorColors`, `customDepts`/`deptMeta`.
-- Lokal: localStorage, Hauptschlüssel `anliker_v4` (`SK`) plus weitere `anliker_*`-Keys.
+- Lokal: localStorage als Kopie für den schnellen Start (`saveLocal()`), Hauptschlüssel
+  `anliker_v4` (`SK`) plus weitere `anliker_*`-Keys (`LOCAL_DATA_KEYS`). Beim Abmelden
+  werden sie gelöscht; nach dem Login gilt immer der Server-Stand.
 - Team-Sync: Supabase-Tabelle `audit_state`, **eine einzige Zeile `id=1`**, jede
-  Datenliste als JSON-String in einer eigenen Spalte. `sbPush` schreibt alles,
-  `sbPull` liest alles (letzter Schreiber gewinnt). Tabelle `presence` für Online-Anzeige.
-- Neue Datenfelder brauchen eine neue Spalte in Supabase; `sbPush` hat dafür einen
-  Fallback ohne die neueren Spalten.
+  Datenliste als JSON-Text in einer eigenen Spalte (Liste der Felder: `SB_FIELDS`).
+- Speichern mit Konflikterkennung: Geschrieben wird nur, wenn `updated_at` noch dem
+  zuletzt gelesenen Stand (`sbBase`) entspricht. Sonst wird der Server-Stand geholt, mit
+  den eigenen Änderungen zusammengeführt (`js/merge.js`, 3-Wege-Merge nach `id`) und
+  erneut gespeichert. Abgleich alle 30 s (zuerst nur `updated_at`).
+- Neue Datenfelder: Eintrag in `SB_FIELDS` (mit `opt:1`) + neue Spalte in Supabase
+  (in `supabase/setup.sql` ergänzen). Fehlen Spalten, speichert `sbWrite` ohne sie.
+- Weitere Tabellen (aus `supabase/setup.sql`): `app_admins` + Funktion `is_app_admin()`,
+  `audit_state_history` (automatischer Verlauf per Trigger), `audit_log`
+  (Änderungsprotokoll, von der App nach jedem Speichern geschrieben), `presence`.
+- RLS ist auf allen Tabellen aktiv; Zugriff nur für angemeldete Benutzer, Verlauf und
+  Protokoll nur für Admins. Löschen der Zeile `audit_state` ist nicht erlaubt.
 
 ## Vorsicht
 
 - Datenformat nicht brechen: Bestehende Daten in localStorage und Supabase müssen nach
   einer Änderung weiterhin geladen werden können. Felder nicht umbenennen oder entfernen.
 - Admin-Funktionen wie «Alles zurücksetzen» oder «Alle Personen löschen» wirken über
-  den Sync auf alle Nutzer.
+  den Sync auf alle Nutzer (Wiederherstellung über Admin → Verlauf & Wiederherstellen).
+- Excel wird nur noch exportiert, nicht mehr importiert (Import wurde entfernt).
 - Die App muss auf Desktop und auf dem Handy (Mobile-Ansicht) funktionieren.
