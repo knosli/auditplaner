@@ -1,6 +1,6 @@
 // Tests für js/merge.js – ausführen mit: node tests/merge.test.js
 const assert=require('assert');
-const {mgMerge,mgMergeAll,mgDescribe}=require('../js/merge.js');
+const {mgMerge,mgMergeAll,mgDescribe,mgSafe}=require('../js/merge.js');
 
 let n=0;
 function t(name,fn){fn();n++;console.log('✓ '+name);}
@@ -113,6 +113,18 @@ t('Beschreibung der Änderungen',()=>{
   assert.ok(d.includes('Baustelle «BS3» erfasst'));
   assert.ok(d.includes('Baustelle «BS2» gelöscht'));
   assert.ok(d.includes('Planungen: 1 neu/geändert'));
+});
+
+t('Schutz vor eingeschleustem Code',()=>{
+  const bad={data:[{id:1,name:'<img src=x onerror=alert(1)>',note:`" onmouseover="x`,addr:"');alert(1);('",psp:'&#39;x&lt;'}],
+    auditorColors:{'<b>X</b>':'#fff'}};
+  const s=JSON.stringify(mgSafe(bad));
+  for(const c of ['<','>','\\"x','&#','&lt;',"');"])assert.ok(!JSON.parse(s).data[0].name.includes(c)&&!s.includes('<'),c);
+  assert.strictEqual(mgSafe('Müller & Co, Bahnhofstr. 5'),'Müller & Co, Bahnhofstr. 5');
+  assert.strictEqual(mgSafe("Hans O'Neill"),'Hans O’Neill');
+  assert.strictEqual(mgSafe(42),42);
+  assert.deepStrictEqual(Object.keys(mgSafe(bad.auditorColors)),['‹b›X‹/b›']);
+  assert.deepStrictEqual(mgSafe(mgSafe(bad)),mgSafe(bad)); // zweimal = einmal
 });
 
 console.log(`\n${n} Tests bestanden`);
