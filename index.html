@@ -361,7 +361,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
   <div id="presence-bar" style="display:flex;align-items:center;gap:4px;margin-left:4px"></div>
   <button onclick="toggleDark()" class="hb" title="Dark Mode" style="font-size:14px">🌙</button>
   <button onclick="openGuide()" class="hb" title="Anleitung" style="font-size:14px">❓</button>
-  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.84</span>
+  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v2.85</span>
   <button onclick="doLogout()" class="hb" title="Abmelden" style="font-size:14px" id="logout-btn">⏻</button>
   <button onclick="toggleMobileView()" id="mobile-btn" class="hb" title="Mobile Ansicht" style="font-size:14px">📱</button>
   <div id="more-w" class="admin-only">
@@ -373,6 +373,7 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
       <button onclick="openAudAdmin();toggleMore()"><i class="ti ti-users"></i> Auditoren verwalten</button>
       <button onclick="openDeptManager();toggleMore()"><i class="ti ti-building"></i> Abteilungen verwalten</button>
       <button onclick="openRapportTypes();toggleMore()"><i class="ti ti-clipboard-list"></i> Rapport-Arten verwalten</button>
+      <button onclick="openPersonLists();toggleMore()"><i class="ti ti-address-book"></i> Personen-Listen verwalten</button>
       <button onclick="openSettings();toggleMore()"><i class="ti ti-settings"></i> Einstellungen & Regeln</button>
       <button onclick="openPersonalImport();toggleMore()"><i class="ti ti-user-pause"></i> Personal-Import (Pausieren)</button>
       <button onclick="openSammelbox();toggleMore()"><i class="ti ti-inbox"></i> Sammelbox <span id="sb-count-badge"></span></button>
@@ -562,14 +563,14 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
       <div class="card">
         <h3 style="margin-bottom:14px"><i class="ti ti-user-check" style="color:var(--purple)"></i> Personen-Audit erfassen</h3>
         <div style="margin-bottom:12px;position:relative">
-          <label style="font-size:11px;color:var(--tx2);display:block;margin-bottom:3px">Person suchen (Name oder Personalnummer) *</label>
+          <label style="font-size:11px;color:var(--tx2);display:block;margin-bottom:3px">Person(en) suchen und hinzufügen (Name oder Personalnummer) * <span style="font-weight:400;color:var(--tx3)">– mehrere möglich, zählt als 1 Audit</span></label>
           <input type="text" id="pa-search" placeholder="z.B. Muster oder 12345" oninput="paSuggest(this.value)" autocomplete="off"
             style="width:100%;padding:8px 10px;border:1px solid var(--bd);border-radius:var(--rs);background:var(--sf2);color:var(--tx);font-size:13px">
           <div id="pa-suggestions" style="display:none;position:absolute;left:0;right:0;border:1px solid var(--bd);border-radius:var(--rs);background:var(--sf);max-height:200px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.15);z-index:100"></div>
         </div>
         <div id="pa-selected" style="display:none;margin-bottom:12px;padding:10px 12px;background:#EFF6FF;border-radius:8px;border-left:3px solid var(--blue)">
-          <div id="pa-sel-name" style="font-size:13px;font-weight:600;color:var(--tx)"></div>
-          <div id="pa-sel-info" style="font-size:11px;color:var(--tx2)"></div>
+          <div id="pa-sel-chips" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+          <div id="pa-sel-info" style="font-size:11px;color:var(--tx2);margin-top:6px"></div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px">
           <div><label style="font-size:11px;color:var(--tx2);display:block;margin-bottom:3px">Datum *</label>
@@ -621,17 +622,18 @@ body.dark #calpop,body.dark .modal{background:var(--sf)}
         </div>
       </div>
       <div id="pa-add-form" style="display:none;padding:12px;background:var(--sf2);border-radius:8px;margin-bottom:12px">
-        <div style="display:grid;grid-template-columns:repeat(6,1fr) auto;gap:6px;align-items:end">
+        <div id="pf-title" style="font-size:12px;font-weight:700;color:var(--tx);margin-bottom:8px">Person hinzufügen</div>
+        <div style="display:grid;grid-template-columns:repeat(7,1fr) auto;gap:6px;align-items:end">
           <div><label style="font-size:10px;color:var(--tx2);display:block;margin-bottom:2px">Pers.Nr *</label><input id="pf-pnr" placeholder="12345" style="width:100%;padding:6px 8px;border:1px solid var(--bd);border-radius:5px;background:var(--sf);color:var(--tx);font-size:12px"></div>
           <div><label style="font-size:10px;color:var(--tx2);display:block;margin-bottom:2px">Nachname *</label><input id="pf-nach" placeholder="Muster" style="width:100%;padding:6px 8px;border:1px solid var(--bd);border-radius:5px;background:var(--sf);color:var(--tx);font-size:12px"></div>
           <div><label style="font-size:10px;color:var(--tx2);display:block;margin-bottom:2px">Vorname</label><input id="pf-vor" placeholder="Max" style="width:100%;padding:6px 8px;border:1px solid var(--bd);border-radius:5px;background:var(--sf);color:var(--tx);font-size:12px"></div>
-          <div><label style="font-size:10px;color:var(--tx2);display:block;margin-bottom:2px">Abteilung *</label><input id="pf-abt" placeholder="Spezialitäten" style="width:100%;padding:6px 8px;border:1px solid var(--bd);border-radius:5px;background:var(--sf);color:var(--tx);font-size:12px"></div>
-          <div><label style="font-size:10px;color:var(--tx2);display:block;margin-bottom:2px">Arbeitsort</label><input id="pf-ort" placeholder="Birsfelden" style="width:100%;padding:6px 8px;border:1px solid var(--bd);border-radius:5px;background:var(--sf);color:var(--tx);font-size:12px"></div>
-          <div><label style="font-size:10px;color:var(--tx2);display:block;margin-bottom:2px">Firma</label><input id="pf-firma" placeholder="Anliker AG" style="width:100%;padding:6px 8px;border:1px solid var(--bd);border-radius:5px;background:var(--sf);color:var(--tx);font-size:12px"></div>
+          <div><label style="font-size:10px;color:var(--tx2);display:block;margin-bottom:2px">Abteilung *</label><select id="pf-abt" onchange="pfSelChange('abt',this)" style="width:100%;padding:6px 8px;border:1px solid var(--bd);border-radius:5px;background:var(--sf);color:var(--tx);font-size:12px"></select></div>
+          <div><label style="font-size:10px;color:var(--tx2);display:block;margin-bottom:2px">Arbeitsort</label><select id="pf-ort" onchange="pfSelChange('ort',this)" style="width:100%;padding:6px 8px;border:1px solid var(--bd);border-radius:5px;background:var(--sf);color:var(--tx);font-size:12px"></select></div>
+          <div><label style="font-size:10px;color:var(--tx2);display:block;margin-bottom:2px">Firma</label><select id="pf-firma" onchange="pfSelChange('firma',this)" style="width:100%;padding:6px 8px;border:1px solid var(--bd);border-radius:5px;background:var(--sf);color:var(--tx);font-size:12px"></select></div>
           <div><label style="font-size:10px;color:var(--tx2);display:block;margin-bottom:2px">Spezialität</label><select id="pf-spez" style="width:100%;padding:6px 8px;border:1px solid var(--bd);border-radius:5px;background:var(--sf);color:var(--tx);font-size:12px"><option value="">— keine —</option><option value="Bodenbeläge">Bodenbeläge</option><option value="Brandschutz">Brandschutz</option><option value="Asbest">Asbest</option></select></div>
           <button onclick="savePerson()" style="padding:7px 14px;border-radius:5px;border:none;background:#10B981;color:#fff;cursor:pointer;font-size:13px;font-weight:700">✓</button>
         </div>
-        <button onclick="document.getElementById('pa-add-form').style.display='none'" style="margin-top:6px;font-size:11px;color:var(--tx3);background:none;border:none;cursor:pointer">Abbrechen</button>
+        <button onclick="closePersonForm()" style="margin-top:6px;font-size:11px;color:var(--tx3);background:none;border:none;cursor:pointer">Abbrechen</button>
       </div>
       <div style="display:flex;gap:8px;margin-bottom:10px">
         <input id="pa-reg-search" placeholder="Name oder Nummer suchen..." oninput="renderPersonRegister()" style="flex:1;padding:7px 10px;border:1px solid var(--bd);border-radius:var(--rs);background:var(--sf2);color:var(--tx);font-size:12px">
@@ -2638,7 +2640,7 @@ function renderFerList(){document.getElementById('fer-list').innerHTML=ferien.le
 
 function rmPA(id){personAudits=personAudits.filter(p=>p.id!==id);renderPA();renderPA2();renderAuditors();saveNow();showToast('🗑 Gelöscht',1500);}
 // ═══ PERSONEN-AUDITS ═══
-let _selectedPerson=null;
+let _selectedPersons=[];
 
 function setPATab(tab){
   ['audit','register','matrix'].forEach(t=>{
@@ -2666,7 +2668,7 @@ function paSuggest(q){
     String(p.pnr).includes(q)||
     (p.nachname||'').toLowerCase().includes(ql)||
     (p.vorname||'').toLowerCase().includes(ql)
-  ).slice(0,8);
+  ).filter(p=>!_selectedPersons.some(s=>s.id===p.id)).slice(0,8);
   if(!matches.length){sug.style.display='none';return;}
   sug.innerHTML=matches.map(p=>`<div onclick="selectPerson(${p.id})" style="padding:8px 12px;cursor:pointer;font-size:12px;border-bottom:1px solid var(--bd)"
     onmouseover="this.style.background='var(--sf2)'" onmouseout="this.style.background=''">
@@ -2678,44 +2680,168 @@ function paSuggest(q){
 }
 
 function selectPerson(id){
-  _selectedPerson=persons.find(p=>p.id===id);
-  if(!_selectedPerson)return;
-  document.getElementById('pa-search').value=_selectedPerson.nachname+' '+_selectedPerson.vorname;
+  const p=persons.find(x=>x.id===id);if(!p)return;
+  if(!_selectedPersons.some(x=>x.id===id))_selectedPersons.push(p);
+  document.getElementById('pa-search').value='';
   document.getElementById('pa-suggestions').style.display='none';
-  document.getElementById('pa-selected').style.display='block';
-  document.getElementById('pa-sel-name').textContent=_selectedPerson.nachname+' '+_selectedPerson.vorname+' ('+_selectedPerson.pnr+')';
-  document.getElementById('pa-sel-info').textContent=_selectedPerson.abt+' · '+(_selectedPerson.firma||'')+' · '+(_selectedPerson.ort||'');
+  renderSelectedPersons();
+  document.getElementById('pa-search').focus();
 }
-
-function openAddPerson(){
-  const f=document.getElementById('pa-add-form');
-  f.style.display=f.style.display==='none'?'block':'none';
-  ['pf-pnr','pf-nach','pf-vor','pf-abt','pf-ort','pf-firma'].forEach(id=>{
-    const el=document.getElementById(id);if(el)el.value='';
+function unselectPerson(id){_selectedPersons=_selectedPersons.filter(x=>x.id!==id);renderSelectedPersons();}
+function renderSelectedPersons(){
+  const box=document.getElementById('pa-selected');if(!box)return;
+  if(!_selectedPersons.length){box.style.display='none';return;}
+  box.style.display='block';
+  document.getElementById('pa-sel-chips').innerHTML=_selectedPersons.map((p,i)=>`<span style="display:inline-flex;align-items:center;gap:6px;padding:4px 6px 4px 10px;background:var(--sf);border:1px solid ${i===0?'var(--blue)':'var(--bd)'};border-radius:14px;font-size:12px"><b>${escH(p.nachname)} ${escH(p.vorname||'')}</b><span style="color:var(--tx3);font-size:10px">${escH(String(p.pnr))}</span><button onclick="unselectPerson(${p.id})" title="Entfernen" style="border:none;background:none;cursor:pointer;color:#EF4444;font-size:12px;line-height:1">✕</button></span>`).join('');
+  const n=_selectedPersons.length,f=_selectedPersons[0];
+  document.getElementById('pa-sel-info').textContent=n>1
+    ?`${n} Personen in einem Audit – zählt als 1 Audit, in der Jahresmatrix erhalten alle den Eintrag. Die erstgenannte Person (${f.nachname}) bestimmt die Abteilung: ${f.abt||'–'}`
+    :[f.abt,f.firma,f.ort].filter(Boolean).join(' · ');
+}
+// ═══ PERSONEN-REGISTER: Auswahllisten (Abteilung / Arbeitsort / Firma) ═══
+// Listen liegen in deptMeta._personLists (synchronisiert). Werte, die im Register vorkommen, werden
+// automatisch ergänzt (Gross-/Kleinschreibung wird als gleich behandelt) - so geht beim Umstellen nichts verloren.
+const PL_KINDS={abt:{l:'Abteilung'},ort:{l:'Arbeitsort'},firma:{l:'Firma'}};
+function paPnrs(a){return(a.pnrs&&a.pnrs.length?a.pnrs:[a.pnr]).filter(x=>x!==undefined&&x!==null&&x!=='').map(String);}
+function personLists(){
+  deptMeta._personLists=deptMeta._personLists||{};
+  const pl=deptMeta._personLists;
+  ['abt','ort','firma'].forEach(k=>{
+    if(!Array.isArray(pl[k]))pl[k]=[];
+    let ch=false;
+    persons.forEach(p=>{
+      const v=(p[k]||'').trim();if(!v)return;
+      const ex=pl[k].find(x=>x.toLowerCase()===v.toLowerCase());
+      if(ex){if(p[k]!==ex)p[k]=ex;}          // abweichende Schreibweise auf die Listen-Schreibweise vereinheitlichen
+      else{pl[k].push(v);ch=true;}
+    });
+    if(ch)pl[k].sort((a,b)=>a.localeCompare(b));
+  });
+  return pl;
+}
+function fillPersonSelects(vals){
+  const pl=personLists();
+  [['pf-abt','abt'],['pf-ort','ort'],['pf-firma','firma']].forEach(([id,k])=>{
+    const el=document.getElementById(id);if(!el)return;
+    const cur=(vals&&vals[k]!==undefined)?vals[k]:el.value;
+    const canon=cur?pl[k].find(o=>o.toLowerCase()===String(cur).trim().toLowerCase()):null;
+    el.innerHTML='<option value="">— wählen —</option>'+pl[k].map(o=>`<option value="${escH(o)}">${escH(o)}</option>`).join('')+'<option value="__new__">＋ Neuer Eintrag…</option>';
+    el.value=canon||'';
   });
 }
-
+function pfSelChange(kind,el){
+  if(el.value!=='__new__')return;
+  const v=(prompt(`Neue ${PL_KINDS[kind].l} (steht danach für alle zur Auswahl):`)||'').trim();
+  if(!v){el.value='';return;}
+  const pl=personLists();
+  const ex=pl[kind].find(x=>x.toLowerCase()===v.toLowerCase());
+  if(ex){showToast(`«${ex}» gibt es schon – ausgewählt`,2500);fillPersonSelects({[kind]:ex});return;}
+  pl[kind].push(v);pl[kind].sort((a,b)=>a.localeCompare(b));saveDepts();
+  fillPersonSelects({[kind]:v});
+}
+let _editPersonId=null;
+function pfTitle(){const t=document.getElementById('pf-title');if(t)t.textContent=_editPersonId!==null?'Person bearbeiten':'Person hinzufügen';}
+function closePersonForm(){_editPersonId=null;document.getElementById('pa-add-form').style.display='none';pfTitle();}
+function openAddPerson(){
+  const f=document.getElementById('pa-add-form');
+  const opening=f.style.display==='none'||_editPersonId!==null;
+  _editPersonId=null;
+  f.style.display=opening?'block':'none';
+  ['pf-pnr','pf-nach','pf-vor'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  fillPersonSelects({abt:'',ort:'',firma:''});
+  const sp=document.getElementById('pf-spez');if(sp)sp.value='';
+  pfTitle();
+}
+function openEditPerson(id){
+  const p=persons.find(x=>x.id===id);if(!p)return;
+  _editPersonId=id;
+  const f=document.getElementById('pa-add-form');f.style.display='block';
+  document.getElementById('pf-pnr').value=p.pnr;
+  document.getElementById('pf-nach').value=p.nachname||'';
+  document.getElementById('pf-vor').value=p.vorname||'';
+  fillPersonSelects({abt:p.abt||'',ort:p.ort||'',firma:p.firma||''});
+  document.getElementById('pf-spez').value=p.spez||'';
+  pfTitle();f.scrollIntoView({block:'nearest'});
+}
 function savePerson(){
   const pnr=document.getElementById('pf-pnr').value.trim();
   const nach=document.getElementById('pf-nach').value.trim();
+  const vor=document.getElementById('pf-vor').value.trim();
+  const sv=id=>{const v=document.getElementById(id).value;return v==='__new__'?'':v.trim();};
+  const abt=sv('pf-abt'),ort=sv('pf-ort'),firma=sv('pf-firma');
   if(!pnr||!nach){showToast('Personalnummer und Nachname erforderlich');return;}
+  if(!abt){showToast('Bitte eine Abteilung wählen');return;}
+  const spez=document.getElementById('pf-spez').value;
+  if(_editPersonId!==null){
+    const p=persons.find(x=>x.id===_editPersonId);if(!p){closePersonForm();return;}
+    if(persons.some(x=>x.id!==p.id&&String(x.pnr)===pnr)){showToast('Personalnummer bereits vorhanden');return;}
+    const oldPnr=String(p.pnr),full=(nach+' '+vor).trim();
+    Object.assign(p,{pnr,nachname:nach,vorname:vor,abt,ort,firma,spez});
+    // Bestehende Personen-Audits mitziehen (Nummer, Name, Abteilung/Firma der erstgenannten Person)
+    personAudits.forEach(a=>{
+      if(a.pnrs){
+        const i=a.pnrs.findIndex(x=>String(x)===oldPnr);if(i<0)return;
+        a.pnrs[i]=pnr;a.names=a.names||[];a.names[i]=full;a.person=a.names.join(', ');
+        if(i===0){a.pnr=pnr;a.kat=abt;a.firma=firma;}
+      }else if(String(a.pnr)===oldPnr){a.pnr=pnr;a.person=full;a.kat=abt;a.firma=firma;}
+    });
+    closePersonForm();saveNow();renderPersonRegister();renderPA2();
+    showToast('✓ Person aktualisiert');return;
+  }
   if(persons.find(p=>String(p.pnr)===pnr)){showToast('Personalnummer bereits vorhanden');return;}
-  persons.push({
-    id:Date.now(),pnr,nachname:nach,
-    vorname:document.getElementById('pf-vor').value.trim(),
-    abt:document.getElementById('pf-abt').value.trim(),
-    ort:document.getElementById('pf-ort').value.trim(),
-    firma:document.getElementById('pf-firma').value.trim(),
-    spez:document.getElementById('pf-spez').value
-  });
+  persons.push({id:Date.now(),pnr,nachname:nach,vorname:vor,abt,ort,firma,spez});
   document.getElementById('pa-add-form').style.display='none';
   saveNow();renderPersonRegister();
   showToast('✓ Person hinzugefügt');
 }
-
-function setPersonSpez(id,val){
-  const p=persons.find(x=>x.id===id);
-  if(p){p.spez=val;saveNow();showToast('✓ Spezialität gespeichert',1500);}
+// ── Admin: Listen verwalten ──
+function openPersonLists(){renderPersonLists();document.getElementById('pl-bg').style.display='flex';}
+function renderPersonLists(){
+  const pl=personLists();
+  const used=(k,v)=>persons.filter(p=>(p[k]||'').trim().toLowerCase()===v.toLowerCase()).length;
+  document.getElementById('pl-body').innerHTML=['abt','ort','firma'].map(k=>`<div style="margin-bottom:16px">
+    <div style="font-size:12px;font-weight:700;color:var(--tx);margin-bottom:6px">${PL_KINDS[k].l}</div>
+    <div style="border:1px solid var(--bd);border-radius:8px">
+      ${pl[k].map(v=>`<div style="display:grid;grid-template-columns:1fr 70px 28px;gap:6px;align-items:center;padding:5px 10px;border-bottom:1px solid var(--bd)">
+        <input value="${escH(v)}" data-k="${k}" data-old="${escH(v)}" onchange="renamePersonListItem(this.dataset.k,this.dataset.old,this.value)" style="padding:5px 7px;border:1px solid var(--bd);border-radius:5px;background:var(--sf);color:var(--tx);font-size:12px">
+        <span style="text-align:center;font-size:11px;color:var(--tx3)">${used(k,v)} Pers.</span>
+        <button data-k="${k}" data-v="${escH(v)}" onclick="removePersonListItem(this.dataset.k,this.dataset.v)" title="${used(k,v)?'In Verwendung – nicht löschbar':'Löschen'}" style="background:none;border:none;cursor:pointer;color:${used(k,v)?'var(--tx3)':'#EF4444'};font-size:13px">🗑</button>
+      </div>`).join('')||'<div style="padding:8px 10px;font-size:11px;color:var(--tx3)">Noch keine Einträge.</div>'}
+      <div style="display:flex;gap:6px;padding:6px 10px">
+        <input id="pl-new-${k}" placeholder="Neu hinzufügen…" onkeydown="if(event.key==='Enter')addPersonListItem('${k}')" style="flex:1;padding:5px 7px;border:1px solid var(--bd);border-radius:5px;background:var(--sf2);color:var(--tx);font-size:12px">
+        <button onclick="addPersonListItem('${k}')" style="padding:5px 12px;border:none;border-radius:5px;background:var(--blue);color:#fff;font-size:12px;font-weight:600;cursor:pointer">+</button>
+      </div>
+    </div></div>`).join('');
+}
+function addPersonListItem(k){
+  const inp=document.getElementById('pl-new-'+k);const v=(inp.value||'').trim();if(!v)return;
+  const pl=personLists();
+  if(pl[k].some(x=>x.toLowerCase()===v.toLowerCase())){showToast('Eintrag existiert bereits',2500);return;}
+  pl[k].push(v);pl[k].sort((a,b)=>a.localeCompare(b));saveDepts();renderPersonLists();fillPersonSelects();
+}
+function renamePersonListItem(k,oldV,newV){
+  newV=(newV||'').trim();
+  if(!newV||newV===oldV){renderPersonLists();return;}
+  const pl=personLists();
+  const ex=pl[k].find(x=>x!==oldV&&x.toLowerCase()===newV.toLowerCase());
+  if(ex&&!confirm(`«${ex}» existiert bereits. «${oldV}» damit zusammenführen?`)){renderPersonLists();return;}
+  const tgt=ex||newV;let n=0;
+  persons.forEach(p=>{if((p[k]||'').trim().toLowerCase()===oldV.toLowerCase()){p[k]=tgt;n++;}});
+  if(k==='abt'){
+    personAudits.forEach(a=>{if((a.kat||'').toLowerCase()===oldV.toLowerCase())a.kat=tgt;});
+    const m=deptMeta._abtMap||{};   // Zuordnung Register-Abteilung → Planer-Abteilung mitnehmen
+    Object.keys(m).forEach(key=>{if(key.toLowerCase()===oldV.toLowerCase()){if(!m[tgt])m[tgt]=m[key];delete m[key];}});
+  }
+  if(k==='firma')personAudits.forEach(a=>{if((a.firma||'').toLowerCase()===oldV.toLowerCase())a.firma=tgt;});
+  pl[k]=pl[k].filter(x=>x!==oldV);if(!ex)pl[k].push(newV);pl[k].sort((a,b)=>a.localeCompare(b));
+  saveDepts();saveNow();renderPersonLists();renderPersonRegister();fillPersonSelects();
+  showToast(`✓ «${oldV}» → «${tgt}» (${n} Personen angepasst)`,3000);
+}
+function removePersonListItem(k,v){
+  const n=persons.filter(p=>(p[k]||'').trim().toLowerCase()===v.toLowerCase()).length;
+  if(n){showToast(`«${v}» wird von ${n} Person(en) verwendet – erst umbenennen oder Personen ändern`,4500);return;}
+  if(!confirm(`«${v}» aus der Liste löschen?`))return;
+  const pl=personLists();pl[k]=pl[k].filter(x=>x!==v);saveDepts();renderPersonLists();fillPersonSelects();
 }
 function deletePerson(id){
   if(!confirm('Person löschen?'))return;
@@ -2756,6 +2882,7 @@ function importPersons(input){
 }
 
 function renderPersonRegister(){
+  personLists();
   const q=(document.getElementById('pa-reg-search')?.value||'').toLowerCase();
   const firma=document.getElementById('pa-reg-firma')?.value||'';
   // Build firma dropdown
@@ -2777,7 +2904,7 @@ function renderPersonRegister(){
   const tbody=document.getElementById('pa-reg-tbody');
   if(!tbody)return;
   tbody.innerHTML=filtered.map(p=>{
-    const lastAudit=personAudits.filter(a=>String(a.pnr)===String(p.pnr)).sort((a,b)=>b.date.localeCompare(a.date))[0];
+    const lastAudit=personAudits.filter(a=>!a.planned&&paPnrs(a).includes(String(p.pnr))).sort((a,b)=>b.date.localeCompare(a.date))[0];
     const spezSel='<select onchange="setPersonSpez('+p.id+',this.value)" style="border:1px solid var(--bd);border-radius:4px;background:var(--sf2);color:var(--tx);font-size:11px;padding:2px 4px">'+
       '<option value="">—</option>'+['Bodenbeläge', 'Brandschutz', 'Asbest'].map(s=>'<option value="'+s+'"'+(p.spez===s?' selected':'')+'>'+s+'</option>').join('')+'</select>';
     return'<tr>'+
@@ -2789,12 +2916,13 @@ function renderPersonRegister(){
       '<td style="font-size:11px">'+p.ort+'</td>'+
       '<td style="font-size:11px">'+p.firma+'</td>'+
       '<td style="color:var(--tx2);font-size:11px">'+(lastAudit?fd(lastAudit.date)+'<br><span style="color:var(--tx3)">'+lastAudit.auditor+'</span>':'—')+'</td>'+
-      '<td><button onclick="deletePerson('+p.id+')" class="admin-only" style="background:none;border:none;cursor:pointer;color:#EF4444;font-size:13px">🗑</button></td>'+
+      '<td style="white-space:nowrap"><button onclick="openEditPerson('+p.id+')" title="Bearbeiten" style="background:none;border:none;cursor:pointer;color:var(--tx2);font-size:13px">✏️</button><button onclick="deletePerson('+p.id+')" class="admin-only" style="background:none;border:none;cursor:pointer;color:#EF4444;font-size:13px">🗑</button></td>'+
     '</tr>';
   }).join('');
 }
 
 function renderPersonMatrix(){
+  personLists();
   const yr=+(document.getElementById('pa-mx-year')?.value||new Date().getFullYear());
   const firma=document.getElementById('pa-mx-firma')?.value||'';
   const abt=document.getElementById('pa-mx-abt')?.value||'';
@@ -2840,17 +2968,22 @@ function renderPersonMatrix(){
   html+='</tr></thead><tbody>';
   filtered.forEach(function(p,rowI){
     const zebraColor=rowI%2===0?'#fff':'#F8F9FC';
-    const auditsThisYear=personAudits.filter(a=>String(a.pnr)===String(p.pnr)&&a.date&&a.date.startsWith(yr));
+    const auditsThisYear=personAudits.filter(a=>paPnrs(a).includes(String(p.pnr))&&a.date&&a.date.startsWith(yr));
+    // Hellgrün: in diesem Jahr bereits auditiert (nur durchgeführte, geplante zählen nicht)
+    const audDone=auditsThisYear.some(a=>!a.planned);
+    const nameBg=audDone?'#DCFCE7':zebraColor;
     html+='<tr>';
-    html+=`<td style="position:sticky;left:0;background:${zebraColor};z-index:1;padding:4px 8px;border:1px solid var(--bd);font-weight:600;white-space:nowrap">`+p.nachname+' '+p.vorname+'</td>';
-    html+=`<td style="position:sticky;left:140px;background:${zebraColor};z-index:1;padding:4px 8px;border:1px solid var(--bd);font-family:monospace;font-size:10px">`+p.pnr+'</td>';
-    html+=`<td style="position:sticky;left:200px;background:${zebraColor};z-index:1;padding:4px 8px;border:1px solid var(--bd);color:var(--tx2);font-size:10px;white-space:nowrap">`+p.abt+'</td>';
+    html+=`<td style="position:sticky;left:0;background:${nameBg};z-index:1;padding:4px 8px;border:1px solid var(--bd);font-weight:600;white-space:nowrap">`+(audDone?'✓ ':'')+p.nachname+' '+p.vorname+'</td>';
+    html+=`<td style="position:sticky;left:140px;background:${nameBg};z-index:1;padding:4px 8px;border:1px solid var(--bd);font-family:monospace;font-size:10px">`+p.pnr+'</td>';
+    html+=`<td style="position:sticky;left:200px;background:${nameBg};z-index:1;padding:4px 8px;border:1px solid var(--bd);color:var(--tx2);font-size:10px;white-space:nowrap">`+p.abt+'</td>';
     for(let kw=1;kw<=52;kw++){
-      const a=auditsThisYear.find(a=>a.kw===kw);
+      const as=auditsThisYear.filter(a=>dateToKW(a.date)===kw);
       const isCur=kw===curKW;
-      if(a){
+      if(as.length){
+        const a=as.find(x=>!x.planned)||as[0],done=!a.planned;
         const ini=(a.auditor||'?').split(' ').map(w=>w[0]).join('');
-        html+=`<td style="padding:3px 4px;border:1px solid var(--bd);text-align:center;background:#F0FDF4;color:#065F46;font-weight:600" title="${a.auditor} · ${fd(a.date)}">${ini}</td>`;
+        const mates=paPnrs(a).length>1?' · gemeinsam mit '+(a.names||[]).filter((n,i)=>String(paPnrs(a)[i])!==String(p.pnr)).join(', '):'';
+        html+=`<td style="padding:3px 4px;border:1px solid var(--bd);text-align:center;background:${done?'#F0FDF4':'#EFF6FF'};color:${done?'#065F46':'#1D4ED8'};font-weight:600" title="${escH((a.auditor||'')+' · '+fd(a.date)+(done?'':' (geplant)')+mates)}">${ini}${done?'':'<span style="font-size:8px">📅</span>'}</td>`;
       } else {
         html+=`<td style="padding:3px 4px;border:1px solid var(--bd);background:${isCur?'#EFF6FF':zebraColor}"></td>`;
       }
@@ -2858,7 +2991,10 @@ function renderPersonMatrix(){
     html+='</tr>';
   });
   html+='</tbody></table>';
-  wrap.innerHTML=html;
+  const _doneN=filtered.filter(p=>personAudits.some(a=>!a.planned&&paPnrs(a).includes(String(p.pnr))&&a.date&&a.date.startsWith(yr))).length;
+  const _pct=filtered.length?Math.round(_doneN/filtered.length*100):0;
+  const _sum=`<div style="padding:4px 2px 10px;font-size:12px;color:var(--tx2);display:flex;align-items:center;gap:14px;flex-wrap:wrap"><span>✅ <b style="color:var(--tx)">${_doneN} von ${filtered.length}</b> Personen in ${yr} auditiert (${_pct} %)</span><span><span style="display:inline-block;width:11px;height:11px;background:#DCFCE7;border:1px solid #86EFAC;border-radius:2px;vertical-align:-1px"></span> Name grün = bereits auditiert</span><span><span style="display:inline-block;width:11px;height:11px;background:#EFF6FF;border:1px solid #93C5FD;border-radius:2px;vertical-align:-1px"></span> 📅 = geplant</span></div>`;
+  wrap.innerHTML=_sum+html;
 }
 
 function paBsSelected(){
@@ -2880,7 +3016,7 @@ function paBsSelected(){
   }
 }
 function addPersonAudit2(){
-  if(!_selectedPerson){showToast('Bitte zuerst eine Person auswählen');return;}
+  if(!_selectedPersons.length){showToast('Bitte zuerst mindestens eine Person auswählen');return;}
   const date=document.getElementById('pa-date2').value;
   const aud=document.getElementById('pa-aud2').value;
   if(!date||!aud){showToast('Datum und Auditor erforderlich');return;}
@@ -2892,20 +3028,26 @@ function addPersonAudit2(){
   // nur bei explizitem Haken wird sofort als erledigt erfasst.
   const planned=!document.getElementById('pa-planned2')?.checked;
   const lat=window._paPendingLat||null,lng=window._paPendingLng||null;
+  // Mehrere Personen = EIN Audit (zählt 1x); pnrs/names führen alle Personen für die Jahresmatrix,
+  // pnr/kat/firma gehören zur erstgenannten Person (Abteilungs-Zuordnung).
+  const _first=_selectedPersons[0];
+  const _names=_selectedPersons.map(p=>((p.nachname||'')+' '+(p.vorname||'')).trim());
   personAudits.push({
     id:Date.now(),
-    pnr:_selectedPerson.pnr,
-    kat:_selectedPerson.abt,
-    person:_selectedPerson.nachname+' '+_selectedPerson.vorname,
-    firma:_selectedPerson.firma||'',
+    pnr:_first.pnr,
+    pnrs:_selectedPersons.map(p=>String(p.pnr)),
+    names:_names,
+    kat:_first.abt,
+    person:_names.join(', '),
+    firma:_first.firma||'',
     bs,psp,date,kw:dateToKW(date),
     auditor:aud,note,addr,planned,lat,lng
   });
   personAudits.sort((a,b)=>b.date.localeCompare(a.date));
   // Reset form
-  _selectedPerson=null;
+  _selectedPersons=[];
   document.getElementById('pa-search').value='';
-  document.getElementById('pa-selected').style.display='none';
+  renderSelectedPersons();
   ['pa-bs2','pa-psp2','pa-note2','pa-addr'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   const pc=document.getElementById('pa-planned2');if(pc)pc.checked=false;
   const ah=document.getElementById('pa-addr-hint');if(ah)ah.textContent='';
@@ -2938,7 +3080,7 @@ function renderPA2(){
       return`<tr>
         <td style="white-space:nowrap">${fd(p.date)}</td>
         <td style="font-weight:600">${p.person||'—'}</td>
-        <td style="font-family:monospace;font-size:11px;color:var(--tx2)">${p.pnr||'—'}</td>
+        <td style="font-family:monospace;font-size:11px;color:var(--tx2)">${paPnrs(p).join(', ')||'—'}</td>
         <td>${p.kat||p.firma||'—'}</td>
         <td>${p.bs||'—'}</td>
         <td style="color:var(--tx2);font-size:10px">${p.psp||'—'}</td>
@@ -3409,7 +3551,8 @@ function renderDeptTable(){
   const todayYM=today().slice(0,7);
   const depts=getAllDepts();
   const personDept=p=>{
-    const per=(typeof persons!=='undefined'?persons:[]).find(x=>((x.nachname||'')+' '+(x.vorname||'')).trim()===(p.person||'').trim());
+    const _fp=paPnrs(p)[0];
+    const per=(typeof persons!=='undefined'?persons:[]).find(x=>_fp&&String(x.pnr)===_fp)||(typeof persons!=='undefined'?persons:[]).find(x=>((x.nachname||'')+' '+(x.vorname||'')).trim()===(p.person||'').trim());
     const m=per?mapPersonAbt(per.abt):null;
     if(m)return[m];
     const bs=p.bs?data.find(e=>e.name===p.bs):null;
@@ -3663,9 +3806,9 @@ function renderWeekView(kw){
       </div>
       ${fer.map(f=>`<div class="kwfer">🌴 ${f.auditor.split(' ').pop()}: ${f.label}</div>`).join('')}
       ${(()=>{const gids=[...new Set(rapporte.filter(r=>r.date===ds&&(!audFilter||r.auditor===audFilter)).map(r=>r.groupId))];const gs=gids.map(g=>rapporte.filter(x=>x.groupId===g&&x.date===ds)).filter(m=>m.length).sort((a,b)=>(a[0].time||'').localeCompare(b[0].time||''));return gs.map(mem=>{const r=mem[0];const anyPlan=mem.some(m=>m.planned);return`<div class="kwe" style="border-left:3px solid #0EA5E9;${anyPlan?'':'background:#F0F9FF'}"><div class="kwe-top" onclick="openRapportEdit(${r.id})" style="cursor:pointer"><div class="kwen" style="color:#0369A1">${anyPlan?'':'✓ '}📋 ${r.type}${r.seriesId?' 🔁':''}${r.time?' '+r.time:''}${(r.dept||r.ort)?`<div style="font-size:10px;font-weight:400;color:var(--tx3)">${[r.dept,r.ort].filter(Boolean).join(' · ')}</div>`:''}</div><span style="display:flex;gap:3px;flex-wrap:wrap;margin-top:2px">${mem.map(m=>m.planned?`<span class="kwea" title="${m.auditor}: geplant" style="background:transparent;border:1.5px solid ${aC(m.auditor)};color:${aC(m.auditor)}">${m.auditor.split(' ').pop()}</span>`:`<span class="kwea" title="${m.auditor}: teilgenommen" style="background:${aC(m.auditor)}">✓ ${m.auditor.split(' ').pop()}</span>`).join('')}</span></div>${anyPlan?`<div class="kwe-move" style="display:flex;gap:2px;padding:2px 6px 3px;border-top:1px solid var(--bd)"><button onclick="moveRapportTo(${r.id},'${rpAddDays(kwToDate(kw),-3)}')" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">←</button>${days.map((day,dj)=>`<button onclick="moveRapportTo(${r.id},'${rpAddDays(kwToDate(kw),dj)}')" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:${rpAddDays(kwToDate(kw),dj)===ds?'#0EA5E9':'var(--sf2)'};color:${rpAddDays(kwToDate(kw),dj)===ds?'#fff':'var(--tx2)'};font-size:9px;cursor:pointer;line-height:1.4">${day}</button>`).join('')}<button onclick="moveRapportTo(${r.id},'${kwToDate(kw+1)}')" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">→</button></div>`:''}</div>`;}).join('');})()}
-      ${(()=>{const bp=beratPlan.filter(p=>p.date===ds&&(!audFilter||p.auditor===audFilter));return bp.map(p=>{const e=data.find(x=>x.id===p.bsId);const audCol=aC(p.auditor||'');return`<div class="kwe" style="border-left:3px solid #8B5CF6"><div class="kwe-top" onclick="openBeratPlanPop(${p.id})" style="cursor:pointer"><div class="kwen">💬 ${e?pspPre(e.psp)+e.name:'(gel.)'}</div><span class="kwea" style="background:${audCol}">${(p.auditor||'?').split(' ').pop()}</span></div>${p.note?`<div style="font-size:10px;color:#7C3AED;padding:2px 6px 3px">${p.note}</div>`:''}<div class="kwe-move" style="display:flex;gap:2px;padding:2px 6px 3px;border-top:1px solid var(--bd)"><button onclick="moveBeratPlan(${p.id},'${kwToDate(kw-1)}',4)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">←</button>${days.map((day,dj)=>`<button onclick="moveBeratPlan(${p.id},'${kwToDate(kw)}',${dj})" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:${dj===di?'var(--blue)':'var(--sf2)'};color:${dj===di?'#fff':'var(--tx2)'};font-size:9px;cursor:pointer;line-height:1.4">${day}</button>`).join('')}<button onclick="moveBeratPlan(${p.id},'${kwToDate(kw+1)}',0)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">→</button></div></div>`;}).join('');})()}
-      ${(()=>{const done=data.flatMap(e=>(e.beratungen||[]).filter(b=>b.date===ds).map(b=>({...b,eName:e.name,ePsp:e.psp,eId:e.id})));return done.map(b=>{const bAudCol=aC(b.auditor||'');return`<div class="kwe" style="background:#F5F3FF;border-left:3px solid #8B5CF6;cursor:pointer" onclick="openBeratDoneUndo(${b.eId},${b.id})"><div class="kwe-top"><div class="kwen" style="color:#7C3AED">✓ 💬 ${pspPre(b.ePsp)}${b.eName}</div><span class="kwea" style="background:${bAudCol}">${(b.auditor||'?').split(' ').pop()}</span></div>${b.note?`<div style="font-size:10px;color:#7C3AED;padding:2px 6px 3px">${b.note}</div>`:''}</div>`;}).join('');})()}
-      ${dayAudits.map(h=>`<div class="kwe" style="background:#F0FDF4;border-left:3px solid #10B981;cursor:pointer" onclick="openAuditUndo(${h.eId},'${h.date}')"><div class="kwe-top"><div class="kwen" style="color:#065F46">✓ ${pspPre(h.ePsp)}${h.eName}</div><span class="kwea" style="background:#10B981">${(h.auditor||'?').split(' ').pop()}</span></div></div>`).join('')}
+      ${(()=>{const bp=beratPlan.filter(p=>p.date===ds&&(!audFilter||p.auditor===audFilter));return bp.map(p=>{const e=data.find(x=>x.id===p.bsId);const audCol=aC(p.auditor||'');return`<div class="kwe" style="border-left:3px solid #8B5CF6"><div class="kwe-top" onclick="openBeratPlanPop(${p.id})" style="cursor:pointer"><div class="kwen">💬 ${e?pspPre(e.psp)+e.name:'(gel.)'}</div>${kwMetaLine(e,kw,'0 0 1px')}<span class="kwea" style="background:${audCol}">${(p.auditor||'?').split(' ').pop()}</span></div>${p.note?`<div style="font-size:10px;color:#7C3AED;padding:2px 6px 3px">${p.note}</div>`:''}<div class="kwe-move" style="display:flex;gap:2px;padding:2px 6px 3px;border-top:1px solid var(--bd)"><button onclick="moveBeratPlan(${p.id},'${kwToDate(kw-1)}',4)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">←</button>${days.map((day,dj)=>`<button onclick="moveBeratPlan(${p.id},'${kwToDate(kw)}',${dj})" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:${dj===di?'var(--blue)':'var(--sf2)'};color:${dj===di?'#fff':'var(--tx2)'};font-size:9px;cursor:pointer;line-height:1.4">${day}</button>`).join('')}<button onclick="moveBeratPlan(${p.id},'${kwToDate(kw+1)}',0)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">→</button></div></div>`;}).join('');})()}
+      ${(()=>{const done=data.flatMap(e=>(e.beratungen||[]).filter(b=>b.date===ds).map(b=>({...b,eName:e.name,ePsp:e.psp,eId:e.id})));return done.map(b=>{const bAudCol=aC(b.auditor||'');return`<div class="kwe" style="background:#F5F3FF;border-left:3px solid #8B5CF6;cursor:pointer" onclick="openBeratDoneUndo(${b.eId},${b.id})"><div class="kwe-top"><div class="kwen" style="color:#7C3AED">✓ 💬 ${pspPre(b.ePsp)}${b.eName}</div>${kwMetaLine(data.find(x=>x.id===b.eId),kw,'0 0 1px')}<span class="kwea" style="background:${bAudCol}">${(b.auditor||'?').split(' ').pop()}</span></div>${b.note?`<div style="font-size:10px;color:#7C3AED;padding:2px 6px 3px">${b.note}</div>`:''}</div>`;}).join('');})()}
+      ${dayAudits.map(h=>{const e=data.find(x=>x.id===h.eId);return`<div class="kwe" style="background:#F0FDF4;border-left:3px solid #10B981;cursor:pointer" onclick="openAuditUndo(${h.eId},'${h.date}')"><div class="kwe-top"><div class="kwen" style="color:#065F46">✓ ${e&&e.type==='werkhof'?'🏠 ':''}${pspPre(h.ePsp)}${h.eName}</div>${kwMetaLine(e,kw,'0 0 1px')}<span class="kwea" style="background:${aC(h.auditor||'')}">${(h.auditor||'?').split(' ').pop()}</span></div></div>`;}).join('')}
       ${(()=>{const paP=personAudits.filter(p=>p.planned&&p.date===ds&&(!audFilter||p.auditor===audFilter));return paP.map(p=>{const col=p.auditor?aC(p.auditor):'#9CA3AF';return`<div class="kwe"><div class="kwe-top" onclick="openPersonAuditPop(${p.id})" style="cursor:pointer"><div class="kwen">👤 ${p.person}${p.bs?' · '+p.bs:''}</div><span class="kwea" style="background:${col}">${p.auditor?p.auditor.split(' ').pop():'? Zuteilen'}</span></div><div class="kwe-move" style="display:flex;gap:2px;padding:2px 6px 3px;border-top:1px solid var(--bd)"><button onclick="movePersonAudit(${p.id},'${kwToDate(kw-1)}',4)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">←</button>${days.map((day,dj)=>`<button onclick="movePersonAudit(${p.id},'${kwToDate(kw)}',${dj})" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:${dj===di?'var(--blue)':'var(--sf2)'};color:${dj===di?'#fff':'var(--tx2)'};font-size:9px;cursor:pointer;line-height:1.4">${day}</button>`).join('')}<button onclick="movePersonAudit(${p.id},'${kwToDate(kw+1)}',0)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">→</button></div></div>`;}).join('');})()}
       ${(()=>{const paDone=personAudits.filter(p=>!p.planned&&p.date===ds&&(!audFilter||p.auditor===audFilter));return paDone.map(p=>{const audCol=aC(p.auditor||'');return`<div class="kwe" style="background:#FFFBEB;border-left:3px solid #F59E0B;cursor:pointer" onclick="openPersonAuditDoneUndo(${p.id})"><div class="kwe-top"><div class="kwen" style="color:#B45309">✓ 👤 ${p.person}${p.bs?' · '+p.bs:''}</div><span class="kwea" style="background:${audCol}">${(p.auditor||'?').split(' ').pop()}</span></div></div>`;}).join('');})()}
       ${dayP.length?dayP.map(p=>{const e=data.find(x=>x.id===p.bsId);const col=p.auditor&&p.auditor!=='Unbekannt'?aC(p.auditor):'#9CA3AF';const isSel=multiAuditMode&&planned.has(p.bsId);return`<div class="kwe" style="${isSel?'background:#EFF6FF;border-left:3px solid var(--blue)':''}"><div class="kwe-top" onclick="${multiAuditMode?`toggleKWAuditSel(${p.bsId})`:`openCalPop(${p._i})`}" style="cursor:pointer"><div class="kwen">${isSel?'☑ ':''}${e?((e.type==='werkhof'?'🏠 ':'')+pspPre(e.psp)+e.name):'(gel.)'}</div>${kwMetaLine(e,kw,'0 0 1px')}<span class="kwea" style="background:${col}">${p.auditor==='Unbekannt'||!p.auditor?'? Zuteilen':p.auditor.split(' ').pop()}</span></div>${!multiAuditMode?`<div class="kwe-move" style="display:flex;gap:2px;padding:2px 6px 3px;border-top:1px solid var(--bd)"><button onclick="movePlan(${p._i},'${kwToDate(kw-1)}',4)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4" title="Vorwoche Fr">←</button>${days.map((day,dj)=>`<button onclick="movePlan(${p._i},'${kwToDate(kw)}',${dj})" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:${dj===di?'var(--blue)':'var(--sf2)'};color:${dj===di?'#fff':'var(--tx2)'};font-size:9px;cursor:pointer;line-height:1.4">${day}</button>`).join('')}<button onclick="movePlan(${p._i},'${kwToDate(kw+1)}',0)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4" title="Nächste Woche Mo">→</button></div>`:''}
@@ -5018,6 +5161,8 @@ function renderMobPlan(){
       </div>
       <div style="font-size:15px;font-weight:700;color:var(--tx);margin-bottom:4px">${pspPre(e.psp)}${e.name}</div>
       <div style="font-size:12px;color:var(--tx2)">${e.addr||''}</div>
+      ${e.bc?`<div style="font-size:11px;color:var(--tx3)">BC: ${e.bc}</div>`:''}
+      ${mobPersHTML(e)?`<div style="margin-top:5px">${mobPersHTML(e)}</div>`:''}
     </div>`;
   });
   // 4. Erledigte Beratungen (ganz unten)
@@ -5030,6 +5175,8 @@ function renderMobPlan(){
       </div>
       <div style="font-size:15px;font-weight:700;color:var(--tx);margin-bottom:4px">${pspPre(e.psp)}${e.name}</div>
       <div style="font-size:12px;color:var(--tx2)">${e.addr||''}${b&&b.note?' · '+b.note:''}</div>
+      ${e.bc?`<div style="font-size:11px;color:var(--tx3)">BC: ${e.bc}</div>`:''}
+      ${mobPersHTML(e)?`<div style="margin-top:5px">${mobPersHTML(e)}</div>`:''}
     </div>`;
   });
   // 4b. Erledigte Rapporte
@@ -5969,6 +6116,14 @@ function rulesHTML(){
     `Termintreue: Audit-Abstände innerhalb Rhythmus + ${v('tt_tol_pct')} % zählen als rechtzeitig; aktuell überfällige als verspätet. Grün ab ${v('tt_green')} %, orange ab ${v('tt_orange')} %.`,
     `Pro 100 MA: Audits im Zeitraum ÷ Mitarbeitende der Abteilung (Abteilungen verwalten) × 100.`,
     `Personen-Audits zählen bei der Abteilung der Person laut Personen-Register (sonst bei der Abteilung der Baustelle).`]) +
+  sec('user-check','Personen-Audits & Personen-Register',[
+    `Abteilung, Arbeitsort und Firma sind Auswahllisten (Admin → Personen-Listen verwalten). Neue Werte über «＋ Neuer Eintrag…» im Formular – gleiche Schreibweisen (auch anders gross/klein) werden erkannt und nicht doppelt angelegt.`,
+    `Personen im Register sind bearbeitbar (✏️). Ändert man Nummer, Name, Abteilung oder Firma, ziehen bestehende Personen-Audits mit.`,
+    `Mehrere Personen in einem Audit: zählt als <b>1 Audit</b> (Soll, Auswertungen); in der Jahresmatrix erhält jede genannte Person den Eintrag (Tooltip zeigt, mit wem). Die erstgenannte Person bestimmt die Abteilung in der Abteilungs-Auswertung.`,
+    `Jahresmatrix: Name, Nummer und Abteilung werden hellgrün (✓), sobald die Person im gewählten Jahr <u>durchgeführt</u> auditiert wurde – geplante Audits zählen nicht (blau, 📅). Oben steht «X von Y Personen auditiert».`]) +
+  sec('layout-columns','Wochenansicht (KW-Planung)',[
+    `Geplante und erledigte Einträge zeigen dieselben Infos: PSP, Name, BC-Chef und Personal. Erledigte sind grün mit ✓ (Namensfeld der Auditor bleibt in seiner Farbe), ohne Verschieben-Knöpfe.`,
+    `Rapporte: ein Termin mit allen Teilnehmenden – Umrandung = geplant, gefüllt mit ✓ = teilgenommen.`]) +
   sec('beach','Ferien',[
     `Wunschferien: jeder trägt eigene ein, alle sehen alle; Admins bestätigen → werden fixe Ferien.`,
     `Überschneidung wird ab ${v('wf_overlap')} Personen gleichzeitig rot markiert. Fixe Ferien sperren Tage in Tourguide und Verteilen.`]);
@@ -8072,6 +8227,19 @@ ALTER TABLE audit_state ADD COLUMN IF NOT EXISTS "rapporte" text;</pre>
     <div style="display:flex;justify-content:flex-end;gap:8px;padding:12px 22px;border-top:1px solid var(--bd);flex-shrink:0">
       <button onclick="document.getElementById('pmb-bg').style.display='none'" style="padding:8px 16px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf2);cursor:pointer;font-size:12px;color:var(--tx)">Schliessen</button>
       <button onclick="savePersonalBulk()" style="padding:8px 16px;border:none;border-radius:var(--rs);background:#10B981;color:#fff;font-size:12px;font-weight:600;cursor:pointer">✓ Speichern</button>
+    </div>
+  </div>
+</div>
+<!-- PERSONEN-LISTEN VERWALTEN -->
+<div id="pl-bg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:4000;align-items:center;justify-content:center">
+  <div style="background:var(--sf);border-radius:12px;width:560px;max-width:96vw;max-height:92vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3)">
+    <div style="padding:16px 22px 8px;flex-shrink:0">
+      <h3 style="font-size:15px;font-weight:700;color:var(--tx);margin-bottom:4px"><i class="ti ti-address-book" style="color:var(--blue)"></i> Personen-Listen verwalten</h3>
+      <p style="font-size:11px;color:var(--tx3)">Auswahllisten für das Personen-Register. Name ändern = umbenennen (Personen und bestehende Audits werden mitgezogen); auf einen bestehenden Namen umbenennen führt zusammen. Löschen nur, wenn niemand den Eintrag verwendet.</p>
+    </div>
+    <div id="pl-body" style="flex:1;min-height:80px;overflow-y:auto;padding:8px 22px 14px"></div>
+    <div style="display:flex;justify-content:flex-end;padding:12px 22px;border-top:1px solid var(--bd);flex-shrink:0">
+      <button onclick="document.getElementById('pl-bg').style.display='none'" style="padding:8px 16px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf2);cursor:pointer;font-size:12px;color:var(--tx)">Schliessen</button>
     </div>
   </div>
 </div>
