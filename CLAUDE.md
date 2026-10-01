@@ -11,8 +11,8 @@ Beratungen, Rapporten und Ferien der Auditoren. Sprache der Oberfläche: Deutsch
 - Vor jedem PR: App im Browser laden (Desktop- und Mobile-Breite) und in der Konsole
   prüfen, dass keine JavaScript-Fehler auftreten.
 - Bei jeder Änderung an der App die Versionsnummer erhöhen, und zwar überall in
-  `index.html`: im Header (`<span ... title="Version">v2.89</span>`) und in den Links
-  `css/style.css?v=2.89`, `js/merge.js?v=2.89` und `js/app.js?v=2.89`. Der `?v=`-Zusatz
+  `index.html`: im Header (`<span ... title="Version">v2.90</span>`) und in den Links
+  `css/style.css?v=2.90`, `js/merge.js?v=2.90` und `js/app.js?v=2.90`. Der `?v=`-Zusatz
   sorgt dafür, dass Browser nach einem Update keine alte Datei aus dem Cache verwenden.
 - Tests für die Zusammenführung: `node tests/merge.test.js` (muss grün sein).
 - Keine Browser-Dialoge (`confirm`, `prompt`, `alert`): `askConfirm()`, `askText()`,
@@ -67,7 +67,9 @@ global; das HTML ruft sie direkt über `onclick="..."` auf.
 - ~3489 Mobile-Ansicht (`toggleMobileView`, `renderMobPlan`, Routen via OpenRouteService)
 - ~4247 Login/Auth (Supabase Auth), Präsenz-Anzeige
 - ~4642 Einstellungen & Regeln (`S(k)` liest eine Einstellung)
-- ~4801 Tourguide / Tagesablauf-Simulation (`tg*`)
+- ~4801 Tourguide / Tagesablauf-Simulation (`tg*`). Auswahl in `tgCompute`: nur rot/orange,
+  «Ort ausschöpfen» (`harvest`, Umkreis `tg_harvest_min`), neue Gegend nur wenn sie ganz
+  Platz hat (`mayOpen`), Gleichstand ±`tg_tie_min` → Grösse/★/Fälligkeit
 - ~5393 Personal-Import (JSON), Sammelbox, temporäre Mitarbeitende
 - ~5969 Supabase-Verbindung (`sbFetch`, `sbInit`)
 - ~6026 Sync (`SB_FIELDS`, `sbPush`, `sbPull`, `sbMergeRemote`, Speicher-Status)
