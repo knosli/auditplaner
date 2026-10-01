@@ -11,8 +11,8 @@ Beratungen, Rapporten und Ferien der Auditoren. Sprache der Oberfläche: Deutsch
 - Vor jedem PR: App im Browser laden (Desktop- und Mobile-Breite) und in der Konsole
   prüfen, dass keine JavaScript-Fehler auftreten.
 - Bei jeder Änderung an der App die Versionsnummer erhöhen, und zwar überall in
-  `index.html`: im Header (`<span ... title="Version">v2.91</span>`) und in den Links
-  `css/style.css?v=2.91`, `js/merge.js?v=2.91` und `js/app.js?v=2.91`. Der `?v=`-Zusatz
+  `index.html`: im Header (`<span ... title="Version">v2.92</span>`) und in den Links
+  `css/style.css?v=2.92`, `js/merge.js?v=2.92` und `js/app.js?v=2.92`. Der `?v=`-Zusatz
   sorgt dafür, dass Browser nach einem Update keine alte Datei aus dem Cache verwenden.
 - Tests für die Zusammenführung: `node tests/merge.test.js` (muss grün sein).
 - Keine Browser-Dialoge (`confirm`, `prompt`, `alert`): `askConfirm()`, `askText()`,
@@ -59,7 +59,8 @@ global; das HTML ruft sie direkt über `onclick="..."` auf.
 - ~147 Dialoge (`uiDialog`, `askConfirm`, `askText`) und Rückgängig (`undoPoint`)
 - ~202 Karte (Leaflet): `initMap`, `renderMarkers`, `renderList`, `selEntry` (Detail-Panel)
 - ~771 `setView`: Tabs Karte / KW-Planung / Auditoren / Übersicht / Personen-Audits
-- ~1102 Ferien und Wunschferien (Gantt)
+- ~1102 Ferien und Wunschferien (Gantt). Fixe Ferien: nur Admin erfassen/bearbeiten/löschen;
+  Wünsche: eigene oder Admin. Bearbeiten über `uiForm()` (Formular-Dialog) oder Klick auf den Balken
 - ~1280 Personen-Audits und Personenregister
 - ~1794 Rapporte (inkl. ICS-Export)
 - ~2309 KW-Planung / Kalender (`renderKW`, Wochenansicht)
