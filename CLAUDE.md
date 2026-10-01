@@ -11,8 +11,8 @@ Beratungen, Rapporten und Ferien der Auditoren. Sprache der Oberfläche: Deutsch
 - Vor jedem PR: App im Browser laden (Desktop- und Mobile-Breite) und in der Konsole
   prüfen, dass keine JavaScript-Fehler auftreten.
 - Bei jeder Änderung an der App die Versionsnummer erhöhen, und zwar überall in
-  `index.html`: im Header (`<span ... title="Version">v2.92</span>`) und in den Links
-  `css/style.css?v=2.92`, `js/merge.js?v=2.92` und `js/app.js?v=2.92`. Der `?v=`-Zusatz
+  `index.html`: im Header (`<span ... title="Version">v2.93</span>`) und in den Links
+  `css/style.css?v=2.93`, `js/merge.js?v=2.93` und `js/app.js?v=2.93`. Der `?v=`-Zusatz
   sorgt dafür, dass Browser nach einem Update keine alte Datei aus dem Cache verwenden.
 - Tests für die Zusammenführung: `node tests/merge.test.js` (muss grün sein).
 - Keine Browser-Dialoge (`confirm`, `prompt`, `alert`): `askConfirm()`, `askText()`,
@@ -79,6 +79,14 @@ global; das HTML ruft sie direkt über `onclick="..."` auf.
 - ~6265 Admin: Anleitung & SQL, Änderungsprotokoll, Verlauf & Wiederherstellen
 - ~6513 Excel-Export, ~6591 Übersichtstabelle, ~6724 ICS-Export
 - ~6876 `renderAll()`, ~6889 Initialisierung (`DOMContentLoaded`)
+
+## Kalenderwochen
+
+KW-Nummern sind in der App **fortlaufend**, bezogen auf das aktuelle ISO-Jahr (53/54 = KW 1/2 des
+nächsten Jahres, 0 = letzte KW des Vorjahres). `kwToDate(kw)` rechnet das richtig um. Für Anzeige
+und Speichern: `kwNum(kw)` (echte KW), `kwYear(kw)`, `kwLabel(kw)` (mit Jahr, wenn nicht das
+aktuelle), `kwIdx(datum)` (Datum → fortlaufende KW), `kwFromInput(n)` (eingetippte KW). Nie
+KW-Nummern auf 1–52 begrenzen oder mit `dateToKW()` vergleichen, ohne das Jahr zu beachten.
 
 ## Daten und Speicherung
 

@@ -64,7 +64,18 @@ const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth
 // Parse date string as LOCAL time (avoids UTC timezone shift)
 function parseDate(ds){if(!ds)return new Date();const[y,m,d]=ds.split('-').map(Number);return new Date(y,m-1,d);}
 function fd(d){if(!d)return'—';const dd=parseDate(d);return dd.toLocaleDateString('de-CH');}
-function kwToDate(kw,yr=new Date().getFullYear()){
+// Wochen: Innerhalb der App sind KW-Nummern fortlaufend, bezogen auf das aktuelle ISO-Jahr –
+// 53 bzw. 54 bedeutet KW 1 bzw. 2 des nächsten Jahres, 0 die letzte KW des Vorjahres. kwToDate rechnet
+// das automatisch richtig um. Für die Anzeige: kwNum (echte KW), kwYear (Jahr), kwLabel.
+function isoYear(ds){const d=parseDate(ds);const thu=new Date(d);thu.setDate(d.getDate()+(4-(d.getDay()||7)));return thu.getFullYear();}
+function curIsoYear(){return isoYear(today());}
+function kwNum(kw){return dateToKW(kwToDate(kw));}
+function kwYear(kw){return isoYear(kwToDate(kw));}
+function kwIdx(ds){return Math.round((parseDate(kwToDate(dateToKW(ds),isoYear(ds)))-parseDate(kwToDate(1)))/604800000)+1;}
+function kwLabel(kw,withYear){const y=kwYear(kw);return'KW '+kwNum(kw)+(withYear||y!==curIsoYear()?' / '+y:'');}
+// Eingetippte KW (1–53) → fortlaufend: liegt sie deutlich vor der aktuellen KW, ist das nächste Jahr gemeint
+function kwFromInput(n){n=+n;if(!n)return 0;const cur=dateToKW(today());return n<cur-8?n+dateToKW(curIsoYear()+'-12-28'):n;}
+function kwToDate(kw,yr=curIsoYear()){
   const j=new Date(yr,0,4);
   const sw=new Date(j.getTime()-((j.getDay()||7)-1)*86400000);
   const d=new Date(sw.getTime()+(kw-1)*7*86400000);
@@ -662,7 +673,7 @@ function getStickyPlanKW(){
   try{
     const s=JSON.parse(localStorage.getItem('plan_kw_sticky')||'null');
     // gespeicherter Montag muss >= Montag der aktuellen Woche sein (funktioniert auch über den Jahreswechsel)
-    if(s&&s.kw&&s.monday&&s.monday>=kwToDate(dateToKW(today())))return s.kw;
+    if(s&&s.kw&&s.monday&&s.monday>=kwToDate(dateToKW(today())))return kwIdx(s.monday);
   }catch(e){}
   return next;
 }
@@ -680,7 +691,7 @@ function showF(w){
     // in der Vergangenheit liegt - sonst nächste KW.
     _planMode='kw';
     setPlanMode('kw');
-    document.getElementById('plan-kw').value=getStickyPlanKW();
+    document.getElementById('plan-kw').value=kwNum(getStickyPlanKW());
     document.getElementById('plan-date').value='';
   }
   if(w==='note'){const e=data.find(x=>x.id===selId);document.getElementById('note-form').style.display='block';document.getElementById('note-inp').value=e?.note||'';}
@@ -718,9 +729,9 @@ function setPlanMode(mode){
 function confirmPlan(){
   const aud=document.getElementById('plan-aud').value;
   const kwVal=document.getElementById('plan-kw').value;
-  if(kwVal)setStickyPlanKW(kwVal);
+  if(kwVal)setStickyPlanKW(kwFromInput(kwVal));
   const dtVal=document.getElementById('plan-date').value;
-  let dt=_planMode==='kw'?kwToDate(+kwVal):dtVal;
+  let dt=_planMode==='kw'?kwToDate(kwFromInput(kwVal)):dtVal;
   if(!aud||!dt||(dt==='Invalid Date')){showToast('Auditor und KW/Datum erforderlich');return;}
   const e=data.find(x=>x.id===selId);if(!e)return;
   if(onVac(aud,dt))showToast(`⚠️ ${aud.split(' ').pop()} hat Ferien!`,4000);
@@ -745,11 +756,10 @@ function togglePause(){const e=data.find(x=>x.id===selId);if(!e)return;if(e.paus
   if(sel){
     const curKW=dateToKW(today());
     let opts='<option value="">— keine —</option>';
-    for(let i=1;i<=52;i++){
-      if(i<curKW)continue;
+    for(let i=curKW;i<curKW+52;i++){
       const dt=kwToDate(i);
       const d=parseDate(dt);
-      opts+='<option value="'+dt+'" style="background:#fff;color:#000">KW '+i+' ('+d.getDate()+'.'+(d.getMonth()+1)+'.)</option>';
+      opts+='<option value="'+dt+'" style="background:#fff;color:#000">'+kwLabel(i)+' ('+d.getDate()+'.'+(d.getMonth()+1)+'.)</option>';
     }
     sel.innerHTML=opts;
     sel.style.background='var(--sf)';
@@ -948,7 +958,7 @@ function applyMultiPlan(){
 
   let date='';
   if(mode==='kw'){
-    const kw=+document.getElementById('mp-kw').value;
+    const kw=kwFromInput(document.getElementById('mp-kw').value);
     if(!kw){showToast('Bitte KW eingeben');return;}
     date=kwToDate(kw);
   } else {
@@ -2382,20 +2392,13 @@ function renderAuditors(){
 // ═══ KW CALENDAR ═══
 function getKWs(){
   const cur=dateToKW(today());
-  const yr=new Date().getFullYear();
-  const maxKW=dateToKW(yr+'-12-28')>52?53:52;
-  // kwOff moves 4 KWs at a time (one block)
-  return[0,1,2,3].map(i=>{
-    let kw=cur+kwOff*4+i;
-    if(kw<1)kw+=maxKW;
-    if(kw>maxKW)kw-=maxKW;
-    return kw;
-  });
+  // kwOff moves 4 KWs at a time (one block); fortlaufend über den Jahreswechsel
+  return[0,1,2,3].map(i=>cur+kwOff*4+i);
 }
 // Untere Zeile der KW-Karten: BC + Personal der KW, in der die Baustelle geplant ist
 function kwPersBadge(e,kw){
   if(!e||e.type==='werkhof')return'';
-  const yr=pmYearFor(kw);
+  const yr=kwYear(kw);kw=kwNum(kw);
   const h=persForKW(e,kw,yr);
   if(h)return`<span title="Personal KW ${kw}: ${h.count} (${h.manual?'manuell':'Import'})" style="font-weight:700;color:${h.count?'var(--tx2)':'#DC2626'}">👷 ${h.count}</span>`;
   if(e.lastPersonalKW!==undefined&&e.lastPersonalCount!==undefined)return`<span title="Kein Wert für KW ${kw} – zuletzt KW ${e.lastPersonalKW}: ${e.lastPersonalCount}" style="opacity:.65;font-style:italic">👷 ${e.lastPersonalCount} <span style="font-size:9px">(KW ${e.lastPersonalKW})</span></span>`;
@@ -2410,8 +2413,8 @@ function kwMetaLine(e,kw,pad){
 function renderKW(){
   if(calViewMode==='week'){
     const curKW=dateToKW(today());
-    const displayKW=Math.max(1,Math.min(52,curKW+weekOff));
-    document.getElementById('cal-ti').textContent=`KW ${displayKW} – Wochenansicht`;
+    const displayKW=curKW+weekOff;
+    document.getElementById('cal-ti').textContent=`${kwLabel(displayKW,true)} – Wochenansicht`;
     // Auditor row
     const ks=kwToDate(displayKW),ke=kwToDate(displayKW+1);
     const pP=plans.filter(p=>p.date>=ks&&p.date<ke);
@@ -2426,7 +2429,8 @@ function renderKW(){
   // Table layout – no CSS grid needed
   document.getElementById('kwgrid').style.width='100%';
   const kws=getKWs(),curKW=dateToKW(today());
-  document.getElementById('cal-ti').textContent=`KW ${kws[0]} – KW ${kws[3]}`;
+  const y0=kwYear(kws[0]),y3=kwYear(kws[3]);
+  document.getElementById('cal-ti').textContent=y0===y3?`KW ${kwNum(kws[0])} – KW ${kwNum(kws[3])} · ${y0}`:`${kwLabel(kws[0],true)} – ${kwLabel(kws[3],true)}`;
   const ks=kwToDate(kws[0]),ke=kwToDate(kws[3]+1);
   const pP=plans.filter(p=>p.date>=ks&&p.date<ke);
   const aC2={};auditors.forEach(a=>aC2[a]=pP.filter(p=>p.auditor===a).length);
@@ -2438,7 +2442,7 @@ function renderKW(){
     const fer=ferien.filter(f=>f.bis>=ks2&&f.von<ke2);
     return`<td class="kwcol">
       <div class="kwh ${isCur?'kwcur':'kwnorm'}">
-        <span>KW ${kw}</span>
+        <span>${kwLabel(kw)}</span>
         ${kwP.length?`<div style="display:flex;gap:3px"><button onclick="kwRoute(${kw})"><i class="ti ti-map-2"></i></button><button onclick="kwPrint(${kw})"><i class="ti ti-printer"></i></button></div>`:''}
       </div>
       ${fer.map(f=>`<div class="kwfer">🌴 ${f.auditor.split(' ').pop()}: ${f.label}</div>`).join('')}
@@ -2446,13 +2450,13 @@ function renderKW(){
     </div>`;
   }).join('');
 }
-function kwRoute(kw){const ks=kwToDate(kw),ke=kwToDate(kw+1);const kwP=plans.filter(p=>p.date>=ks&&p.date<ke&&(!currentUser||p.auditor===currentUser));if(!kwP.length){showToast('Keine Planungen KW '+kw+(currentUser?' für '+currentUser:''));return;}openMaps(kwP.map(p=>data.find(e=>e.id===p.bsId)).filter(e=>e&&e.addr));}
+function kwRoute(kw){const ks=kwToDate(kw),ke=kwToDate(kw+1);const kwP=plans.filter(p=>p.date>=ks&&p.date<ke&&(!currentUser||p.auditor===currentUser));if(!kwP.length){showToast('Keine Planungen '+kwLabel(kw)+(currentUser?' für '+currentUser:''));return;}openMaps(kwP.map(p=>data.find(e=>e.id===p.bsId)).filter(e=>e&&e.addr));}
 function kwPrint(kw){
   const ks=kwToDate(kw),ke=kwToDate(kw+1);
   const kwP=plans.filter(p=>p.date>=ks&&p.date<ke);
   if(!kwP.length){showToast('Keine Planungen KW '+kw);return;}
   let ents=kwP.map(p=>({p,e:data.find(x=>x.id===p.bsId)})).filter(x=>x.e).sort((a,b)=>a.p.date.localeCompare(b.p.date));
-  document.getElementById('pv-ti').textContent=`KW ${kw} – Auditplan`;
+  document.getElementById('pv-ti').textContent=`${kwLabel(kw,true)} – Auditplan`;
   document.getElementById('pv-da').textContent=`${fd(ks)} – ${fd(ke)}`;
   document.getElementById('pv-hd').innerHTML='<tr><th>#</th><th>Baustelle</th><th>Adresse</th><th>Abteilung</th><th>Tag</th><th>Auditor</th><th>Notiz</th></tr>';
   document.getElementById('pv-bd').innerHTML=ents.map(({p,e},i)=>{const c=aC(p.auditor);const dn=['So','Mo','Di','Mi','Do','Fr','Sa'][parseDate(p.date).getDay()];return`<tr><td style="color:var(--tx3)">${i+1}</td><td style="font-weight:600">${e.type==='werkhof'?'🏠 ':''}${e.name}</td><td>${e.addr||'—'}</td><td>${e.dept||'—'}</td><td>${dn} ${fd(p.date)}</td><td><span style="background:${c};color:#fff;padding:2px 7px;border-radius:20px;font-size:11px">${p.auditor}</span></td><td style="color:var(--tx3);font-style:italic">${e.note||''}</td></tr>`;}).join('');
@@ -2831,11 +2835,11 @@ function openKWPrintDialog(){
   const kwSel=document.getElementById('kw-print-kw');
   kwSel.innerHTML='';
   for(let i=-2;i<=10;i++){
-    const kw=Math.max(1,Math.min(52,curKW+i));
+    const kw=curKW+i;
     const ks=kwToDate(kw);
     const ke=kwToDate(kw+1);
     const d=parseDate(ks);
-    const label=`KW ${kw} (${d.getDate()}.${d.getMonth()+1}. – ${parseDate(ke).getDate()-1}.${parseDate(ke).getMonth()+1}.)${i===0?' ← aktuell':''}`;
+    const label=`${kwLabel(kw)} (${d.getDate()}.${d.getMonth()+1}. – ${parseDate(ke).getDate()-1}.${parseDate(ke).getMonth()+1}.)${i===0?' ← aktuell':''}`;
     const opt=document.createElement('option');opt.value=kw;opt.textContent=label;if(i===0)opt.selected=true;
     kwSel.appendChild(opt);
   }
@@ -2849,7 +2853,7 @@ function doKWPrint(){
   const ks=kwToDate(kw);
   const days=['Montag','Dienstag','Mittwoch','Donnerstag','Freitag'];
   const audLabel=aud||'Alle Auditoren';
-  const title=`KW ${kw} – ${audLabel}`;
+  const title=`${kwLabel(kw,true)} – ${audLabel}`;
   document.getElementById('pv-ti').textContent=title;
   document.getElementById('pv-da').textContent=`${parseDate(ks).toLocaleDateString('de-CH',{day:'2-digit',month:'2-digit',year:'numeric'})}`;
   const ts=document.getElementById('pv-ts');if(ts)ts.textContent=new Date().toLocaleString('de-CH',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
@@ -3232,8 +3236,7 @@ function openDistribute(){
   const curKW=dateToKW(today());
   kwSel.innerHTML=Array.from({length:20},(_,i)=>{
     const kw=curKW+i-1;
-    if(kw<1||kw>52)return'';
-    return`<option value="${kw}"${kw===curKW?' selected':''}>KW ${kw}</option>`;
+    return`<option value="${kw}"${kw===curKW?' selected':''}>${kwLabel(kw)}</option>`;
   }).filter(Boolean).join('');
   // Reset
   _distResult=null;
@@ -3276,7 +3279,7 @@ function updateDistInfo(){
     if(!fer&&fx)notes.push(`${names[di]}: ${Math.round(fx)} min belegt`);
   });
   document.getElementById('dist-info').innerHTML=
-    `${kwPlans.length} Baustellen in KW ${kw} für ${aud} – ${withCoords.length} mit Koordinaten`+
+    `${kwPlans.length} Baustellen in ${kwLabel(kw)} für ${aud} – ${withCoords.length} mit Koordinaten`+
     (notes.length?`<div style="margin-top:4px;font-size:11px;color:var(--tx3)">Bereits geplant: ${notes.join(' · ')}</div>`:'');
   document.getElementById('dist-preview').style.display='none';
   document.getElementById('dist-confirm-btn').style.display='none';
@@ -4898,7 +4901,7 @@ function tgCandidates(aud,kw,noPers,dayDates){
     if(plannedThisKW.has(e.id))return false;                  // von irgendwem diese KW eingeplant
     if(deptParts(e.dept).some(d=>excl.has(d)))return false;   // ausgeschlossen (hart)
     // Nur mit Personal vor Ort: bekannt, > 0 und aktuell. Sonst NIE vorschlagen (unbekannt/veraltet werden aufgelistet).
-    const ps=tgPersonalState(e,kw,tgYearForKW(kw));
+    const ps=tgPersonalState(e,kwNum(kw),kwYear(kw));
     if(ps!=='ok'){if(noPers&&(ps==='unknown'||ps==='stale'))noPers.push({e,state:ps});return false;}
     return true;
   }).map(e=>{const isPref=deptParts(e.dept).some(d=>pref.has(d));const urgDay=(dayDates||[null]).map(ds=>{const u=tgUrgency(e,ds);return u===0||u===1?u:null;});
@@ -5118,6 +5121,7 @@ function tgRender(){
         return lunchRow+`<div style="display:flex;align-items:center;gap:6px;padding:4px 0;font-size:12px;border-top:1px solid var(--bd)">${time}
           <span style="width:8px;height:8px;border-radius:50%;flex-shrink:0;background:${fixed?'#6366F1':stCol[s]||'#10B981'}"></span>
           <span style="flex:1;min-width:0">${bsLabel(e)}${R.prefOf.get(j)?' <span style="color:#10B981" title="Bevorzugte Abteilung">★</span>':''}${fixed?' <span style="font-size:10px;color:#6366F1">(bereits geplant)</span>':''}</span>
+          ${tgPersTag(e)}
           <span style="font-size:10px;color:var(--tx3);white-space:nowrap">${C.dur.get(j)} min${e.zeitbedarf?' fix':''}</span>
           ${fixed?'':`<select onchange="tgMove(${j},+this.value)" style="font-size:10px;padding:1px 3px;border:1px solid var(--bd);border-radius:4px;background:var(--sf);color:var(--tx2)">${R.days.map((di,dd)=>`<option value="${dd}"${dd===d?' selected':''}>${names[di]}</option>`).join('')}</select>
           <button onclick="tgToggle(${j})" title="Entfernen" style="background:none;border:none;cursor:pointer;font-size:12px;color:#EF4444">✕</button>`}
@@ -5127,7 +5131,7 @@ function tgRender(){
     </div>`;
   });
   if(R.remaining.length)h+=`<details style="margin-top:4px;font-size:11px;color:var(--tx2)"><summary style="cursor:pointer">Weitere rote/orange Baustellen, nicht eingeplant (${R.remaining.length}) – kein Platz mehr, oder ihre Gegend passt an keinem gewählten Tag ganz hinein</summary>
-    ${R.remaining.slice(0,25).map(x=>`<div style="padding:3px 0;border-top:1px solid var(--bd)">${bsLabel(x.e)} · ${x.min} min</div>`).join('')}</details>`;
+    ${R.remaining.slice(0,25).map(x=>`<div style="padding:3px 0;border-top:1px solid var(--bd)">${bsLabel(x.e)} · ${x.min} min · ${tgPersTag(x.e)}</div>`).join('')}</details>`;
   if(R.noPers&&R.noPers.length){
     const rows=R.noPers.sort((a,b)=>tgUrgency(a.e)-tgUrgency(b.e)||dl(a.e)-dl(b.e));
     h+=`<details style="margin-top:8px;padding:8px 10px;background:#FFFBEB;border:1px solid #FCD34D;border-radius:8px;font-size:11px;color:#92400E"><summary style="cursor:pointer;font-weight:600">⚠ ${rows.length} fällige Baustelle(n) nicht berücksichtigt – kein aktuelles Personal bekannt</summary>
@@ -5153,7 +5157,7 @@ function tgLeftNearHTML(d,active){
   if(!rows.length&&!info.length)return'';
   return`<div style="margin-top:6px;padding:6px 8px;background:#FFFBEB;border:1px solid #FCD34D;border-radius:6px;font-size:11px;color:#92400E">
     <b>⚠ Ort nicht ausgeschöpft</b> – im Umkreis von ${near} min bleiben offen:
-    ${rows.map(r=>`<div style="display:flex;align-items:center;gap:6px;padding:3px 0;border-top:1px solid #FDE68A"><span style="flex:1">${bsLabel(r.e)} · ${Math.round(r.m)} min entfernt · kein Platz mehr</span><button type="button" onclick="tgAddLeft(${r.j},${d})" style="font-size:10px;padding:2px 6px;border:1px solid #F59E0B;border-radius:4px;background:#fff;color:#92400E;cursor:pointer">+ trotzdem hinzufügen</button></div>`).join('')}
+    ${rows.map(r=>`<div style="display:flex;align-items:center;gap:6px;padding:3px 0;border-top:1px solid #FDE68A"><span style="flex:1">${bsLabel(r.e)} · ${tgPersTag(r.e)} · ${Math.round(r.m)} min entfernt · kein Platz mehr</span><button type="button" onclick="tgAddLeft(${r.j},${d})" style="font-size:10px;padding:2px 6px;border:1px solid #F59E0B;border-radius:4px;background:#fff;color:#92400E;cursor:pointer">+ trotzdem hinzufügen</button></div>`).join('')}
     ${info.map(o=>`<div style="padding:3px 0;border-top:1px solid #FDE68A">${bsLabel(o.e)} · Personal ${o.state==='stale'?'veraltet (KW '+o.e.lastPersonalKW+')':'unbekannt'} – erst Personal erfassen</div>`).join('')}
   </div>`;
 }
@@ -5175,6 +5179,11 @@ function tgOthersNearHTML(d,active){
     <div style="color:var(--tx3);margin-top:2px">Evtl. absprechen, wer die Gegend übernimmt.</div></div>`;
 }
 function tgAddLeft(j,d){const R=_tg;R.sets=R.sets.map(s=>s.filter(x=>x!==j));R.sets[d].push(j);R.removed.delete(j);R.remaining=R.remaining.filter(x=>x.e!==R.nodeEntry.get(j));tgRender();}
+// Letzte bekannte Personenzahl einer Baustelle (für den Tourguide-Vorschlag)
+function tgPersTag(e){
+  if(!e||e.lastPersonalCount===undefined||e.lastPersonalCount===null)return'';
+  return`<span title="Personal zuletzt bekannt: KW ${e.lastPersonalKW}" style="font-size:10px;color:var(--tx2);white-space:nowrap;font-weight:600">👷 ${e.lastPersonalCount} <span style="font-weight:400;color:var(--tx3)">(KW ${e.lastPersonalKW})</span></span>`;
+}
 function tgLunchRow(){const ls=S('tg_lunch_start')*60;return`<div style="display:flex;align-items:center;gap:6px;padding:4px 0;font-size:12px;border-top:1px solid var(--bd);color:var(--tx3)"><span style="font-size:10px;width:74px;flex-shrink:0;font-variant-numeric:tabular-nums">${tgHM(ls)}–${tgHM(ls+S('tg_lunch_dur'))}</span><span style="flex:1">🍽 Mittagspause</span></div>`;}
 function tgMove(j,toD){const R=_tg;R.sets=R.sets.map(s=>s.filter(x=>x!==j));R.sets[toD].push(j);tgRender();}
 function tgToggle(j){const R=_tg;if(R.removed.has(j))R.removed.delete(j);else R.removed.add(j);tgRender();}
@@ -5189,8 +5198,8 @@ function tgApply(){
   plans.sort((a,b)=>a.date.localeCompare(b.date));
   saveNow();renderAll();if(curView==='cal')renderKW();
   document.getElementById('tg-bg').style.display='none';
-  log('🧭 Tourguide: '+n+' Baustellen eingeplant','KW '+R.kw,'#3B82F6','');
-  showToast(`🧭 ${n} Baustellen in KW ${R.kw} eingeplant`,3000);
+  log('🧭 Tourguide: '+n+' Baustellen eingeplant',kwLabel(R.kw),'#3B82F6','');
+  showToast(`🧭 ${n} Baustellen in ${kwLabel(R.kw)} eingeplant`,3000);
 }
 function tgUpdateDays(){
   const aud=document.getElementById('tg-aud').value,kw=+document.getElementById('tg-kw').value;
@@ -5214,7 +5223,7 @@ function openTourguide(){
   sel.innerHTML=list.map(a=>`<option value="${escH(a)}"${a===currentUser?' selected':''}>${escH(a)}</option>`).join('');
   sel.disabled=!isAdmin;
   const kwSel=document.getElementById('tg-kw');const cur=dateToKW(today());
-  kwSel.innerHTML=[0,1,2,3,4].map(i=>`<option value="${cur+i}">KW ${cur+i}${i===1?' (nächste)':''}</option>`).join('');
+  kwSel.innerHTML=[0,1,2,3,4].map(i=>`<option value="${cur+i}">${kwLabel(cur+i)}${i===1?' (nächste)':''}</option>`).join('');
   kwSel.value=String(typeof getStickyPlanKW==='function'?getStickyPlanKW():cur+1);
   document.getElementById('tg-desc').textContent=`Sag mir, an welchen Tagen du Zeit hast – ich stelle dir pro Tag bis zu ${S('tg_max_per_day')} rote und orange Baustellen zusammen: Wo du schon hinfährst, nehme ich alle fälligen Baustellen im Umkreis von ${S('tg_harvest_min')} min mit. Eine neue Gegend fange ich nur an, wenn sie an dem Tag ganz Platz hat. Max. ${String(S('tg_day_hours')).replace('.',',')} h inkl. Fahrzeit. Bereits Geplantes bleibt und wird aufgefüllt.`;
   document.getElementById('tg-bg').style.display='flex';
@@ -5287,7 +5296,7 @@ function recordPersonalManual(e,kw,yr,count){
 }
 function pmKwOptions(sel){
   const cur=dateToKW(today());
-  return[-4,-3,-2,-1,0,1,2,3,4].map(i=>{const k=cur+i;return`<option value="${k}"${k===(sel??cur)?' selected':''}>KW ${k}${i===0?' (aktuell)':i===1?' (nächste)':''}</option>`;}).join('');
+  return[-4,-3,-2,-1,0,1,2,3,4].map(i=>{const k=cur+i;return`<option value="${k}"${k===(sel??cur)?' selected':''}>${kwLabel(k)}${i===0?' (aktuell)':i===1?' (nächste)':''}</option>`;}).join('');
 }
 // --- einzelne Baustelle (Detail-Panel) ---
 let _pmId=null;
@@ -5301,7 +5310,7 @@ function openPersonalManual(id){
 }
 function pmFill(){
   const e=data.find(x=>x.id===_pmId);if(!e)return;
-  const kw=+document.getElementById('pm-kw').value,yr=pmYearFor(kw);
+  const kwc=+document.getElementById('pm-kw').value,kw=kwNum(kwc),yr=kwYear(kwc);
   const h=persForKW(e,kw,yr);
   document.getElementById('pm-cnt').value=h?h.count:'';
   document.getElementById('pm-hint').textContent=h?`Vorhandener Wert (${h.manual?'manuell':'Import'}): ${h.count} – wird ersetzt.`:'Für diese KW ist noch kein Wert vorhanden.';
@@ -5310,8 +5319,8 @@ function savePersonalManual(){
   const e=data.find(x=>x.id===_pmId);if(!e)return;
   const v=document.getElementById('pm-cnt').value.trim();
   if(v===''||isNaN(+v)||+v<0){showToast('Bitte eine Personenzahl (0 oder mehr) eingeben');return;}
-  const kw=+document.getElementById('pm-kw').value,n=Math.round(+v);
-  recordPersonalManual(e,kw,pmYearFor(kw),n);
+  const kwc=+document.getElementById('pm-kw').value,kw=kwNum(kwc),n=Math.round(+v);
+  recordPersonalManual(e,kw,kwYear(kwc),n);
   saveNow();renderAll();if(document.getElementById('dp')&&e.id===selId)selEntry(e.id);
   document.getElementById('pm-bg').style.display='none';
   showToast(n===0?`✓ KW ${kw}: 0 Personen gespeichert – Tourguide schlägt die Baustelle nicht mehr vor`:`✓ KW ${kw}: ${n} Personen gespeichert`,3200);
@@ -5327,7 +5336,7 @@ function openPersonalBulk(){
   document.getElementById('pmb-bg').style.display='flex';
 }
 function renderPersonalBulk(){
-  const dept=document.getElementById('pmb-dept').value,kw=+document.getElementById('pmb-kw').value,yr=pmYearFor(kw);
+  const dept=document.getElementById('pmb-dept').value,kwc=+document.getElementById('pmb-kw').value,kw=kwNum(kwc),yr=kwYear(kwc);
   const list=data.filter(e=>e.active&&e.type!=='werkhof'&&deptParts(e.dept).includes(dept)).sort((a,b)=>(a.psp||'~').localeCompare(b.psp||'~')||a.name.localeCompare(b.name));
   document.getElementById('pmb-list').innerHTML=list.length?list.map(e=>{
     const h=persForKW(e,kw,yr);
@@ -5338,7 +5347,7 @@ function renderPersonalBulk(){
     </div>`;}).join(''):'<div style="padding:14px;font-size:12px;color:var(--tx3)">Keine aktiven Baustellen in dieser Abteilung.</div>';
 }
 function savePersonalBulk(){
-  const kw=+document.getElementById('pmb-kw').value,yr=pmYearFor(kw);let n=0,zeros=0;
+  const kwc=+document.getElementById('pmb-kw').value,kw=kwNum(kwc),yr=kwYear(kwc);let n=0,zeros=0;
   document.querySelectorAll('#pmb-list input[data-id]').forEach(inp=>{
     const v=inp.value.trim();if(v===''||isNaN(+v)||+v<0)return;
     if(v===inp.dataset.old)return;                       // unverändert
@@ -6947,11 +6956,11 @@ function openICSDialog(){
   const kwSel=document.getElementById('ics-kw');
   kwSel.innerHTML='';
   for(let i=-1;i<=8;i++){
-    const kw=Math.max(1,Math.min(52,curKW+i));
+    const kw=curKW+i;
     const d=parseDate(kwToDate(kw));
     const opt=document.createElement('option');
     opt.value=kw;
-    opt.textContent=`KW ${kw} (${d.getDate()}.${d.getMonth()+1}.)${i===0?' ← aktuell':''}`;
+    opt.textContent=`${kwLabel(kw)} (${d.getDate()}.${d.getMonth()+1}.)${i===0?' ← aktuell':''}`;
     if(i===0)opt.selected=true;
     kwSel.appendChild(opt);
   }
