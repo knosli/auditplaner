@@ -165,6 +165,35 @@ function uiDialog({msg,input=false,def='',ok='OK',cancel='Abbrechen',extra=null,
     setTimeout(()=>{if(inp){inp.focus();inp.select();}else bg.querySelector('[data-v=ok]').focus();},30);
   });
 }
+// Formular-Dialog: fields=[{k,l,type:'text'|'date'|'select',v,opts:[...]}]. validate(vals) -> Fehlertext oder ''.
+// Rückgabe: Objekt mit den Werten oder null (abgebrochen).
+function uiForm({title,fields,ok='Speichern',validate,extra=null,danger=false}){
+  return new Promise(res=>{
+    const bg=document.createElement('div');bg.className='ui-dlg-bg';
+    bg.innerHTML=`<div class="ui-dlg" role="dialog" aria-modal="true"><div class="ui-dlg-msg" style="font-weight:700"></div><div class="ui-form"></div><div class="ui-form-err" style="display:none;color:#DC2626;font-size:12px;margin:-8px 0 12px"></div><div class="ui-dlg-btns">${extra?'<button type="button" class="ui-btn ui-btn-danger" style="margin-right:auto;color:#fff" data-v="extra"></button>':''}<button type="button" class="ui-btn" data-v="cancel">Abbrechen</button><button type="button" class="ui-btn ui-btn-pri${danger?' ui-btn-danger':''}" data-v="ok"></button></div></div>`;
+    bg.querySelector('.ui-dlg-msg').textContent=title;bg.querySelector('[data-v=ok]').textContent=ok;
+    if(extra)bg.querySelector('[data-v=extra]').textContent=extra;
+    const form=bg.querySelector('.ui-form');
+    fields.forEach(f=>{
+      const w=document.createElement('label');w.style.cssText='display:block;font-size:12px;color:var(--tx2);margin-bottom:10px';w.textContent=f.l;
+      const el=document.createElement(f.type==='select'?'select':'input');
+      if(f.type!=='select')el.type=f.type||'text';else(f.opts||[]).forEach(o=>{const op=document.createElement('option');op.value=o;op.textContent=o;el.appendChild(op);});
+      el.className='ui-dlg-inp';el.style.margin='4px 0 0';el.dataset.k=f.k;el.value=f.v??'';
+      w.appendChild(el);form.appendChild(w);
+    });
+    const vals=()=>{const o={};form.querySelectorAll('[data-k]').forEach(el=>o[el.dataset.k]=el.value.trim());return o;};
+    const err=bg.querySelector('.ui-form-err');
+    const done=v=>{
+      if(v==='ok'){const o=vals(),m=validate?validate(o):'';if(m){err.textContent=m;err.style.display='block';return;}}
+      document.removeEventListener('keydown',key,true);bg.remove();
+      res(v==='ok'?vals():v==='extra'?'extra':null);
+    };
+    const key=e=>{if(e.key==='Escape'){e.preventDefault();done('cancel');}else if(e.key==='Enter'){e.preventDefault();done('ok');}};
+    bg.addEventListener('click',e=>{const v=e.target.dataset&&e.target.dataset.v;if(v)done(v);else if(e.target===bg)done('cancel');});
+    document.addEventListener('keydown',key,true);document.body.appendChild(bg);
+    setTimeout(()=>form.querySelector('[data-k]')?.focus(),30);
+  });
+}
 function askConfirm(msg,o={}){return uiDialog({msg,...o});}
 function askText(msg,def='',o={}){return uiDialog({msg,input:true,def,ok:'Speichern',...o});}
 // Rückgängig: vor einer Änderung aufrufen. Nach der Änderung erscheint unten ein Hinweis mit
@@ -1107,8 +1136,33 @@ function toggleFerList(){
   document.getElementById('fer-toggle-icon').textContent=_ferOpen?'▲ ausblenden':'▼ einblenden';
 }
 
-function addFerien(){const aud=document.getElementById('fer-aud').value,von=document.getElementById('fer-von').value,bis=document.getElementById('fer-bis').value,lbl=document.getElementById('fer-lbl').value.trim()||'Ferien';if(!aud||!von||!bis){showToast('Alle Felder erforderlich');return;}if(bis<von){showToast('Bis muss nach Von sein');return;}ferien.push({id:Date.now(),auditor:aud,von,bis,label:lbl});['fer-von','fer-bis','fer-lbl'].forEach(id=>document.getElementById(id).value='');renderFerList();renderFerChart();saveNow();showToast('✓ Ferien erfasst');}
-function rmFerien(id){ferien=ferien.filter(f=>f.id!==id);renderFerList();renderFerChart();saveNow();}
+function ferIsAdmin(){return document.body.classList.contains('admin-mode');}
+function addFerien(){if(!ferIsAdmin()){showToast('Fixe Ferien erfasst der Admin – trag unten einen Wunsch ein',3500);return;}const aud=document.getElementById('fer-aud').value,von=document.getElementById('fer-von').value,bis=document.getElementById('fer-bis').value,lbl=document.getElementById('fer-lbl').value.trim()||'Ferien';if(!aud||!von||!bis){showToast('Alle Felder erforderlich');return;}if(bis<von){showToast('Bis muss nach Von sein');return;}ferien.push({id:Date.now(),auditor:aud,von,bis,label:lbl});['fer-von','fer-bis','fer-lbl'].forEach(id=>document.getElementById(id).value='');renderFerList();renderFerChart();saveNow();showToast('✓ Ferien erfasst');}
+function rmFerien(id){
+  if(!ferIsAdmin()){showToast('Nur Admins können fixe Ferien löschen');return;}
+  const f=ferien.find(x=>x.id===id);if(!f)return;
+  undoPoint(`Ferien ${f.auditor} ${fd(f.von)}–${fd(f.bis)} gelöscht`,()=>{renderFerList();renderFerChart();});
+  ferien=ferien.filter(x=>x.id!==id);renderFerList();renderFerChart();saveNow();
+}
+// Ferien bzw. Wunsch bearbeiten (gemeinsamer Dialog)
+async function ferEditDialog(item,isWish){
+  const admin=ferIsAdmin();
+  const fields=[];
+  if(admin)fields.push({k:'auditor',l:'Auditor',type:'select',v:item.auditor,opts:[...new Set([item.auditor,...auditors])]});
+  fields.push({k:'von',l:'Von',type:'date',v:item.von},{k:'bis',l:'Bis',type:'date',v:item.bis},{k:'label',l:isWish?'Notiz':'Bezeichnung',v:item.label||''});
+  const r=await uiForm({title:(isWish?'Wunschferien':'Ferien')+' bearbeiten – '+item.auditor,fields,extra:'Löschen',
+    validate:o=>!o.von||!o.bis?'Von und Bis sind nötig':o.bis<o.von?'Bis muss nach Von sein':''});
+  return r;
+}
+async function editFerien(id){
+  if(!ferIsAdmin()){showToast('Nur Admins können fixe Ferien bearbeiten');return;}
+  const f=ferien.find(x=>x.id===id);if(!f)return;
+  const r=await ferEditDialog(f,false);if(!r)return;
+  if(r==='extra'){rmFerien(id);return;}
+  undoPoint('Ferien geändert',()=>{renderFerList();renderFerChart();});
+  Object.assign(f,{auditor:r.auditor||f.auditor,von:r.von,bis:r.bis,label:r.label||'Ferien'});
+  renderFerList();renderFerChart();saveNow();
+}
 // ═══ WUNSCHFERIEN ═══
 // Jeder Auditor trägt eigene Wunschtermine ein (für sich selbst, kein Dropdown für Nicht-
 // Admins), alle sehen alle Wünsche zur gegenseitigen Absprache, Admin bestätigt einzeln ->
@@ -1142,9 +1196,21 @@ function rmWunschFerien(id){
   const w=ferienWunsch.find(x=>x.id===id);
   const isAdmin=document.body.classList.contains('admin-mode');
   if(w&&!isAdmin&&w.auditor!==currentUser){showToast('Nur eigene Wünsche löschbar');return;}
+  if(w)undoPoint(`Wunsch ${w.auditor} ${fd(w.von)}–${fd(w.bis)} gelöscht`,()=>{renderWunschList();renderWunschChart();});
   ferienWunsch=ferienWunsch.filter(x=>x.id!==id);
   renderWunschList();renderWunschChart();saveNow();
 }
+async function editWunsch(id){
+  const w=ferienWunsch.find(x=>x.id===id);if(!w)return;
+  if(!ferIsAdmin()&&w.auditor!==currentUser){showToast('Nur eigene Wünsche bearbeitbar');return;}
+  const r=await ferEditDialog(w,true);if(!r)return;
+  if(r==='extra'){rmWunschFerien(id);return;}
+  undoPoint('Wunsch geändert',()=>{renderWunschList();renderWunschChart();});
+  Object.assign(w,{auditor:ferIsAdmin()?(r.auditor||w.auditor):w.auditor,von:r.von,bis:r.bis,label:r.label||'Wunsch'});
+  renderWunschList();renderWunschChart();saveNow();
+}
+// Balken in der Übersicht angeklickt
+function ferBarClick(id,isWish){if(isWish)editWunsch(id);else if(ferIsAdmin())editFerien(id);}
 // Admin bestätigt einen Wunsch -> wird zum echten Ferien-Eintrag, Wunsch verschwindet aus der Liste
 function confirmWunsch(id){
   const w=ferienWunsch.find(x=>x.id===id);if(!w)return;
@@ -1158,14 +1224,14 @@ function renderWunschList(){
   const el=document.getElementById('wf-list');if(!el)return;
   const isAdmin=document.body.classList.contains('admin-mode');
   if(!ferienWunsch.length){el.innerHTML='<div style="font-size:11px;color:var(--tx3);padding:6px">Noch keine Wunschferien erfasst.</div>';return;}
-  el.innerHTML=ferienWunsch.sort((a,b)=>a.von.localeCompare(b.von)).map(w=>{
+  el.innerHTML=ferienWunsch.slice().sort((a,b)=>a.von.localeCompare(b.von)).map(w=>{
     const c=aC(w.auditor),ini=w.auditor.split(' ').map(x=>x[0]).join('');
     const canDelete=isAdmin||w.auditor===currentUser;
     return`<div class="fi">
       <div class="fiav" style="background:${c}">${ini}</div>
       <div class="fiinfo">${w.auditor} – ${w.label}<div class="fid">${fd(w.von)} – ${fd(w.bis)}</div></div>
       ${isAdmin?`<button onclick="confirmWunsch(${w.id})" title="Bestätigen und in echte Ferien übernehmen" style="border:none;background:#10B981;color:#fff;border-radius:6px;padding:5px 9px;font-size:11px;cursor:pointer;margin-right:4px;white-space:nowrap">✓ Bestätigen</button>`:''}
-      ${canDelete?`<button class="fidel" onclick="rmWunschFerien(${w.id})"><i class="ti ti-trash"></i></button>`:''}
+      ${canDelete?`<button class="fidel" onclick="editWunsch(${w.id})" title="Bearbeiten" style="color:var(--blue)"><i class="ti ti-pencil"></i></button><button class="fidel" onclick="rmWunschFerien(${w.id})" title="Löschen"><i class="ti ti-trash"></i></button>`:''}
     </div>`;
   }).join('');
 }
@@ -1236,7 +1302,8 @@ function ferGanttHTML(entries,isWish){
       const bg=isWish?`repeating-linear-gradient(45deg,${col}cc,${col}cc 4px,${col}55 4px,${col}55 8px)`:col;
       const border=isWish?`1.5px dashed ${col}`:'none';
       const txt=zoom?`<span style="padding:0 4px;font-size:10px;font-weight:600;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${f.label||''}</span>`:'';
-      return`<div title="${a} – ${f.label||''}: ${fd(f.von)} – ${fd(f.bis)} (${len} Tag${len>1?'e':''})" style="position:absolute;left:${pct(s)}%;width:max(${pct(len)}%,4px);top:3px;bottom:3px;background:${bg};border:${border};border-radius:4px;z-index:2;display:flex;align-items:center;overflow:hidden;box-sizing:border-box">${txt}</div>`;
+      const canEdit=isWish?(ferIsAdmin()||a===currentUser):ferIsAdmin();
+      return`<div ${canEdit?`onclick="ferBarClick(${f.id},${isWish})" `:''}title="${a} – ${f.label||''}: ${fd(f.von)} – ${fd(f.bis)} (${len} Tag${len>1?'e':''})${canEdit?' · antippen zum Bearbeiten':''}" style="${canEdit?'cursor:pointer;':''}position:absolute;left:${pct(s)}%;width:max(${pct(len)}%,4px);top:3px;bottom:3px;background:${bg};border:${border};border-radius:4px;z-index:2;display:flex;align-items:center;overflow:hidden;box-sizing:border-box">${txt}</div>`;
     }).join('');
     return`<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
       <div style="width:120px;flex-shrink:0;display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--tx)" title="${a}">
@@ -1276,7 +1343,12 @@ function renderFerChart(){
   const el=document.getElementById('fer-chart');if(!el)return;
   el.innerHTML=ferGanttHTML(ferien,false);
 }
-function renderFerList(){document.getElementById('fer-list').innerHTML=ferien.length?ferien.sort((a,b)=>a.von.localeCompare(b.von)).map(f=>{const c=aC(f.auditor),ini=f.auditor.split(' ').map(w=>w[0]).join('');return`<div class="fi"><div class="fiav" style="background:${c}">${ini}</div><div class="fiinfo">${f.auditor} – ${f.label}<div class="fid">${fd(f.von)} – ${fd(f.bis)}</div></div><button class="fidel" onclick="rmFerien(${f.id})"><i class="ti ti-trash"></i></button></div>`;}).join(''):'<div style="font-size:11px;color:var(--tx3);padding:6px">Noch keine Ferien.</div>';}
+function renderFerList(){
+  const admin=ferIsAdmin();
+  const hint=document.getElementById('fer-fix-hint');if(hint)hint.style.display=admin?'none':'';
+  document.getElementById('fer-list').innerHTML=ferien.length?ferien.slice().sort((a,b)=>a.von.localeCompare(b.von)).map(f=>{const c=aC(f.auditor),ini=f.auditor.split(' ').map(w=>w[0]).join('');
+    return`<div class="fi"><div class="fiav" style="background:${c}">${ini}</div><div class="fiinfo">${f.auditor} – ${f.label}<div class="fid">${fd(f.von)} – ${fd(f.bis)}</div></div>${admin?`<button class="fidel" onclick="editFerien(${f.id})" title="Bearbeiten" style="color:var(--blue)"><i class="ti ti-pencil"></i></button><button class="fidel" onclick="rmFerien(${f.id})" title="Löschen"><i class="ti ti-trash"></i></button>`:''}</div>`;}).join(''):'<div style="font-size:11px;color:var(--tx3);padding:6px">Noch keine Ferien.</div>';
+}
 // ═══ PERSONEN-AUDITS ═══
 
 function rmPA(id){personAudits=personAudits.filter(p=>p.id!==id);renderPA();renderPA2();renderAuditors();saveNow();showToast('🗑 Gelöscht',1500);}
@@ -6227,6 +6299,8 @@ function sbRefreshUI(){
   renderAll();buildDF();buildAudSels();
   if(curView==='aud'){renderAuditors();renderAudTotals();}
   if(curView==='pa'){renderPersonRegister();renderPersonMatrix();}
+  const fp=document.getElementById('aud-panel-ferien');
+  if(curView==='aud'&&fp&&fp.style.display!=='none'){renderFerList();renderFerChart();renderWunschList();renderWunschChart();}
 }
 
 // Schreiben mit Konflikt-Erkennung. Rückgabe: Zeile | 'conflict' | null (Fehler)
