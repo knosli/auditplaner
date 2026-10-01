@@ -4516,6 +4516,11 @@ async function doLogout(){
     await new Promise(r=>setTimeout(r,1500));
     if(sbHasPending()&&!await askConfirm('Einige Änderungen konnten noch nicht gespeichert werden. Beim Abmelden gehen sie verloren. Trotzdem abmelden?',{ok:'Trotzdem abmelden',danger:true}))return;
   }
+  const onlyLocal=sbMissingText();
+  if(onlyLocal&&!await askConfirm(`Achtung: In der Datenbank fehlen Spalten. Diese Daten liegen nur auf diesem Gerät und werden beim Abmelden gelöscht:
+${onlyLocal}
+
+Zuerst Admin → Anleitung & SQL → Skript ausführen lassen. Trotzdem abmelden?`,{ok:'Trotzdem abmelden',danger:true}))return;
   document.getElementById('app').style.display='none';
   document.getElementById('hdr').style.display='none';
   if(sbAuth)await sbAuth.auth.signOut();
@@ -5961,6 +5966,10 @@ function openSammelbox(){
   const box=window._piCollectBox||[];
   const activeOptions=data.filter(e=>e.active).sort((a,b)=>a.name.localeCompare(b.name)).map(e=>`<option value="${e.id}">${e.name}${e.psp?' ('+e.psp+')':''}</option>`).join('')
     +(data.some(e=>!e.active)?`<optgroup label="— inaktive Baustellen —">${data.filter(e=>!e.active).sort((a,b)=>a.name.localeCompare(b.name)).map(e=>`<option value="${e.id}">${e.name}${e.psp?' ('+e.psp+')':''} (inaktiv)</option>`).join('')}</optgroup>`:'');
+  const stEl=document.getElementById('pisb-store');
+  if(stEl)stEl.innerHTML=!sbConnected?'<span style="color:#D97706">⚠ Keine Verbindung zur Datenbank – zurzeit nur auf diesem Gerät gespeichert.</span>'
+    :sbMissingCols.has('piCollectBox')?'<span style="color:#DC2626">⚠ Die Sammelbox wird zurzeit <b>nur auf diesem Gerät</b> gespeichert (Spalte fehlt in der Datenbank). Admin → Anleitung & SQL → Skript ausführen, dann ist sie für alle gespeichert.</span>'
+    :'<span style="color:#10B981">✓ In der Datenbank gespeichert – auf allen Geräten und für das ganze Team verfügbar.</span>';
   const list=document.getElementById('sb-list');
   if(list){
     list.innerHTML=box.length?box.map((it,ci)=>`
@@ -6162,7 +6171,7 @@ let sbUrl=localStorage.getItem(SB_URL_KEY)||SB_DEFAULT_URL;
 let sbKey=localStorage.getItem(SB_KEY_KEY)||SB_DEFAULT_KEY;
 let sbConnected=false;
 let sbPollTimer=null;
-let sbLastStatus=0;
+let sbLastStatus=0,sbLastErr='';
 
 async function getAuthToken(){
   if(sbAuth){
@@ -6183,7 +6192,7 @@ async function sbFetch(path,opts={}){
     const headers=await sbHeadersAuth();
     const r=await fetch(sbUrl+'/rest/v1/'+path,{...opts,headers:{...headers,...(opts.headers||{})}});
     sbLastStatus=r.status;
-    if(!r.ok){console.warn('Supabase error:',r.status,await r.text());return null;}
+    if(!r.ok){sbLastErr=await r.text();console.warn('Supabase error:',r.status,sbLastErr);return null;}
     if(r.status===204||r.headers.get('content-length')==='0')return true;
     const text=await r.text();
     if(!text||!text.trim())return true;
@@ -6222,7 +6231,8 @@ function updateSBStatus(ok){
 // werden die Änderungen beider Seiten zusammengeführt (js/merge.js) und erneut gespeichert.
 let sbBase=null,sbBaseUpdatedAt=null,sbBusy=false,sbPushAgain=false,sbRetryT=null;
 let sbSync={state:'idle',at:0,msg:''};
-let sbNoUpdatedBy=false,sbNoOptional=false,sbLogMissing=false;
+// Spalten, die in der Datenbank (noch) fehlen: werden nicht geschrieben, Daten bleiben dann nur lokal → Warnung
+const sbMissingCols=new Set();let sbLogMissing=false,sbMissingWarned=false;
 // Datenfelder = Spalten in audit_state. raw: Spalte enthält den Wert direkt (nicht als JSON-Text).
 const SB_FIELDS={
   data:{get:()=>data,set:v=>{data=v;ensureCreatedAt();ensurePersonalHistory();}},
@@ -6260,7 +6270,7 @@ function sbRowFrom(vals){
   const row={};
   for(const f in vals){
     if(!SB_FIELDS[f])continue;
-    if(sbNoOptional&&SB_FIELDS[f].opt)continue;
+    if(sbMissingCols.has(f))continue;
     row[f]=SB_FIELDS[f].raw?vals[f]:JSON.stringify(vals[f]);
   }
   return row;
@@ -6301,7 +6311,7 @@ const LOCAL_DATA_KEYS=[SK,'anliker_persons','anliker_berat_plan','anliker_pi_col
 function sbHasPending(){
   if(!sbBase)return false;
   const cur=sbCollect();
-  for(const f in cur){if(sbNoOptional&&SB_FIELDS[f].opt)continue;if(!mgEq(cur[f],sbBase[f]))return true;}
+  for(const f in cur){if(sbMissingCols.has(f))continue;if(!mgEq(cur[f],sbBase[f]))return true;}
   return false;
 }
 function sbRefreshUI(){
@@ -6316,16 +6326,16 @@ function sbRefreshUI(){
 async function sbWrite(vals,expectAt){
   const tries=[];
   for(let i=0;i<3;i++){
+    if(sbMissingCols.size>20)return null;
     const row=sbRowFrom(vals);
     row.updated_at=new Date().toISOString();
-    if(!sbNoUpdatedBy)row.updated_by=currentUser||'';
+    if(!sbMissingCols.has('updated_by'))row.updated_by=currentUser||'';
     const filter=expectAt?'updated_at=eq.'+encodeURIComponent(expectAt):'updated_at=is.null';
     const res=await sbFetch('audit_state?id=eq.1&'+filter,{method:'PATCH',body:JSON.stringify(row),headers:{'Prefer':'return=representation'}});
     if(Array.isArray(res))return res.length?res[0]:'conflict';
-    // Fehler 400: evtl. fehlen neuere Spalten in Supabase → ohne diese nochmals versuchen
-    if(sbLastStatus!==400)return null;
-    if(!sbNoUpdatedBy){sbNoUpdatedBy=true;continue;}
-    if(!sbNoOptional){sbNoOptional=true;console.warn('sbPush: neuere Spalten fehlen in Supabase – ohne sie gespeichert. Siehe Admin → Anleitung & SQL.');continue;}
+    // Fehler 400 «Spalte fehlt» (PGRST204): genau diese Spalte weglassen und nochmals versuchen
+    const miss=sbLastStatus===400&&(sbLastErr.match(/'([A-Za-z_]+)' column/)||[])[1];
+    if(miss&&(SB_FIELDS[miss]||miss==='updated_by')&&!sbMissingCols.has(miss)){sbMissingCols.add(miss);sbWarnMissing();i--;continue;}
     return null;
   }
   return null;
@@ -6373,6 +6383,9 @@ async function sbPush(){
 
 // Server-Stand übernehmen und mit eigenen, noch nicht gespeicherten Änderungen zusammenführen
 function sbMergeRemote(row){
+  const before=sbMissingCols.size;
+  [...Object.keys(SB_FIELDS),'updated_by'].forEach(f=>{if(!(f in row))sbMissingCols.add(f);else sbMissingCols.delete(f);});
+  if(sbMissingCols.size&&sbMissingCols.size!==before)sbWarnMissing();
   const remote=sbParseRow(row);
   const first=!sbBase;
   const local=sbCollect();
@@ -6410,6 +6423,15 @@ async function sbPull(){
   if(sbPushAgain||sbHasPending()){sbPushAgain=false;sbPush();}
 }
 
+// Fehlende Datenbank-Spalten: was dort gespeichert würde, bleibt nur auf diesem Gerät
+const SB_COL_LABELS={...MG_LABELS,data:'Baustellen',updated_by:'«zuletzt geändert von»'};
+function sbMissingText(){return[...sbMissingCols].filter(f=>f!=='updated_by').map(f=>SB_COL_LABELS[f]||f).join(', ');}
+function sbWarnMissing(){
+  const t=sbMissingText();if(!t)return;
+  console.warn('Supabase: fehlende Spalten in audit_state:',[...sbMissingCols]);
+  if(!sbMissingWarned&&document.body.classList.contains('admin-mode')){sbMissingWarned=true;
+    setTimeout(()=>showToast('⚠ Datenbank unvollständig – nur lokal gespeichert: '+t+'. Admin → Anleitung & SQL → Skript ausführen',8000),1500);}
+}
 // Hinweis, wenn jemand anderes etwas geändert hat
 function sbNotifyRemote(changes,who,selBefore){
   const name=who&&who!==currentUser?who:'Jemand';
@@ -6561,7 +6583,8 @@ async function openAdminGuide(){
   const os=document.getElementById('adm-ors-st');if(os)os.innerHTML=window._orsKey?'<span style="color:#10B981">✓ hinterlegt</span>':'<span style="color:#D97706">– noch keiner hinterlegt</span>';
   const ok=sbConnected?await sbFetch('rpc/is_app_admin',{method:'POST',body:'{}'}):null;
   const st=document.getElementById('adm-setup-st');
-  if(st)st.innerHTML=ok===null?'<span style="color:#D97706">– noch nicht eingerichtet</span>':'<span style="color:#10B981">✓ Datenbank eingerichtet</span>';
+  const miss=sbMissingText();
+  if(st)st.innerHTML=ok===null?'<span style="color:#D97706">– noch nicht eingerichtet</span>':miss?`<span style="color:#DC2626">⚠ Spalten fehlen (nur lokal gespeichert: ${escH(miss)}) – Skript nochmals ausführen</span>`:'<span style="color:#10B981">✓ Datenbank eingerichtet</span>';
 }
 
 async function openAuditLog(){

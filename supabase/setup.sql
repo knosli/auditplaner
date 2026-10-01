@@ -23,8 +23,26 @@ $$;
 revoke all on function public.is_app_admin() from public, anon;
 grant execute on function public.is_app_admin() to authenticated;
 
--- 2) Wer hat zuletzt gespeichert (für den Hinweis «X hat soeben … geändert»)
+-- 2) Alle Spalten, in denen der Planer Daten speichert (fehlt eine, bleiben diese Daten nur
+--    lokal im Browser). Bereits vorhandene Spalten bleiben unverändert.
 alter table public.audit_state add column if not exists updated_by text;
+alter table public.audit_state add column if not exists "data" text;
+alter table public.audit_state add column if not exists "plans" text;
+alter table public.audit_state add column if not exists "auditors" text;
+alter table public.audit_state add column if not exists "ferien" text;
+alter table public.audit_state add column if not exists "ghostAudits" text;
+alter table public.audit_state add column if not exists "personAudits" text;
+alter table public.audit_state add column if not exists "beratPlan" text;
+alter table public.audit_state add column if not exists "persons" text;
+alter table public.audit_state add column if not exists "auditorMeta" text;
+alter table public.audit_state add column if not exists "auditorColors" text;
+alter table public.audit_state add column if not exists "piCollectBox" text;
+alter table public.audit_state add column if not exists "auditTarget" integer;
+alter table public.audit_state add column if not exists "tempWorkers" text;
+alter table public.audit_state add column if not exists "ferienWunsch" text;
+alter table public.audit_state add column if not exists "orsKey" text;
+alter table public.audit_state add column if not exists "deptMeta" text;
+alter table public.audit_state add column if not exists "rapporte" text;
 
 -- 3) Verlauf: automatische Sicherung früherer Stände
 --    Vor einer Änderung wird der bisherige Stand gespeichert, höchstens einmal pro Stunde,
