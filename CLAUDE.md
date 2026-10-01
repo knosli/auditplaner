@@ -11,8 +11,8 @@ Beratungen, Rapporten und Ferien der Auditoren. Sprache der Oberfläche: Deutsch
 - Vor jedem PR: App im Browser laden (Desktop- und Mobile-Breite) und in der Konsole
   prüfen, dass keine JavaScript-Fehler auftreten.
 - Bei jeder Änderung an der App die Versionsnummer erhöhen, und zwar überall in
-  `index.html`: im Header (`<span ... title="Version">v2.93</span>`) und in den Links
-  `css/style.css?v=2.93`, `js/merge.js?v=2.93` und `js/app.js?v=2.93`. Der `?v=`-Zusatz
+  `index.html`: im Header (`<span ... title="Version">v2.94</span>`) und in den Links
+  `css/style.css?v=2.94`, `js/merge.js?v=2.94` und `js/app.js?v=2.94`. Der `?v=`-Zusatz
   sorgt dafür, dass Browser nach einem Update keine alte Datei aus dem Cache verwenden.
 - Tests für die Zusammenführung: `node tests/merge.test.js` (muss grün sein).
 - Keine Browser-Dialoge (`confirm`, `prompt`, `alert`): `askConfirm()`, `askText()`,
@@ -103,7 +103,9 @@ KW-Nummern auf 1–52 begrenzen oder mit `dateToKW()` vergleichen, ohne das Jahr
   den eigenen Änderungen zusammengeführt (`js/merge.js`, 3-Wege-Merge nach `id`) und
   erneut gespeichert. Abgleich alle 30 s (zuerst nur `updated_at`).
 - Neue Datenfelder: Eintrag in `SB_FIELDS` (mit `opt:1`) + neue Spalte in Supabase
-  (in `supabase/setup.sql` ergänzen). Fehlen Spalten, speichert `sbWrite` ohne sie.
+  (in `supabase/setup.sql` als `add column if not exists` ergänzen). Fehlende Spalten erkennt die
+  App beim Lesen (`sbMissingCols`), schreibt ohne sie und warnt (Admin-Toast, Anleitung, Sammelbox,
+  Abmelden) – diese Daten liegen dann nur lokal.
 - Weitere Tabellen (aus `supabase/setup.sql`): `app_admins` + Funktion `is_app_admin()`,
   `audit_state_history` (automatischer Verlauf per Trigger), `audit_log`
   (Änderungsprotokoll, von der App nach jedem Speichern geschrieben), `presence`.
