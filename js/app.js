@@ -94,19 +94,20 @@ const onVac=(aud,dt)=>ferien.some(f=>f.auditor===aud&&dt>=f.von&&dt<=f.bis);
 function hasBeratPlan(e){
   return beratPlan.some(p=>p.bsId===e.id&&p.date>=today());
 }
-function status(e){
+// now (optional): Zeitpunkt in ms, an dem die Ampel gelten soll (Standard: jetzt). Tourguide nutzt den Audit-Tag.
+function status(e,now){
   if(!e.active)return'inactive';
   if(e.paused)return'paused';
   if(hasP(e))return'planned';
   if(hasBeratPlan(e))return'beratung';
   if(!e.lastAudit&&!e.resumeFrom){
     if(!e.createdAt)return'new';
-    const dn=dl(e);
+    const dn=dl(e,now);
     if(dn<-S('due_overdue_days'))return'overdue';
     if(dn<=0)return'due';
     return'new';
   }
-  const d=dl(e);
+  const d=dl(e,now);
   if(d<-S('due_overdue_days'))return'overdue';
   if(d<=0)return'due';
   if(d<=S('due_soon_days'))return'soon';
@@ -130,11 +131,11 @@ function ensureCreatedAt(){
   });
   if(n)setTimeout(()=>{try{saveNow();}catch(x){}},800);
 }
-function dl(e){
+function dl(e,now){
   // Nie auditierte Baustellen: Rhythmus läuft ab Erfassungsdatum
   const ref=e.lastAudit||e.resumeFrom||e.createdAt;
   if(!ref)return-999;
-  return Math.round((parseDate(ref).getTime()+e.rhythm*86400000-Date.now())/86400000);
+  return Math.round((parseDate(ref).getTime()+e.rhythm*86400000-(now||Date.now()))/86400000);
 }
 function dotC(e){if(planned.has(e.id))return'#10B981';if(e.type==='werkhof')return'#EA580C';const s=status(e);if(s==='paused')return'rgba(148,163,184,.75)';if(s==='planned')return'#6366F1';if(s==='beratung')return'#8B5CF6';if(s==='overdue')return'#EF4444';if(s==='due')return'#F59E0B';if(s==='soon')return'#FDE047';return'#10B981';}
 // ═══ STORAGE ═══
@@ -4047,13 +4048,41 @@ async function computeMobRoute(opts){
     if(noCoord.length&&!opts.silent)showToast(`⚠ ${noCoord.length} Stopp(s) ohne Koordinaten – ans Ende gestellt`,3500);
   }finally{_mobRouteBusy=false;renderMobPlan();}
 }
+// Prüft einen openrouteservice-Schlüssel mit einer kleinen Fahrzeit-Abfrage (Luzern ↔ Zürich)
+async function orsTestKey(key){
+  try{
+    const r=await fetch('https://api.openrouteservice.org/v2/matrix/driving-car',{method:'POST',
+      headers:{'Authorization':key,'Content-Type':'application/json'},
+      body:JSON.stringify({locations:[[8.3093,47.0502],[8.5417,47.3769]],metrics:['duration']})});
+    if(r.status===401||r.status===403)return{ok:false,msg:'Schlüssel ungültig (vollständig kopiert?)'};
+    if(r.status===429)return{ok:false,msg:'Tageslimit erreicht – morgen nochmals versuchen'};
+    if(!r.ok)return{ok:false,msg:'Fehler '+r.status};
+    const d=await r.json();const sec=d.durations&&d.durations[0]&&d.durations[0][1];
+    if(!sec)return{ok:false,msg:'unerwartete Antwort'};
+    return{ok:true,msg:`Luzern → Zürich ≈ ${Math.round(sec/60)} min Fahrzeit`};
+  }catch(e){return{ok:false,msg:'keine Verbindung zu openrouteservice.org'};}
+}
 async function setOrsKey(){
-  const v=await askText('openrouteservice API-Schlüssel (kostenlos unter openrouteservice.org → Sign up → API Key).\nLeer lassen = Routen nach Luftlinie.',window._orsKey||'');
+  const v=await askText(`Routen-Schlüssel für echte Fahrzeiten (statt Luftlinie)
+
+So bekommst du ihn (kostenlos, einmalig, ca. 5 Minuten):
+1. openrouteservice.org öffnen → «Sign up» → Konto anlegen und E-Mail bestätigen
+2. Anmelden → Dashboard → bei «Request a token» Typ «Standard» wählen, Name z.B. «Auditplaner» → CREATE TOKEN
+3. Den angezeigten Schlüssel (Key) kopieren und hier einfügen
+
+Er gilt danach für alle Benutzer. Leer lassen = Fahrzeiten nach Luftlinie.`,window._orsKey||'');
   if(v===null)return;
-  window._orsKey=v.trim();
+  const key=v.trim();
+  if(key){
+    showToast('🔎 Schlüssel wird geprüft…',3000);
+    const t=await orsTestKey(key);
+    if(!t.ok&&!await askConfirm(`⚠ Der Schlüssel funktioniert nicht: ${t.msg}.\n\nTrotzdem speichern?`,{ok:'Trotzdem speichern',cancel:'Abbrechen'}))return;
+    if(t.ok)setTimeout(()=>showToast('✓ Schlüssel funktioniert: '+t.msg,4500),50);
+  }
+  window._orsKey=key;
   try{localStorage.setItem('anliker_ors_key',window._orsKey);}catch(e){}
   saveNow();
-  showToast(window._orsKey?'✓ Routen-Schlüssel gespeichert (für alle synchronisiert)':'Routen-Schlüssel entfernt',3000);
+  if(!key)showToast('Routen-Schlüssel entfernt – Fahrzeiten nach Luftlinie',3000);
 }
 function haversine(lat1,lng1,lat2,lng2){const R=6371,dLat=(lat2-lat1)*Math.PI/180,dLng=(lng2-lng1)*Math.PI/180,a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));}
 
@@ -4619,10 +4648,9 @@ const SETTINGS_DEF=[
   {k:'tg_min_10_19',l:'Audit-Dauer bei 10–19 Personen',def:60,min:5,max:480,u:'min'},
   {k:'tg_min_20',l:'Audit-Dauer bei 20+ Personen',def:75,min:5,max:480,u:'min'},
   {k:'tg_min_unknown',l:'Audit-Dauer, Personal unbekannt',def:45,min:5,max:480,u:'min'},
-  {k:'tg_bonus_20',l:'Umweg in Kauf nehmen: Baustelle mit 20+ Pers.',def:20,min:0,max:180,u:'min'},
-  {k:'tg_bonus_10',l:'Umweg in Kauf nehmen: 10–19 Pers.',def:10,min:0,max:180,u:'min'},
-  {k:'tg_bonus_4',l:'Umweg in Kauf nehmen: 4–9 Pers.',def:5,min:0,max:180,u:'min'},
-  {k:'tg_bonus_pref',l:'Umweg in Kauf nehmen: bevorzugte Abteilung',def:10,min:0,max:180,u:'min'},
+  {k:'tg_harvest_min',l:'Ort ausschöpfen: alle roten/orangen Baustellen im Umkreis von … Fahrzeit mitnehmen',def:15,min:0,max:60,u:'min'},
+  {k:'tg_force_days',l:'Immer einplanen, wenn mehr als … Tage rot (auch allein in einer Gegend)',def:20,min:0,max:180,u:'Tage'},
+  {k:'tg_tie_min',l:'Gleich weit: Umwege, die sich um höchstens … unterscheiden (dann entscheiden Grösse, ★, Fälligkeit)',def:5,min:0,max:30,u:'min'},
   {k:'tg_fixed_pa',l:'Geplantes Personen-Audit belegt',def:45,min:0,max:480,u:'min'},
   {k:'tg_fixed_berat',l:'Geplante Beratung belegt',def:45,min:0,max:480,u:'min'}]},
  {grp:'Verteilen (KW-Planung)',items:[
@@ -4691,10 +4719,15 @@ function rulesHTML(){
     `Temporäre Mitarbeitende: nur Personal-Nummern (keine Namen), pro Einheit bei jedem Import ersetzt.`,
     `Manuelle Erfassung (für Einheiten ohne brauchbare Einsatzliste): im Detail-Panel ✏️ bei «Personal» oder Admin → «Personal manuell erfassen» (mehrere Baustellen einer Abteilung). Wirkt wie ein Import-Wert (Verlauf, Trend, Tourguide), ersetzt einen vorhandenen Wert derselben KW und ändert den Status der Baustelle nicht (kein Pausieren/Reaktivieren).`]) +
   sec('compass','Tourguide',[
-    `Vorschläge nur für fällige Baustellen mit Koordinaten <b>und bekanntem Personal vor Ort (mehr als 0)</b>. Die Personalangabe (Import oder manuell) darf höchstens ${v('tg_pers_max_age')} Wochen älter sein als die geplante KW – sonst gilt das Personal als unbekannt. Solche Baustellen werden nie vorgeschlagen, aber unter dem Vorschlag aufgelistet.`,
+    `Vorschläge nur für <b>rote (überfällige) und orange (fällige)</b> Baustellen mit Koordinaten <b>und bekanntem Personal vor Ort (mehr als 0)</b>. Gelbe, neue (noch nicht fällige) und grüne Baustellen werden nie vorgeschlagen – sonst lägen Audits zu nahe beieinander. Die Personalangabe (Import oder manuell) darf höchstens ${v('tg_pers_max_age')} Wochen älter sein als die geplante KW – sonst gilt das Personal als unbekannt. Solche Baustellen werden nie vorgeschlagen, aber unter dem Vorschlag aufgelistet.`,
     `Nie: pausiert, inaktiv, ausgeschlossene Abteilungen, diese KW bereits (von irgendwem) eingeplant, 0 Personal oder keine/zu alte Personalangabe.`,
-    `Auswahl: 1. Ampel – zuerst werden alle roten Baustellen eingeplant, die noch Platz haben, dann orange, gelb, neu. 2. Innerhalb derselben Farbe entscheidet der kleinste Umweg zur bestehenden Tagesroute (bereits geplante Baustellen und Termine wie Rapporte sind Anker) – so entstehen regionale Tage.`,
-    `Grössere Baustellen und bevorzugte Abteilungen dürfen mehr Umweg kosten: 20+ Pers. ${v('tg_bonus_20')} min · 10–19 ${v('tg_bonus_10')} min · 4–9 ${v('tg_bonus_4')} min · bevorzugte Abteilung ★ ${v('tg_bonus_pref')} min (alle 0 = rein geografisch).`,
+    `<b>Ort ausschöpfen:</b> Ist an einem Tag eine Baustelle oder ein Termin in einer Gegend, werden zuerst alle roten und orangen Baustellen im Umkreis von ${v('tg_harvest_min')} min Fahrzeit mitgenommen (soweit der Tag Platz hat) – damit man nicht wegen einer einzelnen Baustelle nochmals hinfahren muss. Das gilt für bereits geplante Baustellen, Termine und jede neu gewählte Baustelle.`,
+    `Auswahl: zuerst rot, dann orange. Innerhalb derselben Farbe entscheidet der kleinste Umweg zur bestehenden Tagesroute. Liegen Umwege höchstens ${v('tg_tie_min')} min auseinander, gelten sie als gleich weit – dann entscheiden Personal-Grösse, bevorzugte Abteilung ★ und wie lange die Baustelle schon fällig ist.`,
+    `Die Ampel gilt am <b>Audit-Tag</b>, nicht heute: Eine Baustelle, die heute gelb ist, aber am geplanten Tag orange, wird für diesen Tag berücksichtigt – für frühere Tage der Woche nicht.`,
+    `Keine zweite Fahrt in dieselbe Gegend in derselben Woche: Wird eine Gegend an einem Tag schon besucht, kommen ihre Baustellen nur an diesen Tag (was keinen Platz mehr hat, erscheint im Hinweis «Ort nicht ausgeschöpft»).`,
+    `Eine neue Gegend wird an einem Tag nur angefangen, wenn alle ihre roten und orangen Baustellen dort Platz haben (Ausnahmen: Gegend beim Startort; die Gegend ist ohnehin zu gross für einen Tag; oder die Baustelle ist schon mehr als ${v('tg_force_days')} Tage rot – dann wird sie auf jeden Fall eingeplant, damit nichts ewig liegen bleibt). Sonst kommt sie an einem anderen Tag oder in einer anderen Woche dran.`,
+    `Hinweise im Vorschlag: «Wenig wirtschaftlich», wenn ein Tag mehr Fahrzeit als Audit-/Terminzeit hat; «👥 … ist auch in der Nähe», wenn andere Auditoren am selben Tag Baustellen im Umkreis geplant haben.`,
+    `Bleiben im Umkreis eines Tages Baustellen offen (Tag voll oder Personal unbekannt), zeigt der Vorschlag unter dem Tag «⚠ Ort nicht ausgeschöpft» – mit «+ trotzdem hinzufügen». Beim Ausgleich zwischen den Tagen wird keine Baustelle von ihren Nachbarn getrennt.`,
     `Audit-Dauer: 1–3 Pers. ${v('tg_min_1_3')} · 4–9 ${v('tg_min_4_9')} · 10–19 ${v('tg_min_10_19')} · 20+ ${v('tg_min_20')} · unbekannt ${v('tg_min_unknown')} min (inkl. Schreiben/Rapportieren; Fahrzeit separat).`,
     `Tag: Abfahrt ab Startadresse um ${tgHM(S('tg_day_start')*60)}, max. ${v('tg_day_hours')} h Arbeitszeit bis zur Rückkehr (inkl. aller Fahrten und Wartezeiten, ohne Mittagspause), max. ${v('tg_max_per_day')} Baustellen.`,
     `Mittagspause ${tgHM(S('tg_lunch_start')*60)}–${tgHM(S('tg_lunch_start')*60+S('tg_lunch_dur'))} (${v('tg_lunch_dur')} min): keine Baustellen-Audits, Personen-Audits oder Beratungen – ein Audit, das nicht vor der Pause fertig wäre, beginnt nach der Pause. Fahrten werden unterbrochen. Rapporte mit fixer Uhrzeit dürfen in der Pause liegen. Endet der Tag vorher, entfällt die Pause.`,
@@ -4765,7 +4798,7 @@ function tgPersClass(e){
   if(n===null||n===undefined)return 4;
   if(n>=20)return 0;if(n>=10)return 1;if(n>=4)return 2;return 3;
 }
-function tgUrgency(e){const s=status(e);return{overdue:0,due:1,soon:2,new:3}[s];}
+function tgUrgency(e,ds){const s=status(e,ds?parseDate(ds).getTime()+12*3600000:undefined);return{overdue:0,due:1,soon:2,new:3}[s];}
 // «Personal vor Ort» für Tourguide: bekannter Wert grösser 0, und die Angabe ist nicht älter als eingestellt
 // (relativ zur geplanten KW). Ohne Angabe oder mit veraltetem Wert gilt das Personal als unbekannt -> nie vorschlagen.
 function tgYearForKW(kw){return pmYearFor(kw);}
@@ -4782,21 +4815,23 @@ function tgPersonalState(e,targetKW,targetYear){
   if(wk>S('tg_pers_max_age'))return'stale';
   return e.lastPersonalCount>0?'ok':'zero';
 }
-function tgCandidates(aud,kw,noPers){
+function tgCandidates(aud,kw,noPers,dayDates){
   const m=auditorMeta[aud]||{};const pref=new Set(m.prefDepts||[]),excl=new Set(m.exclDepts||[]);
   const ks=kwToDate(kw),ke=kwToDate(kw+1);
   const plannedThisKW=new Set(plans.filter(p=>p.date>=ks&&p.date<ke).map(p=>p.bsId));
   return data.filter(e=>{
     if(!e.active||e.paused||!e.lat||!e.lng)return false;
-    if(tgUrgency(e)===undefined)return false;                 // ok / geplant / Beratung -> nicht vorschlagen
+    // nur rot + orange – und zwar am Audit-Tag (was heute gelb ist, kann bis dann orange sein)
+    if(!(dayDates||[null]).some(ds=>{const u=tgUrgency(e,ds);return u===0||u===1;}))return false;
     if(plannedThisKW.has(e.id))return false;                  // von irgendwem diese KW eingeplant
     if(deptParts(e.dept).some(d=>excl.has(d)))return false;   // ausgeschlossen (hart)
     // Nur mit Personal vor Ort: bekannt, > 0 und aktuell. Sonst NIE vorschlagen (unbekannt/veraltet werden aufgelistet).
     const ps=tgPersonalState(e,kw,tgYearForKW(kw));
     if(ps!=='ok'){if(noPers&&(ps==='unknown'||ps==='stale'))noPers.push({e,state:ps});return false;}
     return true;
-  }).map(e=>{const isPref=deptParts(e.dept).some(d=>pref.has(d));return{e,isPref,urg:tgUrgency(e),pers:tgPersClass(e),min:tgAuditMin(e)};})
-    // Priorität: 1) Ampel  2) Personal-Grösse (mehr Personal = höheres Risiko)  3) bevorzugte Abteilung  4) am längsten fällig
+  }).map(e=>{const isPref=deptParts(e.dept).some(d=>pref.has(d));const urgDay=(dayDates||[null]).map(ds=>{const u=tgUrgency(e,ds);return u===0||u===1?u:null;});
+    return{e,isPref,urgDay,urg:Math.min(...urgDay.map(u=>u===null?9:u)),pers:tgPersClass(e),min:tgAuditMin(e)};})
+    // Priorität: 1) Ampel (rot vor orange)  2) Personal-Grösse (mehr Personal = höheres Risiko)  3) bevorzugte Abteilung  4) am längsten fällig
     .sort((a,b)=>a.urg-b.urg||a.pers-b.pers||(a.isPref?0:1)-(b.isPref?0:1)||dl(a.e)-dl(b.e));
 }
 // ─── Tagesablauf-Simulation ───────────────────────────────────────────────────────────────
@@ -4895,7 +4930,7 @@ async function tgCompute(){
   const events=dayDates.map(ds=>tgDayEvents(aud,ds));
   await tgGeocodeEvents(events.flat());
   const noPers=[];
-  const cands=tgCandidates(aud,kw,noPers);
+  const cands=tgCandidates(aud,kw,noPers,dayDates);
   const fixedAll=[...new Set(fixedPlans.flat())];
   const evPts=events.flat().filter(ev=>ev.lat&&ev.lng);
   const pool=cands.slice(0,Math.max(0,54-fixedAll.length-evPts.length));
@@ -4911,37 +4946,69 @@ async function tgCompute(){
   const fixedNodes=fixedPlans.map(list=>list.map(e=>idxFixed.get(e.id)));
   const base=fixedNodes.map((n,d)=>tgPlanDay(d,n).sim);
   const ok=(d,p)=>p.sim.total<=dayLen+0.5&&p.sim.late<=base[d].late+0.5;
-  // Auswahl: Ampel-Stufe für Stufe (rot vor orange vor gelb vor neu). Innerhalb einer Stufe wird immer die
-  // Baustelle mit dem kleinsten Umweg zur bestehenden Tagesroute genommen (fixe Baustellen und Termine sind
-  // Anker) - grössere Baustellen und bevorzugte Abteilungen dürfen einen einstellbaren Umweg mehr kosten.
-  // So entstehen regionale Tage statt Hin-und-her-Fahrten quer durchs Land.
+  // Auswahl:
+  // 1. Ort ausschöpfen: Rund um alles, was an einem Tag schon feststeht (geplante Baustellen, Termine), werden
+  //    zuerst alle roten und orangen Baustellen im Umkreis von tg_harvest_min Minuten Fahrzeit mitgenommen.
+  // 2. Danach Ampel-Stufe für Stufe (rot vor orange) die Baustelle mit dem kleinsten Umweg (eine neue Gegend nur,
+  //    wenn sie an dem Tag ganz Platz hat, siehe mayOpen); liegen zwei innerhalb
+  //    von tg_tie_min Minuten gleichauf, entscheiden Personal-Grösse, bevorzugte Abteilung, Fälligkeit.
+  //    Nach jeder neuen Baustelle wird deren Umgebung sofort wieder ausgeschöpft (Schritt 1).
+  // So muss man nicht wegen einer einzelnen Baustelle nochmals in dieselbe Gegend fahren.
   let sets=fixedNodes.map(n=>n.slice());
   const remaining=new Set(pool.map((_,i)=>i));
-  const bonus=x=>([S('tg_bonus_20'),S('tg_bonus_10'),S('tg_bonus_4'),0,0][x.pers]||0)+(x.isPref?S('tg_bonus_pref'):0);
-  [0,1,2,3].forEach(cls=>{
+  const near=S('tg_harvest_min'),tie=S('tg_tie_min');
+  const dayNodes=d=>[...sets[d],..._tgCalc.days[d].events.filter(ev=>ev.node!=null).map(ev=>ev.node)];
+  const minDist=(j,nodes)=>nodes.reduce((m,n)=>Math.min(m,D[j][n]/60,D[n][j]/60),Infinity);
+  const tryDay=(i,d)=>{const x=pool[i],j=idxPool[i];if(x.urgDay[d]===null||sets[d].length>=maxN)return null;
+    const cur=tgPlanDay(d,sets[d]).sim,p=tgPlanDay(d,sets[d].concat(j));if(!ok(d,p))return null;
+    return{i,d,x,score:p.sim.total-cur.total-x.min};};   // Umweg = zusätzliche Fahr-/Wartezeit ohne Auditzeit
+  const better=(a,b)=>{if(!b)return true;
+    if(a.score<b.score-tie)return true;if(b.score<a.score-tie)return false;   // deutlich kürzerer Umweg gewinnt
+    return(a.x.pers-b.x.pers)||((a.x.isPref?0:1)-(b.x.isPref?0:1))||(dl(a.x.e)-dl(b.x.e))||(a.score-b.score)<0;};
+  const harvest=d=>{
+    for(;;){let best=null;const nodes=dayNodes(d);if(!nodes.length)return;
+      remaining.forEach(i=>{if(minDist(idxPool[i],nodes)>near)return;const c=tryDay(i,d);if(c&&better(c,best))best=c;});
+      if(!best)return;sets[d].push(idxPool[best.i]);remaining.delete(best.i);}
+  };
+  // Neue Gegend nur anfangen, wenn ihre roten/orangen Baustellen an diesem Tag ganz Platz haben – ausser die
+  // Gegend liegt beim Startort, ist ohnehin zu gross für einen Tag, oder die Baustelle ist schon lange
+  // überfällig (tg_force_days, damit nichts ewig liegen bleibt). Sonst später/an einem anderen Tag.
+  const mayOpen=(i,d)=>{
+    const j=idxPool[i];if(minDist(j,[0,...dayNodes(d)])<=near)return true;
+    if(sets.some((_,d2)=>d2!==d&&minDist(j,dayNodes(d2))<=near))return false; // Gegend wird schon an einem anderen Tag besucht – keine 2. Fahrt
+    if(-dl(pool[i].e,parseDate(_tgCalc.days[d].ds).getTime())>=S('due_overdue_days')+S('tg_force_days'))return true; // lange überfällig: immer
+    const all=[j,...[...remaining].filter(k=>k!==i&&pool[k].urgDay[d]!==null&&minDist(idxPool[k],[j])<=near).map(k=>idxPool[k])];
+    if(all.length===1)return true;
+    if(sets[d].length+all.length<=maxN&&ok(d,tgPlanDay(d,sets[d].concat(all))))return true;
+    return!(all.length<=maxN&&ok(d,tgPlanDay(d,all)));
+  };
+  sets.forEach((_,d)=>harvest(d));
+  [0,1].forEach(cls=>{
     for(;;){
       let best=null;
-      remaining.forEach(i=>{const x=pool[i];if(x.urg!==cls)return;const j=idxPool[i];
-        sets.forEach((set,d)=>{if(set.length>=maxN)return;
-          const cur=tgPlanDay(d,set).sim,p=tgPlanDay(d,set.concat(j));if(!ok(d,p))return;
-          const detour=p.sim.total-cur.total-x.min;   // zusätzliche Fahr- und Wartezeit, ohne die Auditzeit selbst
-          const score=detour-bonus(x);
-          if(!best||score<best.score-0.01)best={i,d,score};});});
+      remaining.forEach(i=>{sets.forEach((_,d)=>{if(pool[i].urgDay[d]!==cls)return;const c=tryDay(i,d);if(c&&better(c,best)&&mayOpen(i,d))best=c;});});
       if(!best)break;
       sets[best.d].push(idxPool[best.i]);remaining.delete(best.i);
+      harvest(best.d);
     }
   });
   const skipped=pool.filter((_,i)=>remaining.has(i));
-  // Ausgleich zwischen den Tagen (neue Baustellen verschieben/tauschen), bereits geplante bleiben
+  // Ausgleich zwischen den Tagen (neue Baustellen verschieben/tauschen), bereits geplante bleiben.
+  // Eine Baustelle wird nicht von ihren Nachbarn (Umkreis) weg auf einen anderen Tag verschoben.
   const fixedSet=new Set(fixedNodes.flat());
   const cost=ss=>{let mx=0,sum=0;for(let d=0;d<ss.length;d++){if(ss[d].length>maxN)return Infinity;const p=tgPlanDay(d,ss[d]);if(!ok(d,p))return Infinity;mx=Math.max(mx,p.sim.total);sum+=p.sim.total;}return mx*3+sum;};
+  const evNodes=_tgCalc.days.map(dd=>dd.events.filter(ev=>ev.node!=null).map(ev=>ev.node));
+  const hasNb=(j,list,d)=>minDist(j,[...list.filter(x=>x!==j),...evNodes[d]])<=near;
+  const mayMove=(j,a,b)=>!hasNb(j,sets[a],a)||hasNb(j,sets[b],b);
   let cur=cost(sets),t0=Date.now(),imp=true;
   while(imp&&Date.now()-t0<5000){imp=false;
     for(let a=0;a<sets.length&&!imp;a++)for(let b=0;b<sets.length&&!imp;b++){if(a===b)continue;
-      for(const j of sets[a]){if(fixedSet.has(j))continue;const s2=sets.slice();s2[a]=sets[a].filter(x=>x!==j);s2[b]=sets[b].concat(j);const v=cost(s2);if(v<cur-1){sets=s2;cur=v;imp=true;break;}}
-      if(!imp)for(const j of sets[a]){if(fixedSet.has(j)||imp)continue;for(const k of sets[b]){if(fixedSet.has(k))continue;
+      for(const j of sets[a]){if(fixedSet.has(j)||!mayMove(j,a,b))continue;const s2=sets.slice();s2[a]=sets[a].filter(x=>x!==j);s2[b]=sets[b].concat(j);const v=cost(s2);if(v<cur-1){sets=s2;cur=v;imp=true;break;}}
+      if(!imp)for(const j of sets[a]){if(fixedSet.has(j)||imp||!mayMove(j,a,b))continue;for(const k of sets[b]){if(fixedSet.has(k)||!mayMove(k,b,a))continue;
         const s2=sets.slice();s2[a]=sets[a].map(x=>x===j?k:x);s2[b]=sets[b].map(x=>x===k?j:x);const v=cost(s2);if(v<cur-1){sets=s2;cur=v;imp=true;break;}}}}}
-  _tg={aud,kw,days,dayDates,src,sets,fixedIds:fixedSet,removed:new Set(),remaining:skipped,noPers,
+  _tg={aud,kw,days,dayDates,src,sets,fixedIds:fixedSet,removed:new Set(),remaining:skipped,noPers,home,
+    leftPool:pool.map((x,i)=>({x,j:idxPool[i]})).filter(o=>remaining.has(pool.indexOf(o.x))),
+    urgOf:new Map(pool.map((x,i)=>[idxPool[i],x.urgDay])),
     nodeEntry:new Map([...fixedAll.map(e=>[idxFixed.get(e.id),e]),...pool.map((x,i)=>[idxPool[i],x.e])]),prefOf:new Map(pool.map((x,i)=>[idxPool[i],x.isPref]))};
   tgRender();
 }
@@ -4955,6 +5022,9 @@ function tgRender(){
   R.sets.forEach((set,d)=>{
     const active=set.filter(j=>!R.removed.has(j));
     const P=tgPlanDay(d,active),sim=P.sim;
+    const leftHtml=tgLeftNearHTML(d,active)+tgOthersNearHTML(d,active);
+    const workMin=sim.aud+sim.evt;
+    const econHtml=active.length&&sim.drive>workMin+0.5?`<div style="font-size:11px;color:#B45309;margin-bottom:6px">⚠ Wenig wirtschaftlich: ${fmt(sim.drive)} Fahrt für ${fmt(workMin)} Audits/Termine – Tag evtl. frei lassen oder anders kombinieren.</div>`:'';
     newCount+=active.filter(j=>!R.fixedIds.has(j)).length;
     const bsN=active.length;
     h+=`<div style="margin-bottom:10px;padding:10px 12px;background:var(--sf2);border-radius:10px;border-left:3px solid var(--blue)">
@@ -4966,12 +5036,13 @@ function tgRender(){
         <div style="width:${sim.drive/dayLen*100}%;background:#F59E0B" title="Fahrzeit"></div><div style="width:${sim.aud/dayLen*100}%;background:#3B82F6" title="Audits"></div><div style="width:${sim.evt/dayLen*100}%;background:#0EA5E9" title="Termine"></div><div style="width:${sim.wait/dayLen*100}%;background:repeating-linear-gradient(45deg,#CBD5E1,#CBD5E1 3px,transparent 3px,transparent 6px)" title="Wartezeit"></div>
       </div>
       <div style="font-size:10px;color:var(--tx3);margin-bottom:6px">🚗 ${fmt(sim.drive)} · 🏗️ ${fmt(sim.aud)}${sim.evt?` · 📋 ${fmt(sim.evt)} Termine`:''}${sim.wait>1?` · ⏳ ${fmt(sim.wait)} Wartezeit`:''}${sim.lunch?` · 🍽 ${fmt(sim.lunch)} Mittag (nicht in der Arbeitszeit)`:''}</div>
+      ${econHtml}
       ${sim.late>0.5?`<div style="font-size:11px;color:#DC2626;margin-bottom:6px">⚠ Ein Termin ist so nicht rechtzeitig erreichbar (${Math.round(sim.late)} min zu spät) – bitte Termin oder Tag prüfen.</div>`:''}
       ${P.items.map((it,ii)=>{const sc=sim.sched[ii];const lunchRow=sim.lunch>0&&sim.lunchAt===ii?tgLunchRow():'';const time=`<span style="font-size:10px;color:var(--tx3);width:74px;flex-shrink:0;font-variant-numeric:tabular-nums">${tgHM(sc.start)}–${tgHM(sc.end)}</span>`;
         if(it.t==='ev'){const ev=it.ev;return lunchRow+`<div style="display:flex;align-items:center;gap:6px;padding:4px 0;font-size:12px;border-top:1px solid var(--bd)">${time}
           <span style="flex:1;min-width:0">${ev.icon} <b>${escH(ev.label)}</b>${ev.time!=null?` <span style="font-size:10px;color:${sc.late>0.5?'#DC2626':'#0369A1'}">(fix ${tgHM(ev.time)}${sc.late>0.5?', '+Math.round(sc.late)+' min zu spät':''})</span>`:''}${ev.sub?` <span style="font-size:10px;color:var(--tx3)">· ${escH(ev.sub)}</span>`:''}${ev.node==null&&ev.kind==='rp'?' <span style="font-size:10px;color:#B45309">(ohne Adresse – keine Fahrzeit)</span>':''}</span>
           <span style="font-size:10px;color:var(--tx3);white-space:nowrap">${ev.dur} min</span></div>`;}
-        const j=it.node,e=R.nodeEntry.get(j),fixed=R.fixedIds.has(j),s=status(e);
+        const j=it.node,e=R.nodeEntry.get(j),fixed=R.fixedIds.has(j),ud=(R.urgOf.get(j)||[])[d],s=ud===0?'overdue':ud===1?'due':status(e);
         return lunchRow+`<div style="display:flex;align-items:center;gap:6px;padding:4px 0;font-size:12px;border-top:1px solid var(--bd)">${time}
           <span style="width:8px;height:8px;border-radius:50%;flex-shrink:0;background:${fixed?'#6366F1':stCol[s]||'#10B981'}"></span>
           <span style="flex:1;min-width:0">${bsLabel(e)}${R.prefOf.get(j)?' <span style="color:#10B981" title="Bevorzugte Abteilung">★</span>':''}${fixed?' <span style="font-size:10px;color:#6366F1">(bereits geplant)</span>':''}</span>
@@ -4979,10 +5050,11 @@ function tgRender(){
           ${fixed?'':`<select onchange="tgMove(${j},+this.value)" style="font-size:10px;padding:1px 3px;border:1px solid var(--bd);border-radius:4px;background:var(--sf);color:var(--tx2)">${R.days.map((di,dd)=>`<option value="${dd}"${dd===d?' selected':''}>${names[di]}</option>`).join('')}</select>
           <button onclick="tgToggle(${j})" title="Entfernen" style="background:none;border:none;cursor:pointer;font-size:12px;color:#EF4444">✕</button>`}
         </div>`;}).join('')+(sim.lunch>0&&sim.lunchAt===P.items.length&&P.items.length?tgLunchRow():'')||`<div style="font-size:11px;color:var(--tx3);padding:4px 0">${R.remaining.length?'Nichts eingeplant – die übrigen Baustellen passen zeitlich besser auf andere Tage.':'Tag bleibt frei – keine weiteren fälligen Baustellen. Die übrigen Tage sind so effizienter (weniger Anfahrten).'}</div>`}
+      ${leftHtml}
       ${set.filter(j=>R.removed.has(j)).map(j=>`<div style="display:flex;align-items:center;gap:6px;padding:4px 0;font-size:12px;border-top:1px solid var(--bd);opacity:.45"><span style="width:74px"></span><span style="flex:1;text-decoration:line-through">${bsLabel(R.nodeEntry.get(j))}</span><button onclick="tgToggle(${j})" title="Wieder aufnehmen" style="background:none;border:none;cursor:pointer;font-size:12px;color:#10B981">↺</button></div>`).join('')}
     </div>`;
   });
-  if(R.remaining.length)h+=`<details style="margin-top:4px;font-size:11px;color:var(--tx2)"><summary style="cursor:pointer">Weitere fällige Baustellen, die zeitlich nicht mehr passen (${R.remaining.length})</summary>
+  if(R.remaining.length)h+=`<details style="margin-top:4px;font-size:11px;color:var(--tx2)"><summary style="cursor:pointer">Weitere rote/orange Baustellen, nicht eingeplant (${R.remaining.length}) – kein Platz mehr, oder ihre Gegend passt an keinem gewählten Tag ganz hinein</summary>
     ${R.remaining.slice(0,25).map(x=>`<div style="padding:3px 0;border-top:1px solid var(--bd)">${bsLabel(x.e)} · ${x.min} min</div>`).join('')}</details>`;
   if(R.noPers&&R.noPers.length){
     const rows=R.noPers.sort((a,b)=>tgUrgency(a.e)-tgUrgency(b.e)||dl(a.e)-dl(b.e));
@@ -4993,6 +5065,44 @@ function tgRender(){
   document.getElementById('tg-result').innerHTML=h;
   const btn=document.getElementById('tg-apply');btn.style.display=newCount?'':'none';btn.textContent=`✓ ${newCount} Baustellen einplanen`;
 }
+// Hinweis unter einem Tag: Baustellen im Umkreis, die (noch) nicht eingeplant sind
+function tgLeftNearHTML(d,active){
+  const R=_tg,C=_tgCalc,near=S('tg_harvest_min');
+  const nodes=[...active,...C.days[d].events.filter(ev=>ev.node!=null).map(ev=>ev.node)];
+  if(!nodes.length)return'';
+  const planned=new Set(R.sets.flat().filter(j=>!R.removed.has(j)));
+  const dist=j=>nodes.reduce((m,n)=>Math.min(m,C.D[j][n]/60,C.D[n][j]/60),Infinity);
+  const rows=[];
+  (R.leftPool||[]).forEach(o=>{if(planned.has(o.j)||o.x.urgDay[d]===null)return;const m=dist(o.j);if(m<=near)rows.push({e:o.x.e,m,j:o.j});});
+  // Ohne aktuelles Personal: nur zur Info (kein Audit ohne Personal) – Distanz geschätzt (Luftlinie)
+  const pts=nodes.map(n=>n===0?R.home:(R.nodeEntry.get(n)||C.days[d].events.find(ev=>ev.node===n)||{})).filter(p=>p&&p.lat);
+  const est=e=>pts.reduce((m,p)=>Math.min(m,haversine(p.lat,p.lng,e.lat,e.lng)*1.35/50*60),Infinity);
+  const info=(R.noPers||[]).filter(o=>tgUrgency(o.e,C.days[d].ds)<=1&&o.e.lat&&est(o.e)<=near);
+  if(!rows.length&&!info.length)return'';
+  return`<div style="margin-top:6px;padding:6px 8px;background:#FFFBEB;border:1px solid #FCD34D;border-radius:6px;font-size:11px;color:#92400E">
+    <b>⚠ Ort nicht ausgeschöpft</b> – im Umkreis von ${near} min bleiben offen:
+    ${rows.map(r=>`<div style="display:flex;align-items:center;gap:6px;padding:3px 0;border-top:1px solid #FDE68A"><span style="flex:1">${bsLabel(r.e)} · ${Math.round(r.m)} min entfernt · kein Platz mehr</span><button type="button" onclick="tgAddLeft(${r.j},${d})" style="font-size:10px;padding:2px 6px;border:1px solid #F59E0B;border-radius:4px;background:#fff;color:#92400E;cursor:pointer">+ trotzdem hinzufügen</button></div>`).join('')}
+    ${info.map(o=>`<div style="padding:3px 0;border-top:1px solid #FDE68A">${bsLabel(o.e)} · Personal ${o.state==='stale'?'veraltet (KW '+o.e.lastPersonalKW+')':'unbekannt'} – erst Personal erfassen</div>`).join('')}
+  </div>`;
+}
+// Hinweis: andere Auditoren sind an diesem Tag in der Nähe (geschätzt per Luftlinie)
+function tgOthersNearHTML(d,active){
+  const R=_tg,C=_tgCalc,near=S('tg_harvest_min'),ds=C.days[d].ds;
+  const mine=active.map(j=>R.nodeEntry.get(j)).filter(e=>e&&e.lat);
+  if(!mine.length)return'';
+  const est=(a,b)=>haversine(a.lat,a.lng,b.lat,b.lng)*1.35/50*60;
+  const hits=new Map();
+  plans.filter(p=>p.date===ds&&p.auditor!==R.aud).forEach(p=>{
+    const o=data.find(x=>x.id===p.bsId);if(!o||!o.lat)return;
+    let best=null;mine.forEach(e=>{const m=est(e,o);if(m<=near&&(!best||m<best.m))best={m,e};});
+    if(best){const l=hits.get(p.auditor)||[];l.push({o,...best});hits.set(p.auditor,l);}
+  });
+  if(!hits.size)return'';
+  return`<div style="margin-top:6px;padding:6px 8px;background:#EFF6FF;border:1px solid #BFDBFE;border-radius:6px;font-size:11px;color:#1E40AF">
+    ${[...hits].map(([a,l])=>`👥 <b>${escH(a)}</b> ist an diesem Tag auch in der Nähe: ${l.slice(0,3).map(h=>`${escH(h.o.name)} (ca. ${Math.round(h.m)} min von ${escH(h.e.name)})`).join(', ')}${l.length>3?` +${l.length-3}`:''}`).join('<br>')}
+    <div style="color:var(--tx3);margin-top:2px">Evtl. absprechen, wer die Gegend übernimmt.</div></div>`;
+}
+function tgAddLeft(j,d){const R=_tg;R.sets=R.sets.map(s=>s.filter(x=>x!==j));R.sets[d].push(j);R.removed.delete(j);R.remaining=R.remaining.filter(x=>x.e!==R.nodeEntry.get(j));tgRender();}
 function tgLunchRow(){const ls=S('tg_lunch_start')*60;return`<div style="display:flex;align-items:center;gap:6px;padding:4px 0;font-size:12px;border-top:1px solid var(--bd);color:var(--tx3)"><span style="font-size:10px;width:74px;flex-shrink:0;font-variant-numeric:tabular-nums">${tgHM(ls)}–${tgHM(ls+S('tg_lunch_dur'))}</span><span style="flex:1">🍽 Mittagspause</span></div>`;}
 function tgMove(j,toD){const R=_tg;R.sets=R.sets.map(s=>s.filter(x=>x!==j));R.sets[toD].push(j);tgRender();}
 function tgToggle(j){const R=_tg;if(R.removed.has(j))R.removed.delete(j);else R.removed.add(j);tgRender();}
@@ -5034,7 +5144,7 @@ function openTourguide(){
   const kwSel=document.getElementById('tg-kw');const cur=dateToKW(today());
   kwSel.innerHTML=[0,1,2,3,4].map(i=>`<option value="${cur+i}">KW ${cur+i}${i===1?' (nächste)':''}</option>`).join('');
   kwSel.value=String(typeof getStickyPlanKW==='function'?getStickyPlanKW():cur+1);
-  document.getElementById('tg-desc').textContent=`Sag mir, an welchen Tagen du Zeit hast – ich stelle dir pro Tag bis zu ${S('tg_max_per_day')} Baustellen zusammen: dringende zuerst, innerhalb gleicher Dringlichkeit regional passend zu dem, was schon geplant ist (grosse Baustellen und bevorzugte Abteilungen dürfen etwas mehr Umweg kosten), max. ${String(S('tg_day_hours')).replace('.',',')} h inkl. Fahrzeit. Bereits Geplantes bleibt und wird aufgefüllt.`;
+  document.getElementById('tg-desc').textContent=`Sag mir, an welchen Tagen du Zeit hast – ich stelle dir pro Tag bis zu ${S('tg_max_per_day')} rote und orange Baustellen zusammen: Wo du schon hinfährst, nehme ich alle fälligen Baustellen im Umkreis von ${S('tg_harvest_min')} min mit. Eine neue Gegend fange ich nur an, wenn sie an dem Tag ganz Platz hat. Max. ${String(S('tg_day_hours')).replace('.',',')} h inkl. Fahrzeit. Bereits Geplantes bleibt und wird aufgefüllt.`;
   document.getElementById('tg-bg').style.display='flex';
   tgUpdateDays();initStickyFooters();
 }
@@ -6353,6 +6463,8 @@ async function openAdminGuide(){
     <h3>8. Speicherplatz prüfen</h3>
     <p>Im kostenlosen Supabase-Plan stehen 500 MB zur Verfügung.</p>
     ${admSqlBox('adm-sql-size',s.size)}
+    <h3>9. Routen-Schlüssel (echte Fahrzeiten im Tourguide)</h3>
+    <p>Ohne Schlüssel schätzt der Tourguide Fahrzeiten aus der Luftlinie – über Seen und Berge oft ungenau. Mit Schlüssel rechnet er über das Strassennetz. Einrichten: Admin → <b>Routen-Schlüssel (Fahrzeit)</b> – dort steht die Schritt-für-Schritt-Anleitung, der Schlüssel wird beim Speichern automatisch geprüft. Kostenlos (Tageslimit 500 Abfragen, eine Abfrage pro Tourguide-Vorschlag). Status: <span id="adm-ors-st"></span></p>
     <h3>Sicherung & Wiederherstellung</h3>
     <p>Der Planer sichert frühere Stände automatisch (stündlich und vor grösseren Löschungen, 30 Tage lang). Zurückholen: Admin → <b>Verlauf & Wiederherstellen</b>. Zusätzlich kann jederzeit unter Admin → <b>Notfall-Backup</b> eine Sicherungsdatei heruntergeladen werden.</p>
   `);
@@ -6363,6 +6475,7 @@ async function openAdminGuide(){
     const sql=await r.text();
     document.getElementById('adm-setup-sql').innerHTML=admSqlBox('adm-sql-setup',sql);
   }catch(e){document.getElementById('adm-setup-sql').innerHTML='<p class="adm-note">Skript konnte nicht geladen werden. Es liegt im Repository unter supabase/setup.sql.</p>';}
+  const os=document.getElementById('adm-ors-st');if(os)os.innerHTML=window._orsKey?'<span style="color:#10B981">✓ hinterlegt</span>':'<span style="color:#D97706">– noch keiner hinterlegt</span>';
   const ok=sbConnected?await sbFetch('rpc/is_app_admin',{method:'POST',body:'{}'}):null;
   const st=document.getElementById('adm-setup-st');
   if(st)st.innerHTML=ok===null?'<span style="color:#D97706">– noch nicht eingerichtet</span>':'<span style="color:#10B981">✓ Datenbank eingerichtet</span>';
