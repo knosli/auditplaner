@@ -735,6 +735,7 @@ function confirmPlan(){
   if(!aud||!dt||(dt==='Invalid Date')){showToast('Auditor und KW/Datum erforderlich');return;}
   const e=data.find(x=>x.id===selId);if(!e)return;
   if(onVac(aud,dt))showToast(`⚠️ ${aud.split(' ').pop()} hat Ferien!`,4000);
+  {const bf=bauferienAt(data.find(x=>x.id===selId),dt);if(bf)setTimeout(()=>showToast(`🏖 ${bf.dept} hat Bauferien (${fd(bf.von)}–${fd(bf.bis)}) – niemand auf der Baustelle!`,5000),onVac(aud,dt)?4100:0);}
   plans.push({bsId:e.id,auditor:aud,date:dt});plans.sort((a,b)=>a.date.localeCompare(b.date));
   log('Geplant',e.name,'#6366F1',aud);
   document.getElementById('plan-form').style.display='none';
@@ -775,6 +776,22 @@ function autoResumeExpired(){
     if(hist.length){e.lastAudit=hist[0].date;e.lastKW=hist[0].kw;e.auditor=hist[0].auditor;}
     log('Reaktiviert ▶ (Pause bis '+fd(r)+' abgelaufen)',e.name,'#10B981','');n++;}});
   if(n){saveNow();renderAll();showToast(`▶ ${n} Baustelle(n) automatisch reaktiviert – Pausenende erreicht`,4000);}
+}
+// Nach dem Personal-Import: geplante Baustellen dieser KW ohne Personal (oder in Bauferien) melden
+async function checkPlansAfterImport(kwReal,yr){
+  const mon=isoMonday(kwReal,yr),ks=ferISO(mon),ke=ferISO(new Date(mon.getTime()+7*86400000));
+  const bad=[];
+  plans.filter(p=>p.date>=ks&&p.date<ke).forEach(p=>{
+    const e=data.find(x=>x.id===p.bsId);if(!e||e.type==='werkhof')return;
+    const h=persForKW(e,kwReal,yr),bf=bauferienAt(e,p.date);
+    const why=bf?`Bauferien (${bf.dept})`:h&&h.count===0?'kein Personal laut Einsatzliste':e.paused?'pausiert ('+(e.pauseReason||'')+')':'';
+    if(why)bad.push({p,e,why});
+  });
+  if(!bad.length){showToast(`✓ Planung KW ${kwReal}: alle geplanten Baustellen haben Personal`,3500);return;}
+  const dn=['So','Mo','Di','Mi','Do','Fr','Sa'];
+  const txt=bad.slice(0,12).map(b=>`• ${dn[parseDate(b.p.date).getDay()]} ${fd(b.p.date)} · ${b.e.name} (${b.p.auditor||'–'}): ${b.why}`).join('\n')+(bad.length>12?`\n… und ${bad.length-12} weitere`:'');
+  const go=await askConfirm(`⚠ ${bad.length} geplante Baustelle(n) in KW ${kwReal} ohne Personal – bitte umplanen:\n\n${txt}`,{ok:'Im Kalender anzeigen',cancel:'Später'});
+  if(go){setView('cal',[...document.querySelectorAll('#tabs .tab')].find(t=>t.getAttribute('onclick').includes("'cal'")));setCalView('week');weekOff=kwIdx(ks)-dateToKW(today());renderKW();}
 }
 function confirmResume(){
   const e=data.find(x=>x.id===selId);if(!e)return;
@@ -984,11 +1001,13 @@ function applyMultiPlan(){
   });
   saveNow();
   const label=mode==='kw'?`KW ${document.getElementById('mp-kw').value}`:new Date(date+'T12:00:00').toLocaleDateString('de-CH');
+  const bfIds=[...planned];
   const prevSelId=selId;
   clearPlanMode();
   renderAll();buildCalBS();
   if(prevSelId)setTimeout(()=>selEntry(prevSelId),150);
   showToast(`✅ ${count} Baustellen geplant – ${aud}, ${label}`,4000);
+  {const nbf=bfIds.filter(id=>bauferienAt(data.find(x=>x.id===+id),date)).length;if(nbf)setTimeout(()=>showToast(`🏖 Achtung: ${nbf} davon in Bauferien ihrer Einheit – niemand auf der Baustelle!`,5000),4100);}
 }
 
 
@@ -2409,13 +2428,14 @@ function kwPersBadge(e,kw){
   if(!e||e.type==='werkhof')return'';
   const yr=kwYear(kw);kw=kwNum(kw);
   const h=persForKW(e,kw,yr);
-  if(h)return`<span title="Personal KW ${kw}: ${h.count} (${h.manual?'manuell':'Import'})" style="font-weight:700;color:${h.count?'var(--tx2)':'#DC2626'}">👷 ${h.count}</span>`;
+  if(h)return`<span title="Personal KW ${kw}: ${h.count} (${h.manual?'manuell':'Import'})" style="font-weight:700;color:${h.count?'var(--tx2)':'#DC2626'}">👷 ${h.count}${h.count?'':' ⚠ kein Personal – umplanen'}</span>`;
   if(e.lastPersonalKW!==undefined&&e.lastPersonalCount!==undefined)return`<span title="Kein Wert für KW ${kw} – zuletzt KW ${e.lastPersonalKW}: ${e.lastPersonalCount}" style="opacity:.65;font-style:italic">👷 ${e.lastPersonalCount} <span style="font-size:9px">(KW ${e.lastPersonalKW})</span></span>`;
   return`<span title="Keine Personalangabe" style="opacity:.55">👷 –</span>`;
 }
-function kwMetaLine(e,kw,pad){
+function kwMetaLine(e,kw,pad,ds){
   if(!e)return'';
-  const bc=e.bc?`BC: ${e.bc}`:'',pb=kwPersBadge(e,kw);
+  const bf=bauferienAt(e,ds);
+  const bc=e.bc?`BC: ${e.bc}`:'',pb=kwPersBadge(e,kw)+(bf?` <span style="font-weight:700;color:#DC2626" title="${escH(bf.label||'Bauferien')} ${fd(bf.von)}–${fd(bf.bis)}">🏖 Bauferien – umplanen</span>`:'');
   if(!bc&&!pb)return'';
   return`<div style="font-size:10px;color:var(--tx3);padding:${pad}">${bc}${bc&&pb?' · ':''}${pb}</div>`;
 }
@@ -2455,7 +2475,7 @@ function renderKW(){
         ${kwP.length?`<div style="display:flex;gap:3px"><button onclick="kwRoute(${kw})"><i class="ti ti-map-2"></i></button><button onclick="kwPrint(${kw})"><i class="ti ti-printer"></i></button></div>`:''}
       </div>
       ${fer.map(f=>`<div class="kwfer">🌴 ${f.auditor.split(' ').pop()}: ${f.label}</div>`).join('')}
-      ${kwP.length?kwP.map(p=>{const e=data.find(x=>x.id===p.bsId);const c=p.auditor&&p.auditor!=='Unbekannt'?aC(p.auditor):'#9CA3AF';const dn=['So','Mo','Di','Mi','Do','Fr','Sa'][parseDate(p.date).getDay()];return`<div class="kwe" onclick="openCalPop(${p._i})"><div class="kwen">${e?((e.type==='werkhof'?'🏠 ':'')+e.name):'(gel.)'}</div>${kwMetaLine(e,kw,'1px 0')}<span class="kwea" style="background:${c}">${p.auditor==='Unbekannt'?'? Zuteilen':p.auditor.split(' ').pop()}</span><div class="kwed">${dn} ${fd(p.date)}</div></div>`;}).join(''):`<div class="kwemp">Keine Planungen</div>`}
+      ${kwP.length?kwP.map(p=>{const e=data.find(x=>x.id===p.bsId);const c=p.auditor&&p.auditor!=='Unbekannt'?aC(p.auditor):'#9CA3AF';const dn=['So','Mo','Di','Mi','Do','Fr','Sa'][parseDate(p.date).getDay()];return`<div class="kwe" onclick="openCalPop(${p._i})"><div class="kwen">${e?((e.type==='werkhof'?'🏠 ':'')+e.name):'(gel.)'}</div>${kwMetaLine(e,kw,'1px 0',p.date)}<span class="kwea" style="background:${c}">${p.auditor==='Unbekannt'?'? Zuteilen':p.auditor.split(' ').pop()}</span><div class="kwed">${dn} ${fd(p.date)}</div></div>`;}).join(''):`<div class="kwemp">Keine Planungen</div>`}
     </div>`;
   }).join('');
 }
@@ -2503,12 +2523,12 @@ function renderWeekView(kw){
       </div>
       ${fer.map(f=>`<div class="kwfer">🌴 ${f.auditor.split(' ').pop()}: ${f.label}</div>`).join('')}
       ${(()=>{const gids=[...new Set(rapporte.filter(r=>r.date===ds&&(!audFilter||r.auditor===audFilter)).map(r=>r.groupId))];const gs=gids.map(g=>rapporte.filter(x=>x.groupId===g&&x.date===ds)).filter(m=>m.length).sort((a,b)=>(a[0].time||'').localeCompare(b[0].time||''));return gs.map(mem=>{const r=mem[0];const anyPlan=mem.some(m=>m.planned);return`<div class="kwe" style="border-left:3px solid #0EA5E9;${anyPlan?'':'background:#F0F9FF'}"><div class="kwe-top" onclick="openRapportEdit(${r.id})" style="cursor:pointer"><div class="kwen" style="color:#0369A1">${anyPlan?'':'✓ '}📋 ${r.type}${r.seriesId?' 🔁':''}${r.time?' '+r.time:''}${(r.dept||r.ort)?`<div style="font-size:10px;font-weight:400;color:var(--tx3)">${[r.dept,r.ort].filter(Boolean).join(' · ')}</div>`:''}</div><span style="display:flex;gap:3px;flex-wrap:wrap;margin-top:2px">${mem.map(m=>m.planned?`<span class="kwea" title="${m.auditor}: geplant" style="background:transparent;border:1.5px solid ${aC(m.auditor)};color:${aC(m.auditor)}">${m.auditor.split(' ').pop()}</span>`:`<span class="kwea" title="${m.auditor}: teilgenommen" style="background:${aC(m.auditor)}">✓ ${m.auditor.split(' ').pop()}</span>`).join('')}</span></div>${anyPlan?`<div class="kwe-move" style="display:flex;gap:2px;padding:2px 6px 3px;border-top:1px solid var(--bd)"><button onclick="moveRapportTo(${r.id},'${rpAddDays(kwToDate(kw),-3)}')" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">←</button>${days.map((day,dj)=>`<button onclick="moveRapportTo(${r.id},'${rpAddDays(kwToDate(kw),dj)}')" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:${rpAddDays(kwToDate(kw),dj)===ds?'#0EA5E9':'var(--sf2)'};color:${rpAddDays(kwToDate(kw),dj)===ds?'#fff':'var(--tx2)'};font-size:9px;cursor:pointer;line-height:1.4">${day}</button>`).join('')}<button onclick="moveRapportTo(${r.id},'${kwToDate(kw+1)}')" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">→</button></div>`:''}</div>`;}).join('');})()}
-      ${(()=>{const bp=beratPlan.filter(p=>p.date===ds&&(!audFilter||p.auditor===audFilter));return bp.map(p=>{const e=data.find(x=>x.id===p.bsId);const audCol=aC(p.auditor||'');return`<div class="kwe" style="border-left:3px solid #8B5CF6"><div class="kwe-top" onclick="openBeratPlanPop(${p.id})" style="cursor:pointer"><div class="kwen">💬 ${e?pspPre(e.psp)+e.name:'(gel.)'}</div>${kwMetaLine(e,kw,'0 0 1px')}<span class="kwea" style="background:${audCol}">${(p.auditor||'?').split(' ').pop()}</span></div>${p.note?`<div style="font-size:10px;color:#7C3AED;padding:2px 6px 3px">${p.note}</div>`:''}<div class="kwe-move" style="display:flex;gap:2px;padding:2px 6px 3px;border-top:1px solid var(--bd)"><button onclick="moveBeratPlan(${p.id},'${kwToDate(kw-1)}',4)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">←</button>${days.map((day,dj)=>`<button onclick="moveBeratPlan(${p.id},'${kwToDate(kw)}',${dj})" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:${dj===di?'var(--blue)':'var(--sf2)'};color:${dj===di?'#fff':'var(--tx2)'};font-size:9px;cursor:pointer;line-height:1.4">${day}</button>`).join('')}<button onclick="moveBeratPlan(${p.id},'${kwToDate(kw+1)}',0)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">→</button></div></div>`;}).join('');})()}
+      ${(()=>{const bp=beratPlan.filter(p=>p.date===ds&&(!audFilter||p.auditor===audFilter));return bp.map(p=>{const e=data.find(x=>x.id===p.bsId);const audCol=aC(p.auditor||'');return`<div class="kwe" style="border-left:3px solid #8B5CF6"><div class="kwe-top" onclick="openBeratPlanPop(${p.id})" style="cursor:pointer"><div class="kwen">💬 ${e?pspPre(e.psp)+e.name:'(gel.)'}</div>${kwMetaLine(e,kw,'0 0 1px',p.date)}<span class="kwea" style="background:${audCol}">${(p.auditor||'?').split(' ').pop()}</span></div>${p.note?`<div style="font-size:10px;color:#7C3AED;padding:2px 6px 3px">${p.note}</div>`:''}<div class="kwe-move" style="display:flex;gap:2px;padding:2px 6px 3px;border-top:1px solid var(--bd)"><button onclick="moveBeratPlan(${p.id},'${kwToDate(kw-1)}',4)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">←</button>${days.map((day,dj)=>`<button onclick="moveBeratPlan(${p.id},'${kwToDate(kw)}',${dj})" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:${dj===di?'var(--blue)':'var(--sf2)'};color:${dj===di?'#fff':'var(--tx2)'};font-size:9px;cursor:pointer;line-height:1.4">${day}</button>`).join('')}<button onclick="moveBeratPlan(${p.id},'${kwToDate(kw+1)}',0)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">→</button></div></div>`;}).join('');})()}
       ${(()=>{const done=data.flatMap(e=>(e.beratungen||[]).filter(b=>b.date===ds).map(b=>({...b,eName:e.name,ePsp:e.psp,eId:e.id})));return done.map(b=>{const bAudCol=aC(b.auditor||'');return`<div class="kwe" style="background:#F5F3FF;border-left:3px solid #8B5CF6;cursor:pointer" onclick="openBeratDoneUndo(${b.eId},${b.id})"><div class="kwe-top"><div class="kwen" style="color:#7C3AED">✓ 💬 ${pspPre(b.ePsp)}${b.eName}</div>${kwMetaLine(data.find(x=>x.id===b.eId),kw,'0 0 1px')}<span class="kwea" style="background:${bAudCol}">${(b.auditor||'?').split(' ').pop()}</span></div>${b.note?`<div style="font-size:10px;color:#7C3AED;padding:2px 6px 3px">${b.note}</div>`:''}</div>`;}).join('');})()}
       ${dayAudits.map(h=>{const e=data.find(x=>x.id===h.eId);return`<div class="kwe" style="background:#F0FDF4;border-left:3px solid #10B981;cursor:pointer" onclick="openAuditUndo(${h.eId},'${h.date}')"><div class="kwe-top"><div class="kwen" style="color:#065F46">✓ ${e&&e.type==='werkhof'?'🏠 ':''}${pspPre(h.ePsp)}${h.eName}</div>${kwMetaLine(e,kw,'0 0 1px')}<span class="kwea" style="background:${aC(h.auditor||'')}">${(h.auditor||'?').split(' ').pop()}</span></div></div>`;}).join('')}
       ${(()=>{const paP=personAudits.filter(p=>p.planned&&p.date===ds&&(!audFilter||p.auditor===audFilter));return paP.map(p=>{const col=p.auditor?aC(p.auditor):'#9CA3AF';return`<div class="kwe"><div class="kwe-top" onclick="openPersonAuditPop(${p.id})" style="cursor:pointer"><div class="kwen">👤 ${p.person}${p.bs?' · '+p.bs:''}</div><span class="kwea" style="background:${col}">${p.auditor?p.auditor.split(' ').pop():'? Zuteilen'}</span></div><div class="kwe-move" style="display:flex;gap:2px;padding:2px 6px 3px;border-top:1px solid var(--bd)"><button onclick="movePersonAudit(${p.id},'${kwToDate(kw-1)}',4)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">←</button>${days.map((day,dj)=>`<button onclick="movePersonAudit(${p.id},'${kwToDate(kw)}',${dj})" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:${dj===di?'var(--blue)':'var(--sf2)'};color:${dj===di?'#fff':'var(--tx2)'};font-size:9px;cursor:pointer;line-height:1.4">${day}</button>`).join('')}<button onclick="movePersonAudit(${p.id},'${kwToDate(kw+1)}',0)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">→</button></div></div>`;}).join('');})()}
       ${(()=>{const paDone=personAudits.filter(p=>!p.planned&&p.date===ds&&(!audFilter||p.auditor===audFilter));return paDone.map(p=>{const audCol=aC(p.auditor||'');return`<div class="kwe" style="background:#FFFBEB;border-left:3px solid #F59E0B;cursor:pointer" onclick="openPersonAuditDoneUndo(${p.id})"><div class="kwe-top"><div class="kwen" style="color:#B45309">✓ 👤 ${p.person}${p.bs?' · '+p.bs:''}</div><span class="kwea" style="background:${audCol}">${(p.auditor||'?').split(' ').pop()}</span></div></div>`;}).join('');})()}
-      ${dayP.length?dayP.map(p=>{const e=data.find(x=>x.id===p.bsId);const col=p.auditor&&p.auditor!=='Unbekannt'?aC(p.auditor):'#9CA3AF';const isSel=multiAuditMode&&planned.has(p.bsId);return`<div class="kwe" style="${isSel?'background:#EFF6FF;border-left:3px solid var(--blue)':''}"><div class="kwe-top" onclick="${multiAuditMode?`toggleKWAuditSel(${p.bsId})`:`openCalPop(${p._i})`}" style="cursor:pointer"><div class="kwen">${isSel?'☑ ':''}${e?((e.type==='werkhof'?'🏠 ':'')+pspPre(e.psp)+e.name):'(gel.)'}</div>${kwMetaLine(e,kw,'0 0 1px')}<span class="kwea" style="background:${col}">${p.auditor==='Unbekannt'||!p.auditor?'? Zuteilen':p.auditor.split(' ').pop()}</span></div>${!multiAuditMode?`<div class="kwe-move" style="display:flex;gap:2px;padding:2px 6px 3px;border-top:1px solid var(--bd)"><button onclick="movePlan(${p._i},'${kwToDate(kw-1)}',4)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4" title="Vorwoche Fr">←</button>${days.map((day,dj)=>`<button onclick="movePlan(${p._i},'${kwToDate(kw)}',${dj})" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:${dj===di?'var(--blue)':'var(--sf2)'};color:${dj===di?'#fff':'var(--tx2)'};font-size:9px;cursor:pointer;line-height:1.4">${day}</button>`).join('')}<button onclick="movePlan(${p._i},'${kwToDate(kw+1)}',0)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4" title="Nächste Woche Mo">→</button></div>`:''}
+      ${dayP.length?dayP.map(p=>{const e=data.find(x=>x.id===p.bsId);const col=p.auditor&&p.auditor!=='Unbekannt'?aC(p.auditor):'#9CA3AF';const isSel=multiAuditMode&&planned.has(p.bsId);return`<div class="kwe" style="${isSel?'background:#EFF6FF;border-left:3px solid var(--blue)':''}"><div class="kwe-top" onclick="${multiAuditMode?`toggleKWAuditSel(${p.bsId})`:`openCalPop(${p._i})`}" style="cursor:pointer"><div class="kwen">${isSel?'☑ ':''}${e?((e.type==='werkhof'?'🏠 ':'')+pspPre(e.psp)+e.name):'(gel.)'}</div>${kwMetaLine(e,kw,'0 0 1px',p.date)}<span class="kwea" style="background:${col}">${p.auditor==='Unbekannt'||!p.auditor?'? Zuteilen':p.auditor.split(' ').pop()}</span></div>${!multiAuditMode?`<div class="kwe-move" style="display:flex;gap:2px;padding:2px 6px 3px;border-top:1px solid var(--bd)"><button onclick="movePlan(${p._i},'${kwToDate(kw-1)}',4)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4" title="Vorwoche Fr">←</button>${days.map((day,dj)=>`<button onclick="movePlan(${p._i},'${kwToDate(kw)}',${dj})" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:${dj===di?'var(--blue)':'var(--sf2)'};color:${dj===di?'#fff':'var(--tx2)'};font-size:9px;cursor:pointer;line-height:1.4">${day}</button>`).join('')}<button onclick="movePlan(${p._i},'${kwToDate(kw+1)}',0)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4" title="Nächste Woche Mo">→</button></div>`:''}
 </div>`;}).join(''):`<div class="kwemp">Frei</div>`}
     </td>`;
   });
@@ -4808,8 +4828,9 @@ function rulesHTML(){
     `Temporäre Mitarbeitende: nur Personal-Nummern (keine Namen), pro Einheit bei jedem Import ersetzt.`,
     `Manuelle Erfassung (für Einheiten ohne brauchbare Einsatzliste): im Detail-Panel ✏️ bei «Personal» oder Admin → «Personal manuell erfassen» (mehrere Baustellen einer Abteilung). Wirkt wie ein Import-Wert (Verlauf, Trend, Tourguide), ersetzt einen vorhandenen Wert derselben KW und ändert den Status der Baustelle nicht (kein Pausieren/Reaktivieren).`]) +
   sec('compass','Tourguide',[
-    `Vorschläge nur für <b>rote (überfällige) und orange (fällige)</b> Baustellen mit Koordinaten <b>und bekanntem Personal vor Ort (mehr als 0)</b>. Gelbe, neue (noch nicht fällige) und grüne Baustellen werden nie vorgeschlagen – sonst lägen Audits zu nahe beieinander. Die Personalangabe (Einsatzliste oder manuell) muss für <b>genau die geplante KW</b> vorliegen – ältere Angaben zählen nicht (Bauferien, Feiertage, Umstellungen → sonst Leerfahrten). Solche Baustellen werden nie vorgeschlagen, aber unter dem Vorschlag aufgelistet.`,
+    `Vorschläge nur für <b>rote (überfällige) und orange (fällige)</b> Baustellen mit Koordinaten <b>und bekanntem Personal vor Ort (mehr als 0)</b>. Gelbe, neue (noch nicht fällige) und grüne Baustellen werden nie vorgeschlagen – sonst lägen Audits zu nahe beieinander. Die Personalangabe (Einsatzliste oder manuell) soll für <b>genau die geplante KW</b> vorliegen. Fehlt sie noch, gilt die letzte Liste <b>vorläufig</b> – aber nur, wenn sie höchstens 2 Wochen zurückliegt und die Baustelle in ihr und in der Woche davor Personal hatte (sonst nicht). Nach dem Personal-Import prüft der Planer alle Planungen der importierten KW und meldet Baustellen ohne Personal oder in Bauferien. Solche Baustellen werden nie vorgeschlagen, aber unter dem Vorschlag aufgelistet.`,
     `Nie: Werkhöfe (nur manuell planen), pausiert, inaktiv, ausgeschlossene Abteilungen, diese KW bereits (von irgendwem) eingeplant, 0 Personal oder keine Einsatzliste für die geplante KW, ohne Kartenpunkt (wird aufgelistet).`,
+    `<b>Bauferien</b> pro Einheit (Admin → Abteilungen verwalten → 🏖): In diesen Zeiträumen plant der Tourguide dort nichts; die KW-Planung markiert betroffene Planungen («🏖 Bauferien – umplanen») und warnt beim Planen.`,
     `«Pausiert bis KW …»: Ist das Datum erreicht, wird die Baustelle automatisch reaktiviert. Der Tourguide berücksichtigt sie schon für Tage ab diesem Datum.`,
     `Kein Audit beginnt nach ${tgHM(S('tg_last_start')*60)} (viele Baustellen haben dann Feierabend). Bei 1–${v('pi_review_max')} Personen erscheint «📞 wenig Personal – vorher anrufen».`,
     `<b>Ort ausschöpfen:</b> Ist an einem Tag eine Baustelle oder ein Termin in einer Gegend, werden zuerst alle roten und orangen Baustellen im Umkreis von ${v('tg_harvest_min')} min Fahrzeit mitgenommen (soweit der Tag Platz hat) – damit man nicht wegen einer einzelnen Baustelle nochmals hinfahren muss. Das gilt für bereits geplante Baustellen, Termine und jede neu gewählte Baustelle.`,
@@ -4905,27 +4926,40 @@ function persYear(e){
 function tgPersonalState(e,targetKW,targetYear){
   const h=persForKW(e,targetKW,targetYear);
   if(h)return h.count>0?'ok':'zero';
+  // Einsatzliste der geplanten KW fehlt noch: «vorläufig», wenn die letzte Liste höchstens 2 Wochen vor der
+  // geplanten KW liegt und die Baustelle in ihr UND in der Woche davor Personal hatte (stabil, nicht an-/auslaufend).
+  // Nach dem Import der richtigen Liste prüft checkPlansAfterImport die Planung nach.
+  const W=604800000,tm=isoMonday(targetKW,targetYear).getTime();
+  const hist=(e.personalHistory||[]).map(x=>({...x,m:isoMonday(x.kw,x.year).getTime()})).filter(x=>x.m<tm).sort((a,b)=>b.m-a.m);
+  const a=hist[0],b=hist[1];
+  if(a&&Math.round((tm-a.m)/W)<=2){
+    if(a.count===0)return'zero';
+    if(b&&Math.round((a.m-b.m)/W)===1&&b.count>0)return'prov';
+  }
   if(e.lastPersonalKW===undefined||e.lastPersonalCount===undefined||e.lastPersonalCount===null)return'unknown';
   return'stale';
 }
 // Pause «bis KW …» abgelaufen (bzw. am Audit-Tag abgelaufen)?
 function pauseOverAt(e,ds){return!!(e.paused&&e.pauseUntil&&e.pauseUntil<=ds);}
-function tgCandidates(aud,kw,noPers,dayDates,noGeo){
+function tgCandidates(aud,kw,noPers,dayDates,noGeo,bfList,provIds=new Set()){
   const m=auditorMeta[aud]||{};const pref=new Set(m.prefDepts||[]),excl=new Set(m.exclDepts||[]);
   const ks=kwToDate(kw),ke=kwToDate(kw+1);
   const plannedThisKW=new Set(plans.filter(p=>p.date>=ks&&p.date<ke).map(p=>p.bsId));
   const days=dayDates||[null];
   // Ampel am Tag; eine abgelaufene Pause zählt ab ihrem Ende als nicht pausiert
-  const urgAt=(e,ds)=>{if(e.paused&&!(ds&&pauseOverAt(e,ds)))return null;const u=tgUrgency(e.paused?{...e,paused:false}:e,ds);return u===0||u===1?u:null;};
+  const urgRaw=(e,ds)=>{if(e.paused&&!(ds&&pauseOverAt(e,ds)))return null;const u=tgUrgency(e.paused?{...e,paused:false}:e,ds);return u===0||u===1?u:null;};
+  const urgAt=(e,ds)=>bauferienAt(e,ds)?null:urgRaw(e,ds);   // in den Bauferien der Einheit: nie
   return data.filter(e=>{
     if(!e.active||e.type==='werkhof')return false;            // Werkhöfe nur manuell planen
     // nur rot + orange – und zwar am Audit-Tag (was heute gelb ist, kann bis dann orange sein)
-    if(!days.some(ds=>urgAt(e,ds)!==null))return false;
+    if(!days.some(ds=>urgRaw(e,ds)!==null))return false;
+    if(!days.some(ds=>urgAt(e,ds)!==null)){if(bfList&&!plannedThisKW.has(e.id)&&e.lat)bfList.push({e,bf:days.map(ds=>bauferienAt(e,ds)).find(Boolean)});return false;}
     if(plannedThisKW.has(e.id))return false;                  // von irgendwem diese KW eingeplant
     if(deptParts(e.dept).some(d=>excl.has(d)))return false;   // ausgeschlossen (hart)
     if(!e.lat||!e.lng){if(noGeo)noGeo.push(e);return false;}   // ohne Kartenpunkt: auflisten
     // Nur mit Personal vor Ort: bekannt, > 0 und aktuell. Sonst NIE vorschlagen (unbekannt/veraltet werden aufgelistet).
     const ps=tgPersonalState(e,kwNum(kw),kwYear(kw));
+    if(ps==='prov'){provIds.add(e.id);return true;}
     if(ps!=='ok'){if(noPers&&(ps==='unknown'||ps==='stale'))noPers.push({e,state:ps});return false;}
     return true;
   }).map(e=>{const isPref=deptParts(e.dept).some(d=>pref.has(d));const urgDay=days.map(ds=>urgAt(e,ds));
@@ -5029,8 +5063,8 @@ async function tgCompute(){
   const events=dayDates.map(ds=>tgDayEvents(aud,ds));
   await tgGeocodeEvents(events.flat());
   const noPers=[];
-  const noGeo=[];
-  const cands=tgCandidates(aud,kw,noPers,dayDates,noGeo);
+  const noGeo=[],bfList=[],provIds=new Set();
+  const cands=tgCandidates(aud,kw,noPers,dayDates,noGeo,bfList,provIds);
   const fixedAll=[...new Set(fixedPlans.flat())];
   const evPts=events.flat().filter(ev=>ev.lat&&ev.lng);
   const pool=cands.slice(0,Math.max(0,54-fixedAll.length-evPts.length));
@@ -5106,7 +5140,7 @@ async function tgCompute(){
       for(const j of sets[a]){if(fixedSet.has(j)||!mayMove(j,a,b))continue;const s2=sets.slice();s2[a]=sets[a].filter(x=>x!==j);s2[b]=sets[b].concat(j);const v=cost(s2);if(v<cur-1){sets=s2;cur=v;imp=true;break;}}
       if(!imp)for(const j of sets[a]){if(fixedSet.has(j)||imp||!mayMove(j,a,b))continue;for(const k of sets[b]){if(fixedSet.has(k)||!mayMove(k,b,a))continue;
         const s2=sets.slice();s2[a]=sets[a].map(x=>x===j?k:x);s2[b]=sets[b].map(x=>x===k?j:x);const v=cost(s2);if(v<cur-1){sets=s2;cur=v;imp=true;break;}}}}}
-  _tg={aud,kw,days,dayDates,src,sets,fixedIds:fixedSet,removed:new Set(),remaining:skipped,noPers,noGeo,home,
+  _tg={aud,kw,days,dayDates,src,sets,fixedIds:fixedSet,removed:new Set(),remaining:skipped,noPers,noGeo,bfList,provIds,home,
     leftPool:pool.map((x,i)=>({x,j:idxPool[i]})).filter(o=>remaining.has(pool.indexOf(o.x))),
     urgOf:new Map(pool.map((x,i)=>[idxPool[i],x.urgDay])),
     nodeEntry:new Map([...fixedAll.map(e=>[idxFixed.get(e.id),e]),...pool.map((x,i)=>[idxPool[i],x.e])]),prefOf:new Map(pool.map((x,i)=>[idxPool[i],x.isPref]))};
@@ -5169,6 +5203,12 @@ function tgRender(){
       <div style="margin:6px 0;color:var(--tx2)">Ohne Koordinaten kann der Tourguide keine Fahrzeit rechnen. Baustelle in der Liste anklicken → «Bearbeiten» → Adresse wählen oder Marker setzen.</div>
       ${R.noGeo.slice(0,40).map(e=>`<div style="padding:3px 0;border-top:1px solid #FECACA">${bsLabel(e)}${e.addr?` · <span style="color:var(--tx3)">${escH(e.addr)}</span>`:' · <span style="color:var(--tx3)">keine Adresse</span>'}</div>`).join('')}</details>`;
   }
+  if(R.bfList&&R.bfList.length){
+    h+=`<details style="margin-top:8px;padding:8px 10px;background:#EFF6FF;border:1px solid #BFDBFE;border-radius:8px;font-size:11px;color:#1E40AF"><summary style="cursor:pointer;font-weight:600">🏖 ${R.bfList.length} fällige Baustelle(n) in Bauferien – nicht berücksichtigt</summary>
+      ${R.bfList.slice(0,40).map(o=>`<div style="padding:3px 0;border-top:1px solid #DBEAFE">${bsLabel(o.e)} · ${escH(o.bf.dept)}: ${escH(o.bf.label||'Bauferien')} ${fd(o.bf.von)}–${fd(o.bf.bis)}</div>`).join('')}</details>`;
+  }
+  const provPlanned=R.sets.flat().filter(j=>!R.removed.has(j)&&!R.fixedIds.has(j)&&R.provIds&&R.provIds.has((R.nodeEntry.get(j)||{}).id)).length;
+  if(provPlanned)h=`<div style="margin-bottom:8px;padding:6px 8px;background:#FFFBEB;border:1px solid #FCD34D;border-radius:6px;font-size:11px;color:#92400E">⏳ ${provPlanned} Baustelle(n) <b>vorläufig</b> – die Einsatzliste für ${kwLabel(R.kw)} fehlt noch, verwendet wird die letzte Liste. Nach dem Personal-Import für ${kwLabel(R.kw)} prüft der Planer die Planung automatisch und meldet Baustellen ohne Personal.</div>`+h;
   document.getElementById('tg-result').innerHTML=h;
   const btn=document.getElementById('tg-apply');btn.style.display=newCount?'':'none';btn.textContent=`✓ ${newCount} Baustellen einplanen`;
 }
@@ -5216,7 +5256,9 @@ function tgPersTag(e){
   const R=_tg,k=R?kwNum(R.kw):null,h=R?persForKW(e,k,kwYear(R.kw)):null;
   const n=h?h.count:e.lastPersonalCount,kwShow=h?k:e.lastPersonalKW;
   if(n===undefined||n===null)return'';
-  const few=h&&n>0&&n<=S('pi_review_max');
+  const prov=!h&&R&&R.provIds&&R.provIds.has(e.id);
+  const few=(h||prov)&&n>0&&n<=S('pi_review_max');
+  if(prov)return`<span title="Einsatzliste für ${kwLabel(R.kw)} fehlt noch – letzte Liste KW ${kwShow} (Baustelle hatte 2 Wochen in Folge Personal). Nach dem Import prüft der Planer automatisch nach." style="font-size:10px;color:#B45309;white-space:nowrap;font-weight:600">👷 ${n} <span style="font-weight:400">(KW ${kwShow}) · vorläufig</span></span>${few?` <span style="font-size:10px;color:#B45309;white-space:nowrap;font-weight:600">📞 wenig Personal – vorher anrufen</span>`:''}`;
   return`<span title="Personal laut Einsatzliste KW ${kwShow}" style="font-size:10px;color:var(--tx2);white-space:nowrap;font-weight:600">👷 ${n} <span style="font-weight:400;color:var(--tx3)">(KW ${kwShow})</span></span>${few?` <span title="Nur ${n} Person(en) eingeteilt – kleine Trupps sind öfter nicht vor Ort" style="font-size:10px;color:#B45309;white-space:nowrap;font-weight:600">📞 wenig Personal – vorher anrufen</span>`:''}`;
 }
 function tgLunchRow(){const ls=S('tg_lunch_start')*60;return`<div style="display:flex;align-items:center;gap:6px;padding:4px 0;font-size:12px;border-top:1px solid var(--bd);color:var(--tx3)"><span style="font-size:10px;width:74px;flex-shrink:0;font-variant-numeric:tabular-nums">${tgHM(ls)}–${tgHM(ls+S('tg_lunch_dur'))}</span><span style="flex:1">🍽 Mittagspause</span></div>`;}
@@ -5548,6 +5590,35 @@ function renderAbtMap(){
       <select data-v="${v.replace(/"/g,'&quot;')}" onchange="setAbtMap(this.dataset.v,this.value)" style="padding:5px;border:1px solid ${cur?'var(--bd)':'#F59E0B'};border-radius:5px;background:var(--sf);color:var(--tx);font-size:12px"><option value="">— nicht zugeordnet —</option>${opts.map(d=>`<option value="${d.replace(/"/g,'&quot;')}"${d===cur?' selected':''}>${d}</option>`).join('')}</select>
     </div>`;}).join('')}</div>`;
 }
+// ═══ BAUFERIEN pro Abteilung ═══ deptMeta[abteilung].bauferien=[{id,von,bis,label}] (synchronisiert)
+function bauferienOf(dept){return((deptMeta[dept]||{}).bauferien)||[];}
+// Bauferien einer Baustelle an einem Datum (bei mehreren Abteilungen: irgendeine) → {dept,von,bis,label} oder null
+function bauferienAt(e,ds){if(!e||!ds)return null;for(const d of deptParts(e.dept)){const f=bauferienOf(d).find(x=>ds>=x.von&&ds<=x.bis);if(f)return{dept:d,...f};}return null;}
+function openBauferien(dept){
+  const body=admModal('🏖 Bauferien – '+dept,'<div id="bf-body"></div>');
+  renderBauferien(dept);
+}
+function renderBauferien(dept){
+  const el=document.getElementById('bf-body');if(!el)return;
+  const list=bauferienOf(dept).slice().sort((a,b)=>a.von.localeCompare(b.von));
+  const today_=today();
+  el.innerHTML=`<p>In diesen Zeiträumen ist auf den Baustellen dieser Einheit niemand. Der Tourguide plant dort keine Audits, die KW-Planung warnt.</p>
+    <div class="adm-fields"><input type="date" id="bf-von" title="Von"><input type="date" id="bf-bis" title="Bis"><input id="bf-lbl" placeholder="Bezeichnung, z.B. Sommer-Bauferien"></div>
+    <p><button type="button" class="ui-btn ui-btn-pri" onclick="addBauferien(this.dataset.d)" data-d="${escH(dept)}">+ Bauferien erfassen</button></p>
+    ${list.length?`<table class="adm-tbl"><tr><th>Von</th><th>Bis</th><th>Bezeichnung</th><th></th></tr>${list.map(f=>`<tr style="${f.bis<today_?'opacity:.5':''}"><td>${fd(f.von)}</td><td>${fd(f.bis)}</td><td>${escH(f.label||'')}</td><td style="text-align:right"><button type="button" class="ui-btn" data-d="${escH(dept)}" onclick="rmBauferien(this.dataset.d,${f.id})">Löschen</button></td></tr>`).join('')}</table>`:'<p>Noch keine Bauferien erfasst.</p>'}`;
+}
+function addBauferien(dept){
+  const von=document.getElementById('bf-von').value,bis=document.getElementById('bf-bis').value,label=(document.getElementById('bf-lbl').value||'').trim()||'Bauferien';
+  if(!von||!bis){showToast('Von und Bis sind nötig');return;}
+  if(bis<von){showToast('Bis muss nach Von sein');return;}
+  deptMeta[dept]=deptMeta[dept]||{};deptMeta[dept].bauferien=[...bauferienOf(dept),{id:Date.now(),von,bis,label}];
+  saveDepts();renderBauferien(dept);renderDeptList();showToast('🏖 Bauferien erfasst: '+dept);
+}
+function rmBauferien(dept,id){
+  undoPoint('Bauferien gelöscht ('+dept+')',()=>{renderBauferien(dept);renderDeptList();});
+  deptMeta[dept].bauferien=bauferienOf(dept).filter(x=>x.id!==id);
+  saveDepts();renderBauferien(dept);renderDeptList();
+}
 function renderDeptList(){
   renderAbtMap();
   const el=document.getElementById('dept-list');if(!el)return;
@@ -5556,14 +5627,15 @@ function renderDeptList(){
   const yr=ysel?ysel.value:new Date().getFullYear();
   const all=getAllDepts();
   if(!all.length){el.innerHTML='<div style="padding:12px;font-size:12px;color:var(--tx3)">Keine Abteilungen erfasst.</div>';return;}
-  el.innerHTML=`<div style="display:grid;grid-template-columns:1fr 70px 110px 32px;gap:6px;padding:6px 10px;font-size:10px;font-weight:600;color:var(--tx2);border-bottom:1px solid var(--bd);background:var(--sf2)"><span>Abteilung</span><span style="text-align:center">Baustellen</span><span style="text-align:center">Mitarbeitende ${yr}</span><span></span></div>`+
+  el.innerHTML=`<div style="display:grid;grid-template-columns:1fr 70px 110px 70px 32px;gap:6px;padding:6px 10px;font-size:10px;font-weight:600;color:var(--tx2);border-bottom:1px solid var(--bd);background:var(--sf2)"><span>Abteilung</span><span style="text-align:center">Baustellen</span><span style="text-align:center">Mitarbeitende ${yr}</span><span style="text-align:center">Bauferien</span><span></span></div>`+
   all.map(d=>{
     const used=data.filter(e=>deptParts(e.dept).includes(d)).length;
     const q=d.replace(/"/g,'&quot;');
-    return`<div style="display:grid;grid-template-columns:1fr 70px 110px 32px;gap:6px;align-items:center;padding:6px 10px;border-bottom:1px solid var(--bd)">
+    return`<div style="display:grid;grid-template-columns:1fr 70px 110px 70px 32px;gap:6px;align-items:center;padding:6px 10px;border-bottom:1px solid var(--bd)">
       <input value="${q}" data-old="${q}" onchange="renameDept(this.dataset.old,this.value)" style="padding:5px 7px;border:1px solid var(--bd);border-radius:5px;background:var(--sf);color:var(--tx);font-size:12px">
       <span style="text-align:center;font-size:12px;color:var(--tx2)">${used}</span>
       <input type="number" min="0" value="${deptMA(d,yr)||''}" placeholder="—" data-d="${q}" onchange="setDeptMA(this.dataset.d,this.value)" style="padding:5px 7px;border:1px solid var(--bd);border-radius:5px;background:var(--sf);color:var(--tx);font-size:12px;text-align:center">
+      <button onclick="openBauferien(this.dataset.d)" data-d="${q}" title="Bauferien dieser Einheit" style="padding:4px 6px;border:1px solid var(--bd);border-radius:5px;background:var(--sf2);cursor:pointer;font-size:11px;color:var(--tx)">🏖 ${bauferienOf(d).filter(f=>f.bis>=today()).length||''}</button>
       <button onclick="removeDept(this.dataset.d)" data-d="${q}" title="${used?'In Verwendung – nicht löschbar':'Löschen'}" style="background:none;border:none;cursor:pointer;color:${used?'var(--tx3)':'#EF4444'};font-size:13px">🗑</button>
     </div>`;
   }).join('');
@@ -6145,6 +6217,8 @@ function confirmPersonalImport(){
   renderAll();
   saveNow();
   document.getElementById('pi-bg').style.display='none';
+  const impYear=_piPending.targetYear||new Date().getFullYear();
+  setTimeout(()=>checkPlansAfterImport(targetKW,impYear),600);
   showToast(`✓ ${n} Baustellen aktualisiert`+(aliasesSaved?`, ${aliasesSaved} Alias-Zuordnung(en) gespeichert`:''),4000);
 }
 
