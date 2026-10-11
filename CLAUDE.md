@@ -11,8 +11,8 @@ Beratungen, Rapporten und Ferien der Auditoren. Sprache der Oberfläche: Deutsch
 - Vor jedem PR: App im Browser laden (Desktop- und Mobile-Breite) und in der Konsole
   prüfen, dass keine JavaScript-Fehler auftreten.
 - Bei jeder Änderung an der App die Versionsnummer erhöhen, und zwar überall in
-  `index.html`: im Header (`<span ... title="Version">v2.94</span>`) und in den Links
-  `css/style.css?v=2.94`, `js/merge.js?v=2.94` und `js/app.js?v=2.94`. Der `?v=`-Zusatz
+  `index.html`: im Header (`<span ... title="Version">v2.96</span>`) und in den Links
+  `css/style.css?v=2.96`, `js/merge.js?v=2.96` und `js/app.js?v=2.96`. Der `?v=`-Zusatz
   sorgt dafür, dass Browser nach einem Update keine alte Datei aus dem Cache verwenden.
 - Tests für die Zusammenführung: `node tests/merge.test.js` (muss grün sein).
 - Keine Browser-Dialoge (`confirm`, `prompt`, `alert`): `askConfirm()`, `askText()`,
@@ -73,6 +73,12 @@ global; das HTML ruft sie direkt über `onclick="..."` auf.
   Platz hat (`mayOpen`), Gleichstand ±`tg_tie_min` → Grösse/★/Fälligkeit
   Ampel gilt am Audit-Tag (`status(e,now)`, `x.urgDay[d]`), keine 2. Fahrt in dieselbe Gegend pro
   Woche, lange rot (`tg_force_days`) immer; Routen-Schlüssel: `setOrsKey`/`orsTestKey`
+  Personal für GENAU die geplante KW (`tgPersonalState`/`persForKW`); fehlt die Liste noch: «vorläufig»
+  ('prov', letzte Liste ≤2 Wochen alt + Woche davor auch Personal), Nachkontrolle nach dem Import
+  (`checkPlansAfterImport`). Bauferien pro Abteilung in `deptMeta[d].bauferien` (`bauferienAt`,
+  Admin → Abteilungen verwalten → 🏖) sperren Tourguide-Tage und markieren Planungen. Nie Werkhöfe,
+  ohne Kartenpunkt → Liste `noGeo`, kein Audit-Beginn nach `tg_last_start`, «📞 wenig Personal»
+  bis `pi_review_max`. «Pausiert bis» endet automatisch (`autoResumeExpired`, `pauseOverAt`)
 - ~5393 Personal-Import (JSON), Sammelbox, temporäre Mitarbeitende
 - ~5969 Supabase-Verbindung (`sbFetch`, `sbInit`)
 - ~6026 Sync (`SB_FIELDS`, `sbPush`, `sbPull`, `sbMergeRemote`, Speicher-Status)
