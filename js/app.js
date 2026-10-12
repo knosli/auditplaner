@@ -656,7 +656,9 @@ function selEntry(id){
   if(puEl){if(e.paused&&e.pauseUntil){const kw=dateToKW(e.pauseUntil);const d=parseDate(e.pauseUntil);puEl.textContent='⏸ Pausiert bis KW '+kw+' ('+d.getDate()+'.'+(d.getMonth()+1)+'.)';puEl.style.display='block';}else if(e.paused){puEl.textContent='⏸ Pausiert (unbegrenzt)';puEl.style.display='block';}else puEl.style.display='none';}
   ab.textContent=e.active?'⚫ Inaktiv':'✓ Aktivieren';ab.className=e.active?'bt2':'bg';
   document.getElementById('dp').style.display='block';
-  if(e.lat&&e.lng){
+  // Karte unsichtbar (z.B. schmaler Bildschirm): nicht fliegen – Leaflet rechnet sonst mit Grösse 0 (NaN-Fehler)
+  const mapVisible=map&&map.getSize().x>0&&map.getSize().y>0;
+  if(e.lat&&e.lng&&mapVisible){
     const curZ=map.getZoom();
     // If zoomed out too far, zoom in to street level; otherwise just pan
     if(curZ<13)map.flyTo([e.lat,e.lng],14,{animate:true,duration:0.8});
@@ -3084,7 +3086,7 @@ function renderAudAdminList(){
   }).join('');
 }
 
-function openAdd(){editId=null;window._pendingLat=null;window._pendingLng=null;{const z=document.getElementById('f-zb');if(z)z.value='';}{const la=document.getElementById('f-lat'),ln=document.getElementById('f-lng');if(la)la.value='';if(ln)ln.value='';}document.getElementById('m-title').textContent='Neue Baustelle';document.getElementById('form-s').style.display='block';(document.getElementById('imp-s')||{style:{},classList:{remove(){}}}).style.display='none';(document.getElementById('json-s')||{style:{},classList:{remove(){}}}).style.display='none';document.getElementById('m-save').style.display='';['f-name','f-addr','f-psp','f-sap','f-prv','f-bc','f-note'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});fillFDept('');setDefaultRhythm('baustelle');document.getElementById('f-last').value='';document.getElementById('f-type').value='baustelle';document.getElementById('addr-suggestions').style.display='none';const hint=document.getElementById('f-addr-hint');if(hint)hint.textContent='';document.getElementById('mbg').classList.add('open');}
+function openAdd(){editId=null;window._newSitePersonal=null;window._pendingLat=null;window._pendingLng=null;{const z=document.getElementById('f-zb');if(z)z.value='';}{const la=document.getElementById('f-lat'),ln=document.getElementById('f-lng');if(la)la.value='';if(ln)ln.value='';}document.getElementById('m-title').textContent='Neue Baustelle';document.getElementById('form-s').style.display='block';(document.getElementById('imp-s')||{style:{},classList:{remove(){}}}).style.display='none';(document.getElementById('json-s')||{style:{},classList:{remove(){}}}).style.display='none';document.getElementById('m-save').style.display='';['f-name','f-addr','f-psp','f-sap','f-prv','f-bc','f-note'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});fillFDept('');setDefaultRhythm('baustelle');document.getElementById('f-last').value='';document.getElementById('f-type').value='baustelle';document.getElementById('addr-suggestions').style.display='none';const hint=document.getElementById('f-addr-hint');if(hint)hint.textContent='';document.getElementById('mbg').classList.add('open');}
 function openEdit(id){
   // Reset manual marker
   const latEl=document.getElementById('f-lat');
@@ -3115,7 +3117,7 @@ function openEdit(id){
   const hint=document.getElementById('f-addr-hint');if(hint)hint.textContent='';
   document.getElementById('mbg').classList.add('open');
 }
-function closeModal(){document.getElementById('mbg').classList.remove('open');editId=null;}
+function closeModal(){document.getElementById('mbg').classList.remove('open');editId=null;window._newSitePersonal=null;}
 async function saveEntry(){
   const name=document.getElementById('f-name').value.trim(),addr=document.getElementById('f-addr').value.trim();
   const manLat=parseFloat(document.getElementById('f-lat')?.value||0);
@@ -3141,7 +3143,7 @@ async function saveEntry(){
   const _zb=+document.getElementById('f-zb').value||0;
   const entry={id:editId||Date.now(),name,addr,zeitbedarf:_zb>0?_zb:undefined,psp:document.getElementById('f-psp').value.trim(),sap:name,prv:document.getElementById('f-prv').value.trim(),bc:document.getElementById('f-bc').value.trim(),dept,rhythm:rh,type,lastAudit:document.getElementById('f-last').value||null,lastKW:null,note:document.getElementById('f-note').value.trim(),auditor:editId?data.find(e=>e.id===editId)?.auditor:null,active:true,paused:false,auditHistory:[],plannedKW:[],lat,lng};
   if(editId){const old=data.find(e=>e.id===editId);if(old){entry.active=old.active!==false;entry.lastKW=old.lastKW??null;entry.auditor=old.auditor;entry.paused=old.paused;entry.pauseReason=old.pauseReason;entry.auditHistory=old.auditHistory||[];entry.plannedKW=old.plannedKW||[];}data[data.findIndex(e=>e.id===editId)]={...old,...entry};}
-  else{entry.createdAt=today();data.push(entry);}
+  else{entry.createdAt=today();data.push(entry);if(window._newSitePersonal)piApplyNewSite(entry);}
   log(editId?'Bearbeitet':'Hinzugefügt',name,editId?'#F59E0B':'#3B82F6','');
   closeModal();renderAll();buildCalBS();buildDF();if(entry.lat)selEntry(entry.id);saveNow();
 }
@@ -4838,7 +4840,7 @@ function rulesHTML(){
     `«Nicht auf der Liste»: aktive Baustellen einer Abteilung, deren Einsatzlisten <u>alle</u> importiert wurden, die aber auf keiner stehen → Pausieren vorgeschlagen (neu erfasste nicht vorausgewählt).`,
     `Gespeichert wird die Personalzahl bei allen erkannten Baustellen (auch dauerhaft ausgeschlossene), «nicht auf der Liste» erhält 0. Verlauf: ${v('pi_history_weeks')} Wochen.`,
     `<b>Kundendienst-Liste</b> (Admin → Kundendienst-Liste, oder «🔧 Kundendienst» bei unbekannten Einträgen und in der Sammelbox): Einträge ohne passende Baustelle, deren PSP-Nummer (genau oder inkl. aller Unternummern, z.B. 4225280.xx) oder Name (Stichwort, z.B. «Kundenarbeiten», «Divers») auf der Liste steht, werden übersprungen – nicht «unbekannt», nicht in der Sammelbox. Echte Baustellen sind nie betroffen. Die Sammelbox führt doppelte Einträge (gleiche PSP und Name) zusammen. In der Sammelbox als Kundendienst gemerkte Einträge erscheinen sofort unter den erkannten Kundendienst-Einträgen. Unter Admin → Kundendienst-Liste stehen alle erkannten Kundendienst-Einträge (PSP, Name, Einheit, Personen, zuletzt gesehen) – nachgeführt bei jedem übernommenen Import, nach ${PI_KD_KEEP_WEEKS} Wochen ohne Erscheinen entfernt. Pro Eintrag wird der Personalverlauf der letzten ${PI_KD_HIST_WEEKS} Wochen gezeigt (Einheit importiert, Eintrag fehlt = 0). Hat ein Kundendienst-Auftrag ${v('kd_streak_weeks')} Wochen am Stück Personal (in der neuesten Liste mindestens ${v('kd_min_pers')}), erscheint «🔔 Audit prüfen» und nach dem Import ein Hinweis; mit «+ Baustelle» wird er zur normalen Baustelle.`,
-    `Werkhöfe sind vom Import komplett ausgenommen. Unbekannte Einträge: zuordnen (Alias wird gemerkt), neu anlegen oder in die Sammelbox.`,
+    `Werkhöfe sind vom Import komplett ausgenommen. Unbekannte Einträge: zuordnen (Alias wird gemerkt), neu anlegen oder in die Sammelbox. Beim Zuordnen oder Neu-Anlegen (aus Import, Sammelbox oder Kundendienst-Liste) wird die Personalzahl der Liste gleich übernommen; aus der Kundendienst-Liste der ganze Verlauf.`,
     `KW-Planung: Jede Baustellen-Karte zeigt 👷 das Personal der KW, in der sie geplant ist (Import oder manuell). Gibt es dafür keinen Wert, steht grau kursiv der zuletzt bekannte Wert mit seiner KW, ohne Angabe «–». Eine 0 ist rot. Werkhöfe zeigen nichts.`,
     `Temporäre Mitarbeitende: nur Personal-Nummern (keine Namen), pro Einheit bei jedem Import ersetzt.`,
     `Manuelle Erfassung (für Einheiten ohne brauchbare Einsatzliste): im Detail-Panel ✏️ bei «Personal» oder Admin → «Personal manuell erfassen» (mehrere Baustellen einer Abteilung). Wirkt wie ein Import-Wert (Verlauf, Trend, Tourguide), ersetzt einen vorhandenen Wert derselben KW und ändert den Status der Baustelle nicht (kein Pausieren/Reaktivieren).`]) +
@@ -5408,9 +5410,9 @@ function pmYearFor(kw){
   const cur=dateToKW(today()),y=new Date().getFullYear();
   if(kw-cur>40)return y-1;if(cur-kw>40)return y+1;return y;
 }
-function recordPersonalManual(e,kw,yr,count){
+function recordPersonalManual(e,kw,yr,count,manual=true){
   e.personalHistory=(e.personalHistory||[]).filter(h=>!(h.kw===kw&&h.year===yr));
-  e.personalHistory.push({kw,year:yr,count,manual:true});
+  e.personalHistory.push(manual?{kw,year:yr,count,manual:true}:{kw,year:yr,count});
   e.personalHistory.sort((a,b)=>a.year-b.year||a.kw-b.kw);
   const maxW=S('pi_history_weeks');
   if(e.personalHistory.length>maxW)e.personalHistory=e.personalHistory.slice(-maxW);
@@ -6055,6 +6057,7 @@ function piCreateFromUnknown(idx){
   const pspEl=document.getElementById('f-psp');
   if(nameEl)nameEl.value=item.name||'';
   if(pspEl&&item.psp)pspEl.value=item.psp;
+  piNewSitePending(item,_piPending.targetKW,_piPending.targetYear,'import');
   _piPending.buckets.unknown.splice(idx,1);
 }
 
@@ -6233,6 +6236,7 @@ function piKdToSite(key){
   openAdd();
   const n=document.getElementById('f-name'),p=document.getElementById('f-psp');
   if(n)n.value=x.name||'';if(p&&x.psp)p.value=x.psp;
+  piNewSitePending(x,x.kw,x.year,'kd');
   showToast('Baustelle erfassen – beim nächsten Import wird der Eintrag dann normal zugeordnet',4500);
 }
 async function addPiIgnore(){if(await piIgnoreAsk({psp:'',name:''})){sammelboxClean();renderPiIgnore();}}
@@ -6346,12 +6350,42 @@ function sbAssign(ci){
     e.nameAliases=e.nameAliases||[];
     if(!e.nameAliases.includes(nn))e.nameAliases.push(nn);
   }
+  {const w=piItemWeek(it);if(w&&it.count!=null)recordPersonalManual(e,w.kw,w.year,+it.count||0,false);}
   if(it.count===0){if(!e.paused){e.paused=true;e.pauseReason='Import (Sammelbox): kein Personal';e.pauseUntil=null;log('Pausiert ⏸ (Sammelbox)',e.name,'#94A3B8','');}}
   else if(it.count>S('pi_review_max')){if(e.paused){e.paused=false;e.pauseReason=null;e.pauseUntil=null;log('Reaktiviert ▶ (Sammelbox)',e.name,'#10B981','');}}
   window._piCollectBox.splice(ci,1);
   saveNow();renderAll();
   showToast('✓ Zugeordnet: '+e.name,2000);
   openSammelbox();
+}
+// KW eines Import-Eintrags; ältere Sammelbox-Einträge ohne KW: neueste importierte Woche
+function piItemWeek(it,kw,yr){
+  if(kw)return{kw,year:yr||curIsoYear()};
+  if(it&&it.kw)return{kw:it.kw,year:it.year||curIsoYear()};
+  let best=null;
+  data.forEach(e=>(e.personalHistory||[]).forEach(h=>{if(!h.manual&&(!best||h.year>best.year||(h.year===best.year&&h.kw>best.kw)))best=h;}));
+  return best?{kw:best.kw,year:best.year}:null;
+}
+// «+ Neue Baustelle» aus Sammelbox / Import / Kundendienst-Liste: Personal beim Speichern übernehmen
+function piNewSitePending(it,kw,yr,src){
+  const w=piItemWeek(it,kw,yr);
+  window._newSitePersonal={src,psp:it.psp||'',name:it.name||'',count:it.count==null?null:+it.count||0,kw:w&&w.kw,year:w&&w.year,hist:src==='kd'?piKdHist(it):null};
+}
+function piApplyNewSite(e){
+  const x=window._newSitePersonal;window._newSitePersonal=null;
+  if(!x)return;
+  if(x.src==='box'){
+    const box=window._piCollectBox||[],i=box.findIndex(b=>piPspKey(b.psp)===piPspKey(x.psp)&&piNormName(b.name)===piNormName(x.name));
+    if(i>=0)box.splice(i,1);
+    if(typeof updateSbBadge==='function')updateSbBadge();
+  }
+  // Abweichende Schreibweise auf der Liste als Alias merken, damit der nächste Import zuordnet
+  if(x.psp&&piFullPSP(x.psp)&&piFullPSP(x.psp)!==piFullPSP(e.psp)){e.pspAliases=e.pspAliases||[];if(!e.pspAliases.includes(piFullPSP(x.psp)))e.pspAliases.push(piFullPSP(x.psp));}
+  else if(!x.psp&&x.name&&piNormName(x.name)!==piNormName(e.name)){e.nameAliases=e.nameAliases||[];if(!e.nameAliases.includes(piNormName(x.name)))e.nameAliases.push(piNormName(x.name));}
+  if(x.count==null||!x.kw)return;
+  (x.hist||[]).forEach(h=>recordPersonalManual(e,h.kw,h.year,+h.count||0,false));   // Kundendienst: ganzer Verlauf
+  recordPersonalManual(e,x.kw,x.year,x.count,false);
+  setTimeout(()=>showToast(`👷 Personal übernommen: ${x.count} Pers. (KW ${x.kw}${x.year!==curIsoYear()?' / '+x.year:''})`,3500),400);
 }
 function sbCreate(ci){
   const it=(window._piCollectBox||[])[ci];
@@ -6362,8 +6396,8 @@ function sbCreate(ci){
   const pspEl=document.getElementById('f-psp');
   if(nameEl)nameEl.value=it.name||'';
   if(pspEl&&it.psp)pspEl.value=it.psp;
-  window._piCollectBox.splice(ci,1);
-  saveNow();
+  // Personal und Entfernen aus der Sammelbox erst beim Speichern (Abbrechen → bleibt in der Sammelbox)
+  piNewSitePending(it,it.kw,it.year,'box');
 }
 function confirmPersonalImport(){
   if(!_piPending)return;
