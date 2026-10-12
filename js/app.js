@@ -698,7 +698,12 @@ function showF(w){
 }
 function showDel(){['audit-form','plan-form','note-form','pause-form','resume-form'].forEach(x=>document.getElementById(x).style.display='none');document.getElementById('delc').style.display='block';}
 function hideDel(){document.getElementById('delc').style.display='none';}
-function doDelete(){if(!selId)return;const e=data.find(x=>x.id===selId);if(e)log('Gelöscht',e.name,'#EF4444','');data=data.filter(x=>x.id!==selId);closeDP();renderAll();}
+function doDelete(){if(!selId)return;const id=selId,e=data.find(x=>x.id===id);
+  undoPoint('Baustelle '+(e?'«'+e.name+'» ':'')+'gelöscht (inkl. offener Planungen)',()=>{if(curView==='cal'){renderCalSB();renderKW();}});
+  if(e)log('Gelöscht',e.name,'#EF4444','');
+  // offene Planungen und Beratungs-Planungen dieser Baustelle mitentfernen (sonst «Baustelle gelöscht» im Kalender)
+  plans=plans.filter(p=>p.bsId!==id);beratPlan=beratPlan.filter(p=>p.bsId!==id);
+  data=data.filter(x=>x.id!==id);closeDP();saveNow();renderAll();if(curView==='cal'){renderCalSB();renderKW();}}
 function confirmAudit(){
   const aud=document.getElementById('aud-pick').value,dt=document.getElementById('aud-date').value;
   if(!aud||!dt){showToast('Auditor und Datum erforderlich');return;}
@@ -2475,7 +2480,7 @@ function renderKW(){
         ${kwP.length?`<div style="display:flex;gap:3px"><button onclick="kwRoute(${kw})"><i class="ti ti-map-2"></i></button><button onclick="kwPrint(${kw})"><i class="ti ti-printer"></i></button></div>`:''}
       </div>
       ${fer.map(f=>`<div class="kwfer">🌴 ${f.auditor.split(' ').pop()}: ${f.label}</div>`).join('')}
-      ${kwP.length?kwP.map(p=>{const e=data.find(x=>x.id===p.bsId);const c=p.auditor&&p.auditor!=='Unbekannt'?aC(p.auditor):'#9CA3AF';const dn=['So','Mo','Di','Mi','Do','Fr','Sa'][parseDate(p.date).getDay()];return`<div class="kwe" onclick="openCalPop(${p._i})"><div class="kwen">${e?((e.type==='werkhof'?'🏠 ':'')+e.name):'(gel.)'}</div>${kwMetaLine(e,kw,'1px 0',p.date)}<span class="kwea" style="background:${c}">${p.auditor==='Unbekannt'?'? Zuteilen':p.auditor.split(' ').pop()}</span><div class="kwed">${dn} ${fd(p.date)}</div></div>`;}).join(''):`<div class="kwemp">Keine Planungen</div>`}
+      ${kwP.length?kwP.map(p=>{const e=data.find(x=>x.id===p.bsId);const c=p.auditor&&p.auditor!=='Unbekannt'?aC(p.auditor):'#9CA3AF';const dn=['So','Mo','Di','Mi','Do','Fr','Sa'][parseDate(p.date).getDay()];return`<div class="kwe" onclick="openCalPop(${p._i})"><div class="kwen">${e?((e.type==='werkhof'?'🏠 ':'')+e.name):'⚠ Baustelle gelöscht'}</div>${kwMetaLine(e,kw,'1px 0',p.date)}<span class="kwea" style="background:${c}">${p.auditor==='Unbekannt'?'? Zuteilen':p.auditor.split(' ').pop()}</span><div class="kwed">${dn} ${fd(p.date)}</div></div>`;}).join(''):`<div class="kwemp">Keine Planungen</div>`}
     </div>`;
   }).join('');
 }
@@ -2523,12 +2528,12 @@ function renderWeekView(kw){
       </div>
       ${fer.map(f=>`<div class="kwfer">🌴 ${f.auditor.split(' ').pop()}: ${f.label}</div>`).join('')}
       ${(()=>{const gids=[...new Set(rapporte.filter(r=>r.date===ds&&(!audFilter||r.auditor===audFilter)).map(r=>r.groupId))];const gs=gids.map(g=>rapporte.filter(x=>x.groupId===g&&x.date===ds)).filter(m=>m.length).sort((a,b)=>(a[0].time||'').localeCompare(b[0].time||''));return gs.map(mem=>{const r=mem[0];const anyPlan=mem.some(m=>m.planned);return`<div class="kwe" style="border-left:3px solid #0EA5E9;${anyPlan?'':'background:#F0F9FF'}"><div class="kwe-top" onclick="openRapportEdit(${r.id})" style="cursor:pointer"><div class="kwen" style="color:#0369A1">${anyPlan?'':'✓ '}📋 ${r.type}${r.seriesId?' 🔁':''}${r.time?' '+r.time:''}${(r.dept||r.ort)?`<div style="font-size:10px;font-weight:400;color:var(--tx3)">${[r.dept,r.ort].filter(Boolean).join(' · ')}</div>`:''}</div><span style="display:flex;gap:3px;flex-wrap:wrap;margin-top:2px">${mem.map(m=>m.planned?`<span class="kwea" title="${m.auditor}: geplant" style="background:transparent;border:1.5px solid ${aC(m.auditor)};color:${aC(m.auditor)}">${m.auditor.split(' ').pop()}</span>`:`<span class="kwea" title="${m.auditor}: teilgenommen" style="background:${aC(m.auditor)}">✓ ${m.auditor.split(' ').pop()}</span>`).join('')}</span></div>${anyPlan?`<div class="kwe-move" style="display:flex;gap:2px;padding:2px 6px 3px;border-top:1px solid var(--bd)"><button onclick="moveRapportTo(${r.id},'${rpAddDays(kwToDate(kw),-3)}')" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">←</button>${days.map((day,dj)=>`<button onclick="moveRapportTo(${r.id},'${rpAddDays(kwToDate(kw),dj)}')" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:${rpAddDays(kwToDate(kw),dj)===ds?'#0EA5E9':'var(--sf2)'};color:${rpAddDays(kwToDate(kw),dj)===ds?'#fff':'var(--tx2)'};font-size:9px;cursor:pointer;line-height:1.4">${day}</button>`).join('')}<button onclick="moveRapportTo(${r.id},'${kwToDate(kw+1)}')" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">→</button></div>`:''}</div>`;}).join('');})()}
-      ${(()=>{const bp=beratPlan.filter(p=>p.date===ds&&(!audFilter||p.auditor===audFilter));return bp.map(p=>{const e=data.find(x=>x.id===p.bsId);const audCol=aC(p.auditor||'');return`<div class="kwe" style="border-left:3px solid #8B5CF6"><div class="kwe-top" onclick="openBeratPlanPop(${p.id})" style="cursor:pointer"><div class="kwen">💬 ${e?pspPre(e.psp)+e.name:'(gel.)'}</div>${kwMetaLine(e,kw,'0 0 1px',p.date)}<span class="kwea" style="background:${audCol}">${(p.auditor||'?').split(' ').pop()}</span></div>${p.note?`<div style="font-size:10px;color:#7C3AED;padding:2px 6px 3px">${p.note}</div>`:''}<div class="kwe-move" style="display:flex;gap:2px;padding:2px 6px 3px;border-top:1px solid var(--bd)"><button onclick="moveBeratPlan(${p.id},'${kwToDate(kw-1)}',4)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">←</button>${days.map((day,dj)=>`<button onclick="moveBeratPlan(${p.id},'${kwToDate(kw)}',${dj})" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:${dj===di?'var(--blue)':'var(--sf2)'};color:${dj===di?'#fff':'var(--tx2)'};font-size:9px;cursor:pointer;line-height:1.4">${day}</button>`).join('')}<button onclick="moveBeratPlan(${p.id},'${kwToDate(kw+1)}',0)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">→</button></div></div>`;}).join('');})()}
+      ${(()=>{const bp=beratPlan.filter(p=>p.date===ds&&(!audFilter||p.auditor===audFilter));return bp.map(p=>{const e=data.find(x=>x.id===p.bsId);const audCol=aC(p.auditor||'');return`<div class="kwe" style="border-left:3px solid #8B5CF6"><div class="kwe-top" onclick="openBeratPlanPop(${p.id})" style="cursor:pointer"><div class="kwen">💬 ${e?pspPre(e.psp)+e.name:'⚠ Baustelle gelöscht'}</div>${kwMetaLine(e,kw,'0 0 1px',p.date)}<span class="kwea" style="background:${audCol}">${(p.auditor||'?').split(' ').pop()}</span></div>${p.note?`<div style="font-size:10px;color:#7C3AED;padding:2px 6px 3px">${p.note}</div>`:''}<div class="kwe-move" style="display:flex;gap:2px;padding:2px 6px 3px;border-top:1px solid var(--bd)"><button onclick="moveBeratPlan(${p.id},'${kwToDate(kw-1)}',4)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">←</button>${days.map((day,dj)=>`<button onclick="moveBeratPlan(${p.id},'${kwToDate(kw)}',${dj})" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:${dj===di?'var(--blue)':'var(--sf2)'};color:${dj===di?'#fff':'var(--tx2)'};font-size:9px;cursor:pointer;line-height:1.4">${day}</button>`).join('')}<button onclick="moveBeratPlan(${p.id},'${kwToDate(kw+1)}',0)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">→</button></div></div>`;}).join('');})()}
       ${(()=>{const done=data.flatMap(e=>(e.beratungen||[]).filter(b=>b.date===ds).map(b=>({...b,eName:e.name,ePsp:e.psp,eId:e.id})));return done.map(b=>{const bAudCol=aC(b.auditor||'');return`<div class="kwe" style="background:#F5F3FF;border-left:3px solid #8B5CF6;cursor:pointer" onclick="openBeratDoneUndo(${b.eId},${b.id})"><div class="kwe-top"><div class="kwen" style="color:#7C3AED">✓ 💬 ${pspPre(b.ePsp)}${b.eName}</div>${kwMetaLine(data.find(x=>x.id===b.eId),kw,'0 0 1px')}<span class="kwea" style="background:${bAudCol}">${(b.auditor||'?').split(' ').pop()}</span></div>${b.note?`<div style="font-size:10px;color:#7C3AED;padding:2px 6px 3px">${b.note}</div>`:''}</div>`;}).join('');})()}
       ${dayAudits.map(h=>{const e=data.find(x=>x.id===h.eId);return`<div class="kwe" style="background:#F0FDF4;border-left:3px solid #10B981;cursor:pointer" onclick="openAuditUndo(${h.eId},'${h.date}')"><div class="kwe-top"><div class="kwen" style="color:#065F46">✓ ${e&&e.type==='werkhof'?'🏠 ':''}${pspPre(h.ePsp)}${h.eName}</div>${kwMetaLine(e,kw,'0 0 1px')}<span class="kwea" style="background:${aC(h.auditor||'')}">${(h.auditor||'?').split(' ').pop()}</span></div></div>`;}).join('')}
       ${(()=>{const paP=personAudits.filter(p=>p.planned&&p.date===ds&&(!audFilter||p.auditor===audFilter));return paP.map(p=>{const col=p.auditor?aC(p.auditor):'#9CA3AF';return`<div class="kwe"><div class="kwe-top" onclick="openPersonAuditPop(${p.id})" style="cursor:pointer"><div class="kwen">👤 ${p.person}${p.bs?' · '+p.bs:''}</div><span class="kwea" style="background:${col}">${p.auditor?p.auditor.split(' ').pop():'? Zuteilen'}</span></div><div class="kwe-move" style="display:flex;gap:2px;padding:2px 6px 3px;border-top:1px solid var(--bd)"><button onclick="movePersonAudit(${p.id},'${kwToDate(kw-1)}',4)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">←</button>${days.map((day,dj)=>`<button onclick="movePersonAudit(${p.id},'${kwToDate(kw)}',${dj})" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:${dj===di?'var(--blue)':'var(--sf2)'};color:${dj===di?'#fff':'var(--tx2)'};font-size:9px;cursor:pointer;line-height:1.4">${day}</button>`).join('')}<button onclick="movePersonAudit(${p.id},'${kwToDate(kw+1)}',0)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">→</button></div></div>`;}).join('');})()}
       ${(()=>{const paDone=personAudits.filter(p=>!p.planned&&p.date===ds&&(!audFilter||p.auditor===audFilter));return paDone.map(p=>{const audCol=aC(p.auditor||'');return`<div class="kwe" style="background:#FFFBEB;border-left:3px solid #F59E0B;cursor:pointer" onclick="openPersonAuditDoneUndo(${p.id})"><div class="kwe-top"><div class="kwen" style="color:#B45309">✓ 👤 ${p.person}${p.bs?' · '+p.bs:''}</div><span class="kwea" style="background:${audCol}">${(p.auditor||'?').split(' ').pop()}</span></div></div>`;}).join('');})()}
-      ${dayP.length?dayP.map(p=>{const e=data.find(x=>x.id===p.bsId);const col=p.auditor&&p.auditor!=='Unbekannt'?aC(p.auditor):'#9CA3AF';const isSel=multiAuditMode&&planned.has(p.bsId);return`<div class="kwe" style="${isSel?'background:#EFF6FF;border-left:3px solid var(--blue)':''}"><div class="kwe-top" onclick="${multiAuditMode?`toggleKWAuditSel(${p.bsId})`:`openCalPop(${p._i})`}" style="cursor:pointer"><div class="kwen">${isSel?'☑ ':''}${e?((e.type==='werkhof'?'🏠 ':'')+pspPre(e.psp)+e.name):'(gel.)'}</div>${kwMetaLine(e,kw,'0 0 1px',p.date)}<span class="kwea" style="background:${col}">${p.auditor==='Unbekannt'||!p.auditor?'? Zuteilen':p.auditor.split(' ').pop()}</span></div>${!multiAuditMode?`<div class="kwe-move" style="display:flex;gap:2px;padding:2px 6px 3px;border-top:1px solid var(--bd)"><button onclick="movePlan(${p._i},'${kwToDate(kw-1)}',4)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4" title="Vorwoche Fr">←</button>${days.map((day,dj)=>`<button onclick="movePlan(${p._i},'${kwToDate(kw)}',${dj})" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:${dj===di?'var(--blue)':'var(--sf2)'};color:${dj===di?'#fff':'var(--tx2)'};font-size:9px;cursor:pointer;line-height:1.4">${day}</button>`).join('')}<button onclick="movePlan(${p._i},'${kwToDate(kw+1)}',0)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4" title="Nächste Woche Mo">→</button></div>`:''}
+      ${dayP.length?dayP.map(p=>{const e=data.find(x=>x.id===p.bsId);const col=p.auditor&&p.auditor!=='Unbekannt'?aC(p.auditor):'#9CA3AF';const isSel=multiAuditMode&&planned.has(p.bsId);return`<div class="kwe" style="${isSel?'background:#EFF6FF;border-left:3px solid var(--blue)':''}"><div class="kwe-top" onclick="${multiAuditMode?`toggleKWAuditSel(${p.bsId})`:`openCalPop(${p._i})`}" style="cursor:pointer"><div class="kwen">${isSel?'☑ ':''}${e?((e.type==='werkhof'?'🏠 ':'')+pspPre(e.psp)+e.name):'⚠ Baustelle gelöscht'}</div>${kwMetaLine(e,kw,'0 0 1px',p.date)}<span class="kwea" style="background:${col}">${p.auditor==='Unbekannt'||!p.auditor?'? Zuteilen':p.auditor.split(' ').pop()}</span></div>${!multiAuditMode?`<div class="kwe-move" style="display:flex;gap:2px;padding:2px 6px 3px;border-top:1px solid var(--bd)"><button onclick="movePlan(${p._i},'${kwToDate(kw-1)}',4)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4" title="Vorwoche Fr">←</button>${days.map((day,dj)=>`<button onclick="movePlan(${p._i},'${kwToDate(kw)}',${dj})" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:${dj===di?'var(--blue)':'var(--sf2)'};color:${dj===di?'#fff':'var(--tx2)'};font-size:9px;cursor:pointer;line-height:1.4">${day}</button>`).join('')}<button onclick="movePlan(${p._i},'${kwToDate(kw+1)}',0)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4" title="Nächste Woche Mo">→</button></div>`:''}
 </div>`;}).join(''):`<div class="kwemp">Frei</div>`}
     </td>`;
   });
@@ -2579,7 +2584,7 @@ function kwRoute_day(ds){
 function kwPrint_day(ds){const kw=dateToKW(ds);kwPrint(kw);}
 
 function renderCalSB(){
-  document.getElementById('cal-pl').innerHTML=plans.length?plans.slice().reverse().map((p,ri)=>{const i=plans.length-1-ri;const e=data.find(x=>x.id===p.bsId);const c=aC(p.auditor);return`<div class="cpi"><button class="cpid2" onclick="delPlanIdx(${i})"><i class="ti ti-trash"></i></button><div class="cpin">${e?((e.type==='werkhof'?'🏠 ':'')+e.name):'(gel.)'}</div><div class="cpim">${e?e.dept||'':''}</div><div class="cpit"><span class="cpia" style="background:${c}">${p.auditor.split(' ').pop()}</span><span class="cpid">KW ${dateToKW(p.date)} · ${fd(p.date)}</span></div></div>`;}).join(''):`<div style="padding:12px;font-size:11px;color:var(--tx3);text-align:center">Keine Planungen.</div>`;
+  document.getElementById('cal-pl').innerHTML=plans.length?plans.slice().reverse().map((p,ri)=>{const i=plans.length-1-ri;const e=data.find(x=>x.id===p.bsId);const c=aC(p.auditor);return`<div class="cpi"><button class="cpid2" onclick="delPlanIdx(${i})"><i class="ti ti-trash"></i></button><div class="cpin">${e?((e.type==='werkhof'?'🏠 ':'')+e.name):'⚠ Baustelle gelöscht'}</div><div class="cpim">${e?e.dept||'':''}</div><div class="cpit"><span class="cpia" style="background:${c}">${p.auditor.split(' ').pop()}</span><span class="cpid">KW ${dateToKW(p.date)} · ${fd(p.date)}</span></div></div>`;}).join(''):`<div style="padding:12px;font-size:11px;color:var(--tx3);text-align:center">Keine Planungen.</div>`;
 }
 
 // ═══ Personen-Audits Panel (Kartenansicht) - reine Übersichtsliste, verändert die Karte nicht ═══
@@ -2717,9 +2722,9 @@ function openCalPop(idx){
   popMode='site';popPersonId=null;
   popIdx=idx;const p=plans[idx];if(!p)return;
   const e=data.find(x=>x.id===p.bsId);
-  document.getElementById('pop-n').textContent=e?((e.type==='werkhof'?'🏠 ':'')+e.name):'(gel.)';
+  document.getElementById('pop-n').textContent=e?((e.type==='werkhof'?'🏠 ':'')+e.name):'⚠ Baustelle gelöscht';
   const kwNum=dateToKW(p.date);
-  document.getElementById('pop-m').textContent=`${e?e.dept||'—':'—'} · KW ${kwNum} · ${fd(p.date)}`;
+  document.getElementById('pop-m').textContent=e?`${e.dept||'—'} · KW ${kwNum} · ${fd(p.date)}`:`KW ${kwNum} · ${fd(p.date)} – die Baustelle existiert nicht mehr. «Nicht besucht» entfernt diese Planung.`;
   // Populate auditor dropdown - always visible for reassignment
   const audSel=document.getElementById('pop-aud-sel');
   if(audSel){
@@ -2791,7 +2796,11 @@ function popAct(action){
     }
     closeCalPop();renderKW();renderPA2();renderAuditors();saveNow();return;
   }
-  if(popIdx===null)return;const p=plans[popIdx];if(!p)return;const e=data.find(x=>x.id===p.bsId);if(!e)return;
+  if(popIdx===null)return;const p=plans[popIdx];if(!p)return;const e=data.find(x=>x.id===p.bsId);
+  if(!e){ // Planung einer gelöschten Baustelle: nur noch entfernen
+    undoPoint('Planung (gelöschte Baustelle) entfernt',()=>{if(curView==='cal'){renderCalSB();renderKW();}});
+    plans.splice(popIdx,1);closeCalPop();saveNow();renderAll();if(curView==='cal'){renderCalSB();renderKW();}return;
+  }
   // Get selected auditor if Unbekannt
   const selEl=document.getElementById('pop-aud-sel');
   if(selEl&&selEl.value)p.auditor=selEl.value;
@@ -2912,7 +2921,7 @@ function doKWPrint(){
       ${dayP.map(p=>{const e=data.find(x=>x.id===p.bsId);return`<div style="padding:6px 10px;border-bottom:1px solid #e5e7eb;display:flex;align-items:flex-start;gap:6px">
         <span style="color:#6366F1;font-size:13px;flex-shrink:0;margin-top:1px">●</span>
         <div>
-          <div style="font-size:14px;font-weight:600">${e?(e.type==='werkhof'?'🏠 ':'')+e.name:'(gel.)'}</div>
+          <div style="font-size:14px;font-weight:600">${e?(e.type==='werkhof'?'🏠 ':'')+e.name:'⚠ Baustelle gelöscht'}</div>
           <div style="font-size:10px;color:#6B7280">${e?e.addr||'':''}</div>
           <div style="font-size:10px;color:#6366F1;font-weight:500">${p.auditor||''}</div>
         </div>
@@ -4807,7 +4816,7 @@ function setDefaultRhythm(type){
 // Regel-Beschreibung - Zahlen kommen live aus den Einstellungen, damit Text und Verhalten übereinstimmen
 function rulesHTML(){
   const v=k=>`<b style="color:var(--blue)">${String(S(k)).replace('.',',')}</b>`;
-  const sec=(ic,t,items)=>`<div style="margin-bottom:14px"><div style="font-size:13px;font-weight:700;color:var(--tx);margin-bottom:6px"><i class="ti ti-${ic}" style="color:var(--blue)"></i> ${t}</div><ul style="margin:0;padding-left:18px;font-size:12px;color:var(--tx2);line-height:1.55">${items.map(i=>`<li>${i}</li>`).join('')}</ul></div>`;
+  const sec=(ic,t,items)=>`<div class="rule-sec" data-t="${t}" style="margin-bottom:14px"><div style="font-size:13px;font-weight:700;color:var(--tx);margin-bottom:6px"><i class="ti ti-${ic}" style="color:var(--blue)"></i> ${t}</div><ul style="margin:0;padding-left:18px;font-size:12px;color:var(--tx2);line-height:1.55">${items.map(i=>`<li>${i}</li>`).join('')}</ul></div>`;
   return`<div style="font-size:11px;color:var(--tx3);margin-bottom:12px">Übersicht der Regeln, nach denen der Planer arbeitet. Blaue Zahlen sind im Tab «Werte» einstellbar.</div>`+
   sec('traffic-lights','Status & Ampel',[
     `Fälligkeit = letztes Audit + Rhythmus der Baustelle.`,
@@ -4878,10 +4887,41 @@ function rulesHTML(){
 let _setTab='werte';
 function openSettings(){_setTab='werte';renderSettings();document.getElementById('set-bg').style.display='flex';}
 function setSettingsTab(t){_setTab=t;renderSettings();}
+// Regeln ausdrucken (z.B. zur Kontrolle durch eine Drittperson). Inhalt = aktuelle Regeln mit den
+// aktuell eingestellten Werten. onlyTg: nur Ampel + Tourguide (inkl. Personal-Import als Grundlage).
+function printRules(onlyTg){
+  const tmp=document.createElement('div');tmp.innerHTML=rulesHTML();
+  const keep=['Status & Ampel','Personal-Import (Einsatzlisten)','Tourguide'];
+  const secs=[...tmp.querySelectorAll('.rule-sec')].filter(x=>!onlyTg||keep.includes(x.dataset.t));
+  secs.forEach(x=>x.querySelectorAll('i.ti').forEach(i=>i.remove()));
+  const groups=SETTINGS_DEF.filter(g=>!onlyTg||['Fälligkeit (Ampel)','Tourguide','Personal-Import'].includes(g.grp));
+  const st=deptMeta._settings||{};
+  const fmtV=i=>i.u==='Uhr'?tgHM(S(i.k)*60)+' Uhr':String(S(i.k)).replace('.',',')+' '+i.u;
+  const ver=(document.querySelector('[title="Version"]')||{}).textContent||'';
+  const html=`<!doctype html><html lang="de"><head><meta charset="utf-8"><title>${onlyTg?'Tourguide-Regeln':'Regeln'} – Audit Planer</title>
+<style>:root{--blue:#1D4ED8;--tx:#111;--tx2:#333;--tx3:#666;--bd:#ccc;--sf:#fff;--sf2:#f5f5f5}
+body{font-family:Inter,Arial,sans-serif;color:#111;margin:24px;font-size:12px}h1{font-size:18px;margin:0 0 4px}.meta{color:#555;margin-bottom:16px}
+table{border-collapse:collapse;width:100%;margin:6px 0 18px}td,th{border:1px solid #ccc;padding:4px 6px;text-align:left;font-size:11px}th{background:#f2f2f2}
+.rule-sec{page-break-inside:avoid}.sign{margin-top:28px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px}.sign div{border-top:1px solid #333;padding-top:4px;font-size:11px;color:#333}
+@media print{body{margin:12mm}button{display:none}}</style></head><body>
+<button onclick="print()" style="float:right;padding:6px 12px">🖨 Drucken</button>
+<h1>${onlyTg?'Tourguide-Regeln':'Regeln'} – Anliker Audit Planer</h1>
+<div class="meta">Stand: ${new Date().toLocaleDateString('de-CH')} · ${escH(ver)} · ausgedruckt von ${escH(currentUser||'–')}</div>
+<h2 style="font-size:14px">Regeln</h2>${secs.map(x=>x.outerHTML).join('')}
+<h2 style="font-size:14px">Eingestellte Werte</h2>
+${groups.map(g=>`<table><tr><th colspan="3">${escH(g.grp)}</th></tr><tr><th>Einstellung</th><th style="width:110px">Aktueller Wert</th><th style="width:90px">Standard</th></tr>${g.items.map(i=>`<tr><td>${escH(i.l)}</td><td><b>${fmtV(i)}</b>${st[i.k]!==undefined?' (geändert)':''}</td><td>${i.u==='Uhr'?tgHM(i.def*60)+' Uhr':String(i.def).replace('.',',')+' '+i.u}</td></tr>`).join('')}</table>`).join('')}
+<div class="sign"><div>Geprüft von (Name)</div><div>Datum</div><div>Unterschrift</div></div>
+<div style="margin-top:14px;font-size:11px;color:#333">Bemerkungen:<br><br><br><br></div>
+</body></html>`;
+  const w=window.open('','_blank');
+  if(!w){showToast('Pop-up wurde blockiert – bitte Pop-ups für diese Seite erlauben',4000);return;}
+  w.document.open();w.document.write(html);w.document.close();
+  setTimeout(()=>{try{w.focus();w.print();}catch(e){}},400);
+}
 function renderSettings(){
   const box=document.getElementById('set-body');if(!box)return;
   ['werte','regeln'].forEach(t=>{const b=document.getElementById('set-tab-'+t);if(b){b.style.borderBottomColor=t===_setTab?'var(--blue)':'transparent';b.style.color=t===_setTab?'var(--blue)':'var(--tx2)';}});
-  if(_setTab==='regeln'){box.innerHTML=rulesHTML();return;}
+  if(_setTab==='regeln'){box.innerHTML=`<div style="display:flex;gap:6px;justify-content:flex-end;margin-bottom:10px"><button type="button" class="ui-btn" onclick="printRules(true)">🖨 Tourguide-Regeln drucken</button><button type="button" class="ui-btn" onclick="printRules(false)">🖨 Alle Regeln drucken</button></div>`+rulesHTML();return;}
   const s=deptMeta._settings||{};
   box.innerHTML=SETTINGS_DEF.map(g=>`<div style="margin-bottom:16px">
     <div style="font-size:12px;font-weight:700;color:var(--tx);margin-bottom:6px">${escH(g.grp)}</div>

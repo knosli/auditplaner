@@ -11,8 +11,8 @@ Beratungen, Rapporten und Ferien der Auditoren. Sprache der Oberfläche: Deutsch
 - Vor jedem PR: App im Browser laden (Desktop- und Mobile-Breite) und in der Konsole
   prüfen, dass keine JavaScript-Fehler auftreten.
 - Bei jeder Änderung an der App die Versionsnummer erhöhen, und zwar überall in
-  `index.html`: im Header (`<span ... title="Version">v2.96</span>`) und in den Links
-  `css/style.css?v=2.96`, `js/merge.js?v=2.96` und `js/app.js?v=2.96`. Der `?v=`-Zusatz
+  `index.html`: im Header (`<span ... title="Version">v2.97</span>`) und in den Links
+  `css/style.css?v=2.97`, `js/merge.js?v=2.97` und `js/app.js?v=2.97`. Der `?v=`-Zusatz
   sorgt dafür, dass Browser nach einem Update keine alte Datei aus dem Cache verwenden.
 - Tests für die Zusammenführung: `node tests/merge.test.js` (muss grün sein).
 - Keine Browser-Dialoge (`confirm`, `prompt`, `alert`): `askConfirm()`, `askText()`,
@@ -67,7 +67,7 @@ global; das HTML ruft sie direkt über `onclick="..."` auf.
 - ~3147 Automatische Verteilung (`openDistribute`)
 - ~3489 Mobile-Ansicht (`toggleMobileView`, `renderMobPlan`, Routen via OpenRouteService)
 - ~4247 Login/Auth (Supabase Auth), Präsenz-Anzeige
-- ~4642 Einstellungen & Regeln (`S(k)` liest eine Einstellung)
+- ~4642 Einstellungen & Regeln (`S(k)` liest eine Einstellung; Regeltexte `rulesHTML()`, Druck `printRules()`)
 - ~4801 Tourguide / Tagesablauf-Simulation (`tg*`). Auswahl in `tgCompute`: nur rot/orange,
   «Ort ausschöpfen» (`harvest`, Umkreis `tg_harvest_min`), neue Gegend nur wenn sie ganz
   Platz hat (`mayOpen`), Gleichstand ±`tg_tie_min` → Grösse/★/Fälligkeit
