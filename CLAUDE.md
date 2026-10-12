@@ -11,8 +11,8 @@ Beratungen, Rapporten und Ferien der Auditoren. Sprache der Oberfläche: Deutsch
 - Vor jedem PR: App im Browser laden (Desktop- und Mobile-Breite) und in der Konsole
   prüfen, dass keine JavaScript-Fehler auftreten.
 - Bei jeder Änderung an der App die Versionsnummer erhöhen, und zwar überall in
-  `index.html`: im Header (`<span ... title="Version">v3.02</span>`) und in den Links
-  `css/style.css?v=3.02`, `js/merge.js?v=3.02` und `js/app.js?v=3.02`. Der `?v=`-Zusatz
+  `index.html`: im Header (`<span ... title="Version">v3.03</span>`) und in den Links
+  `css/style.css?v=3.03`, `js/merge.js?v=3.03` und `js/app.js?v=3.03`. Der `?v=`-Zusatz
   sorgt dafür, dass Browser nach einem Update keine alte Datei aus dem Cache verwenden.
 - Tests für die Zusammenführung: `node tests/merge.test.js` (muss grün sein).
 - Keine Browser-Dialoge (`confirm`, `prompt`, `alert`): `askConfirm()`, `askText()`,
@@ -88,6 +88,8 @@ global; das HTML ruft sie direkt über `onclick="..."` auf.
   mit Verlauf `hist` (12 Wochen, `piKdHist`); «🔔 Audit prüfen» ab `kd_streak_weeks` Wochen am Stück
   mit Personal (`piKdStreak`/`piKdFlag`), Hinweis nach dem Import; aus der Sammelbox gemerkte sofort
   (`piKdFromBox` in `sammelboxClean`)
+  «+ Neue Baustelle» aus Import/Sammelbox/Kundendienst: Personal wird beim Speichern übernommen
+  (`piNewSitePending` → `window._newSitePersonal` → `piApplyNewSite` in `saveEntry`); `sbAssign` ebenfalls
 - ~5969 Supabase-Verbindung (`sbFetch`, `sbInit`)
 - ~6026 Sync (`SB_FIELDS`, `sbPush`, `sbPull`, `sbMergeRemote`, Speicher-Status)
 - ~6265 Admin: Anleitung & SQL, Änderungsprotokoll, Verlauf & Wiederherstellen
