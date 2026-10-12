@@ -11,8 +11,8 @@ Beratungen, Rapporten und Ferien der Auditoren. Sprache der Oberfläche: Deutsch
 - Vor jedem PR: App im Browser laden (Desktop- und Mobile-Breite) und in der Konsole
   prüfen, dass keine JavaScript-Fehler auftreten.
 - Bei jeder Änderung an der App die Versionsnummer erhöhen, und zwar überall in
-  `index.html`: im Header (`<span ... title="Version">v2.99</span>`) und in den Links
-  `css/style.css?v=2.99`, `js/merge.js?v=2.99` und `js/app.js?v=2.99`. Der `?v=`-Zusatz
+  `index.html`: im Header (`<span ... title="Version">v3.00</span>`) und in den Links
+  `css/style.css?v=3.00`, `js/merge.js?v=3.00` und `js/app.js?v=3.00`. Der `?v=`-Zusatz
   sorgt dafür, dass Browser nach einem Update keine alte Datei aus dem Cache verwenden.
 - Tests für die Zusammenführung: `node tests/merge.test.js` (muss grün sein).
 - Keine Browser-Dialoge (`confirm`, `prompt`, `alert`): `askConfirm()`, `askText()`,
@@ -84,6 +84,8 @@ global; das HTML ruft sie direkt über `onclick="..."` auf.
   `piIgnoreMatch`, Admin → Kundendienst-Liste): greift nur bei Einträgen OHNE passende Baustelle →
   Bucket `kundendienst` statt `unknown`. Sammelbox: `sammelboxClean()` (Doppelte zusammenführen)
   Erkannte Kundendienst-Einträge: `deptMeta._piKdSeen` (`piKdRecord` bei «Übernehmen», 8 Wochen)
+  mit Verlauf `hist` (12 Wochen, `piKdHist`); «🔔 Audit prüfen» ab `kd_streak_weeks` Wochen am Stück
+  mit Personal (`piKdStreak`/`piKdFlag`), Hinweis nach dem Import
 - ~5969 Supabase-Verbindung (`sbFetch`, `sbInit`)
 - ~6026 Sync (`SB_FIELDS`, `sbPush`, `sbPull`, `sbMergeRemote`, Speicher-Status)
 - ~6265 Admin: Anleitung & SQL, Änderungsprotokoll, Verlauf & Wiederherstellen
