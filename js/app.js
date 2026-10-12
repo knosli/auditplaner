@@ -4832,7 +4832,7 @@ function rulesHTML(){
     `Zuordnung: PSP exakt inkl. Unternummer (4226280.13 ≠ 4226280.01); Etappen (3025325.1/.2) → Hauptnummer 3025325; Namens-Treffer nur innerhalb der Abteilung der Einsatzliste; mehrere Listen für dieselbe Baustelle werden zusammengezählt.`,
     `«Nicht auf der Liste»: aktive Baustellen einer Abteilung, deren Einsatzlisten <u>alle</u> importiert wurden, die aber auf keiner stehen → Pausieren vorgeschlagen (neu erfasste nicht vorausgewählt).`,
     `Gespeichert wird die Personalzahl bei allen erkannten Baustellen (auch dauerhaft ausgeschlossene), «nicht auf der Liste» erhält 0. Verlauf: ${v('pi_history_weeks')} Wochen.`,
-    `<b>Kundendienst-Liste</b> (Admin → Kundendienst-Liste, oder «🔧 Kundendienst» bei unbekannten Einträgen und in der Sammelbox): Einträge ohne passende Baustelle, deren PSP-Nummer oder Name (Stichwort, z.B. «Kundenarbeiten», «Divers») auf der Liste steht, werden übersprungen – nicht «unbekannt», nicht in der Sammelbox. Echte Baustellen sind nie betroffen. Die Sammelbox führt doppelte Einträge (gleiche PSP und Name) zusammen.`,
+    `<b>Kundendienst-Liste</b> (Admin → Kundendienst-Liste, oder «🔧 Kundendienst» bei unbekannten Einträgen und in der Sammelbox): Einträge ohne passende Baustelle, deren PSP-Nummer oder Name (Stichwort, z.B. «Kundenarbeiten», «Divers») auf der Liste steht, werden übersprungen – nicht «unbekannt», nicht in der Sammelbox. Echte Baustellen sind nie betroffen. Die Sammelbox führt doppelte Einträge (gleiche PSP und Name) zusammen. Unter Admin → Kundendienst-Liste stehen alle erkannten Kundendienst-Einträge (PSP, Name, Einheit, Personen, zuletzt gesehen) – nachgeführt bei jedem übernommenen Import, nach ${PI_KD_KEEP_WEEKS} Wochen ohne Erscheinen entfernt.`,
     `Werkhöfe sind vom Import komplett ausgenommen. Unbekannte Einträge: zuordnen (Alias wird gemerkt), neu anlegen oder in die Sammelbox.`,
     `KW-Planung: Jede Baustellen-Karte zeigt 👷 das Personal der KW, in der sie geplant ist (Import oder manuell). Gibt es dafür keinen Wert, steht grau kursiv der zuletzt bekannte Wert mit seiner KW, ohne Angabe «–». Eine 0 ist rot. Werkhöfe zeigen nichts.`,
     `Temporäre Mitarbeitende: nur Personal-Nummern (keine Namen), pro Einheit bei jedem Import ersetzt.`,
@@ -6063,8 +6063,9 @@ function piIgnoreList(){return Array.isArray(deptMeta._piIgnore)?deptMeta._piIgn
 function piIgnoreSave(list){deptMeta._piIgnore=list;saveDepts();}
 function piPspKey(s){return piFullPSP(s)||String(s||'').replace(/\s+/g,'');}
 // Passende Regel für einen Import-Eintrag (it.psp, it.name, it.quelle) oder null
+function piQuelleDept(q){if(!q)return null;const qm=(deptMeta._quelleMap||{});return(q in qm)?(qm[q]||null):(autoMapQuelle(q)||null);}
 function piIgnoreMatch(it){
-  const qd=(()=>{const q=it.quelle;if(!q)return null;const qm=(deptMeta._quelleMap||{});return(q in qm)?(qm[q]||null):(autoMapQuelle(q)||null);})();
+  const qd=piQuelleDept(it.quelle);
   const nm=' '+piNormName(it.name)+' ',pk=it.psp?piPspKey(it.psp):'';
   return piIgnoreList().find(r=>{
     if(r.dept&&qd&&r.dept!==qd)return false;
@@ -6108,6 +6109,22 @@ function sammelboxClean(){
   if(!mgEq(next,box)){window._piCollectBox=next;saveNow();}
   if(typeof updateSbBadge==='function')updateSbBadge();
 }
+// Erkannte Kundendienst-Einträge (bei jedem übernommenen Import nachgeführt), deptMeta._piKdSeen:
+// [{key,psp,name,dept,quelle,count,kw,year,rule}] – nach 8 Wochen ohne Erscheinen entfernt.
+const PI_KD_KEEP_WEEKS=8;
+function piKdSeenList(){return Array.isArray(deptMeta._piKdSeen)?deptMeta._piKdSeen:[];}
+function piKdRecord(items,kw,yr){
+  const map=new Map(piKdSeenList().map(x=>[x.key,{...x}]));
+  items.forEach(it=>{
+    const key=piPspKey(it.psp)+'|'+piNormName(it.name);
+    const prev=map.get(key);
+    // pro Eintrag die neueste KW behalten (ältere Listen nachträglich importiert → nicht überschreiben)
+    if(prev&&(prev.year>yr||(prev.year===yr&&prev.kw>kw)))return;
+    map.set(key,{key,psp:it.psp||'',name:it.name||'',dept:piQuelleDept(it.quelle)||it.quelle||'',quelle:it.quelle||'',count:it.count||0,kw,year:yr,rule:it.ignoreRule?piIgnoreLabel(it.ignoreRule):''});
+  });
+  const limit=Date.now()-PI_KD_KEEP_WEEKS*7*86400000;
+  deptMeta._piKdSeen=[...map.values()].filter(x=>isoMonday(x.kw,x.year).getTime()>=limit);
+}
 // Admin → Kundendienst-Liste
 function openPiIgnore(){admModal('🔧 Kundendienst-Liste (Personal-Import)','<div id="pii-body"></div>');renderPiIgnore();}
 function renderPiIgnore(){
@@ -6115,7 +6132,32 @@ function renderPiIgnore(){
   const list=piIgnoreList();
   el.innerHTML=`<p>Einträge auf den Einsatzlisten, die hier passen, überspringt der Import (sie erscheinen nicht als «unbekannt» und nicht in der Sammelbox). Gilt nur für Einträge, die keiner Baustelle zugeordnet werden können.</p>
     <table class="adm-tbl"><tr><th>Erkennen nach</th><th>Wert</th><th>Einheit</th><th></th></tr>${list.map(r=>`<tr><td>${r.kind==='psp'?'PSP-Nummer':'Stichwort im Namen'}</td><td><b>${escH(r.value)}</b></td><td>${escH(r.dept||'alle')}</td><td style="text-align:right"><button type="button" class="ui-btn" onclick="rmPiIgnore(${r.id})">Löschen</button></td></tr>`).join('')||'<tr><td colspan="4">Keine Einträge.</td></tr>'}</table>
-    <p style="margin-top:12px"><button type="button" class="ui-btn ui-btn-pri" onclick="addPiIgnore()">+ Eintrag hinzufügen</button></p>`;
+    <p style="margin-top:12px"><button type="button" class="ui-btn ui-btn-pri" onclick="addPiIgnore()">+ Eintrag hinzufügen</button></p>
+    <h3>Erkannte Kundendienst-Einträge</h3>
+    <p>Alles, was beim Personal-Import als Kundendienst übersprungen wurde (Stand des jeweils neuesten Imports, Einträge ohne Erscheinen seit ${PI_KD_KEEP_WEEKS} Wochen fallen weg). Ist etwas dabei, das eine echte Baustelle ist: «+ Baustelle» – danach wird der Eintrag normal zugeordnet.</p>
+    <input id="pii-q" class="ui-dlg-inp" placeholder="Suchen (PSP, Name, Einheit …)" oninput="renderPiKdSeen()">
+    <div id="pii-seen"></div>`;
+  renderPiKdSeen();
+}
+function renderPiKdSeen(){
+  const el=document.getElementById('pii-seen');if(!el)return;
+  const q=(document.getElementById('pii-q')?.value||'').toLowerCase();
+  const rows=piKdSeenList().filter(x=>!q||(x.psp+' '+x.name+' '+x.dept+' '+x.rule).toLowerCase().includes(q))
+    .sort((a,b)=>(a.dept||'').localeCompare(b.dept||'')||(a.name||'').localeCompare(b.name||''));
+  if(!rows.length){el.innerHTML='<p>'+(piKdSeenList().length?'Keine Treffer.':'Noch nichts erkannt – die Liste füllt sich beim nächsten Personal-Import.')+'</p>';return;}
+  const sum=rows.reduce((a,x)=>a+(+x.count||0),0);
+  el.innerHTML=`<table class="adm-tbl"><tr><th>PSP</th><th>Name</th><th>Einheit</th><th style="text-align:right">Pers.</th><th>Zuletzt</th><th>Erkannt durch</th><th></th></tr>
+    ${rows.map(x=>`<tr><td style="white-space:nowrap">${escH(x.psp||'–')}</td><td>${escH(x.name)}</td><td>${escH(x.dept||'–')}</td><td style="text-align:right">${+x.count||0}</td><td style="white-space:nowrap">KW ${x.kw}${x.year!==curIsoYear()?' / '+x.year:''}</td><td style="color:var(--tx3)">${escH(x.rule||'–')}</td>
+      <td style="text-align:right"><button type="button" class="ui-btn" title="Ist eine echte Baustelle – als Baustelle anlegen" onclick="piKdToSite('${escH(x.key)}')">+ Baustelle</button></td></tr>`).join('')}
+    <tr><td colspan="3"><b>${rows.length} Einträge</b></td><td style="text-align:right"><b>${sum}</b></td><td colspan="3"></td></tr></table>`;
+}
+function piKdToSite(key){
+  const x=piKdSeenList().find(y=>y.key===key);if(!x)return;
+  document.getElementById('adm-bg')?.remove();
+  openAdd();
+  const n=document.getElementById('f-name'),p=document.getElementById('f-psp');
+  if(n)n.value=x.name||'';if(p&&x.psp)p.value=x.psp;
+  showToast('Baustelle erfassen – beim nächsten Import wird der Eintrag dann normal zugeordnet',4500);
 }
 async function addPiIgnore(){if(await piIgnoreAsk({psp:'',name:''})){sammelboxClean();renderPiIgnore();}}
 function rmPiIgnore(id){
@@ -6259,6 +6301,7 @@ function confirmPersonalImport(){
   //  - «nicht auf der Liste» (nur vollständig importierte Abteilungen): 0 für diese KW
   // Werkhöfe und «Unbekannt» erhalten nichts.
   const yr=_piPending.targetYear||new Date().getFullYear();
+  if((buckets.kundendienst||[]).length||piKdSeenList().length){piKdRecord(buckets.kundendienst||[],targetKW,yr);saveDepts();}
   const recordPersonal=(e,count)=>{
     if(!e)return;
     e.lastPersonalCount=count;
