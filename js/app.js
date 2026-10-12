@@ -4767,7 +4767,7 @@ const SETTINGS_DEF=[
   {k:'rh_gu',l:'Generalunternehmung (GU)',def:42,min:7,max:365,u:'Tage'},
   {k:'rh_werkhof',l:'Werkhof',def:182,min:7,max:730,u:'Tage'}]},
  {grp:'Tourguide',items:[
-  {k:'tg_day_start',l:'Tagesbeginn (Abfahrt ab Startadresse)',def:7,min:4,max:12,step:.25,u:'Uhr'},
+  {k:'tg_day_start',l:'Tagesbeginn = Beginn des ersten Audits (Abfahrt entsprechend früher)',def:7,min:4,max:12,step:.25,u:'Uhr'},
   {k:'tg_day_hours',l:'Arbeitstag inkl. Fahrzeit (ohne Mittagspause)',def:9,min:2,max:14,step:.5,u:'Std.'},
   {k:'tg_lunch_start',l:'Mittagspause ab',def:12,min:10,max:15,step:.25,u:'Uhr'},
   {k:'tg_lunch_dur',l:'Mittagspause Dauer (0 = keine)',def:60,min:0,max:120,step:15,u:'min'},
@@ -4866,7 +4866,7 @@ function rulesHTML(){
     `Hinweise im Vorschlag: «Wenig wirtschaftlich», wenn ein Tag mehr Fahrzeit als Audit-/Terminzeit hat; «👥 … ist auch in der Nähe», wenn andere Auditoren am selben Tag Baustellen im Umkreis geplant haben.`,
     `Bleiben im Umkreis eines Tages Baustellen offen (Tag voll oder Personal unbekannt), zeigt der Vorschlag unter dem Tag «⚠ Ort nicht ausgeschöpft» – mit «+ trotzdem hinzufügen». Beim Ausgleich zwischen den Tagen wird keine Baustelle von ihren Nachbarn getrennt.`,
     `Audit-Dauer: 1–3 Pers. ${v('tg_min_1_3')} · 4–9 ${v('tg_min_4_9')} · 10–19 ${v('tg_min_10_19')} · 20+ ${v('tg_min_20')} · unbekannt ${v('tg_min_unknown')} min (inkl. Schreiben/Rapportieren; Fahrzeit separat).`,
-    `Tag: Abfahrt ab Startadresse um ${tgHM(S('tg_day_start')*60)}, max. ${v('tg_day_hours')} h Arbeitszeit (inkl. aller Fahrten und Wartezeiten, ohne Mittagspause) plus <b>${v('tg_post_min')} min Nachbearbeitung pro Baustelle</b> am Ende des Tages (Audit-Bericht; bei 4 Baustellen also 4 × ${v('tg_post_min')} min) – beides zusammen muss in den Arbeitstag passen. Max. ${v('tg_max_per_day')} Baustellen.`,
+    `Tag: <b>Das erste Audit beginnt um ${tgHM(S('tg_day_start')*60)}</b> – losgefahren wird entsprechend früher (Fahrzeit ab Startadresse). Max. ${v('tg_day_hours')} h Arbeitszeit (inkl. aller Fahrten und Wartezeiten, ohne Mittagspause) plus <b>${v('tg_post_min')} min Nachbearbeitung pro Baustelle</b> am Ende des Tages (Audit-Bericht; bei 4 Baustellen also 4 × ${v('tg_post_min')} min) – beides zusammen muss in den Arbeitstag passen. Max. ${v('tg_max_per_day')} Baustellen.`,
     `Mittagspause ${tgHM(S('tg_lunch_start')*60)}–${tgHM(S('tg_lunch_start')*60+S('tg_lunch_dur'))} (${v('tg_lunch_dur')} min): keine Baustellen-Audits, Personen-Audits oder Beratungen – ein Audit, das nicht vor der Pause fertig wäre, beginnt nach der Pause. Fahrten werden unterbrochen. Rapporte mit fixer Uhrzeit dürfen in der Pause liegen. Endet der Tag vorher, entfällt die Pause.`,
     `Tagesablauf wird echt simuliert: Fahrt zu jedem Stopp (Baustellen <u>und</u> Termine an ihrer Adresse), Auditzeit, Fahrt zum nächsten, Rückfahrt.`,
     `Rapporte mit Uhrzeit sind fix: rechtzeitig dort sein (früher ankommen = Wartezeit). Ist ein Rapport der erste Termin des Tages und ab Tagesbeginn nicht erreichbar, wird entsprechend früher losgefahren. Baustellen werden nur so eingeplant, dass kein Termin verpasst wird.`,
@@ -5080,7 +5080,11 @@ function tgSim(items){
     const post=items.filter(it=>it.t==='bs').length*S('tg_post_min');
     return{start,end:t,total:t-start-lunch+post,post,drive,wait:Math.max(0,wait),late,lateStart,aud,evt,lunch,lunchAt,sched};
   };
-  const day0=S('tg_day_start')*60;let r=run(day0);
+  // Tagesbeginn = Beginn des ersten Audits/Stopps: so früh losfahren, dass man um diese Zeit beim ersten Stopp ist
+  const firstNode=items.length?(items[0].t==='bs'?items[0].node:items[0].ev.node):null;
+  // (ist der erste Stopp ein Termin mit späterer Uhrzeit: pünktlich dort sein statt früh hinfahren und warten)
+  const tm0=items.length&&items[0].t==='ev'&&items[0].ev.time!=null?items[0].ev.time:null;
+  const day0=Math.max(S('tg_day_start')*60,tm0??0)-(firstNode!=null?D[0][firstNode]/60:0);let r=run(day0);
   // Nur wenn der ERSTE Stopp des Tages ein Termin mit Uhrzeit ist und ab Tagesbeginn nicht erreichbar:
   // entsprechend früher losfahren. Liegt etwas davor, gilt der Termin als verpasst (keine Mitternachts-Touren).
   if(items.length&&items[0].t==='ev'&&items[0].ev.time!=null&&r.sched[0].late>0){const r2=run(day0-r.sched[0].late);if(r2.late<r.late)r=r2;}
@@ -5210,7 +5214,7 @@ function tgRender(){
   const stCol={overdue:'#EF4444',due:'#F59E0B',soon:'#EAB308',new:'#7C3AED'};
   const dayLen=S('tg_day_hours')*60;
   let newCount=0;
-  let h=`<div style="font-size:10px;color:${R.src==='ors'?'#10B981':'#F59E0B'};margin-bottom:8px">${R.src==='ors'?'✓ Fahrzeiten über Strassennetz':'⚠ Fahrzeiten geschätzt (Luftlinie)'} · Rundtour ab/bis Startadresse · Arbeitstag ${String(S('tg_day_hours')).replace('.',',')} h · Tagesbeginn ${tgHM(S('tg_day_start')*60)}${S('tg_lunch_dur')>0?` · Mittag ${tgHM(S('tg_lunch_start')*60)}–${tgHM(S('tg_lunch_start')*60+S('tg_lunch_dur'))}`:''}</div>`;
+  let h=`<div style="font-size:10px;color:${R.src==='ors'?'#10B981':'#F59E0B'};margin-bottom:8px">${R.src==='ors'?'✓ Fahrzeiten über Strassennetz':'⚠ Fahrzeiten geschätzt (Luftlinie)'} · Rundtour ab/bis Startadresse · Arbeitstag ${String(S('tg_day_hours')).replace('.',',')} h · 1. Audit ab ${tgHM(S('tg_day_start')*60)}${S('tg_lunch_dur')>0?` · Mittag ${tgHM(S('tg_lunch_start')*60)}–${tgHM(S('tg_lunch_start')*60+S('tg_lunch_dur'))}`:''}</div>`;
   R.sets.forEach((set,d)=>{
     const active=set.filter(j=>!R.removed.has(j));
     const P=tgPlanDay(d,active),sim=P.sim;
