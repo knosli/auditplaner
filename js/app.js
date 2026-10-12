@@ -3086,8 +3086,9 @@ function renderAudAdminList(){
   }).join('');
 }
 
-function openAdd(){editId=null;window._newSitePersonal=null;window._pendingLat=null;window._pendingLng=null;{const z=document.getElementById('f-zb');if(z)z.value='';}{const la=document.getElementById('f-lat'),ln=document.getElementById('f-lng');if(la)la.value='';if(ln)ln.value='';}document.getElementById('m-title').textContent='Neue Baustelle';document.getElementById('form-s').style.display='block';(document.getElementById('imp-s')||{style:{},classList:{remove(){}}}).style.display='none';(document.getElementById('json-s')||{style:{},classList:{remove(){}}}).style.display='none';document.getElementById('m-save').style.display='';['f-name','f-addr','f-psp','f-sap','f-prv','f-bc','f-note'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});fillFDept('');setDefaultRhythm('baustelle');document.getElementById('f-last').value='';document.getElementById('f-type').value='baustelle';document.getElementById('addr-suggestions').style.display='none';const hint=document.getElementById('f-addr-hint');if(hint)hint.textContent='';document.getElementById('mbg').classList.add('open');}
+function openAdd(){editId=null;{const k=document.getElementById('m-to-kd');if(k)k.style.display='none';}window._newSitePersonal=null;window._pendingLat=null;window._pendingLng=null;{const z=document.getElementById('f-zb');if(z)z.value='';}{const la=document.getElementById('f-lat'),ln=document.getElementById('f-lng');if(la)la.value='';if(ln)ln.value='';}document.getElementById('m-title').textContent='Neue Baustelle';document.getElementById('form-s').style.display='block';(document.getElementById('imp-s')||{style:{},classList:{remove(){}}}).style.display='none';(document.getElementById('json-s')||{style:{},classList:{remove(){}}}).style.display='none';document.getElementById('m-save').style.display='';['f-name','f-addr','f-psp','f-sap','f-prv','f-bc','f-note'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});fillFDept('');setDefaultRhythm('baustelle');document.getElementById('f-last').value='';document.getElementById('f-type').value='baustelle';document.getElementById('addr-suggestions').style.display='none';const hint=document.getElementById('f-addr-hint');if(hint)hint.textContent='';document.getElementById('mbg').classList.add('open');}
 function openEdit(id){
+  {const k=document.getElementById('m-to-kd');if(k)k.style.display=document.body.classList.contains('admin-mode')?'':'none';}
   // Reset manual marker
   const latEl=document.getElementById('f-lat');
   const lngEl=document.getElementById('f-lng');
@@ -4845,7 +4846,7 @@ function rulesHTML(){
     `Zuordnung: PSP exakt inkl. Unternummer (4226280.13 ≠ 4226280.01); Etappen (3025325.1/.2) → Hauptnummer 3025325; Namens-Treffer nur innerhalb der Abteilung der Einsatzliste; mehrere Listen für dieselbe Baustelle werden zusammengezählt.`,
     `«Nicht auf der Liste»: aktive Baustellen einer Abteilung, deren Einsatzlisten <u>alle</u> importiert wurden, die aber auf keiner stehen → Pausieren vorgeschlagen (neu erfasste nicht vorausgewählt).`,
     `Gespeichert wird die Personalzahl bei allen erkannten Baustellen (auch dauerhaft ausgeschlossene), «nicht auf der Liste» erhält 0. Verlauf: ${v('pi_history_weeks')} Wochen.`,
-    `<b>Kundendienst-Liste</b> (Admin → Kundendienst-Liste, oder «🔧 Kundendienst» bei unbekannten Einträgen und in der Sammelbox): Einträge ohne passende Baustelle, deren PSP-Nummer (genau oder inkl. aller Unternummern, z.B. 4225280.xx) oder Name (Stichwort, z.B. «Kundenarbeiten», «Divers») auf der Liste steht, werden übersprungen – nicht «unbekannt», nicht in der Sammelbox. Echte Baustellen sind nie betroffen. Die Sammelbox führt doppelte Einträge (gleiche PSP und Name) zusammen. In der Sammelbox als Kundendienst gemerkte Einträge erscheinen sofort unter den erkannten Kundendienst-Einträgen. Unter Admin → Kundendienst-Liste stehen alle erkannten Kundendienst-Einträge (PSP, Name, Einheit, Personen, zuletzt gesehen) – nachgeführt bei jedem übernommenen Import, nach ${PI_KD_KEEP_WEEKS} Wochen ohne Erscheinen entfernt. Pro Eintrag wird der Personalverlauf der letzten ${PI_KD_HIST_WEEKS} Wochen gezeigt (Einheit importiert, Eintrag fehlt = 0). Hat ein Kundendienst-Auftrag ${v('kd_streak_weeks')} Wochen am Stück Personal (in der neuesten Liste mindestens ${v('kd_min_pers')}), erscheint «🔔 Audit prüfen» und nach dem Import ein Hinweis; mit «+ Baustelle» wird er zur normalen Baustelle.`,
+    `<b>Kundendienst-Liste</b> (Admin → Kundendienst-Liste, oder «🔧 Kundendienst» bei unbekannten Einträgen und in der Sammelbox): Einträge ohne passende Baustelle, deren PSP-Nummer (genau oder inkl. aller Unternummern, z.B. 4225280.xx) oder Name (Stichwort, z.B. «Kundenarbeiten», «Divers») auf der Liste steht, werden übersprungen – nicht «unbekannt», nicht in der Sammelbox. Echte Baustellen sind nie betroffen. Die Sammelbox führt doppelte Einträge (gleiche PSP und Name) zusammen. In der Sammelbox als Kundendienst gemerkte Einträge erscheinen sofort unter den erkannten Kundendienst-Einträgen. Eine bereits erfasste Baustelle, die eigentlich Kundendienst ist: Bearbeiten → «🔧 Ist Kundendienst» (nur Admin) – sie kommt auf die Liste (inkl. ihrer Listen-Nummern), ihr Personalverlauf wird übernommen und die Baustelle samt offener Planungen gelöscht (Rückgängig möglich). Unter Admin → Kundendienst-Liste stehen alle erkannten Kundendienst-Einträge (PSP, Name, Einheit, Personen, zuletzt gesehen) – nachgeführt bei jedem übernommenen Import, nach ${PI_KD_KEEP_WEEKS} Wochen ohne Erscheinen entfernt. Pro Eintrag wird der Personalverlauf der letzten ${PI_KD_HIST_WEEKS} Wochen gezeigt (Einheit importiert, Eintrag fehlt = 0). Hat ein Kundendienst-Auftrag ${v('kd_streak_weeks')} Wochen am Stück Personal (in der neuesten Liste mindestens ${v('kd_min_pers')}), erscheint «🔔 Audit prüfen» und nach dem Import ein Hinweis; mit «+ Baustelle» wird er zur normalen Baustelle.`,
     `Jeder übernommene Import speichert zusätzlich eine Wochen-Zusammenfassung pro Einheit (Personen laut Einsatzlisten, davon Kundendienst, Einsatzorte, Anzahl Temporäre – die Temporären stehen auf einer separaten Liste und werden fürs Total dazugezählt): Admin → Personal-Übersicht, mit Verlauf; ältere Wochen rückwirkend aus dem Personalverlauf der Baustellen. Werkhöfe sind vom Import komplett ausgenommen. Unbekannte Einträge: zuordnen (Alias wird gemerkt), neu anlegen oder in die Sammelbox. Beim Zuordnen oder Neu-Anlegen (aus Import, Sammelbox oder Kundendienst-Liste) wird die Personalzahl der Liste gleich übernommen; aus der Kundendienst-Liste der ganze Verlauf.`,
     `KW-Planung: Jede Baustellen-Karte zeigt 👷 das Personal der KW, in der sie geplant ist (Import oder manuell). Gibt es dafür keinen Wert, steht grau kursiv der zuletzt bekannte Wert mit seiner KW, ohne Angabe «–». Eine 0 ist rot. Werkhöfe zeigen nichts.`,
     `Temporäre Mitarbeitende: nur Personal-Nummern (keine Namen), pro Einheit bei jedem Import ersetzt.`,
@@ -6093,7 +6094,7 @@ function piIgnoreMatch(it){
 function piIgnoreLabel(r){return(r.kind==='psp'?'PSP '+r.value:r.kind==='pspall'?'PSP '+((pspParts(r.value)||{}).base||r.value)+'.xx':'Stichwort «'+r.value+'»')+(r.dept?' (nur '+r.dept+')':'');}
 function piIgnoreKindLabel(k){return k==='psp'?'PSP-Nummer':k==='pspall'?'PSP-Nummer inkl. aller Unternummern':'Stichwort im Namen';}
 // Dialog: Regel für einen Eintrag anlegen
-async function piIgnoreAsk(it){
+async function piIgnoreAsk(it,noSave){
   if(!document.body.classList.contains('admin-mode')){showToast('Nur Admins können die Kundendienst-Liste ändern');return null;}
   const r=await uiForm({title:'🔧 Als Kundendienst merken – '+(it.psp?it.psp+' · ':'')+it.name,
     fields:[{k:'kind',l:'Erkennen nach',type:'select',v:it.psp?'PSP-Nummer (nur genau diese)':'Stichwort im Namen',opts:['PSP-Nummer (nur genau diese)','PSP-Nummer inkl. aller Unternummern (z.B. 4225280.xx)','Stichwort im Namen']},
@@ -6103,6 +6104,7 @@ async function piIgnoreAsk(it){
   if(!r)return null;
   const kind=r.kind.includes('Unternummern')?'pspall':r.kind.startsWith('PSP')?'psp':'word';
   const rule={id:Date.now(),kind,value:kind==='pspall'?pspParts(r.value).base:r.value,dept:r.dept||''};
+  if(noSave)return rule;
   piIgnoreSave([...piIgnoreList(),rule]);
   showToast('🔧 Kundendienst gemerkt: '+piIgnoreLabel(rule),3000);
   return rule;
@@ -6282,6 +6284,32 @@ function renderPersonalWeeks(){
     ${depts.map(([k,o])=>{const st=sitesFor(k);return`<tr><td>${st.length?`<details><summary style="cursor:pointer">${escH(k)}</summary><div style="font-size:11px;color:var(--tx2);padding:4px 0 2px 14px">${st.slice(0,40).map(x=>`${escH(x.e.name)}: <b>${piNum(+x.h.count)}</b>`).join('<br>')}${st.length>40?`<br>… +${st.length-40}`:''}</div></details>`:escH(k)}</td><td style="text-align:right"><b>${piNum(o.total+(sel.full?o.temp:0))}</b></td><td style="text-align:right">${piNum(o.total)}</td><td style="text-align:right">${sel.full?(o.temp||'–'):'–'}</td><td style="text-align:right">${o.kd?piNum(o.kd):'–'}</td><td style="text-align:right">${o.n||'–'}</td></tr>`;}).join('')}
     <tr><td><b>Total</b></td><td style="text-align:right"><b>${piNum(sel.total)}</b></td><td style="text-align:right"><b>${piNum(sel.own)}</b></td><td style="text-align:right"><b>${sel.full&&sel.tempN?sel.tempN:'–'}</b></td><td style="text-align:right"><b>${sel.kd?piNum(sel.kd):'–'}</b></td><td style="text-align:right"><b>${sel.n||'–'}</b></td></tr></table></div>
     <p style="font-size:11px;color:var(--tx3)">«Einsatzlisten» = Summe der Personenzahlen aller Einträge (Baustellen, Kundendienst, Werkhöfe, unbekannte). «Temporäre» = Anzahl Personal-Nummern auf der separaten Liste der Temporären – sie sind in den Einsatzlisten nicht enthalten und werden fürs Total dazugezählt (einer Baustelle zuordnen lassen sie sich nicht; eine Person auf zwei Einheiten zählt im Total einmal). Bruchzahlen kommen von Teilzeit-/Teilwochen-Angaben auf den Listen. Wurde eine Einheit in einer KW nicht importiert, fehlt sie in dieser Woche.</p>`;
+}
+// Bestehende Baustelle ist eigentlich Kundendienst: Regel anlegen, Personalverlauf in die erkannten
+// Kundendienst-Einträge übernehmen, Baustelle (inkl. offener Planungen) löschen – mit «Rückgängig».
+async function siteToKundendienst(id){
+  if(!document.body.classList.contains('admin-mode')){showToast('Nur Admins können die Kundendienst-Liste ändern');return;}
+  const e=data.find(x=>x.id===id);if(!e)return;
+  const nPlans=plans.filter(p=>p.bsId===id&&p.date>=today()).length+beratPlan.filter(p=>p.bsId===id).length;
+  const al=(e.pspAliases||[]).filter(a=>a&&piFullPSP(a)!==piFullPSP(e.psp));
+  if(!await askConfirm(`«${e.name}» ist eine Kundendienst-Baustelle?\n\n• Die Baustelle wird gelöscht${nPlans?` (inkl. ${nPlans} offener Planung${nPlans===1?'':'en'})`:''}, Audit-Verlauf inklusive.\n• Sie kommt auf die Kundendienst-Liste${al.length?` (auch die Listen-Nummern ${al.join(', ')})`:''} und wird beim Import übersprungen.\n• Ihr Personalverlauf erscheint unter «Erkannte Kundendienst-Einträge».\n\nRückgängig ist direkt danach möglich.`,{ok:'Weiter',danger:true}))return;
+  const rule=await piIgnoreAsk({psp:e.psp||'',name:e.name||''},true);
+  if(!rule)return;
+  undoPoint('«'+e.name+'» als Kundendienst übernommen',()=>{renderAll();if(curView==='cal'){renderCalSB();renderKW();}});
+  const rules=[...piIgnoreList(),rule];
+  al.forEach((a,i)=>{if(!rules.some(r=>r.kind==='psp'&&piPspKey(r.value)===piPspKey(a)))rules.push({id:Date.now()+i+1,kind:'psp',value:a,dept:rule.dept||''});});
+  deptMeta._piIgnore=rules;
+  // Personalverlauf → erkannte Kundendienst-Einträge (wie bei einem Import, KW für KW)
+  const hist=(e.personalHistory||[]).slice().sort((a,b)=>piKdWeek(a.kw,a.year)-piKdWeek(b.kw,b.year));
+  const it={psp:e.psp||'',name:e.name||'',quelle:deptParts(e.dept)[0]||e.dept||'',ignoreRule:rule};
+  hist.forEach(h=>piKdRecord([{...it,count:+h.count||0}],h.kw,h.year));
+  if(!hist.length&&e.lastPersonalKW)piKdRecord([{...it,count:+e.lastPersonalCount||0}],e.lastPersonalKW,curIsoYear());
+  log('Als Kundendienst übernommen (gelöscht)',e.name,'#F59E0B','');
+  plans=plans.filter(p=>p.bsId!==id);beratPlan=beratPlan.filter(p=>p.bsId!==id);
+  data=data.filter(x=>x.id!==id);
+  closeModal();if(selId===id)closeDP();
+  saveDepts();saveNow();renderAll();if(curView==='cal'){renderCalSB();renderKW();}
+  showToast('🔧 Als Kundendienst übernommen: '+piIgnoreLabel(rule),3500);
 }
 // Admin → Kundendienst-Liste
 function openPiIgnore(){admModal('🔧 Kundendienst-Liste (Personal-Import)','<div id="pii-body"></div>');renderPiIgnore();}
