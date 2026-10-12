@@ -4771,6 +4771,8 @@ const SETTINGS_DEF=[
   {k:'tg_day_hours',l:'Arbeitstag inkl. Fahrzeit (ohne Mittagspause)',def:9,min:2,max:14,step:.5,u:'Std.'},
   {k:'tg_znueni_start',l:'Znüni der Baustellen ab (dann kein Audit)',def:9,min:7,max:11,step:.25,u:'Uhr'},
   {k:'tg_znueni_dur',l:'Znüni Dauer (0 = keine)',def:15,min:0,max:60,step:5,u:'min'},
+  {k:'tg_znueni_through',l:'Znüni: laufendes Audit darf durchlaufen (Besprechung mit Bauleiter)',def:1,min:0,max:1,u:'',bool:1},
+  {k:'tg_audit_flex',l:'Audit darf kürzer sein, wenn es sonst in eine Pause liefe, um bis zu',def:7,min:0,max:30,u:'min'},
   {k:'tg_lunch_start',l:'Mittag der Baustellen ab (dann kein Audit)',def:12,min:10,max:15,step:.25,u:'Uhr'},
   {k:'tg_lunch_dur',l:'Mittagspause Dauer (0 = keine)',def:60,min:0,max:120,step:15,u:'min'},
   {k:'tg_lunch_flex',l:'Eigene Mittagspause darf sich verschieben um ± …',def:30,min:0,max:90,step:5,u:'min'},
@@ -4872,7 +4874,8 @@ function rulesHTML(){
     `Bleiben im Umkreis eines Tages Baustellen offen (Tag voll oder Personal unbekannt), zeigt der Vorschlag unter dem Tag «⚠ Ort nicht ausgeschöpft» – mit «+ trotzdem hinzufügen». Beim Ausgleich zwischen den Tagen wird keine Baustelle von ihren Nachbarn getrennt.`,
     `Audit-Dauer: 1–3 Pers. ${v('tg_min_1_3')} · 4–9 ${v('tg_min_4_9')} · 10–19 ${v('tg_min_10_19')} · 20+ ${v('tg_min_20')} · unbekannt ${v('tg_min_unknown')} min (inkl. Schreiben/Rapportieren; Fahrzeit separat).`,
     `Tag: <b>Das erste Audit beginnt um ${tgHM(S('tg_day_start')*60)}</b> – losgefahren wird entsprechend früher (Fahrzeit ab Startadresse). Max. ${v('tg_day_hours')} h Arbeitszeit (inkl. aller Fahrten und Wartezeiten, ohne Mittagspause) plus <b>${v('tg_post_min')} min Nachbearbeitung pro Baustelle</b> am Ende des Tages (Audit-Bericht; bei 4 Baustellen also 4 × ${v('tg_post_min')} min) – beides zusammen muss in den Arbeitstag passen. <b>Toleranz:</b> Ein Tag darf bis ${v('tg_day_tol')} min länger werden, alle Tage der Woche zusammen aber höchstens ${v('tg_week_tol')} min – damit keine Baustelle wegen ein paar Minuten wegfällt, aber auch nicht jeder Tag länger wird. Max. ${v('tg_max_per_day')} Baustellen.`,
-    `<b>Znüni der Baustellen ${tgHM(S('tg_znueni_start')*60)}–${tgHM(S('tg_znueni_start')*60+S('tg_znueni_dur'))} (${v('tg_znueni_dur')} min): kein Audit</b> (auch keine Personen-Audits oder Beratungen) – ein Audit, das nicht vorher fertig ist, beginnt erst um ${tgHM(S('tg_znueni_start')*60+S('tg_znueni_dur'))}. Fahren ist in dieser Zeit möglich; Warten zählt zur Arbeitszeit. Dauer 0 = kein Znüni.`,
+    `<b>Znüni der Baustellen ${tgHM(S('tg_znueni_start')*60)}–${tgHM(S('tg_znueni_start')*60+S('tg_znueni_dur'))} (${v('tg_znueni_dur')} min):</b> In dieser Zeit beginnt kein Audit (auch kein Personen-Audit oder Beratung) – wer im Znüni ankommt, beginnt danach. ${S('tg_znueni_through')>0?'Ein <b>laufendes Audit darf durchs Znüni laufen</b> (Besprechung mit dem Bauleiter), z.B. Beginn 08:30.':'Ein Audit, das nicht vor dem Znüni fertig ist, beginnt erst danach.'} Fahren ist in dieser Zeit möglich; Warten zählt zur Arbeitszeit. Dauer 0 = kein Znüni.`,
+    `<b>Audit-Dauer flexibel:</b> Würde ein Baustellen-Audit nur wenige Minuten ins Znüni oder in den Baustellen-Mittag laufen, wird es um bis zu ${v('tg_audit_flex')} min kürzer geplant (im Vorschlag «(−x)»), statt ganz nach hinten zu rutschen.`,
     `<b>Mittag der Baustellen ${tgHM(S('tg_lunch_start')*60)}–${tgHM(S('tg_lunch_start')*60+S('tg_lunch_dur'))}: kein Audit</b> (auch keine Personen-Audits oder Beratungen) – ein Audit, das nicht vorher fertig ist, beginnt erst um ${tgHM(S('tg_lunch_start')*60+S('tg_lunch_dur'))}. Die eigene Mittagspause (${v('tg_lunch_dur')} min) ist <b>flexibel ± ${v('tg_lunch_flex')} min</b>: Beginn zwischen ${tgHM(S('tg_lunch_start')*60-S('tg_lunch_flex'))} und ${tgHM(S('tg_lunch_start')*60+S('tg_lunch_flex'))}, dort wo sie passt. Beispiel: Audit endet 11:45 → Pause 11:45–12:45 → Fahrt zur nächsten Baustelle → nächstes Audit ab ${tgHM(S('tg_lunch_start')*60+S('tg_lunch_dur'))}. Bei einer langen Fahrt über Mittag wird die Pause unterwegs gemacht. Rapporte mit fixer Uhrzeit dürfen über Mittag liegen. Ist man vor ${tgHM(S('tg_lunch_start')*60)} wieder zu Hause, entfällt die Pause.`,
     `Tagesablauf wird echt simuliert: Fahrt zu jedem Stopp (Baustellen <u>und</u> Termine an ihrer Adresse), Auditzeit, Fahrt zum nächsten, Rückfahrt.`,
     `Rapporte mit Uhrzeit sind fix: rechtzeitig dort sein (früher ankommen = Wartezeit). Ist ein Rapport der erste Termin des Tages und ab Tagesbeginn nicht erreichbar, wird entsprechend früher losgefahren. Baustellen werden nur so eingeplant, dass kein Termin verpasst wird.`,
@@ -4948,9 +4951,9 @@ function renderSettings(){
   box.innerHTML=SETTINGS_DEF.map(g=>`<div style="margin-bottom:16px">
     <div style="font-size:12px;font-weight:700;color:var(--tx);margin-bottom:6px">${escH(g.grp)}</div>
     <div style="border:1px solid var(--bd);border-radius:8px">${g.items.map(i=>{const changed=s[i.k]!==undefined;return`<div style="display:flex;align-items:center;gap:10px;padding:7px 10px;border-bottom:1px solid var(--bd)">
-      <span style="flex:1;font-size:12px;color:var(--tx)">${escH(i.l)}${changed?` <span style="font-size:10px;color:#F59E0B">(geändert, Standard ${i.def})</span>`:''}</span>
-      <input type="number" value="${S(i.k)}" min="${i.min}" max="${i.max}" step="${i.step||1}" onchange="setSetting('${i.k}',this.value)" style="width:80px;padding:5px 7px;border:1px solid ${changed?'#F59E0B':'var(--bd)'};border-radius:5px;background:var(--sf);color:var(--tx);font-size:12px;text-align:right">
-      <span style="width:46px;font-size:11px;color:var(--tx3)">${i.u==='Uhr'?tgHM(S(i.k)*60):i.u}</span>
+      <span style="flex:1;font-size:12px;color:var(--tx)">${escH(i.l)}${changed?` <span style="font-size:10px;color:#F59E0B">(geändert, Standard ${i.bool?(i.def?'ja':'nein'):i.def})</span>`:''}</span>
+      ${i.bool?`<input type="checkbox" ${S(i.k)>0?'checked':''} onchange="setSetting('${i.k}',this.checked?1:0)" style="width:18px;height:18px;margin:0 31px">`:`<input type="number" value="${S(i.k)}" min="${i.min}" max="${i.max}" step="${i.step||1}" onchange="setSetting('${i.k}',this.value)" style="width:80px;padding:5px 7px;border:1px solid ${changed?'#F59E0B':'var(--bd)'};border-radius:5px;background:var(--sf);color:var(--tx);font-size:12px;text-align:right">`}
+      <span style="width:46px;font-size:11px;color:var(--tx3)">${i.bool?(S(i.k)>0?'ja':'nein'):i.u==='Uhr'?tgHM(S(i.k)*60):i.u}</span>
       <button onclick="setSetting('${i.k}','')" title="Auf Standard (${i.def}) zurücksetzen" style="background:none;border:none;cursor:pointer;color:${changed?'var(--blue)':'var(--bd)'};font-size:14px" ${changed?'':'disabled'}>↺</button>
     </div>`;}).join('')}</div></div>`).join('')+
     `<div style="text-align:right"><button onclick="resetAllSettings()" style="padding:6px 12px;border:1px solid var(--bd);border-radius:var(--rs);background:var(--sf2);font-size:11px;cursor:pointer;color:var(--tx2)">↺ Alle auf Standard</button></div>`;
@@ -5063,6 +5066,9 @@ function tgSim(items){
   const blocked=(st,du)=>LD>0&&st<BE&&st+du>LS;   // Stopp würde in den Baustellen-Mittag fallen
   // Znüni-Pause der Baustellen (z.B. 09:00–09:15): ebenfalls kein Audit; Fahrten gehen weiter
   const ZS=S('tg_znueni_start')*60,ZD=S('tg_znueni_dur'),ZE=ZS+ZD;
+  // Ein laufendes Audit darf durchs Znüni laufen (Besprechung mit dem Bauleiter), nur nicht darin beginnen.
+  // Baustellen-Audits dürfen um bis zu tg_audit_flex Minuten kürzer sein, wenn sie sonst in eine Pause liefen.
+  const ZT=S('tg_znueni_through')>0,AF=S('tg_audit_flex');
   const run=start=>{
     let t=start,pos=0,drive=0,wait=0,late=0,aud=0,evt=0,lunch=0,lunchAt=-1,lunchStart=null,lateStart=0;const sched=[];
     const need=()=>LD>0&&lunch===0;
@@ -5071,26 +5077,31 @@ function tgSim(items){
       const node=it.t==='bs'?it.node:it.ev.node;
       const tr=node!=null?D[pos][node]/60:0;drive+=tr;
       const tm=it.t==='ev'?it.ev.time:null;
-      const du=it.t==='bs'?R.dur.get(it.node):it.ev.dur;
+      const du0=it.t==='bs'?R.dur.get(it.node):it.ev.dur,af=it.t==='bs'?AF:0;let du=du0;
       if(need()&&tr>0&&t<=W1){
-        const clash=tm==null&&blocked(t+tr,du);
+        const clash=tm==null&&blocked(t+tr,du-af);
         // nächster Stopp fiele in den Baustellen-Mittag (oder wäre nicht bis Fensterende fertig) -> Pause jetzt
         // (frühestens ab Fensterbeginn), dann losfahren
-        if(clash||(t>=W0&&(tm==null?t+tr+du>W1:t+tr>W1))){const ls=Math.max(t,W0);wait+=ls-t;takeLunch(ii,ls);t=ls+LD;}
+        if(clash||(t>=W0&&(tm==null?t+tr+du-af>W1:t+tr>W1))){const ls=Math.max(t,W0);wait+=ls-t;takeLunch(ii,ls);t=ls+LD;}
         // lange Fahrt über das ganze Fenster -> Pause unterwegs
         else if(t<W0&&t+tr>W1){takeLunch(ii,W0);t+=LD;}
       }
       let arr=t+tr,st=arr;
       if(tm!=null){if(arr>tm){late+=arr-tm;st=arr;}else{wait+=tm-arr;st=tm;}}
-      // Stopp ohne Uhrzeit nie im Znüni: erst ab dessen Ende (Wartezeit)
-      if(tm==null&&ZD>0&&st<ZE&&st+du>ZS){wait+=ZE-st;st=ZE;}
+      // Znüni: nie darin beginnen (-> ab Ende, Wartezeit); hineinlaufen nur, wenn erlaubt – sonst kürzen (bis af) oder danach
+      if(tm==null&&ZD>0){
+        if(st>=ZS&&st<ZE){wait+=ZE-st;st=ZE;}
+        else if(!ZT&&st<ZS&&st+du>ZS){if(st+du-ZS<=af+0.01)du=ZS-st;else{wait+=ZE-st;st=ZE;}}
+      }
+      // Baustellen-Mittag: nur wenige Minuten hinein -> Audit entsprechend kürzer (bis af)
+      if(tm==null&&blocked(st,du)&&st<LS&&st+du-LS<=af+0.01)du=LS-st;
       // Stopp ohne Uhrzeit nie im Baustellen-Mittag: erst ab dessen Ende (vorher Pause, falls noch nicht gemacht)
-      if(tm==null&&blocked(st,du)){
+      if(tm==null&&blocked(st,du)){du=du0;
         if(need()){const ls=Math.max(st,W0);wait+=ls-st;takeLunch(ii,ls);st=ls+LD;}
         if(st<BE){wait+=BE-st;st=BE;}
       }
       if(it.t==='bs'){aud+=du;if(st>LAST+0.5)lateStart+=st-LAST;}else evt+=du;
-      sched.push({arr,start:st,end:st+du,late:tm!=null&&arr>tm?arr-tm:0});
+      sched.push({arr,start:st,end:st+du,short:du0-du,late:tm!=null&&arr>tm?arr-tm:0});
       t=st+du;if(node!=null)pos=node;
     });
     const back=items.length?D[pos][0]/60:0;drive+=back;
@@ -5270,7 +5281,7 @@ function tgRender(){
           <span style="width:8px;height:8px;border-radius:50%;flex-shrink:0;background:${fixed?'#6366F1':stCol[s]||'#10B981'}"></span>
           <span style="flex:1;min-width:0">${bsLabel(e)}${R.prefOf.get(j)?' <span style="color:#10B981" title="Bevorzugte Abteilung">★</span>':''}${fixed?' <span style="font-size:10px;color:#6366F1">(bereits geplant)</span>':''}</span>
           ${tgPersTag(e)}
-          <span style="font-size:10px;color:var(--tx3);white-space:nowrap">${C.dur.get(j)} min${e.zeitbedarf?' fix':''}</span>
+          <span style="font-size:10px;color:var(--tx3);white-space:nowrap"${sc.short>0.5?` title="${Math.round(sc.short)} min kürzer, damit es vor der Pause fertig ist"`:''}>${sc.short>0.5?`${Math.round(C.dur.get(j)-sc.short)} <span style="color:#B45309">(−${Math.round(sc.short)})</span>`:C.dur.get(j)} min${e.zeitbedarf?' fix':''}</span>
           ${fixed?'':`<select onchange="tgMove(${j},+this.value)" style="font-size:10px;padding:1px 3px;border:1px solid var(--bd);border-radius:4px;background:var(--sf);color:var(--tx2)">${R.days.map((di,dd)=>`<option value="${dd}"${dd===d?' selected':''}>${names[di]}</option>`).join('')}</select>
           <button onclick="tgToggle(${j})" title="Entfernen" style="background:none;border:none;cursor:pointer;font-size:12px;color:#EF4444">✕</button>`}
         </div>`;}).join('')+(sim.lunch>0&&sim.lunchAt===P.items.length&&P.items.length?tgLunchRow(sim.lunchStart):'')||`<div style="font-size:11px;color:var(--tx3);padding:4px 0">${R.remaining.length?'Nichts eingeplant – die übrigen Baustellen passen zeitlich besser auf andere Tage.':'Tag bleibt frei – keine weiteren fälligen Baustellen. Die übrigen Tage sind so effizienter (weniger Anfahrten).'}</div>`}
