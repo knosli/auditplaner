@@ -3613,7 +3613,13 @@ function toggleMobileView(){
     mv.style.display='none';
     document.getElementById('mobile-btn').style.opacity='1';
     if(_mobMap){_mobMap.remove();_mobMap=null;}
+    // Auf dem Handy war die normale Ansicht beim Start ausgeblendet → wieder einblenden und merken
+    document.getElementById('mob-hide')?.remove();document.body.classList.add('full-view');
+    try{sessionStorage.setItem('ap_full','1');}catch(e){}
+    setTimeout(()=>{if(map)map.invalidateSize();renderAll();},100);
   } else {
+    document.body.classList.remove('full-view');
+    try{sessionStorage.removeItem('ap_full');}catch(e){}
     mv.style.display='flex';
     mv.style.flexDirection='column';
     document.getElementById('mobile-btn').style.opacity='0.5';
@@ -7521,7 +7527,9 @@ document.addEventListener('DOMContentLoaded',()=>{
   updateUserUI();
   renderFerList();
   setTimeout(()=>initAuth(),400);
-  if(window.innerWidth<768||('ontouchstart' in window&&window.innerWidth<1024)){
+  let apFull=false;try{apFull=sessionStorage.getItem('ap_full')==='1';}catch(e){}
+  if(apFull)document.body.classList.add('full-view');
+  if(!apFull&&(window.innerWidth<768||('ontouchstart' in window&&window.innerWidth<1024))){
     setTimeout(()=>toggleMobileView(),800);
   }
 });

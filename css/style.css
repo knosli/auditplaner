@@ -4,9 +4,11 @@ body.dark{--bg:#0F1117;--sf:#1A1D2E;--sf2:#252840;--bd:#2D3460;--tx:#F1F5F9;--tx
 body{font-family:'Inter',sans-serif;font-size:13px;color:var(--tx);background:var(--bg);overflow:hidden;height:100vh}
 #app,#hdr{display:none}
 @media(max-width:767px){
-  #app,#hdr{display:none!important}
-  #mobile-view{display:flex!important;flex-direction:column}
+  body:not(.full-view) #app,body:not(.full-view) #hdr{display:none!important}
+  body:not(.full-view) #mobile-view{display:flex!important;flex-direction:column}
 }
+#mob-back{display:none}
+@media(max-width:1023px){body.full-view #mob-back{display:flex;background:var(--blue);border-color:transparent;color:#fff;flex-shrink:0}}
 button,input,select,textarea{font-family:inherit;font-size:13px}
 #app{display:flex;flex-direction:column;height:100vh}
 /* HEADER */
