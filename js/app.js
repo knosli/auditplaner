@@ -145,6 +145,11 @@ function ensureCreatedAt(){
   });
   if(n)setTimeout(()=>{try{saveNow();}catch(x){}},800);
 }
+// Fester Besuchstermin {days:[0..4 = Mo..Fr], time:'07:30'} (optional): Tourguide plant nur an diesen Tagen, genau zu dieser Zeit
+const FV_DAYS=['Mo','Di','Mi','Do','Fr'];
+function fvTime(e){const t=e&&e.fixVisit&&e.fixVisit.time;if(!t||!/^\d{1,2}:\d{2}$/.test(t))return null;const[h,m]=t.split(':').map(Number);return h*60+m;}
+function fvDayOK(e,ds){if(fvTime(e)==null)return true;const d=e.fixVisit.days||[];if(!d.length||!ds)return true;return d.includes((parseDate(ds).getDay()+6)%7);}
+function fvLabel(e){return fvTime(e)==null?'':((e.fixVisit.days||[]).length?e.fixVisit.days.map(i=>FV_DAYS[i]).join('/')+' ':'')+e.fixVisit.time;}
 function dl(e,now){
   // Nie auditierte Baustellen: Rhythmus läuft ab Erfassungsdatum
   const ref=e.lastAudit||e.resumeFrom||e.createdAt;
@@ -569,6 +574,7 @@ function selEntry(id){
   document.getElementById('dp-prv').textContent=e.prv||'—';
   const bcEl=document.getElementById('dp-bc');if(bcEl)bcEl.textContent=e.bc||'—';
   document.getElementById('dp-dept').textContent=e.dept||'—';
+  {const r=document.getElementById('dp-fv-row');if(r){r.style.display=fvTime(e)!=null?'':'none';document.getElementById('dp-fv').textContent=fvTime(e)!=null?'🕖 '+fvLabel(e)+(e.zeitbedarf?' · '+e.zeitbedarf+' min':''):'';}}
   document.getElementById('dp-rh').textContent=rhLabel(e.rhythm,true);
   {const zr=document.getElementById('dp-zb-row');if(zr){zr.style.display=e.zeitbedarf?'':'none';if(e.zeitbedarf)document.getElementById('dp-zb').textContent=e.zeitbedarf+' min (fix)';}}
   renderPersonalHistory(e);
@@ -744,6 +750,11 @@ function confirmPlan(){
   let dt=_planMode==='kw'?kwToDate(kwFromInput(kwVal)):dtVal;
   if(!aud||!dt||(dt==='Invalid Date')){showToast('Auditor und KW/Datum erforderlich');return;}
   const e=data.find(x=>x.id===selId);if(!e)return;
+  // Fester Besuchstermin: im KW-Modus direkt den (ersten) festen Wochentag nehmen, sonst bei falschem Tag warnen
+  if(fvTime(e)!=null&&(e.fixVisit.days||[]).length){
+    if(_planMode==='kw'){const m=parseDate(dt);m.setDate(m.getDate()+e.fixVisit.days[0]);dt=ferISO(m);}
+    else if(!fvDayOK(e,dt))setTimeout(()=>showToast(`🕖 Fester Besuchstermin: ${fvLabel(e)} – geplanter Tag passt nicht`,5000),300);
+  }
   if(onVac(aud,dt))showToast(`⚠️ ${aud.split(' ').pop()} hat Ferien!`,4000);
   {const bf=bauferienAt(data.find(x=>x.id===selId),dt);if(bf)setTimeout(()=>showToast(`🏖 ${bf.dept} hat Bauferien (${fd(bf.von)}–${fd(bf.bis)}) – niemand auf der Baustelle!`,5000),onVac(aud,dt)?4100:0);}
   plans.push({bsId:e.id,auditor:aud,date:dt});plans.sort((a,b)=>a.date.localeCompare(b.date));
@@ -3086,7 +3097,7 @@ function renderAudAdminList(){
   }).join('');
 }
 
-function openAdd(){editId=null;{const k=document.getElementById('m-to-kd');if(k)k.style.display='none';}window._newSitePersonal=null;window._pendingLat=null;window._pendingLng=null;{const z=document.getElementById('f-zb');if(z)z.value='';}{const la=document.getElementById('f-lat'),ln=document.getElementById('f-lng');if(la)la.value='';if(ln)ln.value='';}document.getElementById('m-title').textContent='Neue Baustelle';document.getElementById('form-s').style.display='block';(document.getElementById('imp-s')||{style:{},classList:{remove(){}}}).style.display='none';(document.getElementById('json-s')||{style:{},classList:{remove(){}}}).style.display='none';document.getElementById('m-save').style.display='';['f-name','f-addr','f-psp','f-sap','f-prv','f-bc','f-note'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});fillFDept('');setDefaultRhythm('baustelle');document.getElementById('f-last').value='';document.getElementById('f-type').value='baustelle';document.getElementById('addr-suggestions').style.display='none';const hint=document.getElementById('f-addr-hint');if(hint)hint.textContent='';document.getElementById('mbg').classList.add('open');}
+function openAdd(){editId=null;FV_DAYS.forEach((_,i)=>{const c=document.getElementById('f-fv-'+i);if(c)c.checked=false;});{const t=document.getElementById('f-fv-time');if(t)t.value='';}{const k=document.getElementById('m-to-kd');if(k)k.style.display='none';}window._newSitePersonal=null;window._pendingLat=null;window._pendingLng=null;{const z=document.getElementById('f-zb');if(z)z.value='';}{const la=document.getElementById('f-lat'),ln=document.getElementById('f-lng');if(la)la.value='';if(ln)ln.value='';}document.getElementById('m-title').textContent='Neue Baustelle';document.getElementById('form-s').style.display='block';(document.getElementById('imp-s')||{style:{},classList:{remove(){}}}).style.display='none';(document.getElementById('json-s')||{style:{},classList:{remove(){}}}).style.display='none';document.getElementById('m-save').style.display='';['f-name','f-addr','f-psp','f-sap','f-prv','f-bc','f-note'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});fillFDept('');setDefaultRhythm('baustelle');document.getElementById('f-last').value='';document.getElementById('f-type').value='baustelle';document.getElementById('addr-suggestions').style.display='none';const hint=document.getElementById('f-addr-hint');if(hint)hint.textContent='';document.getElementById('mbg').classList.add('open');}
 function openEdit(id){
   {const k=document.getElementById('m-to-kd');if(k)k.style.display=document.body.classList.contains('admin-mode')?'':'none';}
   // Reset manual marker
@@ -3111,6 +3122,8 @@ function openEdit(id){
   fillFDept(e.dept||'');
   document.getElementById('f-rh').value=e.rhythm||28;
   document.getElementById('f-zb').value=e.zeitbedarf||'';
+  FV_DAYS.forEach((_,i)=>{const c=document.getElementById('f-fv-'+i);if(c)c.checked=!!(e.fixVisit&&(e.fixVisit.days||[]).includes(i));});
+  {const t=document.getElementById('f-fv-time');if(t)t.value=(e.fixVisit&&e.fixVisit.time)||'';}
   document.getElementById('f-last').value=e.lastAudit||'';
   document.getElementById('f-note').value=e.note||'';
   document.getElementById('f-type').value=e.type||'baustelle';
@@ -3142,7 +3155,8 @@ async function saveEntry(){
   btn.textContent='Speichern';btn.disabled=false;
   let rh=+document.getElementById('f-rh').value;if(type==='werkhof'&&rh===S('rh_baustelle'))rh=S('rh_werkhof');
   const _zb=+document.getElementById('f-zb').value||0;
-  const entry={id:editId||Date.now(),name,addr,zeitbedarf:_zb>0?_zb:undefined,psp:document.getElementById('f-psp').value.trim(),sap:name,prv:document.getElementById('f-prv').value.trim(),bc:document.getElementById('f-bc').value.trim(),dept,rhythm:rh,type,lastAudit:document.getElementById('f-last').value||null,lastKW:null,note:document.getElementById('f-note').value.trim(),auditor:editId?data.find(e=>e.id===editId)?.auditor:null,active:true,paused:false,auditHistory:[],plannedKW:[],lat,lng};
+  const _fvT=(document.getElementById('f-fv-time')||{}).value||'',_fvD=FV_DAYS.map((_,i)=>i).filter(i=>document.getElementById('f-fv-'+i)?.checked);
+  const entry={id:editId||Date.now(),name,addr,zeitbedarf:_zb>0?_zb:undefined,fixVisit:_fvT?{days:_fvD,time:_fvT}:undefined,psp:document.getElementById('f-psp').value.trim(),sap:name,prv:document.getElementById('f-prv').value.trim(),bc:document.getElementById('f-bc').value.trim(),dept,rhythm:rh,type,lastAudit:document.getElementById('f-last').value||null,lastKW:null,note:document.getElementById('f-note').value.trim(),auditor:editId?data.find(e=>e.id===editId)?.auditor:null,active:true,paused:false,auditHistory:[],plannedKW:[],lat,lng};
   if(editId){const old=data.find(e=>e.id===editId);if(old){entry.active=old.active!==false;entry.lastKW=old.lastKW??null;entry.auditor=old.auditor;entry.paused=old.paused;entry.pauseReason=old.pauseReason;entry.auditHistory=old.auditHistory||[];entry.plannedKW=old.plannedKW||[];}data[data.findIndex(e=>e.id===editId)]={...old,...entry};}
   else{entry.createdAt=today();data.push(entry);if(window._newSitePersonal)piApplyNewSite(entry);}
   log(editId?'Bearbeitet':'Hinzugefügt',name,editId?'#F59E0B':'#3B82F6','');
@@ -4874,6 +4888,8 @@ function rulesHTML(){
     `Bleiben im Umkreis eines Tages Baustellen offen (Tag voll oder Personal unbekannt), zeigt der Vorschlag unter dem Tag «⚠ Ort nicht ausgeschöpft» – mit «+ trotzdem hinzufügen». Beim Ausgleich zwischen den Tagen wird keine Baustelle von ihren Nachbarn getrennt.`,
     `Audit-Dauer: 1–3 Pers. ${v('tg_min_1_3')} · 4–9 ${v('tg_min_4_9')} · 10–19 ${v('tg_min_10_19')} · 20+ ${v('tg_min_20')} · unbekannt ${v('tg_min_unknown')} min (inkl. Schreiben/Rapportieren; Fahrzeit separat).`,
     `Tag: <b>Das erste Audit beginnt um ${tgHM(S('tg_day_start')*60)}</b> – losgefahren wird entsprechend früher (Fahrzeit ab Startadresse). Max. ${v('tg_day_hours')} h Arbeitszeit (inkl. aller Fahrten und Wartezeiten, ohne Mittagspause) plus <b>${v('tg_post_min')} min Nachbearbeitung pro Baustelle</b> am Ende des Tages (Audit-Bericht; bei 4 Baustellen also 4 × ${v('tg_post_min')} min) – beides zusammen muss in den Arbeitstag passen. <b>Toleranz:</b> Ein Tag darf bis ${v('tg_day_tol')} min länger werden, alle Tage der Woche zusammen aber höchstens ${v('tg_week_tol')} min – damit keine Baustelle wegen ein paar Minuten wegfällt, aber auch nicht jeder Tag länger wird. Max. ${v('tg_max_per_day')} Baustellen.`,
+    `<b>Mehrere Einheiten am gleichen Ort</b> (gleiche Adresse/Koordinaten): ein gemeinsamer Rundgang – die Audit-Dauer richtet sich nach den Personen <u>aller</u> Einheiten zusammen (z.B. 3 + 4 + 2 = 9 Personen → Dauer für 4–9 Personen), die Nachbearbeitung zählt aber pro Einheit. Im Vorschlag mit «🔗 +x min» markiert.`,
+    `<b>Fester Besuchstermin</b> (Bearbeiten → «Fester Besuchstermin», z.B. Do 07:30, Dauer = Zeitbedarf): Die Baustelle wird nur an diesen Wochentagen vorgeschlagen und beginnt genau zu dieser Zeit – wie ein Termin mit fixer Uhrzeit (gilt auch über Znüni/Mittag). Beim Planen in der KW-Planung wird der feste Wochentag übernommen.`,
     `<b>Znüni der Baustellen ${tgHM(S('tg_znueni_start')*60)}–${tgHM(S('tg_znueni_start')*60+S('tg_znueni_dur'))} (${v('tg_znueni_dur')} min):</b> In dieser Zeit beginnt kein Audit (auch kein Personen-Audit oder Beratung) – wer im Znüni ankommt, beginnt danach. ${S('tg_znueni_through')>0?'Ein <b>laufendes Audit darf durchs Znüni laufen</b> (Besprechung mit dem Bauleiter), z.B. Beginn 08:30.':'Ein Audit, das nicht vor dem Znüni fertig ist, beginnt erst danach.'} Fahren ist in dieser Zeit möglich; Warten zählt zur Arbeitszeit. Dauer 0 = kein Znüni.`,
     `<b>Audit-Dauer flexibel:</b> Würde ein Baustellen-Audit nur wenige Minuten ins Znüni oder in den Baustellen-Mittag laufen, wird es um bis zu ${v('tg_audit_flex')} min kürzer geplant (im Vorschlag «(−x)»), statt ganz nach hinten zu rutschen.`,
     `<b>Mittag der Baustellen ${tgHM(S('tg_lunch_start')*60)}–${tgHM(S('tg_lunch_start')*60+S('tg_lunch_dur'))}: kein Audit</b> (auch keine Personen-Audits oder Beratungen) – ein Audit, das nicht vorher fertig ist, beginnt erst um ${tgHM(S('tg_lunch_start')*60+S('tg_lunch_dur'))}. Die eigene Mittagspause (${v('tg_lunch_dur')} min) ist <b>flexibel ± ${v('tg_lunch_flex')} min</b>: Beginn zwischen ${tgHM(S('tg_lunch_start')*60-S('tg_lunch_flex'))} und ${tgHM(S('tg_lunch_start')*60+S('tg_lunch_flex'))}, dort wo sie passt. Beispiel: Audit endet 11:45 → Pause 11:45–12:45 → Fahrt zur nächsten Baustelle → nächstes Audit ab ${tgHM(S('tg_lunch_start')*60+S('tg_lunch_dur'))}. Bei einer langen Fahrt über Mittag wird die Pause unterwegs gemacht. Rapporte mit fixer Uhrzeit dürfen über Mittag liegen. Ist man vor ${tgHM(S('tg_lunch_start')*60)} wieder zu Hause, entfällt die Pause.`,
@@ -4965,10 +4981,15 @@ function renderSettings(){
 // fällig > bald fällig > neu; bevorzugte Abteilungen zuerst, ausgeschlossene nie. Füllt nur auf.
 function tgAuditMin(e){
   if(e.zeitbedarf)return +e.zeitbedarf;
-  const n=e.lastPersonalKW!==undefined?e.lastPersonalCount:null;
+  return tgMinForCount(tgPersCount(e));
+}
+function tgPersCount(e){const n=e.lastPersonalKW!==undefined?e.lastPersonalCount:null;return n===null||n===undefined?null:+n;}
+function tgMinForCount(n){
   if(n===null||n===undefined)return S('tg_min_unknown');
   if(n<=3)return S('tg_min_1_3');if(n<=9)return S('tg_min_4_9');if(n<=19)return S('tg_min_10_19');return S('tg_min_20');
 }
+// Gleicher Ort (gleiche Koordinaten auf ~10 m): Einheiten dort werden in EINEM Rundgang auditiert
+function tgLocKey(e){return e&&e.lat&&e.lng&&!e.zeitbedarf&&fvTime(e)==null&&tgPersCount(e)!=null?(+e.lat).toFixed(4)+','+(+e.lng).toFixed(4):null;}
 // Personal-Klasse für die Priorität: 0 = 20+, 1 = 10-19, 2 = 4-9, 3 = 1-3, 4 = unbekannt (kein Import)
 function tgPersClass(e){
   const n=e.lastPersonalKW!==undefined?e.lastPersonalCount:null;
@@ -5013,11 +5034,12 @@ function tgCandidates(aud,kw,noPers,dayDates,noGeo,bfList,provIds=new Set()){
   const days=dayDates||[null];
   // Ampel am Tag; eine abgelaufene Pause zählt ab ihrem Ende als nicht pausiert
   const urgRaw=(e,ds)=>{if(e.paused&&!(ds&&pauseOverAt(e,ds)))return null;const u=tgUrgency(e.paused?{...e,paused:false}:e,ds);return u===0||u===1?u:null;};
-  const urgAt=(e,ds)=>bauferienAt(e,ds)?null:urgRaw(e,ds);   // in den Bauferien der Einheit: nie
+  const urgAt=(e,ds)=>bauferienAt(e,ds)||!fvDayOK(e,ds)?null:urgRaw(e,ds);   // in den Bauferien der Einheit / nicht am festen Besuchstag: nie
   return data.filter(e=>{
     if(!e.active||e.type==='werkhof')return false;            // Werkhöfe nur manuell planen
     // nur rot + orange – und zwar am Audit-Tag (was heute gelb ist, kann bis dann orange sein)
     if(!days.some(ds=>urgRaw(e,ds)!==null))return false;
+    if(!days.some(ds=>fvDayOK(e,ds)))return false;          // fester Besuchstag nicht unter den gewählten Tagen
     if(!days.some(ds=>urgAt(e,ds)!==null)){if(bfList&&!plannedThisKW.has(e.id)&&e.lat)bfList.push({e,bf:days.map(ds=>bauferienAt(e,ds)).find(Boolean)});return false;}
     if(plannedThisKW.has(e.id))return false;                  // von irgendwem diese KW eingeplant
     if(deptParts(e.dept).some(d=>excl.has(d)))return false;   // ausgeschlossen (hart)
@@ -5055,6 +5077,8 @@ async function tgGeocodeEvents(evs){
   }
 }
 // items: [{t:'bs',node}|{t:'ev',ev}] ; liefert Zeiten, Fahrzeit, Verspätung, Gesamtdauer ab Abfahrt
+// Feste Uhrzeit eines Stopps: Termin mit Uhrzeit oder Baustelle mit festem Besuchstermin
+function tgTm(it){return it.t==='ev'?it.ev.time:((_tgCalc&&_tgCalc.fixT&&_tgCalc.fixT.get(it.node))??null);}
 function tgSim(items){
   const R=_tgCalc,D=R.D;
   // Mittagspause: keine Audits/Stopps ohne Uhrzeit darin; Fahrten werden unterbrochen. Fixe Termine (Rapporte
@@ -5071,13 +5095,20 @@ function tgSim(items){
   const ZT=S('tg_znueni_through')>0,AF=S('tg_audit_flex');
   const run=start=>{
     let t=start,pos=0,drive=0,wait=0,late=0,aud=0,evt=0,lunch=0,lunchAt=-1,lunchStart=null,lateStart=0;const sched=[];
+    // gemeinsamer Rundgang: folgt eine Einheit am gleichen Ort direkt auf die vorherige, dauert der Rundgang so lange
+    // wie für die Personen ALLER Einheiten dort zusammen (nur die Differenz kommt dazu); Nachbearbeitung bleibt pro Einheit
+    let gKey=null,gPers=0,gDur=0;
     const need=()=>LD>0&&lunch===0;
     const takeLunch=(i,at)=>{if(need()){lunch=LD;lunchAt=i;lunchStart=at;}};
     items.forEach((it,ii)=>{
       const node=it.t==='bs'?it.node:it.ev.node;
       const tr=node!=null?D[pos][node]/60:0;drive+=tr;
-      const tm=it.t==='ev'?it.ev.time:null;
-      const du0=it.t==='bs'?R.dur.get(it.node):it.ev.dur,af=it.t==='bs'?AF:0;let du=du0;
+      const tm=tgTm(it);
+      let du0=it.t==='bs'?R.dur.get(it.node):it.ev.dur,joint=false;const af=it.t==='bs'?AF:0;
+      {const k=it.t==='bs'&&R.loc?R.loc.get(it.node):null;
+       if(k&&k===gKey){const p=R.persN.get(it.node);du0=Math.max(0,tgMinForCount(gPers+p)-gDur);gPers+=p;gDur+=du0;joint=true;}
+       else if(k){gKey=k;gPers=R.persN.get(it.node);gDur=du0;}else gKey=null;}
+      let du=du0;
       if(need()&&tr>0&&t<=W1){
         const clash=tm==null&&blocked(t+tr,du-af);
         // nächster Stopp fiele in den Baustellen-Mittag (oder wäre nicht bis Fensterende fertig) -> Pause jetzt
@@ -5101,7 +5132,7 @@ function tgSim(items){
         if(st<BE){wait+=BE-st;st=BE;}
       }
       if(it.t==='bs'){aud+=du;if(st>LAST+0.5)lateStart+=st-LAST;}else evt+=du;
-      sched.push({arr,start:st,end:st+du,short:du0-du,late:tm!=null&&arr>tm?arr-tm:0});
+      sched.push({arr,start:st,end:st+du,short:du0-du,joint,late:tm!=null&&arr>tm?arr-tm:0});
       t=st+du;if(node!=null)pos=node;
     });
     const back=items.length?D[pos][0]/60:0;drive+=back;
@@ -5115,11 +5146,11 @@ function tgSim(items){
   // Tagesbeginn = Beginn des ersten Audits/Stopps: so früh losfahren, dass man um diese Zeit beim ersten Stopp ist
   const firstNode=items.length?(items[0].t==='bs'?items[0].node:items[0].ev.node):null;
   // (ist der erste Stopp ein Termin mit späterer Uhrzeit: pünktlich dort sein statt früh hinfahren und warten)
-  const tm0=items.length&&items[0].t==='ev'&&items[0].ev.time!=null?items[0].ev.time:null;
+  const tm0=items.length?tgTm(items[0]):null;
   const day0=Math.max(S('tg_day_start')*60,tm0??0)-(firstNode!=null?D[0][firstNode]/60:0);let r=run(day0);
   // Nur wenn der ERSTE Stopp des Tages ein Termin mit Uhrzeit ist und ab Tagesbeginn nicht erreichbar:
   // entsprechend früher losfahren. Liegt etwas davor, gilt der Termin als verpasst (keine Mitternachts-Touren).
-  if(items.length&&items[0].t==='ev'&&items[0].ev.time!=null&&r.sched[0].late>0){const r2=run(day0-r.sched[0].late);if(r2.late<r.late)r=r2;}
+  if(items.length&&tm0!=null&&r.sched[0].late>0){const r2=run(day0-r.sched[0].late);if(r2.late<r.late)r=r2;}
   return r;
 }
 const _tgBetter=(a,b)=>a.late<b.late-0.5||(Math.abs(a.late-b.late)<=0.5&&(a.lateStart<b.lateStart-0.5||(Math.abs(a.lateStart-b.lateStart)<=0.5&&a.total<b.total)));
@@ -5128,14 +5159,14 @@ function tgPlanDay(d,bsNodes){
   const R=_tgCalc;const key=d+':'+bsNodes.slice().sort((a,b)=>a-b).join(',');
   if(R.cache.has(key))return R.cache.get(key);
   const evs=R.days[d].events;
-  let items=evs.filter(e=>e.time!=null).sort((a,b)=>a.time-b.time).map(ev=>({t:'ev',ev}));
-  const flex=[...evs.filter(e=>e.time==null).map(ev=>({t:'ev',ev})),...bsNodes.map(node=>({t:'bs',node}))];
+  let items=[...evs.filter(e=>e.time!=null).map(ev=>({t:'ev',ev})),...bsNodes.filter(n=>R.fixT&&R.fixT.has(n)).map(node=>({t:'bs',node}))].sort((a,b)=>tgTm(a)-tgTm(b));
+  const flex=[...evs.filter(e=>e.time==null).map(ev=>({t:'ev',ev})),...bsNodes.filter(n=>!(R.fixT&&R.fixT.has(n))).map(node=>({t:'bs',node}))];
   const insertBest=(arr,it)=>{let best=null;for(let p=0;p<=arr.length;p++){const cand=arr.slice(0,p).concat(it,arr.slice(p));const s=tgSim(cand);if(!best||_tgBetter(s,best.s))best={cand,s};}return best;};
   flex.forEach(it=>{items=insertBest(items,it).cand;});
   // Verbesserung: flexible Stopps einzeln herausnehmen und bestmöglich wieder einfügen
   let cur=tgSim(items),imp=true,guard=0;
   while(imp&&guard++<6){imp=false;
-    for(let i=0;i<items.length;i++){const it=items[i];if(it.t==='ev'&&it.ev.time!=null)continue;
+    for(let i=0;i<items.length;i++){const it=items[i];if(tgTm(it)!=null)continue;
       const rest=items.slice(0,i).concat(items.slice(i+1));const b=insertBest(rest,it);
       if(_tgBetter(b.s,cur)&&(cur.total-b.s.total>0.5||cur.late-b.s.late>0.5)){items=b.cand;cur=b.s;imp=true;}}
   }
@@ -5169,7 +5200,12 @@ async function tgCompute(){
   evPts.forEach((ev,i)=>{ev.node=1+fixedAll.length+pool.length+i;});
   events.flat().forEach(ev=>{if(ev.node===undefined)ev.node=null;});
   const dur=new Map();fixedAll.forEach(e=>dur.set(idxFixed.get(e.id),tgAuditMin(e)));pool.forEach((x,i)=>dur.set(idxPool[i],x.min));
-  _tgCalc={D,dur,cache:new Map(),days:dayDates.map((ds,d)=>({ds,events:events[d]}))};
+  // gleicher Ort: Schlüssel und Personen pro Knoten (für den gemeinsamen Rundgang in tgSim)
+  const loc=new Map(),persN=new Map();
+  fixedAll.forEach(e=>{const j=idxFixed.get(e.id),k=tgLocKey(e);if(k){loc.set(j,k);persN.set(j,tgPersCount(e));}});
+  pool.forEach((x,i)=>{const k=tgLocKey(x.e);if(k){loc.set(idxPool[i],k);persN.set(idxPool[i],tgPersCount(x.e));}});
+  const fixT=new Map();fixedAll.forEach(e=>{if(fvTime(e)!=null)fixT.set(idxFixed.get(e.id),fvTime(e));});pool.forEach((x,i)=>{if(fvTime(x.e)!=null)fixT.set(idxPool[i],fvTime(x.e));});
+  _tgCalc={D,dur,fixT,loc,persN,cache:new Map(),days:dayDates.map((ds,d)=>({ds,events:events[d]}))};
   const dayLen=S('tg_day_hours')*60,maxN=S('tg_max_per_day');
   const fixedNodes=fixedPlans.map(list=>list.map(e=>idxFixed.get(e.id)));
   const base=fixedNodes.map((n,d)=>tgPlanDay(d,n).sim);
@@ -5279,9 +5315,9 @@ function tgRender(){
         const j=it.node,e=R.nodeEntry.get(j),fixed=R.fixedIds.has(j),ud=(R.urgOf.get(j)||[])[d],s=ud===0?'overdue':ud===1?'due':status(e);
         return lunchRow+`<div style="display:flex;align-items:center;gap:6px;padding:4px 0;font-size:12px;border-top:1px solid var(--bd)">${time}
           <span style="width:8px;height:8px;border-radius:50%;flex-shrink:0;background:${fixed?'#6366F1':stCol[s]||'#10B981'}"></span>
-          <span style="flex:1;min-width:0">${bsLabel(e)}${R.prefOf.get(j)?' <span style="color:#10B981" title="Bevorzugte Abteilung">★</span>':''}${fixed?' <span style="font-size:10px;color:#6366F1">(bereits geplant)</span>':''}</span>
+          <span style="flex:1;min-width:0">${bsLabel(e)}${R.prefOf.get(j)?' <span style="color:#10B981" title="Bevorzugte Abteilung">★</span>':''}${fixed?' <span style="font-size:10px;color:#6366F1">(bereits geplant)</span>':''}${fvTime(e)!=null?` <span style="font-size:10px;color:${sc.late>0.5?'#DC2626':'#0369A1'}" title="Fester Besuchstermin ${fvLabel(e)}">(fix ${tgHM(fvTime(e))}${sc.late>0.5?', '+Math.round(sc.late)+' min zu spät':''}${fvDayOK(e,C.days[d].ds)?'':', falscher Tag'})</span>`:''}</span>
           ${tgPersTag(e)}
-          <span style="font-size:10px;color:var(--tx3);white-space:nowrap"${sc.short>0.5?` title="${Math.round(sc.short)} min kürzer, damit es vor der Pause fertig ist"`:''}>${sc.short>0.5?`${Math.round(C.dur.get(j)-sc.short)} <span style="color:#B45309">(−${Math.round(sc.short)})</span>`:C.dur.get(j)} min${e.zeitbedarf?' fix':''}</span>
+          ${sc.joint?`<span style="font-size:10px;color:#0369A1;white-space:nowrap" title="Gleicher Ort wie die Einheit davor: ein gemeinsamer Rundgang, Dauer nach den Personen aller Einheiten zusammen. Nachbearbeitung zählt pro Einheit.">🔗 ${Math.round(sc.end-sc.start)>0?'+'+Math.round(sc.end-sc.start)+' min':'im selben Rundgang'}</span>`:''}<span style="font-size:10px;color:var(--tx3);white-space:nowrap;${sc.joint?'display:none':''}"${sc.short>0.5?` title="${Math.round(sc.short)} min kürzer, damit es vor der Pause fertig ist"`:''}>${sc.short>0.5?`${Math.round(C.dur.get(j)-sc.short)} <span style="color:#B45309">(−${Math.round(sc.short)})</span>`:C.dur.get(j)} min${e.zeitbedarf?' fix':''}</span>
           ${fixed?'':`<select onchange="tgMove(${j},+this.value)" style="font-size:10px;padding:1px 3px;border:1px solid var(--bd);border-radius:4px;background:var(--sf);color:var(--tx2)">${R.days.map((di,dd)=>`<option value="${dd}"${dd===d?' selected':''}>${names[di]}</option>`).join('')}</select>
           <button onclick="tgToggle(${j})" title="Entfernen" style="background:none;border:none;cursor:pointer;font-size:12px;color:#EF4444">✕</button>`}
         </div>`;}).join('')+(sim.lunch>0&&sim.lunchAt===P.items.length&&P.items.length?tgLunchRow(sim.lunchStart):'')||`<div style="font-size:11px;color:var(--tx3);padding:4px 0">${R.remaining.length?'Nichts eingeplant – die übrigen Baustellen passen zeitlich besser auf andere Tage.':'Tag bleibt frei – keine weiteren fälligen Baustellen. Die übrigen Tage sind so effizienter (weniger Anfahrten).'}</div>`}

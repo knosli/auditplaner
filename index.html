@@ -33,7 +33,7 @@ if('serviceWorker' in navigator){
 <link rel="stylesheet" href="vendor/markercluster/MarkerCluster.css?v=1.5.3">
 <link rel="stylesheet" href="vendor/markercluster/MarkerCluster.Default.css?v=1.5.3">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
-<link rel="stylesheet" href="css/style.css?v=3.15">
+<link rel="stylesheet" href="css/style.css?v=3.17">
 </head>
 <body>
 <div id="app" style="display:none">
@@ -61,7 +61,7 @@ if('serviceWorker' in navigator){
   <div id="presence-bar" style="display:flex;align-items:center;gap:4px;margin-left:4px"></div>
   <button onclick="toggleDark()" class="hb" title="Dark Mode" style="font-size:14px">🌙</button>
   <button onclick="openGuide()" class="hb" title="Anleitung" style="font-size:14px">❓</button>
-  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v3.15</span>
+  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v3.17</span>
   <button onclick="doLogout()" class="hb" title="Abmelden" style="font-size:14px" id="logout-btn">⏻</button>
   <button onclick="toggleMobileView()" id="mobile-btn" class="hb" title="Mobile Ansicht" style="font-size:14px">📱</button>
   <div id="more-w" class="admin-only">
@@ -169,6 +169,7 @@ if('serviceWorker' in navigator){
         <div class="dp-r"><span class="dp-l">PrV</span><span class="dp-v" id="dp-prv"></span></div>
         <div class="dp-r"><span class="dp-l">BC</span><span class="dp-v" id="dp-bc"></span></div>
         <div class="dp-r"><span class="dp-l">Abteilung</span><span class="dp-v" id="dp-dept"></span></div>
+        <div class="dp-r" id="dp-fv-row" style="display:none"><span class="dp-l">Fester Termin</span><span class="dp-v" id="dp-fv"></span></div>
         <div class="dp-r"><span class="dp-l">Rhythmus</span><span class="dp-v" id="dp-rh"></span></div>
         <div class="dp-r" id="dp-zb-row" style="display:none"><span class="dp-l">Zeitbedarf</span><span class="dp-v" id="dp-zb"></span></div>
         <div class="dp-r" id="dp-personal-row"><span class="dp-l" id="dp-personal-lbl">Personal</span><span class="dp-v"><span id="dp-personal-cnt"></span> <button id="dp-personal-edit" title="Personal dieser KW manuell eintragen" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,.7);font-size:12px;padding:0 0 0 4px">✏️</button></span></div>
@@ -700,6 +701,8 @@ if('serviceWorker' in navigator){
         <div class="fr"><label>Letztes Audit</label><input type="date" id="f-last"></div>
       </div>
       <div class="fr"><label title="Nur für Spezialbaustellen: feste Zeit pro Audit in Minuten. Übersteuert die automatische Schätzung nach Personal (Tourguide).">Zeitbedarf pro Audit (min) <span style="font-weight:400;color:var(--tx3)">– optional, nur Spezialbaustellen</span></label><input type="number" id="f-zb" min="10" max="600" step="5" placeholder="leer = automatisch nach Personal"></div>
+      <div class="fr"><label title="Für Baustellen mit festem Besuchstermin (z.B. immer Donnerstag 07:30). Der Tourguide plant sie nur an diesen Tagen und genau zu dieser Zeit.">Fester Besuchstermin <span style="font-weight:400;color:var(--tx3)">– optional</span></label>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span id="f-fv-days" style="display:flex;gap:8px"><label style="display:inline-flex;align-items:center;gap:2px;font-size:12px;font-weight:400;margin:0"><input type="checkbox" id="f-fv-0" style="width:auto;margin:0">Mo</label><label style="display:inline-flex;align-items:center;gap:2px;font-size:12px;font-weight:400;margin:0"><input type="checkbox" id="f-fv-1" style="width:auto;margin:0">Di</label><label style="display:inline-flex;align-items:center;gap:2px;font-size:12px;font-weight:400;margin:0"><input type="checkbox" id="f-fv-2" style="width:auto;margin:0">Mi</label><label style="display:inline-flex;align-items:center;gap:2px;font-size:12px;font-weight:400;margin:0"><input type="checkbox" id="f-fv-3" style="width:auto;margin:0">Do</label><label style="display:inline-flex;align-items:center;gap:2px;font-size:12px;font-weight:400;margin:0"><input type="checkbox" id="f-fv-4" style="width:auto;margin:0">Fr</label></span><span style="font-size:12px;color:var(--tx2)">um</span><input type="time" id="f-fv-time" style="width:110px"><span style="font-size:11px;color:var(--tx3)">Dauer = Zeitbedarf</span></div></div>
       <!-- Row 6: Notiz -->
       <div class="fr"><label>Notiz</label><textarea id="f-note" placeholder="Optional..."></textarea></div>
     </div>
@@ -1086,8 +1089,8 @@ if('serviceWorker' in navigator){
 <script src="vendor/leaflet/leaflet.js?v=1.9.4"></script>
 <script src="vendor/markercluster/leaflet.markercluster.js?v=1.5.3"></script>
 <script src="vendor/xlsx/xlsx.full.min.js?v=0.18.5"></script>
-<script src="js/merge.js?v=3.15"></script>
-<script src="js/app.js?v=3.15"></script>
+<script src="js/merge.js?v=3.17"></script>
+<script src="js/app.js?v=3.17"></script>
 <!-- ONBOARDING GUIDE MODAL -->
 <div id="guide-bg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:5000;align-items:center;justify-content:center">
   <div style="background:var(--sf);border-radius:16px;width:560px;max-width:95vw;max-height:90vh;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.4);display:flex;flex-direction:column">

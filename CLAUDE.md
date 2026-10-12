@@ -11,8 +11,8 @@ Beratungen, Rapporten und Ferien der Auditoren. Sprache der Oberfläche: Deutsch
 - Vor jedem PR: App im Browser laden (Desktop- und Mobile-Breite) und in der Konsole
   prüfen, dass keine JavaScript-Fehler auftreten.
 - Bei jeder Änderung an der App die Versionsnummer erhöhen, und zwar überall in
-  `index.html`: im Header (`<span ... title="Version">v3.15</span>`) und in den Links
-  `css/style.css?v=3.15`, `js/merge.js?v=3.15` und `js/app.js?v=3.15`. Der `?v=`-Zusatz
+  `index.html`: im Header (`<span ... title="Version">v3.17</span>`) und in den Links
+  `css/style.css?v=3.17`, `js/merge.js?v=3.17` und `js/app.js?v=3.17`. Der `?v=`-Zusatz
   sorgt dafür, dass Browser nach einem Update keine alte Datei aus dem Cache verwenden.
 - Tests für die Zusammenführung: `node tests/merge.test.js` (muss grün sein).
 - Keine Browser-Dialoge (`confirm`, `prompt`, `alert`): `askConfirm()`, `askText()`,
@@ -79,6 +79,10 @@ global; das HTML ruft sie direkt über `onclick="..."` auf.
   Woche, lange rot (`tg_force_days`) immer; Nachbearbeitung `tg_post_min` pro Baustelle zählt zur Tageslänge (`tgSim` → `post`);
   Toleranz: Tag ≤ `tg_day_tol` über `tg_day_hours`, Überzeit aller Tage zusammen ≤ `tg_week_tol` (`ok`/`weekOver` in `tgCompute`);
   `tg_day_start` = Beginn des ersten Audits (Abfahrt um die Fahrzeit früher, `tgSim`);
+  Gleicher Ort (`tgLocKey`, Koordinaten 4 Stellen): gemeinsamer Rundgang, Dauer = `tgMinForCount`(Personen aller
+  Einheiten), nur die Differenz pro weiterer Einheit (`sched[].joint`); Nachbearbeitung pro Einheit;
+  Fester Besuchstermin pro Baustelle `e.fixVisit={days:[0..4],time:'HH:MM'}` (`fvTime`/`fvDayOK`/`fvLabel`): nur an diesen
+  Tagen vorgeschlagen, im Tag als fixe Uhrzeit (`_tgCalc.fixT`, `tgTm`); KW-Planung übernimmt den Wochentag;
   Znüni der Baustellen `tg_znueni_start`+`tg_znueni_dur`: kein Audit-Beginn; laufendes darf durch (`tg_znueni_through`, bool);
   Audit-Dauer bis `tg_audit_flex` kürzer statt in eine Pause zu laufen (`sched[].short`); Einstellung mit `bool:1` = Häkchen;
   Baustellen-Mittag `tg_lunch_start`…+`tg_lunch_dur` = nie ein Audit (`blocked` in `tgSim`); eigene Pause flexibel
