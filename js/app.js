@@ -4832,6 +4832,7 @@ function rulesHTML(){
     `Zuordnung: PSP exakt inkl. Unternummer (4226280.13 ≠ 4226280.01); Etappen (3025325.1/.2) → Hauptnummer 3025325; Namens-Treffer nur innerhalb der Abteilung der Einsatzliste; mehrere Listen für dieselbe Baustelle werden zusammengezählt.`,
     `«Nicht auf der Liste»: aktive Baustellen einer Abteilung, deren Einsatzlisten <u>alle</u> importiert wurden, die aber auf keiner stehen → Pausieren vorgeschlagen (neu erfasste nicht vorausgewählt).`,
     `Gespeichert wird die Personalzahl bei allen erkannten Baustellen (auch dauerhaft ausgeschlossene), «nicht auf der Liste» erhält 0. Verlauf: ${v('pi_history_weeks')} Wochen.`,
+    `<b>Kundendienst-Liste</b> (Admin → Kundendienst-Liste, oder «🔧 Kundendienst» bei unbekannten Einträgen und in der Sammelbox): Einträge ohne passende Baustelle, deren PSP-Nummer oder Name (Stichwort, z.B. «Kundenarbeiten», «Divers») auf der Liste steht, werden übersprungen – nicht «unbekannt», nicht in der Sammelbox. Echte Baustellen sind nie betroffen. Die Sammelbox führt doppelte Einträge (gleiche PSP und Name) zusammen.`,
     `Werkhöfe sind vom Import komplett ausgenommen. Unbekannte Einträge: zuordnen (Alias wird gemerkt), neu anlegen oder in die Sammelbox.`,
     `KW-Planung: Jede Baustellen-Karte zeigt 👷 das Personal der KW, in der sie geplant ist (Import oder manuell). Gibt es dafür keinen Wert, steht grau kursiv der zuletzt bekannte Wert mit seiner KW, ohne Angabe «–». Eine 0 ist rot. Werkhöfe zeigen nichts.`,
     `Temporäre Mitarbeitende: nur Personal-Nummern (keine Namen), pro Einheit bei jedem Import ersetzt.`,
@@ -5841,7 +5842,7 @@ async function runPersonalImport(file){
       return;
     }
 
-    const buckets={pause:[],review:[],reactivate:[],unknown:[],noop:[],reactivateInactive:[],inactiveInfo:[],excluded:[]};
+    const buckets={kundendienst:[],pause:[],review:[],reactivate:[],unknown:[],noop:[],reactivateInactive:[],inactiveInfo:[],excluded:[]};
     const qDeptOf=q=>{if(!q)return null;const qm=(deptMeta._quelleMap||{});return(q in qm)?(qm[q]||null):(autoMapQuelle(q)||null);};
     // 1. Zuordnen; 2. mehrere Listen-Einträge derselben Baustelle zusammenfassen (Personen addieren),
     // damit z.B. «0 Pers.» auf der Terratech-Liste eine voll laufende Hochbau-Baustelle nicht pausiert.
@@ -5849,7 +5850,7 @@ async function runPersonalImport(file){
     raw.forEach(r=>{
       const m=piMatchBaustelle(r.psp,r.name,qDeptOf(r.quelle));
       const item={...r,match:m};
-      if(!m){buckets.unknown.push(item);return;}
+      if(!m){const ig=piIgnoreMatch(item);if(ig)buckets.kundendienst.push({...item,ignoreRule:ig});else buckets.unknown.push(item);return;}
       const k=m.entry.id;
       if(!groups.has(k))groups.set(k,[]);
       groups.get(k).push(item);
@@ -5902,7 +5903,7 @@ function piRenderPreview(){
   if(!_piPending)return;
   const{buckets,targetKW}=_piPending;
   document.getElementById('pi-summary').textContent=
-    `KW ${targetKW}: ${buckets.pause.length} pausieren · ${buckets.review.length} prüfen · ${buckets.reactivate.length} reaktivieren · ${buckets.unknown.length} unbekannt`;
+    `KW ${targetKW}: ${buckets.pause.length} pausieren · ${buckets.review.length} prüfen · ${buckets.reactivate.length} reaktivieren · ${buckets.unknown.length} unbekannt${(buckets.kundendienst||[]).length?` · ${buckets.kundendienst.length} Kundendienst übersprungen`:''}`;
   const grp=(title,color,arr,key,showCount,defaultChecked)=>{
     if(!arr.length)return'';
     const dc=defaultChecked!==false;
@@ -5933,6 +5934,7 @@ function piRenderPreview(){
       <button onclick="piResolveUnknown(${i})" style="padding:4px 10px;border-radius:6px;border:none;background:#3B82F6;color:#fff;font-size:11px;cursor:pointer">Zuordnen</button>
       <button onclick="piCreateFromUnknown(${i})" style="padding:4px 10px;border-radius:6px;border:1px solid #10B981;background:transparent;color:#10B981;font-size:11px;cursor:pointer">+ Neue Baustelle</button>
       <button onclick="piCollectUnknown(${i})" style="padding:4px 10px;border-radius:6px;border:1px solid var(--bd);background:transparent;color:var(--tx2);font-size:11px;cursor:pointer"><i class="ti ti-inbox" style="color:var(--blue)"></i> Sammelbox</button>
+      <button onclick="piIgnoreUnknown(${i})" title="Als Kundendienst merken – kommt nie mehr als unbekannt" style="padding:4px 10px;border-radius:6px;border:1px solid #F59E0B;background:transparent;color:#B45309;font-size:11px;cursor:pointer">🔧 Kundendienst</button>
     </div>`;
   };
   const unknownGrp=buckets.unknown.length?`<div style="margin-bottom:14px">
@@ -5980,6 +5982,10 @@ function piRenderPreview(){
   }
   html=collectBoxHtml+html;
   html+=unknownGrp;
+  const kd=buckets.kundendienst||[];
+  if(kd.length)html+=`<details style="margin-bottom:14px"><summary style="cursor:pointer;font-size:12px;font-weight:700;color:var(--tx3)">🔧 Kundendienst – übersprungen (${kd.length})</summary>
+    <div style="font-size:11px;color:var(--tx3);margin:6px 0">Stehen auf der Kundendienst-Liste (Admin → Kundendienst-Liste) und werden nicht verarbeitet.</div>
+    ${kd.map(it=>`<div style="padding:5px 10px;background:var(--sf2);border-radius:8px;margin-bottom:3px;font-size:11px;color:var(--tx3)">${listLabel(it)} · ${it.count} Pers. <span style="opacity:.8">· ${escH(piIgnoreLabel(it.ignoreRule))}</span></div>`).join('')}</details>`;
   if(!html)html='<div style="font-size:12px;color:var(--tx2)">Keine Änderungen nötig – alles bereits konsistent.</div>';
   document.getElementById('pi-groups').innerHTML=html;
   document.getElementById('pi-preview').style.display='block';
@@ -6047,6 +6053,76 @@ function piCreateFromUnknown(idx){
   _piPending.buckets.unknown.splice(idx,1);
 }
 
+// ═══ KUNDENDIENST-LISTE (Import) ═══
+// Einträge auf Einsatzlisten, die Kundendienst sind (z.B. «Kundenarbeiten», «Divers»), werden beim Import
+// übersprungen statt als «unbekannt» zu erscheinen. Regeln in deptMeta._piIgnore (synchronisiert):
+// {id,kind:'psp'|'word',value,dept} – PSP exakt (inkl. Unternummer) oder Stichwort im Namen, optional nur
+// für eine Einheit. Greift NUR bei Einträgen ohne passende Baustelle – echte Baustellen sind nie betroffen.
+const PI_IGNORE_DEFAULT=['Kundenarbeiten','Kundendienst','Kudi','Divers'].map((w,i)=>({id:i+1,kind:'word',value:w,dept:''}));
+function piIgnoreList(){return Array.isArray(deptMeta._piIgnore)?deptMeta._piIgnore:PI_IGNORE_DEFAULT;}
+function piIgnoreSave(list){deptMeta._piIgnore=list;saveDepts();}
+function piPspKey(s){return piFullPSP(s)||String(s||'').replace(/\s+/g,'');}
+// Passende Regel für einen Import-Eintrag (it.psp, it.name, it.quelle) oder null
+function piIgnoreMatch(it){
+  const qd=(()=>{const q=it.quelle;if(!q)return null;const qm=(deptMeta._quelleMap||{});return(q in qm)?(qm[q]||null):(autoMapQuelle(q)||null);})();
+  const nm=' '+piNormName(it.name)+' ',pk=it.psp?piPspKey(it.psp):'';
+  return piIgnoreList().find(r=>{
+    if(r.dept&&qd&&r.dept!==qd)return false;
+    if(r.dept&&!qd)return false;
+    if(r.kind==='psp')return !!pk&&piPspKey(r.value)===pk;
+    const w=piNormName(r.value);return !!w&&nm.includes(w);
+  })||null;
+}
+function piIgnoreLabel(r){return(r.kind==='psp'?'PSP '+r.value:'Stichwort «'+r.value+'»')+(r.dept?' (nur '+r.dept+')':'');}
+// Dialog: Regel für einen Eintrag anlegen
+async function piIgnoreAsk(it){
+  if(!document.body.classList.contains('admin-mode')){showToast('Nur Admins können die Kundendienst-Liste ändern');return null;}
+  const r=await uiForm({title:'🔧 Als Kundendienst merken – '+(it.psp?it.psp+' · ':'')+it.name,
+    fields:[{k:'kind',l:'Erkennen nach',type:'select',v:it.psp?'PSP-Nummer (nur genau diese)':'Stichwort im Namen',opts:['PSP-Nummer (nur genau diese)','Stichwort im Namen']},
+      {k:'value',l:'PSP-Nummer bzw. Stichwort (z.B. Kundenarbeiten)',v:it.psp||''},
+      {k:'dept',l:'Nur für Einheit (leer = alle)',type:'select',v:'',opts:['',...getAllDepts()]}],
+    ok:'Merken',validate:o=>!o.value?'Bitte PSP-Nummer oder Stichwort eingeben':''});
+  if(!r)return null;
+  const rule={id:Date.now(),kind:r.kind.startsWith('PSP')?'psp':'word',value:r.value,dept:r.dept||''};
+  piIgnoreSave([...piIgnoreList(),rule]);
+  showToast('🔧 Kundendienst gemerkt: '+piIgnoreLabel(rule),3000);
+  return rule;
+}
+async function piIgnoreUnknown(idx){
+  if(!_piPending)return;const it=_piPending.buckets.unknown[idx];if(!it)return;
+  if(!await piIgnoreAsk(it))return;
+  // alle Unbekannten, die jetzt passen, als Kundendienst überspringen
+  const U=_piPending.buckets.unknown;_piPending.buckets.unknown=U.filter(x=>{const r=piIgnoreMatch(x);if(r){_piPending.buckets.kundendienst.push({...x,ignoreRule:r});return false;}return true;});
+  sammelboxClean();piRenderPreview();
+}
+async function sbIgnore(ci){
+  const it=(window._piCollectBox||[])[ci];if(!it)return;
+  if(!await piIgnoreAsk(it))return;
+  sammelboxClean();openSammelbox();
+}
+// Sammelbox aufräumen: Doppelte (gleiche PSP + Name) zusammenführen, Kundendienst entfernen
+function sammelboxClean(){
+  const box=window._piCollectBox||[],seen=new Map();
+  box.forEach(it=>{if(piIgnoreMatch(it))return;const k=piPspKey(it.psp)+'|'+piNormName(it.name);const o=seen.get(k);if(!o)seen.set(k,{...it});else o.count=it.count;});
+  const next=[...seen.values()];
+  if(!mgEq(next,box)){window._piCollectBox=next;saveNow();}
+  if(typeof updateSbBadge==='function')updateSbBadge();
+}
+// Admin → Kundendienst-Liste
+function openPiIgnore(){admModal('🔧 Kundendienst-Liste (Personal-Import)','<div id="pii-body"></div>');renderPiIgnore();}
+function renderPiIgnore(){
+  const el=document.getElementById('pii-body');if(!el)return;
+  const list=piIgnoreList();
+  el.innerHTML=`<p>Einträge auf den Einsatzlisten, die hier passen, überspringt der Import (sie erscheinen nicht als «unbekannt» und nicht in der Sammelbox). Gilt nur für Einträge, die keiner Baustelle zugeordnet werden können.</p>
+    <table class="adm-tbl"><tr><th>Erkennen nach</th><th>Wert</th><th>Einheit</th><th></th></tr>${list.map(r=>`<tr><td>${r.kind==='psp'?'PSP-Nummer':'Stichwort im Namen'}</td><td><b>${escH(r.value)}</b></td><td>${escH(r.dept||'alle')}</td><td style="text-align:right"><button type="button" class="ui-btn" onclick="rmPiIgnore(${r.id})">Löschen</button></td></tr>`).join('')||'<tr><td colspan="4">Keine Einträge.</td></tr>'}</table>
+    <p style="margin-top:12px"><button type="button" class="ui-btn ui-btn-pri" onclick="addPiIgnore()">+ Eintrag hinzufügen</button></p>`;
+}
+async function addPiIgnore(){if(await piIgnoreAsk({psp:'',name:''})){sammelboxClean();renderPiIgnore();}}
+function rmPiIgnore(id){
+  if(!document.body.classList.contains('admin-mode')){showToast('Nur Admins');return;}
+  undoPoint('Kundendienst-Eintrag gelöscht',()=>renderPiIgnore());
+  piIgnoreSave(piIgnoreList().filter(r=>r.id!==id));renderPiIgnore();
+}
 // Legt den Eintrag in eine einfache Sammelbox (nur für diese Session), damit man mehrere
 // unbekannte Baustellen sammeln und anschliessend nacheinander in Ruhe anlegen kann.
 function piCollectUnknown(idx){
@@ -6054,7 +6130,9 @@ function piCollectUnknown(idx){
   const item=_piPending.buckets.unknown[idx];
   if(!item)return;
   window._piCollectBox=window._piCollectBox||[];
-  window._piCollectBox.push({psp:item.psp||'',name:item.name,count:item.count,quelle:item.quelle||''});
+  const dup=window._piCollectBox.find(x=>piPspKey(x.psp)===piPspKey(item.psp)&&piNormName(x.name)===piNormName(item.name));
+  if(dup){dup.count=item.count;dup.quelle=item.quelle||dup.quelle;}
+  else window._piCollectBox.push({psp:item.psp||'',name:item.name,count:item.count,quelle:item.quelle||''});
   _piPending.buckets.unknown.splice(idx,1);
   saveNow();
   piRenderPreview();
@@ -6105,6 +6183,7 @@ function exportTempWorkersCSV(){
   a.click();
 }
 function openSammelbox(){
+  sammelboxClean();
   const box=window._piCollectBox||[];
   const activeOptions=data.filter(e=>e.active).sort((a,b)=>a.name.localeCompare(b.name)).map(e=>`<option value="${e.id}">${e.name}${e.psp?' ('+e.psp+')':''}</option>`).join('')
     +(data.some(e=>!e.active)?`<optgroup label="— inaktive Baustellen —">${data.filter(e=>!e.active).sort((a,b)=>a.name.localeCompare(b.name)).map(e=>`<option value="${e.id}">${e.name}${e.psp?' ('+e.psp+')':''} (inaktiv)</option>`).join('')}</optgroup>`:'');
@@ -6121,6 +6200,7 @@ function openSammelbox(){
           ${bsPickerHTML('sb-sel-'+ci,'width:320px;max-width:100%')}
           <button onclick="sbAssign(${ci})" style="padding:4px 10px;border-radius:6px;border:none;background:#3B82F6;color:#fff;font-size:11px;cursor:pointer">Zuordnen</button>
           <button onclick="sbCreate(${ci})" style="padding:4px 10px;border-radius:6px;border:1px solid #10B981;background:transparent;color:#10B981;font-size:11px;cursor:pointer">+ Neue Baustelle</button>
+          <button onclick="sbIgnore(${ci})" style="padding:4px 10px;border-radius:6px;border:1px solid #F59E0B;background:transparent;color:#B45309;font-size:11px;cursor:pointer" title="Als Kundendienst merken – kommt nie mehr">🔧 Kundendienst</button>
           <button onclick="sbRemove(${ci})" style="padding:4px 10px;border-radius:6px;border:1px solid var(--bd);background:transparent;color:var(--tx2);font-size:11px;cursor:pointer">✕ Entfernen</button>
         </div>
       </div>`).join('')

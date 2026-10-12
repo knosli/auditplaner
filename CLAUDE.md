@@ -11,8 +11,8 @@ Beratungen, Rapporten und Ferien der Auditoren. Sprache der Oberfläche: Deutsch
 - Vor jedem PR: App im Browser laden (Desktop- und Mobile-Breite) und in der Konsole
   prüfen, dass keine JavaScript-Fehler auftreten.
 - Bei jeder Änderung an der App die Versionsnummer erhöhen, und zwar überall in
-  `index.html`: im Header (`<span ... title="Version">v2.97</span>`) und in den Links
-  `css/style.css?v=2.97`, `js/merge.js?v=2.97` und `js/app.js?v=2.97`. Der `?v=`-Zusatz
+  `index.html`: im Header (`<span ... title="Version">v2.98</span>`) und in den Links
+  `css/style.css?v=2.98`, `js/merge.js?v=2.98` und `js/app.js?v=2.98`. Der `?v=`-Zusatz
   sorgt dafür, dass Browser nach einem Update keine alte Datei aus dem Cache verwenden.
 - Tests für die Zusammenführung: `node tests/merge.test.js` (muss grün sein).
 - Keine Browser-Dialoge (`confirm`, `prompt`, `alert`): `askConfirm()`, `askText()`,
@@ -80,6 +80,9 @@ global; das HTML ruft sie direkt über `onclick="..."` auf.
   ohne Kartenpunkt → Liste `noGeo`, kein Audit-Beginn nach `tg_last_start`, «📞 wenig Personal»
   bis `pi_review_max`. «Pausiert bis» endet automatisch (`autoResumeExpired`, `pauseOverAt`)
 - ~5393 Personal-Import (JSON), Sammelbox, temporäre Mitarbeitende
+  Kundendienst-Liste `deptMeta._piIgnore` (PSP exakt oder Stichwort, optional pro Einheit;
+  `piIgnoreMatch`, Admin → Kundendienst-Liste): greift nur bei Einträgen OHNE passende Baustelle →
+  Bucket `kundendienst` statt `unknown`. Sammelbox: `sammelboxClean()` (Doppelte zusammenführen)
 - ~5969 Supabase-Verbindung (`sbFetch`, `sbInit`)
 - ~6026 Sync (`SB_FIELDS`, `sbPush`, `sbPull`, `sbMergeRemote`, Speicher-Status)
 - ~6265 Admin: Anleitung & SQL, Änderungsprotokoll, Verlauf & Wiederherstellen
