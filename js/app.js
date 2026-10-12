@@ -4846,7 +4846,7 @@ function rulesHTML(){
     `«Nicht auf der Liste»: aktive Baustellen einer Abteilung, deren Einsatzlisten <u>alle</u> importiert wurden, die aber auf keiner stehen → Pausieren vorgeschlagen (neu erfasste nicht vorausgewählt).`,
     `Gespeichert wird die Personalzahl bei allen erkannten Baustellen (auch dauerhaft ausgeschlossene), «nicht auf der Liste» erhält 0. Verlauf: ${v('pi_history_weeks')} Wochen.`,
     `<b>Kundendienst-Liste</b> (Admin → Kundendienst-Liste, oder «🔧 Kundendienst» bei unbekannten Einträgen und in der Sammelbox): Einträge ohne passende Baustelle, deren PSP-Nummer (genau oder inkl. aller Unternummern, z.B. 4225280.xx) oder Name (Stichwort, z.B. «Kundenarbeiten», «Divers») auf der Liste steht, werden übersprungen – nicht «unbekannt», nicht in der Sammelbox. Echte Baustellen sind nie betroffen. Die Sammelbox führt doppelte Einträge (gleiche PSP und Name) zusammen. In der Sammelbox als Kundendienst gemerkte Einträge erscheinen sofort unter den erkannten Kundendienst-Einträgen. Unter Admin → Kundendienst-Liste stehen alle erkannten Kundendienst-Einträge (PSP, Name, Einheit, Personen, zuletzt gesehen) – nachgeführt bei jedem übernommenen Import, nach ${PI_KD_KEEP_WEEKS} Wochen ohne Erscheinen entfernt. Pro Eintrag wird der Personalverlauf der letzten ${PI_KD_HIST_WEEKS} Wochen gezeigt (Einheit importiert, Eintrag fehlt = 0). Hat ein Kundendienst-Auftrag ${v('kd_streak_weeks')} Wochen am Stück Personal (in der neuesten Liste mindestens ${v('kd_min_pers')}), erscheint «🔔 Audit prüfen» und nach dem Import ein Hinweis; mit «+ Baustelle» wird er zur normalen Baustelle.`,
-    `Werkhöfe sind vom Import komplett ausgenommen. Unbekannte Einträge: zuordnen (Alias wird gemerkt), neu anlegen oder in die Sammelbox. Beim Zuordnen oder Neu-Anlegen (aus Import, Sammelbox oder Kundendienst-Liste) wird die Personalzahl der Liste gleich übernommen; aus der Kundendienst-Liste der ganze Verlauf.`,
+    `Jeder übernommene Import speichert zusätzlich eine Wochen-Zusammenfassung pro Einheit (Personen laut Einsatzlisten, davon Kundendienst, Einsatzorte, Anzahl Temporäre – die Temporären stehen auf einer separaten Liste und werden fürs Total dazugezählt): Admin → Personal-Übersicht, mit Verlauf; ältere Wochen rückwirkend aus dem Personalverlauf der Baustellen. Werkhöfe sind vom Import komplett ausgenommen. Unbekannte Einträge: zuordnen (Alias wird gemerkt), neu anlegen oder in die Sammelbox. Beim Zuordnen oder Neu-Anlegen (aus Import, Sammelbox oder Kundendienst-Liste) wird die Personalzahl der Liste gleich übernommen; aus der Kundendienst-Liste der ganze Verlauf.`,
     `KW-Planung: Jede Baustellen-Karte zeigt 👷 das Personal der KW, in der sie geplant ist (Import oder manuell). Gibt es dafür keinen Wert, steht grau kursiv der zuletzt bekannte Wert mit seiner KW, ohne Angabe «–». Eine 0 ist rot. Werkhöfe zeigen nichts.`,
     `Temporäre Mitarbeitende: nur Personal-Nummern (keine Namen), pro Einheit bei jedem Import ersetzt.`,
     `Manuelle Erfassung (für Einheiten ohne brauchbare Einsatzliste): im Detail-Panel ✏️ bei «Personal» oder Admin → «Personal manuell erfassen» (mehrere Baustellen einer Abteilung). Wirkt wie ein Import-Wert (Verlauf, Trend, Tourguide), ersetzt einen vorhandenen Wert derselben KW und ändert den Status der Baustelle nicht (kein Pausieren/Reaktivieren).`]) +
@@ -6207,6 +6207,82 @@ function piKdFromBox(items){
   groups.forEach(g=>piKdRecord(g.list,g.kw,g.yr));
   saveDepts();
 }
+// ═══ PERSONAL-ÜBERSICHT (Admin) ═══
+// Pro Import eine Wochen-Zusammenfassung pro Einheit (Quelle): deptMeta._piWeeks =
+// [{kw,year,u:{[quelle]:[total,kundendienst,temporäre,einträgeMitPersonal]}}]. Ein Import ersetzt nur die
+// Einheiten, die er enthält (Teil-Importe möglich). Temporäre = Anzahl Personal-Nummern auf der separaten
+// Liste, NICHT in den Personenzahlen der Einträge enthalten → für das Total dazugezählt (sie arbeiten auch auf
+// den Baustellen, sind aber keiner Baustelle zugeordnet).
+function piWeeksList(){return Array.isArray(deptMeta._piWeeks)?deptMeta._piWeeks:[];}
+function piWeekRecord(raw,kd,temps,kw,yr){
+  const u={},add=(q,i,v)=>{q=q||'?';(u[q]=u[q]||[0,0,0,0])[i]+=v;};
+  raw.forEach(r=>{const c=+r.count||0;add(r.quelle,0,c);if(c>0)add(r.quelle,3,1);});
+  kd.forEach(r=>add(r.quelle,1,+r.count||0));
+  temps.forEach(t=>String(t.quelle||'?').split(', ').forEach(q=>add(q,2,1)));
+  Object.values(u).forEach(a=>{a[0]=Math.round(a[0]*10)/10;a[1]=Math.round(a[1]*10)/10;});
+  const list=piWeeksList().map(w=>({...w,u:{...w.u}}));
+  let w=list.find(x=>x.kw===kw&&x.year===yr);
+  if(!w){w={kw,year:yr,u:{}};list.push(w);}
+  // Temporäre total: pro Quellen-Angabe (auch «A, B» = eine Person auf zwei Einheiten) gezählt, damit
+  // Teil-Importe derselben KW niemanden doppelt zählen
+  const t={...(w.t||{})},qs=new Set(raw.map(r=>r.quelle).concat(temps.flatMap(x=>String(x.quelle||'?').split(', '))));
+  Object.keys(t).forEach(k=>{if(k.split(', ').some(q=>qs.has(q)))delete t[k];});
+  const seenP=new Set();temps.forEach(x=>{if(seenP.has(x.pnr))return;seenP.add(x.pnr);const k=String(x.quelle||'?');t[k]=(t[k]||0)+1;});
+  Object.assign(w.u,u);w.t=t;w.tempN=Object.values(t).reduce((a,n)=>a+n,0);
+  list.sort((a,b)=>piKdWeek(a.kw,a.year)-piKdWeek(b.kw,b.year));
+  deptMeta._piWeeks=list.slice(-S('pi_history_weeks'));
+}
+// Alle Wochen (Import-Zusammenfassung; ältere Wochen rückwirkend aus dem Personalverlauf der Baustellen)
+function piWeekRows(){
+  const byW=new Map();
+  piWeeksList().forEach(w=>{
+    const d={};Object.entries(w.u||{}).forEach(([q,a])=>{const k=piQuelleDept(q)||q;const o=d[k]=d[k]||{total:0,kd:0,temp:0,n:0};o.total+=a[0];o.kd+=a[1];o.temp+=a[2];o.n+=a[3];});
+    byW.set(piKdWeek(w.kw,w.year),{kw:w.kw,year:w.year,depts:d,full:true,tempN:w.tempN||0});
+  });
+  data.forEach(e=>(e.personalHistory||[]).forEach(h=>{
+    if(h.manual||!(+h.count>0))return;const wk=piKdWeek(h.kw,h.year);
+    if(byW.has(wk)&&byW.get(wk).full)return;
+    if(!byW.has(wk))byW.set(wk,{kw:h.kw,year:h.year,depts:{},full:false,tempN:0});
+    const d=byW.get(wk).depts,k=deptParts(e.dept)[0]||e.dept||'?',o=d[k]=d[k]||{total:0,kd:0,temp:0,n:0};o.total+=+h.count;o.n++;
+  }));
+  const rows=[...byW.entries()].sort((a,b)=>a[0]-b[0]).map(([wk,r])=>{
+    const t=Object.values(r.depts).reduce((a,o)=>({own:a.own+o.total,kd:a.kd+o.kd,n:a.n+o.n}),{own:0,kd:0,n:0});
+    const own=Math.round(t.own*10)/10;
+    return{wk,...r,own,total:Math.round((own+(r.full?r.tempN:0))*10)/10,kd:Math.round(t.kd*10)/10,n:t.n};
+  });
+  return rows;
+}
+let _pwSel=null,_pwRange=26;
+function piNum(v){return(Math.round(v*10)/10).toLocaleString('de-CH');}
+function openPersonalWeeks(){_pwSel=null;admModal('👷 Personal-Übersicht (Einsatzlisten)','<div id="pw-body"></div>',true);renderPersonalWeeks();}
+function renderPersonalWeeks(){
+  const el=document.getElementById('pw-body');if(!el)return;
+  const all=piWeekRows();
+  if(!all.length){el.innerHTML='<p>Noch keine Daten – die Übersicht füllt sich mit dem nächsten Personal-Import.</p>';return;}
+  const last=all[all.length-1].wk,rows=all.filter(r=>r.wk>last-_pwRange);
+  if(_pwSel===null||!all.some(r=>r.wk===_pwSel))_pwSel=last;
+  const sel=all.find(r=>r.wk===_pwSel);
+  const max=Math.max(1,...rows.map(r=>r.total));
+  const lbl=r=>'KW '+r.kw+(r.year!==curIsoYear()?' / '+r.year:'');
+  // Säulen: eine Serie (Total Personal pro KW); Hover = Tooltip, Klick = Details
+  const bars=rows.map(r=>{const h=Math.max(2,Math.round(r.total/max*140)),on=r.wk===_pwSel;
+    return`<button type="button" onclick="_pwSel=${r.wk};renderPersonalWeeks()" title="${lbl(r)}: ${piNum(r.total)} Personen${r.full?` (${piNum(r.own)} laut Einsatzlisten + ${r.tempN} Temporäre)`:' (nur Baustellen, rückwirkend, ohne Temporäre)'}" style="flex:1 1 0;min-width:6px;max-width:34px;height:160px;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;background:none;border:none;padding:0 1px;cursor:pointer">
+      <span style="display:block;width:100%;height:${h}px;border-radius:4px 4px 0 0;background:var(--blue);opacity:${on?1:r.full?.55:.3};${on?'outline:2px solid var(--tx);outline-offset:1px':''}"></span></button>`;}).join('');
+  const ticks=rows.map((r,i)=>`<span style="flex:1 1 0;min-width:6px;max-width:34px;text-align:center;font-size:10px;color:var(--tx3);overflow:hidden">${i%Math.ceil(rows.length/13)===0||r.wk===_pwSel?r.kw:''}</span>`).join('');
+  const depts=Object.entries(sel.depts).sort((a,b)=>b[1].total-a[1].total);
+  const sitesFor=k=>data.filter(e=>(deptParts(e.dept)[0]||e.dept||'?')===k||deptParts(e.dept).includes(k)).map(e=>({e,h:persForKW(e,sel.kw,sel.year)})).filter(x=>x.h&&+x.h.count>0).sort((a,b)=>b.h.count-a.h.count);
+  el.innerHTML=`<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:10px 0">
+      <span style="color:var(--tx2)">Zeitraum:</span>${[12,26,52].map(n=>`<button type="button" class="ui-btn${_pwRange===n?' ui-btn-pri':''}" onclick="_pwRange=${n};renderPersonalWeeks()">${n} Wochen</button>`).join('')}</div>
+    <div style="font-size:12px;color:var(--tx2);margin-bottom:4px">Personen im Einsatz pro KW (Einsatzlisten + Temporäre) – Säule anklicken für Details</div>
+    <div style="display:flex;align-items:flex-end;gap:2px;border-bottom:1px solid var(--bd);padding-top:4px">${bars}</div>
+    <div style="display:flex;gap:2px;margin-top:2px">${ticks}</div>
+    <div style="font-size:11px;color:var(--tx3);margin-top:4px">Helle Säulen: ältere Wochen, rückwirkend nur aus den Baustellen (ohne Kundendienst, Werkhöfe, unbekannte Einträge und Temporäre).</div>
+    <h3 style="margin-top:16px">${lbl(sel)}: ${piNum(sel.total)} Personen${sel.full?` <span style="font-size:12px;font-weight:400;color:var(--tx3)">(${piNum(sel.own)} laut Einsatzlisten + ${sel.tempN} Temporäre)</span>`:' <span style="font-size:12px;font-weight:400;color:var(--tx3)">(rückwirkend, nur Baustellen)</span>'}</h3>
+    <div style="overflow-x:auto"><table class="adm-tbl"><tr><th>Abteilung / Einheit</th><th style="text-align:right">Total</th><th style="text-align:right" title="Personenzahlen der Einträge auf den Einsatzlisten">Einsatzlisten</th><th style="text-align:right" title="Personal-Nummern auf der Liste der Temporären (zusätzlich gezählt)">Temporäre</th><th style="text-align:right" title="davon auf Kundendienst-Aufträgen (Teil der Einsatzlisten)">davon Kundendienst</th><th style="text-align:right" title="Einträge (Baustellen/Aufträge) mit Personal">Einsatzorte</th></tr>
+    ${depts.map(([k,o])=>{const st=sitesFor(k);return`<tr><td>${st.length?`<details><summary style="cursor:pointer">${escH(k)}</summary><div style="font-size:11px;color:var(--tx2);padding:4px 0 2px 14px">${st.slice(0,40).map(x=>`${escH(x.e.name)}: <b>${piNum(+x.h.count)}</b>`).join('<br>')}${st.length>40?`<br>… +${st.length-40}`:''}</div></details>`:escH(k)}</td><td style="text-align:right"><b>${piNum(o.total+(sel.full?o.temp:0))}</b></td><td style="text-align:right">${piNum(o.total)}</td><td style="text-align:right">${sel.full?(o.temp||'–'):'–'}</td><td style="text-align:right">${o.kd?piNum(o.kd):'–'}</td><td style="text-align:right">${o.n||'–'}</td></tr>`;}).join('')}
+    <tr><td><b>Total</b></td><td style="text-align:right"><b>${piNum(sel.total)}</b></td><td style="text-align:right"><b>${piNum(sel.own)}</b></td><td style="text-align:right"><b>${sel.full&&sel.tempN?sel.tempN:'–'}</b></td><td style="text-align:right"><b>${sel.kd?piNum(sel.kd):'–'}</b></td><td style="text-align:right"><b>${sel.n||'–'}</b></td></tr></table></div>
+    <p style="font-size:11px;color:var(--tx3)">«Einsatzlisten» = Summe der Personenzahlen aller Einträge (Baustellen, Kundendienst, Werkhöfe, unbekannte). «Temporäre» = Anzahl Personal-Nummern auf der separaten Liste der Temporären – sie sind in den Einsatzlisten nicht enthalten und werden fürs Total dazugezählt (einer Baustelle zuordnen lassen sie sich nicht; eine Person auf zwei Einheiten zählt im Total einmal). Bruchzahlen kommen von Teilzeit-/Teilwochen-Angaben auf den Listen. Wurde eine Einheit in einer KW nicht importiert, fehlt sie in dieser Woche.</p>`;
+}
 // Admin → Kundendienst-Liste
 function openPiIgnore(){admModal('🔧 Kundendienst-Liste (Personal-Import)','<div id="pii-body"></div>');renderPiIgnore();}
 function renderPiIgnore(){
@@ -6425,6 +6501,7 @@ function confirmPersonalImport(){
     kdNewFlags=piKdSeenList().filter(x=>piKdFlag(x)&&!before.has(x.key)).length;
     saveDepts();
   }
+  piWeekRecord(_piPending.rawEntries||[],buckets.kundendienst||[],temporaere||[],targetKW,yr);saveDepts();
   const recordPersonal=(e,count)=>{
     if(!e)return;
     e.lastPersonalCount=count;
