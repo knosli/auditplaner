@@ -4772,6 +4772,8 @@ const SETTINGS_DEF=[
   {k:'tg_lunch_start',l:'Mittag der Baustellen ab (dann kein Audit)',def:12,min:10,max:15,step:.25,u:'Uhr'},
   {k:'tg_lunch_dur',l:'Mittagspause Dauer (0 = keine)',def:60,min:0,max:120,step:15,u:'min'},
   {k:'tg_lunch_flex',l:'Eigene Mittagspause darf sich verschieben um ± …',def:30,min:0,max:90,step:5,u:'min'},
+  {k:'tg_day_tol',l:'Toleranz: ein Tag darf so viel länger werden',def:15,min:0,max:60,step:5,u:'min'},
+  {k:'tg_week_tol',l:'… aber alle Tage der Woche zusammen höchstens',def:30,min:0,max:120,step:5,u:'min'},
   {k:'tg_max_per_day',l:'Max. Baustellen pro Tag',def:6,min:1,max:15,u:'Stk.'},
   {k:'tg_last_start',l:'Letzter Audit-Beginn auf der Baustelle',def:15.5,min:12,max:19,step:.25,u:'Uhr'},
   {k:'tg_min_1_3',l:'Audit-Dauer bei 1–3 Personen',def:30,min:5,max:480,u:'min'},
@@ -4867,7 +4869,7 @@ function rulesHTML(){
     `Hinweise im Vorschlag: «Wenig wirtschaftlich», wenn ein Tag mehr Fahrzeit als Audit-/Terminzeit hat; «👥 … ist auch in der Nähe», wenn andere Auditoren am selben Tag Baustellen im Umkreis geplant haben.`,
     `Bleiben im Umkreis eines Tages Baustellen offen (Tag voll oder Personal unbekannt), zeigt der Vorschlag unter dem Tag «⚠ Ort nicht ausgeschöpft» – mit «+ trotzdem hinzufügen». Beim Ausgleich zwischen den Tagen wird keine Baustelle von ihren Nachbarn getrennt.`,
     `Audit-Dauer: 1–3 Pers. ${v('tg_min_1_3')} · 4–9 ${v('tg_min_4_9')} · 10–19 ${v('tg_min_10_19')} · 20+ ${v('tg_min_20')} · unbekannt ${v('tg_min_unknown')} min (inkl. Schreiben/Rapportieren; Fahrzeit separat).`,
-    `Tag: <b>Das erste Audit beginnt um ${tgHM(S('tg_day_start')*60)}</b> – losgefahren wird entsprechend früher (Fahrzeit ab Startadresse). Max. ${v('tg_day_hours')} h Arbeitszeit (inkl. aller Fahrten und Wartezeiten, ohne Mittagspause) plus <b>${v('tg_post_min')} min Nachbearbeitung pro Baustelle</b> am Ende des Tages (Audit-Bericht; bei 4 Baustellen also 4 × ${v('tg_post_min')} min) – beides zusammen muss in den Arbeitstag passen. Max. ${v('tg_max_per_day')} Baustellen.`,
+    `Tag: <b>Das erste Audit beginnt um ${tgHM(S('tg_day_start')*60)}</b> – losgefahren wird entsprechend früher (Fahrzeit ab Startadresse). Max. ${v('tg_day_hours')} h Arbeitszeit (inkl. aller Fahrten und Wartezeiten, ohne Mittagspause) plus <b>${v('tg_post_min')} min Nachbearbeitung pro Baustelle</b> am Ende des Tages (Audit-Bericht; bei 4 Baustellen also 4 × ${v('tg_post_min')} min) – beides zusammen muss in den Arbeitstag passen. <b>Toleranz:</b> Ein Tag darf bis ${v('tg_day_tol')} min länger werden, alle Tage der Woche zusammen aber höchstens ${v('tg_week_tol')} min – damit keine Baustelle wegen ein paar Minuten wegfällt, aber auch nicht jeder Tag länger wird. Max. ${v('tg_max_per_day')} Baustellen.`,
     `<b>Mittag der Baustellen ${tgHM(S('tg_lunch_start')*60)}–${tgHM(S('tg_lunch_start')*60+S('tg_lunch_dur'))}: kein Audit</b> (auch keine Personen-Audits oder Beratungen) – ein Audit, das nicht vorher fertig ist, beginnt erst um ${tgHM(S('tg_lunch_start')*60+S('tg_lunch_dur'))}. Die eigene Mittagspause (${v('tg_lunch_dur')} min) ist <b>flexibel ± ${v('tg_lunch_flex')} min</b>: Beginn zwischen ${tgHM(S('tg_lunch_start')*60-S('tg_lunch_flex'))} und ${tgHM(S('tg_lunch_start')*60+S('tg_lunch_flex'))}, dort wo sie passt. Beispiel: Audit endet 11:45 → Pause 11:45–12:45 → Fahrt zur nächsten Baustelle → nächstes Audit ab ${tgHM(S('tg_lunch_start')*60+S('tg_lunch_dur'))}. Bei einer langen Fahrt über Mittag wird die Pause unterwegs gemacht. Rapporte mit fixer Uhrzeit dürfen über Mittag liegen. Ist man vor ${tgHM(S('tg_lunch_start')*60)} wieder zu Hause, entfällt die Pause.`,
     `Tagesablauf wird echt simuliert: Fahrt zu jedem Stopp (Baustellen <u>und</u> Termine an ihrer Adresse), Auditzeit, Fahrt zum nächsten, Rückfahrt.`,
     `Rapporte mit Uhrzeit sind fix: rechtzeitig dort sein (früher ankommen = Wartezeit). Ist ein Rapport der erste Termin des Tages und ab Tagesbeginn nicht erreichbar, wird entsprechend früher losgefahren. Baustellen werden nur so eingeplant, dass kein Termin verpasst wird.`,
@@ -5153,7 +5155,12 @@ async function tgCompute(){
   const dayLen=S('tg_day_hours')*60,maxN=S('tg_max_per_day');
   const fixedNodes=fixedPlans.map(list=>list.map(e=>idxFixed.get(e.id)));
   const base=fixedNodes.map((n,d)=>tgPlanDay(d,n).sim);
-  const ok=(d,p)=>p.sim.total<=dayLen+0.5&&p.sim.late<=base[d].late+0.5&&p.sim.lateStart<=base[d].lateStart+0.5;
+  // Arbeitszeit: pro Tag bis tg_day_tol Minuten über dayLen erlaubt, über die ganze Woche (gewählte Tage) aber höchstens
+  // tg_week_tol Minuten Überzeit zusammen – damit nicht eine Baustelle wegen 3 min wegfällt, aber auch nicht jeder Tag länger wird.
+  const tolD=S('tg_day_tol'),tolW=S('tg_week_tol'),over=t=>Math.max(0,t-dayLen);
+  const weekOver=(d,total,ss)=>ss.reduce((a,s2,d2)=>a+(d2===d?over(total):over(tgPlanDay(d2,s2).sim.total)),0);
+  const ok=(d,p,ss=sets)=>p.sim.total<=dayLen+tolD+0.5&&(p.sim.total<=dayLen+0.5||weekOver(d,p.sim.total,ss)<=tolW+0.5)
+    &&p.sim.late<=base[d].late+0.5&&p.sim.lateStart<=base[d].lateStart+0.5;
   // Auswahl:
   // 1. Ort ausschöpfen: Rund um alles, was an einem Tag schon feststeht (geplante Baustellen, Termine), werden
   //    zuerst alle roten und orangen Baustellen im Umkreis von tg_harvest_min Minuten Fahrzeit mitgenommen.
@@ -5204,7 +5211,7 @@ async function tgCompute(){
   // Ausgleich zwischen den Tagen (neue Baustellen verschieben/tauschen), bereits geplante bleiben.
   // Eine Baustelle wird nicht von ihren Nachbarn (Umkreis) weg auf einen anderen Tag verschoben.
   const fixedSet=new Set(fixedNodes.flat());
-  const cost=ss=>{let mx=0,sum=0;for(let d=0;d<ss.length;d++){if(ss[d].length>maxN)return Infinity;const p=tgPlanDay(d,ss[d]);if(!ok(d,p))return Infinity;mx=Math.max(mx,p.sim.total);sum+=p.sim.total;}return mx*3+sum;};
+  const cost=ss=>{let mx=0,sum=0;for(let d=0;d<ss.length;d++){if(ss[d].length>maxN)return Infinity;const p=tgPlanDay(d,ss[d]);if(!ok(d,p,ss))return Infinity;mx=Math.max(mx,p.sim.total);sum+=p.sim.total;}return mx*3+sum;};
   const evNodes=_tgCalc.days.map(dd=>dd.events.filter(ev=>ev.node!=null).map(ev=>ev.node));
   const hasNb=(j,list,d)=>minDist(j,[...list.filter(x=>x!==j),...evNodes[d]])<=near;
   const mayMove=(j,a,b)=>!hasNb(j,sets[a],a)||hasNb(j,sets[b],b);
@@ -5238,7 +5245,7 @@ function tgRender(){
     h+=`<div style="margin-bottom:10px;padding:10px 12px;background:var(--sf2);border-radius:10px;border-left:3px solid var(--blue)">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;gap:8px;flex-wrap:wrap">
         <span style="font-size:13px;font-weight:700;color:var(--blue)">${names[R.days[d]]} ${fd(C.days[d].ds)} · ${bsN} Baustellen</span>
-        <span style="font-size:12px;font-weight:700;color:${sim.total>dayLen?'#EF4444':'var(--tx)'}">${P.items.length?`🏠 ${tgHM(sim.start)} → 🏠 ${tgHM(sim.end)}${sim.post?` <span title="Nachbearbeitung der Audits am Ende des Tages">+ 📝 ${fmt(sim.post)}</span>`:''} · `:''}≈ ${fmt(sim.total)} / ${fmt(dayLen)}</span>
+        <span style="font-size:12px;font-weight:700;color:${sim.total>dayLen+S('tg_day_tol')+0.5?'#EF4444':sim.total>dayLen+0.5?'#D97706':'var(--tx)'}" title="${sim.total>dayLen+0.5?`${Math.round(sim.total-dayLen)} min über ${fmt(dayLen)}`+(sim.total<=dayLen+S('tg_day_tol')+0.5?' – innerhalb der Toleranz':' – mehr als die Toleranz'):''}">${P.items.length?`🏠 ${tgHM(sim.start)} → 🏠 ${tgHM(sim.end)}${sim.post?` <span title="Nachbearbeitung der Audits am Ende des Tages">+ 📝 ${fmt(sim.post)}</span>`:''} · `:''}≈ ${fmt(sim.total)} / ${fmt(dayLen)}</span>
       </div>
       <div style="height:6px;background:var(--bd);border-radius:3px;overflow:hidden;display:flex;margin-bottom:3px">
         <div style="width:${sim.drive/dayLen*100}%;background:#F59E0B" title="Fahrzeit"></div><div style="width:${sim.aud/dayLen*100}%;background:#3B82F6" title="Audits"></div><div style="width:${sim.evt/dayLen*100}%;background:#0EA5E9" title="Termine"></div><div style="width:${(sim.post||0)/dayLen*100}%;background:#8B5CF6" title="Nachbearbeitung"></div><div style="width:${sim.wait/dayLen*100}%;background:repeating-linear-gradient(45deg,#CBD5E1,#CBD5E1 3px,transparent 3px,transparent 6px)" title="Wartezeit"></div>
@@ -5264,6 +5271,8 @@ function tgRender(){
       ${set.filter(j=>R.removed.has(j)).map(j=>`<div style="display:flex;align-items:center;gap:6px;padding:4px 0;font-size:12px;border-top:1px solid var(--bd);opacity:.45"><span style="width:74px"></span><span style="flex:1;text-decoration:line-through">${bsLabel(R.nodeEntry.get(j))}</span><button onclick="tgToggle(${j})" title="Wieder aufnehmen" style="background:none;border:none;cursor:pointer;font-size:12px;color:#10B981">↺</button></div>`).join('')}
     </div>`;
   });
+  {const ov=R.sets.reduce((a,set,d)=>a+Math.max(0,tgPlanDay(d,set.filter(j=>!R.removed.has(j))).sim.total-dayLen),0);
+   if(ov>0.5)h+=`<div style="font-size:11px;color:${ov>S('tg_week_tol')+0.5?'#DC2626':'#B45309'};margin:2px 0 8px">⏱ Überzeit diese Woche: ${Math.round(ov)} min (erlaubt: bis ${S('tg_day_tol')} min pro Tag, ${S('tg_week_tol')} min pro Woche)</div>`;}
   if(R.remaining.length)h+=`<details style="margin-top:4px;font-size:11px;color:var(--tx2)"><summary style="cursor:pointer">Weitere rote/orange Baustellen, nicht eingeplant (${R.remaining.length}) – kein Platz mehr, oder ihre Gegend passt an keinem gewählten Tag ganz hinein</summary>
     ${R.remaining.slice(0,25).map(x=>`<div style="padding:3px 0;border-top:1px solid var(--bd)">${bsLabel(x.e)} · ${x.min} min · ${tgPersTag(x.e)}</div>`).join('')}</details>`;
   if(R.noPers&&R.noPers.length){

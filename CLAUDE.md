@@ -11,8 +11,8 @@ Beratungen, Rapporten und Ferien der Auditoren. Sprache der Oberfläche: Deutsch
 - Vor jedem PR: App im Browser laden (Desktop- und Mobile-Breite) und in der Konsole
   prüfen, dass keine JavaScript-Fehler auftreten.
 - Bei jeder Änderung an der App die Versionsnummer erhöhen, und zwar überall in
-  `index.html`: im Header (`<span ... title="Version">v3.12</span>`) und in den Links
-  `css/style.css?v=3.12`, `js/merge.js?v=3.12` und `js/app.js?v=3.12`. Der `?v=`-Zusatz
+  `index.html`: im Header (`<span ... title="Version">v3.13</span>`) und in den Links
+  `css/style.css?v=3.13`, `js/merge.js?v=3.13` und `js/app.js?v=3.13`. Der `?v=`-Zusatz
   sorgt dafür, dass Browser nach einem Update keine alte Datei aus dem Cache verwenden.
 - Tests für die Zusammenführung: `node tests/merge.test.js` (muss grün sein).
 - Keine Browser-Dialoge (`confirm`, `prompt`, `alert`): `askConfirm()`, `askText()`,
@@ -77,6 +77,7 @@ global; das HTML ruft sie direkt über `onclick="..."` auf.
   Platz hat (`mayOpen`), Gleichstand ±`tg_tie_min` → Grösse/★/Fälligkeit
   Ampel gilt am Audit-Tag (`status(e,now)`, `x.urgDay[d]`), keine 2. Fahrt in dieselbe Gegend pro
   Woche, lange rot (`tg_force_days`) immer; Nachbearbeitung `tg_post_min` pro Baustelle zählt zur Tageslänge (`tgSim` → `post`);
+  Toleranz: Tag ≤ `tg_day_tol` über `tg_day_hours`, Überzeit aller Tage zusammen ≤ `tg_week_tol` (`ok`/`weekOver` in `tgCompute`);
   `tg_day_start` = Beginn des ersten Audits (Abfahrt um die Fahrzeit früher, `tgSim`);
   Baustellen-Mittag `tg_lunch_start`…+`tg_lunch_dur` = nie ein Audit (`blocked` in `tgSim`); eigene Pause flexibel
   ± `tg_lunch_flex` (z.B. 11:45–12:45, dann Fahrt, Audit ab 13:00); Routen-Schlüssel: `setOrsKey`/`orsTestKey`
