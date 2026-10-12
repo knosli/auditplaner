@@ -4777,7 +4777,9 @@ const SETTINGS_DEF=[
  {grp:'Personal-Import',items:[
   {k:'pi_review_max',l:'«Prüfen» bis … Personen (darüber: läuft)',def:2,min:0,max:20,u:'Pers.'},
   {k:'pi_react_inactive_min',l:'Inaktive Baustelle: Reaktivierung vorschlagen ab',def:2,min:1,max:50,u:'Pers.'},
-  {k:'pi_history_weeks',l:'Personalverlauf aufbewahren',def:52,min:4,max:260,u:'Wochen'}]},
+  {k:'pi_history_weeks',l:'Personalverlauf aufbewahren',def:52,min:4,max:260,u:'Wochen'},
+  {k:'kd_streak_weeks',l:'Kundendienst: «🔔 Audit prüfen» nach … Wochen am Stück mit Personal',def:4,min:2,max:12,u:'Wochen'},
+  {k:'kd_min_pers',l:'Kundendienst: Hinweis nur ab … Personen (neueste Liste)',def:1,min:1,max:50,u:'Pers.'}]},
  {grp:'Auswertung Abteilungen',items:[
   {k:'tt_tol_pct',l:'Termintreue: Toleranz auf den Rhythmus',def:25,min:0,max:200,u:'%'},
   {k:'tt_green',l:'Termintreue grün ab',def:80,min:0,max:100,u:'%'},
@@ -4832,7 +4834,7 @@ function rulesHTML(){
     `Zuordnung: PSP exakt inkl. Unternummer (4226280.13 ≠ 4226280.01); Etappen (3025325.1/.2) → Hauptnummer 3025325; Namens-Treffer nur innerhalb der Abteilung der Einsatzliste; mehrere Listen für dieselbe Baustelle werden zusammengezählt.`,
     `«Nicht auf der Liste»: aktive Baustellen einer Abteilung, deren Einsatzlisten <u>alle</u> importiert wurden, die aber auf keiner stehen → Pausieren vorgeschlagen (neu erfasste nicht vorausgewählt).`,
     `Gespeichert wird die Personalzahl bei allen erkannten Baustellen (auch dauerhaft ausgeschlossene), «nicht auf der Liste» erhält 0. Verlauf: ${v('pi_history_weeks')} Wochen.`,
-    `<b>Kundendienst-Liste</b> (Admin → Kundendienst-Liste, oder «🔧 Kundendienst» bei unbekannten Einträgen und in der Sammelbox): Einträge ohne passende Baustelle, deren PSP-Nummer oder Name (Stichwort, z.B. «Kundenarbeiten», «Divers») auf der Liste steht, werden übersprungen – nicht «unbekannt», nicht in der Sammelbox. Echte Baustellen sind nie betroffen. Die Sammelbox führt doppelte Einträge (gleiche PSP und Name) zusammen. Unter Admin → Kundendienst-Liste stehen alle erkannten Kundendienst-Einträge (PSP, Name, Einheit, Personen, zuletzt gesehen) – nachgeführt bei jedem übernommenen Import, nach ${PI_KD_KEEP_WEEKS} Wochen ohne Erscheinen entfernt.`,
+    `<b>Kundendienst-Liste</b> (Admin → Kundendienst-Liste, oder «🔧 Kundendienst» bei unbekannten Einträgen und in der Sammelbox): Einträge ohne passende Baustelle, deren PSP-Nummer oder Name (Stichwort, z.B. «Kundenarbeiten», «Divers») auf der Liste steht, werden übersprungen – nicht «unbekannt», nicht in der Sammelbox. Echte Baustellen sind nie betroffen. Die Sammelbox führt doppelte Einträge (gleiche PSP und Name) zusammen. Unter Admin → Kundendienst-Liste stehen alle erkannten Kundendienst-Einträge (PSP, Name, Einheit, Personen, zuletzt gesehen) – nachgeführt bei jedem übernommenen Import, nach ${PI_KD_KEEP_WEEKS} Wochen ohne Erscheinen entfernt. Pro Eintrag wird der Personalverlauf der letzten ${PI_KD_HIST_WEEKS} Wochen gezeigt (Einheit importiert, Eintrag fehlt = 0). Hat ein Kundendienst-Auftrag ${v('kd_streak_weeks')} Wochen am Stück Personal (in der neuesten Liste mindestens ${v('kd_min_pers')}), erscheint «🔔 Audit prüfen» und nach dem Import ein Hinweis; mit «+ Baustelle» wird er zur normalen Baustelle.`,
     `Werkhöfe sind vom Import komplett ausgenommen. Unbekannte Einträge: zuordnen (Alias wird gemerkt), neu anlegen oder in die Sammelbox.`,
     `KW-Planung: Jede Baustellen-Karte zeigt 👷 das Personal der KW, in der sie geplant ist (Import oder manuell). Gibt es dafür keinen Wert, steht grau kursiv der zuletzt bekannte Wert mit seiner KW, ohne Angabe «–». Eine 0 ist rot. Werkhöfe zeigen nichts.`,
     `Temporäre Mitarbeitende: nur Personal-Nummern (keine Namen), pro Einheit bei jedem Import ersetzt.`,
@@ -6110,20 +6112,73 @@ function sammelboxClean(){
   if(typeof updateSbBadge==='function')updateSbBadge();
 }
 // Erkannte Kundendienst-Einträge (bei jedem übernommenen Import nachgeführt), deptMeta._piKdSeen:
-// [{key,psp,name,dept,quelle,count,kw,year,rule}] – nach 8 Wochen ohne Erscheinen entfernt.
-const PI_KD_KEEP_WEEKS=8;
+// [{key,psp,name,dept,quelle,count,kw,year,rule,hist:[{kw,year,count}]}] – nach 8 Wochen ohne
+// Erscheinen entfernt. hist = Personalverlauf der letzten PI_KD_HIST_WEEKS Wochen (0 = Einheit
+// importiert, Eintrag nicht auf der Liste).
+const PI_KD_KEEP_WEEKS=8,PI_KD_HIST_WEEKS=12;
 function piKdSeenList(){return Array.isArray(deptMeta._piKdSeen)?deptMeta._piKdSeen:[];}
-function piKdRecord(items,kw,yr){
-  const map=new Map(piKdSeenList().map(x=>[x.key,{...x}]));
+const PI_KD_REF=new Date(2000,0,3);// Montag KW 1/2000 (Bezug für fortlaufende Wochen)
+function piKdWeek(kw,yr){return Math.round((isoMonday(kw,yr)-PI_KD_REF)/(7*86400000));}
+function piKdWeekKW(w){const thu=new Date(PI_KD_REF.getTime()+(w*7+3)*86400000+43200000),y=thu.getFullYear();return{kw:Math.floor((thu-isoMonday(1,y))/(7*86400000))+1,year:y};}
+function piKdHist(x){
+  const h=Array.isArray(x.hist)?x.hist:(x.kw?[{kw:x.kw,year:x.year,count:+x.count||0}]:[]);
+  return h.slice().sort((a,b)=>piKdWeek(a.kw,a.year)-piKdWeek(b.kw,b.year));
+}
+// Anzahl Wochen am Stück mit Personal, bis zur zuletzt erfassten Woche
+function piKdStreak(x){
+  const h=piKdHist(x);let n=0,w=null;
+  for(let i=h.length-1;i>=0;i--){
+    const wi=piKdWeek(h[i].kw,h[i].year);
+    if(!(+h[i].count>0)||(w!==null&&wi!==w-1))break;
+    n++;w=wi;
+  }
+  return n;
+}
+// Hinweis «Audit prüfen»: seit kd_streak_weeks Wochen am Stück Personal, auch in der neuesten Liste
+function piKdFlag(x){
+  const latest=Math.max(...piKdSeenList().map(y=>piKdWeek(y.kw,y.year)));
+  if(piKdWeek(x.kw,x.year)<latest)return 0;
+  const n=piKdStreak(x);
+  return n>=S('kd_streak_weeks')&&(+x.count||0)>=S('kd_min_pers')?n:0;
+}
+function piKdRecord(items,kw,yr,quellen){
+  const map=new Map(piKdSeenList().map(x=>[x.key,{...x,hist:piKdHist(x)}]));
+  const setHist=(x,count)=>{x.hist=x.hist.filter(h=>!(h.kw===kw&&h.year===yr));x.hist.push({kw,year:yr,count});};
+  const seen=new Set();
   items.forEach(it=>{
     const key=piPspKey(it.psp)+'|'+piNormName(it.name);
+    if(seen.has(key)){const x=map.get(key);if(x){const h=x.hist.find(h=>h.kw===kw&&h.year===yr);if(h)h.count+=it.count||0;if(x.kw===kw&&x.year===yr)x.count=(+x.count||0)+(it.count||0);}return;}
+    seen.add(key);
     const prev=map.get(key);
-    // pro Eintrag die neueste KW behalten (ältere Listen nachträglich importiert → nicht überschreiben)
-    if(prev&&(prev.year>yr||(prev.year===yr&&prev.kw>kw)))return;
-    map.set(key,{key,psp:it.psp||'',name:it.name||'',dept:piQuelleDept(it.quelle)||it.quelle||'',quelle:it.quelle||'',count:it.count||0,kw,year:yr,rule:it.ignoreRule?piIgnoreLabel(it.ignoreRule):''});
+    const x=prev||{key,hist:[]};
+    setHist(x,it.count||0);
+    // Stammdaten/Zahl: neueste KW gewinnt (ältere Listen nachträglich importiert → nicht überschreiben)
+    if(!prev||!(prev.year>yr||(prev.year===yr&&prev.kw>kw)))
+      Object.assign(x,{psp:it.psp||'',name:it.name||'',dept:piQuelleDept(it.quelle)||it.quelle||'',quelle:it.quelle||'',count:it.count||0,kw,year:yr,rule:it.ignoreRule?piIgnoreLabel(it.ignoreRule):''});
+    map.set(key,x);
   });
-  const limit=Date.now()-PI_KD_KEEP_WEEKS*7*86400000;
+  // Einheit importiert, Eintrag nicht mehr auf der Liste → 0 für diese Woche
+  if(quellen&&quellen.length)map.forEach((x,key)=>{if(!seen.has(key)&&quellen.includes(x.quelle))setHist(x,0);});
+  const limit=Date.now()-PI_KD_KEEP_WEEKS*7*86400000,cut=piKdWeek(kw,yr)-PI_KD_HIST_WEEKS;
+  map.forEach(x=>{x.hist=x.hist.filter(h=>piKdWeek(h.kw,h.year)>cut).sort((a,b)=>piKdWeek(a.kw,a.year)-piKdWeek(b.kw,b.year));});
   deptMeta._piKdSeen=[...map.values()].filter(x=>isoMonday(x.kw,x.year).getTime()>=limit);
+}
+function piKdHistToast(key){
+  const x=piKdSeenList().find(y=>y.key===key);if(!x)return;
+  showToast((x.name||x.psp)+': '+(piKdHist(x).map(h=>'KW '+h.kw+' '+(+h.count||0)).join(' · ')||'kein Verlauf'),7000);
+}
+// Mini-Balkendiagramm der letzten PI_KD_HIST_WEEKS Wochen (bis zur neuesten Liste)
+function piKdBars(x,lastWeek){
+  const h=new Map(piKdHist(x).map(v=>[piKdWeek(v.kw,v.year),v]));
+  const max=Math.max(1,...[...h.values()].map(v=>+v.count||0));
+  let out='';
+  for(let w=lastWeek-PI_KD_HIST_WEEKS+1;w<=lastWeek;w++){
+    const v=h.get(w),c=v?+v.count||0:null;
+    const k=piKdWeekKW(w),lbl='KW '+k.kw+(k.year!==curIsoYear()?' / '+k.year:'');
+    const ht=c?Math.max(3,Math.round(c/max*18)):2;
+    out+=`<span title="${lbl}: ${c===null?'keine Angabe':c+' Pers.'}" style="display:inline-block;width:5px;height:${ht}px;margin-right:1px;vertical-align:bottom;border-radius:1px;background:${c?'var(--blue)':c===0?'var(--bd)':'transparent'};${c===null?'border-bottom:1px dotted var(--tx3)':''}"></span>`;
+  }
+  return `<span style="display:inline-flex;align-items:flex-end;height:20px">${out}</span>`;
 }
 // Admin → Kundendienst-Liste
 function openPiIgnore(){admModal('🔧 Kundendienst-Liste (Personal-Import)','<div id="pii-body"></div>');renderPiIgnore();}
@@ -6134,7 +6189,7 @@ function renderPiIgnore(){
     <table class="adm-tbl"><tr><th>Erkennen nach</th><th>Wert</th><th>Einheit</th><th></th></tr>${list.map(r=>`<tr><td>${r.kind==='psp'?'PSP-Nummer':'Stichwort im Namen'}</td><td><b>${escH(r.value)}</b></td><td>${escH(r.dept||'alle')}</td><td style="text-align:right"><button type="button" class="ui-btn" onclick="rmPiIgnore(${r.id})">Löschen</button></td></tr>`).join('')||'<tr><td colspan="4">Keine Einträge.</td></tr>'}</table>
     <p style="margin-top:12px"><button type="button" class="ui-btn ui-btn-pri" onclick="addPiIgnore()">+ Eintrag hinzufügen</button></p>
     <h3>Erkannte Kundendienst-Einträge</h3>
-    <p>Alles, was beim Personal-Import als Kundendienst übersprungen wurde (Stand des jeweils neuesten Imports, Einträge ohne Erscheinen seit ${PI_KD_KEEP_WEEKS} Wochen fallen weg). Ist etwas dabei, das eine echte Baustelle ist: «+ Baustelle» – danach wird der Eintrag normal zugeordnet.</p>
+    <p>Alles, was beim Personal-Import als Kundendienst übersprungen wurde (Stand des jeweils neuesten Imports, Einträge ohne Erscheinen seit ${PI_KD_KEEP_WEEKS} Wochen fallen weg). «Verlauf» zeigt das Personal der letzten ${PI_KD_HIST_WEEKS} Wochen (Maus auf einen Balken oder antippen = KW und Anzahl). 🔔 = seit mindestens ${S('kd_streak_weeks')} Wochen am Stück Personal (einstellbar unter Einstellungen → Personal-Import). Ist etwas dabei, das eine echte Baustelle ist: «+ Baustelle» – danach wird der Eintrag normal zugeordnet.</p>
     <input id="pii-q" class="ui-dlg-inp" placeholder="Suchen (PSP, Name, Einheit …)" oninput="renderPiKdSeen()">
     <div id="pii-seen"></div>`;
   renderPiKdSeen();
@@ -6142,14 +6197,17 @@ function renderPiIgnore(){
 function renderPiKdSeen(){
   const el=document.getElementById('pii-seen');if(!el)return;
   const q=(document.getElementById('pii-q')?.value||'').toLowerCase();
-  const rows=piKdSeenList().filter(x=>!q||(x.psp+' '+x.name+' '+x.dept+' '+x.rule).toLowerCase().includes(q))
-    .sort((a,b)=>(a.dept||'').localeCompare(b.dept||'')||(a.name||'').localeCompare(b.name||''));
-  if(!rows.length){el.innerHTML='<p>'+(piKdSeenList().length?'Keine Treffer.':'Noch nichts erkannt – die Liste füllt sich beim nächsten Personal-Import.')+'</p>';return;}
-  const sum=rows.reduce((a,x)=>a+(+x.count||0),0);
-  el.innerHTML=`<table class="adm-tbl"><tr><th>PSP</th><th>Name</th><th>Einheit</th><th style="text-align:right">Pers.</th><th>Zuletzt</th><th>Erkannt durch</th><th></th></tr>
-    ${rows.map(x=>`<tr><td style="white-space:nowrap">${escH(x.psp||'–')}</td><td>${escH(x.name)}</td><td>${escH(x.dept||'–')}</td><td style="text-align:right">${+x.count||0}</td><td style="white-space:nowrap">KW ${x.kw}${x.year!==curIsoYear()?' / '+x.year:''}</td><td style="color:var(--tx3)">${escH(x.rule||'–')}</td>
-      <td style="text-align:right"><button type="button" class="ui-btn" title="Ist eine echte Baustelle – als Baustelle anlegen" onclick="piKdToSite('${escH(x.key)}')">+ Baustelle</button></td></tr>`).join('')}
-    <tr><td colspan="3"><b>${rows.length} Einträge</b></td><td style="text-align:right"><b>${sum}</b></td><td colspan="3"></td></tr></table>`;
+  const all=piKdSeenList(),lastWeek=Math.max(...all.map(x=>piKdWeek(x.kw,x.year)));
+  const flag=new Map(all.map(x=>[x.key,piKdFlag(x)]));
+  const rows=all.filter(x=>!q||(x.psp+' '+x.name+' '+x.dept+' '+x.rule).toLowerCase().includes(q))
+    .sort((a,b)=>flag.get(b.key)-flag.get(a.key)||(a.dept||'').localeCompare(b.dept||'')||(a.name||'').localeCompare(b.name||''));
+  if(!rows.length){el.innerHTML='<p>'+(all.length?'Keine Treffer.':'Noch nichts erkannt – die Liste füllt sich beim nächsten Personal-Import.')+'</p>';return;}
+  const sum=rows.reduce((a,x)=>a+(+x.count||0),0),nFlag=all.filter(x=>flag.get(x.key)).length;
+  const banner=nFlag?`<div style="margin:8px 0;padding:8px 10px;border-radius:8px;background:rgba(245,158,11,.15);border:1px solid var(--orange)">🔔 <b>${nFlag} Kundendienst-Auftr${nFlag===1?'ag':'äge'}</b> seit mindestens ${S('kd_streak_weeks')} Wochen am Stück mit Personal – ein Audit könnte sich lohnen. «+ Baustelle» legt den Auftrag als normale Baustelle an.</div>`:'';
+  el.innerHTML=`${banner}<div style="overflow-x:auto"><table class="adm-tbl"><tr><th>PSP</th><th>Name</th><th>Einheit</th><th style="text-align:right">Pers.</th><th style="white-space:nowrap" title="Personal pro Woche, letzte ${PI_KD_HIST_WEEKS} Wochen (grau = 0, leer = keine Angabe) – antippen für Details">Verlauf</th><th>Zuletzt</th><th>Erkannt durch</th><th></th></tr>
+    ${rows.map(x=>{const f=flag.get(x.key);return`<tr${f?' style="background:rgba(245,158,11,.10)"':''}><td style="white-space:nowrap">${escH(x.psp||'–')}</td><td>${escH(x.name)}${f?`<div style="color:var(--orange);font-weight:600;font-size:12px">🔔 seit ${f} Wochen Personal – Audit prüfen</div>`:''}</td><td>${escH(x.dept||'–')}</td><td style="text-align:right">${+x.count||0}</td><td style="white-space:nowrap;cursor:pointer" onclick="piKdHistToast('${escH(x.key)}')">${piKdBars(x,lastWeek)}</td><td style="white-space:nowrap">KW ${x.kw}${x.year!==curIsoYear()?' / '+x.year:''}</td><td style="color:var(--tx3)">${escH(x.rule||'–')}</td>
+      <td style="text-align:right"><button type="button" class="ui-btn${f?' ui-btn-pri':''}" title="Ist eine echte Baustelle – als Baustelle anlegen" onclick="piKdToSite('${escH(x.key)}')">+ Baustelle</button></td></tr>`;}).join('')}
+    <tr><td colspan="3"><b>${rows.length} Einträge</b></td><td style="text-align:right"><b>${sum}</b></td><td colspan="4"></td></tr></table></div>`;
 }
 function piKdToSite(key){
   const x=piKdSeenList().find(y=>y.key===key);if(!x)return;
@@ -6301,7 +6359,13 @@ function confirmPersonalImport(){
   //  - «nicht auf der Liste» (nur vollständig importierte Abteilungen): 0 für diese KW
   // Werkhöfe und «Unbekannt» erhalten nichts.
   const yr=_piPending.targetYear||new Date().getFullYear();
-  if((buckets.kundendienst||[]).length||piKdSeenList().length){piKdRecord(buckets.kundendienst||[],targetKW,yr);saveDepts();}
+  let kdNewFlags=0;
+  if((buckets.kundendienst||[]).length||piKdSeenList().length){
+    const before=new Set(piKdSeenList().filter(x=>piKdFlag(x)).map(x=>x.key));
+    piKdRecord(buckets.kundendienst||[],targetKW,yr,(_piPending.coverage&&_piPending.coverage.quellen)||[...new Set((_piPending.rawEntries||[]).map(r=>r.quelle).filter(Boolean))]);
+    kdNewFlags=piKdSeenList().filter(x=>piKdFlag(x)&&!before.has(x.key)).length;
+    saveDepts();
+  }
   const recordPersonal=(e,count)=>{
     if(!e)return;
     e.lastPersonalCount=count;
@@ -6382,7 +6446,8 @@ function confirmPersonalImport(){
   document.getElementById('pi-bg').style.display='none';
   const impYear=_piPending.targetYear||new Date().getFullYear();
   setTimeout(()=>checkPlansAfterImport(targetKW,impYear),600);
-  showToast(`✓ ${n} Baustellen aktualisiert`+(aliasesSaved?`, ${aliasesSaved} Alias-Zuordnung(en) gespeichert`:''),4000);
+  showToast(`✓ ${n} Baustellen aktualisiert`+(aliasesSaved?`, ${aliasesSaved} Alias-Zuordnung(en) gespeichert`:'')
+    +(kdNewFlags?` · 🔔 ${kdNewFlags} Kundendienst-Auftr${kdNewFlags===1?'ag':'äge'} seit ${S('kd_streak_weeks')} Wochen mit Personal – Audit prüfen (Admin → Kundendienst-Liste)`:''),kdNewFlags?9000:4000);
 }
 
 async function clearGhostAudits(){
