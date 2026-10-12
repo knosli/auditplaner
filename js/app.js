@@ -4834,7 +4834,7 @@ function rulesHTML(){
     `Zuordnung: PSP exakt inkl. Unternummer (4226280.13 ≠ 4226280.01); Etappen (3025325.1/.2) → Hauptnummer 3025325; Namens-Treffer nur innerhalb der Abteilung der Einsatzliste; mehrere Listen für dieselbe Baustelle werden zusammengezählt.`,
     `«Nicht auf der Liste»: aktive Baustellen einer Abteilung, deren Einsatzlisten <u>alle</u> importiert wurden, die aber auf keiner stehen → Pausieren vorgeschlagen (neu erfasste nicht vorausgewählt).`,
     `Gespeichert wird die Personalzahl bei allen erkannten Baustellen (auch dauerhaft ausgeschlossene), «nicht auf der Liste» erhält 0. Verlauf: ${v('pi_history_weeks')} Wochen.`,
-    `<b>Kundendienst-Liste</b> (Admin → Kundendienst-Liste, oder «🔧 Kundendienst» bei unbekannten Einträgen und in der Sammelbox): Einträge ohne passende Baustelle, deren PSP-Nummer oder Name (Stichwort, z.B. «Kundenarbeiten», «Divers») auf der Liste steht, werden übersprungen – nicht «unbekannt», nicht in der Sammelbox. Echte Baustellen sind nie betroffen. Die Sammelbox führt doppelte Einträge (gleiche PSP und Name) zusammen. Unter Admin → Kundendienst-Liste stehen alle erkannten Kundendienst-Einträge (PSP, Name, Einheit, Personen, zuletzt gesehen) – nachgeführt bei jedem übernommenen Import, nach ${PI_KD_KEEP_WEEKS} Wochen ohne Erscheinen entfernt. Pro Eintrag wird der Personalverlauf der letzten ${PI_KD_HIST_WEEKS} Wochen gezeigt (Einheit importiert, Eintrag fehlt = 0). Hat ein Kundendienst-Auftrag ${v('kd_streak_weeks')} Wochen am Stück Personal (in der neuesten Liste mindestens ${v('kd_min_pers')}), erscheint «🔔 Audit prüfen» und nach dem Import ein Hinweis; mit «+ Baustelle» wird er zur normalen Baustelle.`,
+    `<b>Kundendienst-Liste</b> (Admin → Kundendienst-Liste, oder «🔧 Kundendienst» bei unbekannten Einträgen und in der Sammelbox): Einträge ohne passende Baustelle, deren PSP-Nummer (genau oder inkl. aller Unternummern, z.B. 4225280.xx) oder Name (Stichwort, z.B. «Kundenarbeiten», «Divers») auf der Liste steht, werden übersprungen – nicht «unbekannt», nicht in der Sammelbox. Echte Baustellen sind nie betroffen. Die Sammelbox führt doppelte Einträge (gleiche PSP und Name) zusammen. In der Sammelbox als Kundendienst gemerkte Einträge erscheinen sofort unter den erkannten Kundendienst-Einträgen. Unter Admin → Kundendienst-Liste stehen alle erkannten Kundendienst-Einträge (PSP, Name, Einheit, Personen, zuletzt gesehen) – nachgeführt bei jedem übernommenen Import, nach ${PI_KD_KEEP_WEEKS} Wochen ohne Erscheinen entfernt. Pro Eintrag wird der Personalverlauf der letzten ${PI_KD_HIST_WEEKS} Wochen gezeigt (Einheit importiert, Eintrag fehlt = 0). Hat ein Kundendienst-Auftrag ${v('kd_streak_weeks')} Wochen am Stück Personal (in der neuesten Liste mindestens ${v('kd_min_pers')}), erscheint «🔔 Audit prüfen» und nach dem Import ein Hinweis; mit «+ Baustelle» wird er zur normalen Baustelle.`,
     `Werkhöfe sind vom Import komplett ausgenommen. Unbekannte Einträge: zuordnen (Alias wird gemerkt), neu anlegen oder in die Sammelbox.`,
     `KW-Planung: Jede Baustellen-Karte zeigt 👷 das Personal der KW, in der sie geplant ist (Import oder manuell). Gibt es dafür keinen Wert, steht grau kursiv der zuletzt bekannte Wert mit seiner KW, ohne Angabe «–». Eine 0 ist rot. Werkhöfe zeigen nichts.`,
     `Temporäre Mitarbeitende: nur Personal-Nummern (keine Namen), pro Einheit bei jedem Import ersetzt.`,
@@ -6058,7 +6058,8 @@ function piCreateFromUnknown(idx){
 // ═══ KUNDENDIENST-LISTE (Import) ═══
 // Einträge auf Einsatzlisten, die Kundendienst sind (z.B. «Kundenarbeiten», «Divers»), werden beim Import
 // übersprungen statt als «unbekannt» zu erscheinen. Regeln in deptMeta._piIgnore (synchronisiert):
-// {id,kind:'psp'|'word',value,dept} – PSP exakt (inkl. Unternummer) oder Stichwort im Namen, optional nur
+// {id,kind:'psp'|'pspall'|'word',value,dept} – PSP exakt (inkl. Unternummer), PSP mit allen Unternummern
+// (4225280 → auch 4225280.42) oder Stichwort im Namen, optional nur
 // für eine Einheit. Greift NUR bei Einträgen ohne passende Baustelle – echte Baustellen sind nie betroffen.
 const PI_IGNORE_DEFAULT=['Kundenarbeiten','Kundendienst','Kudi','Divers'].map((w,i)=>({id:i+1,kind:'word',value:w,dept:''}));
 function piIgnoreList(){return Array.isArray(deptMeta._piIgnore)?deptMeta._piIgnore:PI_IGNORE_DEFAULT;}
@@ -6073,20 +6074,23 @@ function piIgnoreMatch(it){
     if(r.dept&&qd&&r.dept!==qd)return false;
     if(r.dept&&!qd)return false;
     if(r.kind==='psp')return !!pk&&piPspKey(r.value)===pk;
+    if(r.kind==='pspall'){const a=pspParts(r.value),b=pspParts(it.psp);return !!a&&!!b&&a.base===b.base;}
     const w=piNormName(r.value);return !!w&&nm.includes(w);
   })||null;
 }
-function piIgnoreLabel(r){return(r.kind==='psp'?'PSP '+r.value:'Stichwort «'+r.value+'»')+(r.dept?' (nur '+r.dept+')':'');}
+function piIgnoreLabel(r){return(r.kind==='psp'?'PSP '+r.value:r.kind==='pspall'?'PSP '+((pspParts(r.value)||{}).base||r.value)+'.xx':'Stichwort «'+r.value+'»')+(r.dept?' (nur '+r.dept+')':'');}
+function piIgnoreKindLabel(k){return k==='psp'?'PSP-Nummer':k==='pspall'?'PSP-Nummer inkl. aller Unternummern':'Stichwort im Namen';}
 // Dialog: Regel für einen Eintrag anlegen
 async function piIgnoreAsk(it){
   if(!document.body.classList.contains('admin-mode')){showToast('Nur Admins können die Kundendienst-Liste ändern');return null;}
   const r=await uiForm({title:'🔧 Als Kundendienst merken – '+(it.psp?it.psp+' · ':'')+it.name,
-    fields:[{k:'kind',l:'Erkennen nach',type:'select',v:it.psp?'PSP-Nummer (nur genau diese)':'Stichwort im Namen',opts:['PSP-Nummer (nur genau diese)','Stichwort im Namen']},
+    fields:[{k:'kind',l:'Erkennen nach',type:'select',v:it.psp?'PSP-Nummer (nur genau diese)':'Stichwort im Namen',opts:['PSP-Nummer (nur genau diese)','PSP-Nummer inkl. aller Unternummern (z.B. 4225280.xx)','Stichwort im Namen']},
       {k:'value',l:'PSP-Nummer bzw. Stichwort (z.B. Kundenarbeiten)',v:it.psp||''},
       {k:'dept',l:'Nur für Einheit (leer = alle)',type:'select',v:'',opts:['',...getAllDepts()]}],
-    ok:'Merken',validate:o=>!o.value?'Bitte PSP-Nummer oder Stichwort eingeben':''});
+    ok:'Merken',validate:o=>!o.value?'Bitte PSP-Nummer oder Stichwort eingeben':o.kind.startsWith('PSP')&&!pspParts(o.value)?'Keine gültige PSP-Nummer':''});
   if(!r)return null;
-  const rule={id:Date.now(),kind:r.kind.startsWith('PSP')?'psp':'word',value:r.value,dept:r.dept||''};
+  const kind=r.kind.includes('Unternummern')?'pspall':r.kind.startsWith('PSP')?'psp':'word';
+  const rule={id:Date.now(),kind,value:kind==='pspall'?pspParts(r.value).base:r.value,dept:r.dept||''};
   piIgnoreSave([...piIgnoreList(),rule]);
   showToast('🔧 Kundendienst gemerkt: '+piIgnoreLabel(rule),3000);
   return rule;
@@ -6106,8 +6110,10 @@ async function sbIgnore(ci){
 // Sammelbox aufräumen: Doppelte (gleiche PSP + Name) zusammenführen, Kundendienst entfernen
 function sammelboxClean(){
   const box=window._piCollectBox||[],seen=new Map();
-  box.forEach(it=>{if(piIgnoreMatch(it))return;const k=piPspKey(it.psp)+'|'+piNormName(it.name);const o=seen.get(k);if(!o)seen.set(k,{...it});else o.count=it.count;});
+  const kd=[];
+  box.forEach(it=>{const r=piIgnoreMatch(it);if(r){kd.push({...it,ignoreRule:r});return;}const k=piPspKey(it.psp)+'|'+piNormName(it.name);const o=seen.get(k);if(!o)seen.set(k,{...it});else o.count=it.count;});
   const next=[...seen.values()];
+  if(kd.length)piKdFromBox(kd);
   if(!mgEq(next,box)){window._piCollectBox=next;saveNow();}
   if(typeof updateSbBadge==='function')updateSbBadge();
 }
@@ -6180,13 +6186,22 @@ function piKdBars(x,lastWeek){
   }
   return `<span style="display:inline-flex;align-items:flex-end;height:20px">${out}</span>`;
 }
+// Aus der Sammelbox als Kundendienst erkannt → sofort in die erkannten Einträge (KW des Imports,
+// bei älteren Sammelbox-Einträgen ohne KW: neueste bekannte Liste bzw. aktuelle Woche)
+function piKdFromBox(items){
+  const L=piKdSeenList(),last=L.length?L.reduce((a,x)=>piKdWeek(x.kw,x.year)>piKdWeek(a.kw,a.year)?x:a):{kw:dateToKW(today()),year:curIsoYear()};
+  const groups=new Map();
+  items.forEach(it=>{const kw=it.kw||last.kw,yr=it.kw?(it.year||curIsoYear()):last.year,k=kw+'|'+yr;if(!groups.has(k))groups.set(k,{kw,yr,list:[]});groups.get(k).list.push(it);});
+  groups.forEach(g=>piKdRecord(g.list,g.kw,g.yr));
+  saveDepts();
+}
 // Admin → Kundendienst-Liste
 function openPiIgnore(){admModal('🔧 Kundendienst-Liste (Personal-Import)','<div id="pii-body"></div>');renderPiIgnore();}
 function renderPiIgnore(){
   const el=document.getElementById('pii-body');if(!el)return;
   const list=piIgnoreList();
   el.innerHTML=`<p>Einträge auf den Einsatzlisten, die hier passen, überspringt der Import (sie erscheinen nicht als «unbekannt» und nicht in der Sammelbox). Gilt nur für Einträge, die keiner Baustelle zugeordnet werden können.</p>
-    <table class="adm-tbl"><tr><th>Erkennen nach</th><th>Wert</th><th>Einheit</th><th></th></tr>${list.map(r=>`<tr><td>${r.kind==='psp'?'PSP-Nummer':'Stichwort im Namen'}</td><td><b>${escH(r.value)}</b></td><td>${escH(r.dept||'alle')}</td><td style="text-align:right"><button type="button" class="ui-btn" onclick="rmPiIgnore(${r.id})">Löschen</button></td></tr>`).join('')||'<tr><td colspan="4">Keine Einträge.</td></tr>'}</table>
+    <table class="adm-tbl"><tr><th>Erkennen nach</th><th>Wert</th><th>Einheit</th><th></th></tr>${list.map(r=>`<tr><td>${piIgnoreKindLabel(r.kind)}</td><td><b>${escH(r.kind==='pspall'?r.value+'.xx':r.value)}</b></td><td>${escH(r.dept||'alle')}</td><td style="text-align:right"><button type="button" class="ui-btn" onclick="rmPiIgnore(${r.id})">Löschen</button></td></tr>`).join('')||'<tr><td colspan="4">Keine Einträge.</td></tr>'}</table>
     <p style="margin-top:12px"><button type="button" class="ui-btn ui-btn-pri" onclick="addPiIgnore()">+ Eintrag hinzufügen</button></p>
     <h3>Erkannte Kundendienst-Einträge</h3>
     <p>Alles, was beim Personal-Import als Kundendienst übersprungen wurde (Stand des jeweils neuesten Imports, Einträge ohne Erscheinen seit ${PI_KD_KEEP_WEEKS} Wochen fallen weg). «Verlauf» zeigt das Personal der letzten ${PI_KD_HIST_WEEKS} Wochen (Maus auf einen Balken oder antippen = KW und Anzahl). 🔔 = seit mindestens ${S('kd_streak_weeks')} Wochen am Stück Personal (einstellbar unter Einstellungen → Personal-Import). Ist etwas dabei, das eine echte Baustelle ist: «+ Baustelle» – danach wird der Eintrag normal zugeordnet.</p>
@@ -6232,7 +6247,8 @@ function piCollectUnknown(idx){
   window._piCollectBox=window._piCollectBox||[];
   const dup=window._piCollectBox.find(x=>piPspKey(x.psp)===piPspKey(item.psp)&&piNormName(x.name)===piNormName(item.name));
   if(dup){dup.count=item.count;dup.quelle=item.quelle||dup.quelle;}
-  else window._piCollectBox.push({psp:item.psp||'',name:item.name,count:item.count,quelle:item.quelle||''});
+  else window._piCollectBox.push({psp:item.psp||'',name:item.name,count:item.count,quelle:item.quelle||'',kw:_piPending.targetKW,year:_piPending.targetYear||curIsoYear()});
+  if(dup){dup.kw=_piPending.targetKW;dup.year=_piPending.targetYear||curIsoYear();}
   _piPending.buckets.unknown.splice(idx,1);
   saveNow();
   piRenderPreview();

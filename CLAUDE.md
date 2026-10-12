@@ -11,8 +11,8 @@ Beratungen, Rapporten und Ferien der Auditoren. Sprache der Oberfläche: Deutsch
 - Vor jedem PR: App im Browser laden (Desktop- und Mobile-Breite) und in der Konsole
   prüfen, dass keine JavaScript-Fehler auftreten.
 - Bei jeder Änderung an der App die Versionsnummer erhöhen, und zwar überall in
-  `index.html`: im Header (`<span ... title="Version">v3.00</span>`) und in den Links
-  `css/style.css?v=3.00`, `js/merge.js?v=3.00` und `js/app.js?v=3.00`. Der `?v=`-Zusatz
+  `index.html`: im Header (`<span ... title="Version">v3.01</span>`) und in den Links
+  `css/style.css?v=3.01`, `js/merge.js?v=3.01` und `js/app.js?v=3.01`. Der `?v=`-Zusatz
   sorgt dafür, dass Browser nach einem Update keine alte Datei aus dem Cache verwenden.
 - Tests für die Zusammenführung: `node tests/merge.test.js` (muss grün sein).
 - Keine Browser-Dialoge (`confirm`, `prompt`, `alert`): `askConfirm()`, `askText()`,
@@ -80,12 +80,14 @@ global; das HTML ruft sie direkt über `onclick="..."` auf.
   ohne Kartenpunkt → Liste `noGeo`, kein Audit-Beginn nach `tg_last_start`, «📞 wenig Personal»
   bis `pi_review_max`. «Pausiert bis» endet automatisch (`autoResumeExpired`, `pauseOverAt`)
 - ~5393 Personal-Import (JSON), Sammelbox, temporäre Mitarbeitende
-  Kundendienst-Liste `deptMeta._piIgnore` (PSP exakt oder Stichwort, optional pro Einheit;
+  Kundendienst-Liste `deptMeta._piIgnore` (PSP exakt, `pspall` = PSP inkl. aller Unternummern, oder
+  Stichwort, optional pro Einheit;
   `piIgnoreMatch`, Admin → Kundendienst-Liste): greift nur bei Einträgen OHNE passende Baustelle →
   Bucket `kundendienst` statt `unknown`. Sammelbox: `sammelboxClean()` (Doppelte zusammenführen)
   Erkannte Kundendienst-Einträge: `deptMeta._piKdSeen` (`piKdRecord` bei «Übernehmen», 8 Wochen)
   mit Verlauf `hist` (12 Wochen, `piKdHist`); «🔔 Audit prüfen» ab `kd_streak_weeks` Wochen am Stück
-  mit Personal (`piKdStreak`/`piKdFlag`), Hinweis nach dem Import
+  mit Personal (`piKdStreak`/`piKdFlag`), Hinweis nach dem Import; aus der Sammelbox gemerkte sofort
+  (`piKdFromBox` in `sammelboxClean`)
 - ~5969 Supabase-Verbindung (`sbFetch`, `sbInit`)
 - ~6026 Sync (`SB_FIELDS`, `sbPush`, `sbPull`, `sbMergeRemote`, Speicher-Status)
 - ~6265 Admin: Anleitung & SQL, Änderungsprotokoll, Verlauf & Wiederherstellen
