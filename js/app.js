@@ -112,11 +112,14 @@ function status(e,now){
   if(hasP(e))return'planned';
   if(hasBeratPlan(e))return'beratung';
   if(!e.lastAudit&&!e.resumeFrom){
-    if(!e.createdAt)return'new';
+    // Werkhöfe sind nie «neu» (Rhythmus dort weniger wichtig): ohne Audit nur über das Erfassungsdatum fällig
+    const wh=e.type==='werkhof';
+    if(!e.createdAt)return wh?'ok':'new';
     const dn=dl(e,now);
     if(dn<-S('due_overdue_days'))return'overdue';
     if(dn<=0)return'due';
-    return'new';
+    if(wh&&dn<=S('due_soon_days'))return'soon';
+    return wh?'ok':'new';
   }
   const d=dl(e,now);
   if(d<-S('due_overdue_days'))return'overdue';
@@ -466,7 +469,7 @@ function renderList(){
   }else list.sort((a,b)=>dl(a)-dl(b));
   if(!data.length){document.getElementById('bslist').innerHTML=`<div class="empty-s"><h3>Keine Baustellen</h3><p>Über «+ Neue Baustelle» erfassen oder ein Backup laden.</p></div>`;return;}
   const tc={overdue:'tov',due:'tdu',soon:'tsn',ok:'tok',new:'tnew',paused:'tpa',inactive:'tin',planned:'tpl',beratung:'tpl'};
-  const sl=e=>{const s=status(e);if(s==='planned'){const p=plans.filter(x=>x.bsId===e.id&&x.date>=today()).sort((a,b)=>a.date.localeCompare(b.date))[0];return p?`KW ${dateToKW(p.date)}`:'Geplant';}if(s==='overdue')return`${Math.abs(dl(e))-10}T überfällig`;if(s==='due')return`${Math.abs(dl(e))}T über`;if(s==='soon')return`in ${dl(e)}T`;if(s==='new')return'Neu – kein Audit';if(s==='beratung')return'Beratung geplant';if(s==='paused')return'Pausiert';if(s==='inactive')return'Inaktiv';return`in ${dl(e)}T`;};
+  const sl=e=>{const s=status(e);if(s==='planned'){const p=plans.filter(x=>x.bsId===e.id&&x.date>=today()).sort((a,b)=>a.date.localeCompare(b.date))[0];return p?`KW ${dateToKW(p.date)}`:'Geplant';}if(s==='overdue')return`${Math.abs(dl(e))-10}T überfällig`;if(s==='due')return`${Math.abs(dl(e))}T über`;if(s==='soon')return`in ${dl(e)}T`;if(s==='new')return'Neu – kein Audit';if(dl(e)===-999)return'Kein Audit';if(s==='beratung')return'Beratung geplant';if(s==='paused')return'Pausiert';if(s==='inactive')return'Inaktiv';return`in ${dl(e)}T`;};
   const _cardHTML=e=>{
     const s=status(e),ip=planned.has(e.id);
     const chk=(planMode||multiPlanMode||multiAuditMode)&&e.active&&!e.paused?`<div class="pchk${ip?' on':''}" onclick="togPI(event,${e.id})">${ip?'✓':''}</div>`:'';
@@ -4823,7 +4826,7 @@ function rulesHTML(){
   sec('traffic-lights','Status & Ampel',[
     `Fälligkeit = letztes Audit + Rhythmus der Baustelle.`,
     `<span style="color:#EAB308">●</span> Bald fällig ab ${v('due_soon_days')} Tagen vor Fälligkeit · <span style="color:#F59E0B">●</span> fällig ab Fälligkeitstag · <span style="color:#EF4444">●</span> überfällig ab ${v('due_overdue_days')} Tagen danach.`,
-    `Noch nie auditierte Baustellen (★ auf der Karte): Frist läuft ab Erfassung – violett = neu, orange = fällig, rot = überfällig.`,
+    `Noch nie auditierte Baustellen (★ auf der Karte): Frist läuft ab Erfassung – violett = neu, orange = fällig, rot = überfällig. Werkhöfe gelten nie als «neu» (Audit-Rhythmus dort weniger wichtig).`,
     `Geplante Baustellen (blau) und geplante Beratungen (violett) werden nicht als fällig gezählt; pausierte und inaktive gar nicht.`]) +
   sec('refresh','Rhythmus',[
     `Standard beim Erfassen: Baustelle ${v('rh_baustelle')} Tage, GU ${v('rh_gu')} Tage, Werkhof ${v('rh_werkhof')} Tage. Pro Baustelle individuell änderbar.`,

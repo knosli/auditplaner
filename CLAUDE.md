@@ -11,8 +11,8 @@ Beratungen, Rapporten und Ferien der Auditoren. Sprache der Oberfläche: Deutsch
 - Vor jedem PR: App im Browser laden (Desktop- und Mobile-Breite) und in der Konsole
   prüfen, dass keine JavaScript-Fehler auftreten.
 - Bei jeder Änderung an der App die Versionsnummer erhöhen, und zwar überall in
-  `index.html`: im Header (`<span ... title="Version">v3.01</span>`) und in den Links
-  `css/style.css?v=3.01`, `js/merge.js?v=3.01` und `js/app.js?v=3.01`. Der `?v=`-Zusatz
+  `index.html`: im Header (`<span ... title="Version">v3.02</span>`) und in den Links
+  `css/style.css?v=3.02`, `js/merge.js?v=3.02` und `js/app.js?v=3.02`. Der `?v=`-Zusatz
   sorgt dafür, dass Browser nach einem Update keine alte Datei aus dem Cache verwenden.
 - Tests für die Zusammenführung: `node tests/merge.test.js` (muss grün sein).
 - Keine Browser-Dialoge (`confirm`, `prompt`, `alert`): `askConfirm()`, `askText()`,
@@ -54,7 +54,7 @@ global; das HTML ruft sie direkt über `onclick="..."` auf.
 - ~1 Konstanten: Abteilungen (`DEPT_MAP`, `ALL_DEPTS`, `DC`), Auditor-Kürzel,
   PLZ-Koordinaten (`PLZ`, `CFB`) für die Geokodierung
 - ~97 `status(e)`: berechnet den Status einer Baustelle
-  (inactive, paused, planned, beratung, new, overdue, due, soon, ok)
+  (inactive, paused, planned, beratung, new, overdue, due, soon, ok); Werkhöfe sind nie `new`
 - ~142 `save()` (verzögert) / `saveNow()` / `load()`
 - ~147 Dialoge (`uiDialog`, `askConfirm`, `askText`) und Rückgängig (`undoPoint`)
 - ~202 Karte (Leaflet): `initMap`, `renderMarkers`, `renderList`, `selEntry` (Detail-Panel)
