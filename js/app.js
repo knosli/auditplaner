@@ -4888,6 +4888,7 @@ function rulesHTML(){
     `Bleiben im Umkreis eines Tages Baustellen offen (Tag voll oder Personal unbekannt), zeigt der Vorschlag unter dem Tag «⚠ Ort nicht ausgeschöpft» – mit «+ trotzdem hinzufügen». Beim Ausgleich zwischen den Tagen wird keine Baustelle von ihren Nachbarn getrennt.`,
     `Audit-Dauer: 1–3 Pers. ${v('tg_min_1_3')} · 4–9 ${v('tg_min_4_9')} · 10–19 ${v('tg_min_10_19')} · 20+ ${v('tg_min_20')} · unbekannt ${v('tg_min_unknown')} min (inkl. Schreiben/Rapportieren; Fahrzeit separat).`,
     `Tag: <b>Das erste Audit beginnt um ${tgHM(S('tg_day_start')*60)}</b> – losgefahren wird entsprechend früher (Fahrzeit ab Startadresse). Max. ${v('tg_day_hours')} h Arbeitszeit (inkl. aller Fahrten und Wartezeiten, ohne Mittagspause) plus <b>${v('tg_post_min')} min Nachbearbeitung pro Baustelle</b> am Ende des Tages (Audit-Bericht; bei 4 Baustellen also 4 × ${v('tg_post_min')} min) – beides zusammen muss in den Arbeitstag passen. <b>Toleranz:</b> Ein Tag darf bis ${v('tg_day_tol')} min länger werden, alle Tage der Woche zusammen aber höchstens ${v('tg_week_tol')} min – damit keine Baustelle wegen ein paar Minuten wegfällt, aber auch nicht jeder Tag länger wird. Max. ${v('tg_max_per_day')} Baustellen.`,
+    `<b>Mehrere Einheiten am gleichen Ort</b> (gleiche Adresse/Koordinaten): ein gemeinsamer Rundgang – die Audit-Dauer richtet sich nach den Personen <u>aller</u> Einheiten zusammen (z.B. 3 + 4 + 2 = 9 Personen → Dauer für 4–9 Personen), die Nachbearbeitung zählt aber pro Einheit. Im Vorschlag mit «🔗 +x min» markiert.`,
     `<b>Fester Besuchstermin</b> (Bearbeiten → «Fester Besuchstermin», z.B. Do 07:30, Dauer = Zeitbedarf): Die Baustelle wird nur an diesen Wochentagen vorgeschlagen und beginnt genau zu dieser Zeit – wie ein Termin mit fixer Uhrzeit (gilt auch über Znüni/Mittag). Beim Planen in der KW-Planung wird der feste Wochentag übernommen.`,
     `<b>Znüni der Baustellen ${tgHM(S('tg_znueni_start')*60)}–${tgHM(S('tg_znueni_start')*60+S('tg_znueni_dur'))} (${v('tg_znueni_dur')} min):</b> In dieser Zeit beginnt kein Audit (auch kein Personen-Audit oder Beratung) – wer im Znüni ankommt, beginnt danach. ${S('tg_znueni_through')>0?'Ein <b>laufendes Audit darf durchs Znüni laufen</b> (Besprechung mit dem Bauleiter), z.B. Beginn 08:30.':'Ein Audit, das nicht vor dem Znüni fertig ist, beginnt erst danach.'} Fahren ist in dieser Zeit möglich; Warten zählt zur Arbeitszeit. Dauer 0 = kein Znüni.`,
     `<b>Audit-Dauer flexibel:</b> Würde ein Baustellen-Audit nur wenige Minuten ins Znüni oder in den Baustellen-Mittag laufen, wird es um bis zu ${v('tg_audit_flex')} min kürzer geplant (im Vorschlag «(−x)»), statt ganz nach hinten zu rutschen.`,
@@ -4980,10 +4981,15 @@ function renderSettings(){
 // fällig > bald fällig > neu; bevorzugte Abteilungen zuerst, ausgeschlossene nie. Füllt nur auf.
 function tgAuditMin(e){
   if(e.zeitbedarf)return +e.zeitbedarf;
-  const n=e.lastPersonalKW!==undefined?e.lastPersonalCount:null;
+  return tgMinForCount(tgPersCount(e));
+}
+function tgPersCount(e){const n=e.lastPersonalKW!==undefined?e.lastPersonalCount:null;return n===null||n===undefined?null:+n;}
+function tgMinForCount(n){
   if(n===null||n===undefined)return S('tg_min_unknown');
   if(n<=3)return S('tg_min_1_3');if(n<=9)return S('tg_min_4_9');if(n<=19)return S('tg_min_10_19');return S('tg_min_20');
 }
+// Gleicher Ort (gleiche Koordinaten auf ~10 m): Einheiten dort werden in EINEM Rundgang auditiert
+function tgLocKey(e){return e&&e.lat&&e.lng&&!e.zeitbedarf&&fvTime(e)==null&&tgPersCount(e)!=null?(+e.lat).toFixed(4)+','+(+e.lng).toFixed(4):null;}
 // Personal-Klasse für die Priorität: 0 = 20+, 1 = 10-19, 2 = 4-9, 3 = 1-3, 4 = unbekannt (kein Import)
 function tgPersClass(e){
   const n=e.lastPersonalKW!==undefined?e.lastPersonalCount:null;
@@ -5089,13 +5095,20 @@ function tgSim(items){
   const ZT=S('tg_znueni_through')>0,AF=S('tg_audit_flex');
   const run=start=>{
     let t=start,pos=0,drive=0,wait=0,late=0,aud=0,evt=0,lunch=0,lunchAt=-1,lunchStart=null,lateStart=0;const sched=[];
+    // gemeinsamer Rundgang: folgt eine Einheit am gleichen Ort direkt auf die vorherige, dauert der Rundgang so lange
+    // wie für die Personen ALLER Einheiten dort zusammen (nur die Differenz kommt dazu); Nachbearbeitung bleibt pro Einheit
+    let gKey=null,gPers=0,gDur=0;
     const need=()=>LD>0&&lunch===0;
     const takeLunch=(i,at)=>{if(need()){lunch=LD;lunchAt=i;lunchStart=at;}};
     items.forEach((it,ii)=>{
       const node=it.t==='bs'?it.node:it.ev.node;
       const tr=node!=null?D[pos][node]/60:0;drive+=tr;
       const tm=tgTm(it);
-      const du0=it.t==='bs'?R.dur.get(it.node):it.ev.dur,af=it.t==='bs'?AF:0;let du=du0;
+      let du0=it.t==='bs'?R.dur.get(it.node):it.ev.dur,joint=false;const af=it.t==='bs'?AF:0;
+      {const k=it.t==='bs'&&R.loc?R.loc.get(it.node):null;
+       if(k&&k===gKey){const p=R.persN.get(it.node);du0=Math.max(0,tgMinForCount(gPers+p)-gDur);gPers+=p;gDur+=du0;joint=true;}
+       else if(k){gKey=k;gPers=R.persN.get(it.node);gDur=du0;}else gKey=null;}
+      let du=du0;
       if(need()&&tr>0&&t<=W1){
         const clash=tm==null&&blocked(t+tr,du-af);
         // nächster Stopp fiele in den Baustellen-Mittag (oder wäre nicht bis Fensterende fertig) -> Pause jetzt
@@ -5119,7 +5132,7 @@ function tgSim(items){
         if(st<BE){wait+=BE-st;st=BE;}
       }
       if(it.t==='bs'){aud+=du;if(st>LAST+0.5)lateStart+=st-LAST;}else evt+=du;
-      sched.push({arr,start:st,end:st+du,short:du0-du,late:tm!=null&&arr>tm?arr-tm:0});
+      sched.push({arr,start:st,end:st+du,short:du0-du,joint,late:tm!=null&&arr>tm?arr-tm:0});
       t=st+du;if(node!=null)pos=node;
     });
     const back=items.length?D[pos][0]/60:0;drive+=back;
@@ -5187,8 +5200,12 @@ async function tgCompute(){
   evPts.forEach((ev,i)=>{ev.node=1+fixedAll.length+pool.length+i;});
   events.flat().forEach(ev=>{if(ev.node===undefined)ev.node=null;});
   const dur=new Map();fixedAll.forEach(e=>dur.set(idxFixed.get(e.id),tgAuditMin(e)));pool.forEach((x,i)=>dur.set(idxPool[i],x.min));
+  // gleicher Ort: Schlüssel und Personen pro Knoten (für den gemeinsamen Rundgang in tgSim)
+  const loc=new Map(),persN=new Map();
+  fixedAll.forEach(e=>{const j=idxFixed.get(e.id),k=tgLocKey(e);if(k){loc.set(j,k);persN.set(j,tgPersCount(e));}});
+  pool.forEach((x,i)=>{const k=tgLocKey(x.e);if(k){loc.set(idxPool[i],k);persN.set(idxPool[i],tgPersCount(x.e));}});
   const fixT=new Map();fixedAll.forEach(e=>{if(fvTime(e)!=null)fixT.set(idxFixed.get(e.id),fvTime(e));});pool.forEach((x,i)=>{if(fvTime(x.e)!=null)fixT.set(idxPool[i],fvTime(x.e));});
-  _tgCalc={D,dur,fixT,cache:new Map(),days:dayDates.map((ds,d)=>({ds,events:events[d]}))};
+  _tgCalc={D,dur,fixT,loc,persN,cache:new Map(),days:dayDates.map((ds,d)=>({ds,events:events[d]}))};
   const dayLen=S('tg_day_hours')*60,maxN=S('tg_max_per_day');
   const fixedNodes=fixedPlans.map(list=>list.map(e=>idxFixed.get(e.id)));
   const base=fixedNodes.map((n,d)=>tgPlanDay(d,n).sim);
@@ -5300,7 +5317,7 @@ function tgRender(){
           <span style="width:8px;height:8px;border-radius:50%;flex-shrink:0;background:${fixed?'#6366F1':stCol[s]||'#10B981'}"></span>
           <span style="flex:1;min-width:0">${bsLabel(e)}${R.prefOf.get(j)?' <span style="color:#10B981" title="Bevorzugte Abteilung">★</span>':''}${fixed?' <span style="font-size:10px;color:#6366F1">(bereits geplant)</span>':''}${fvTime(e)!=null?` <span style="font-size:10px;color:${sc.late>0.5?'#DC2626':'#0369A1'}" title="Fester Besuchstermin ${fvLabel(e)}">(fix ${tgHM(fvTime(e))}${sc.late>0.5?', '+Math.round(sc.late)+' min zu spät':''}${fvDayOK(e,C.days[d].ds)?'':', falscher Tag'})</span>`:''}</span>
           ${tgPersTag(e)}
-          <span style="font-size:10px;color:var(--tx3);white-space:nowrap"${sc.short>0.5?` title="${Math.round(sc.short)} min kürzer, damit es vor der Pause fertig ist"`:''}>${sc.short>0.5?`${Math.round(C.dur.get(j)-sc.short)} <span style="color:#B45309">(−${Math.round(sc.short)})</span>`:C.dur.get(j)} min${e.zeitbedarf?' fix':''}</span>
+          ${sc.joint?`<span style="font-size:10px;color:#0369A1;white-space:nowrap" title="Gleicher Ort wie die Einheit davor: ein gemeinsamer Rundgang, Dauer nach den Personen aller Einheiten zusammen. Nachbearbeitung zählt pro Einheit.">🔗 ${Math.round(sc.end-sc.start)>0?'+'+Math.round(sc.end-sc.start)+' min':'im selben Rundgang'}</span>`:''}<span style="font-size:10px;color:var(--tx3);white-space:nowrap;${sc.joint?'display:none':''}"${sc.short>0.5?` title="${Math.round(sc.short)} min kürzer, damit es vor der Pause fertig ist"`:''}>${sc.short>0.5?`${Math.round(C.dur.get(j)-sc.short)} <span style="color:#B45309">(−${Math.round(sc.short)})</span>`:C.dur.get(j)} min${e.zeitbedarf?' fix':''}</span>
           ${fixed?'':`<select onchange="tgMove(${j},+this.value)" style="font-size:10px;padding:1px 3px;border:1px solid var(--bd);border-radius:4px;background:var(--sf);color:var(--tx2)">${R.days.map((di,dd)=>`<option value="${dd}"${dd===d?' selected':''}>${names[di]}</option>`).join('')}</select>
           <button onclick="tgToggle(${j})" title="Entfernen" style="background:none;border:none;cursor:pointer;font-size:12px;color:#EF4444">✕</button>`}
         </div>`;}).join('')+(sim.lunch>0&&sim.lunchAt===P.items.length&&P.items.length?tgLunchRow(sim.lunchStart):'')||`<div style="font-size:11px;color:var(--tx3);padding:4px 0">${R.remaining.length?'Nichts eingeplant – die übrigen Baustellen passen zeitlich besser auf andere Tage.':'Tag bleibt frei – keine weiteren fälligen Baustellen. Die übrigen Tage sind so effizienter (weniger Anfahrten).'}</div>`}
