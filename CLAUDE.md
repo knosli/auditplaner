@@ -11,8 +11,8 @@ Beratungen, Rapporten und Ferien der Auditoren. Sprache der Oberfläche: Deutsch
 - Vor jedem PR: App im Browser laden (Desktop- und Mobile-Breite) und in der Konsole
   prüfen, dass keine JavaScript-Fehler auftreten.
 - Bei jeder Änderung an der App die Versionsnummer erhöhen, und zwar überall in
-  `index.html`: im Header (`<span ... title="Version">v3.21</span>`) und in den Links
-  `css/style.css?v=3.21`, `js/merge.js?v=3.21` und `js/app.js?v=3.21`. Der `?v=`-Zusatz
+  `index.html`: im Header (`<span ... title="Version">v3.22</span>`) und in den Links
+  `css/style.css?v=3.22`, `js/merge.js?v=3.22` und `js/app.js?v=3.22`. Der `?v=`-Zusatz
   sorgt dafür, dass Browser nach einem Update keine alte Datei aus dem Cache verwenden.
 - Tests für die Zusammenführung: `node tests/merge.test.js` (muss grün sein).
 - Keine Browser-Dialoge (`confirm`, `prompt`, `alert`): `askConfirm()`, `askText()`,
@@ -83,6 +83,10 @@ global; das HTML ruft sie direkt über `onclick="..."` auf.
   Neue Baustellen (Status `new`) wie orange, sobald Personal (`tg_new_due`, bool, `urgRaw` in `tgCandidates`);
   Gleicher Ort (`tgLocKey`, Koordinaten 4 Stellen): gemeinsamer Rundgang, Dauer = `tgMinForCount`(Personen aller
   Einheiten), nur die Differenz pro weiterer Einheit (`sched[].joint`); Nachbearbeitung pro Einheit;
+  Gelbe (Stufe 2, `tg_yellow_harvest`) nur zum Schluss im Umkreis (`harvest(d,true)`); Umweg-Bonus für grosse Baustellen
+  (`tg_size_bonus`, `sizeBonus`); neue Gegend auch teilweise, wenn kein anderer freier Tag sie ganz aufnimmt (`mayOpen`);
+  Reihenfolge `tgCompute`: harvest um Fixes → «über tg_force_days rot» (`isForce`) → pro Farbe Region, dann Rest → gelbe am Weg;
+  Ausgleich verschiebt nur auf Tage, an denen die Baustelle rot/orange ist (`mayMove`). Einstellungen: `SETTINGS_ADV` = «Erweitert»;
   Hauptregion pro Auditor `auditorMeta[a].regionKm` + `regionPlace` (Umkreis um Ort, leer = Startadresse; `tgInRegion`/`tgRegionCenter`/`tgGeocodeRegion`): pro Farbe erst Region, dann Rest;
   Einmaliger Termin: Planung mit `p.time` 'HH:MM' (`planTimeMin`/`planTimeTag`, Planen-Formular `plan-time`, Popup `pop-time`)
   → fixe Uhrzeit im Tourguide (`fixT`, geht `fixVisit` vor);
