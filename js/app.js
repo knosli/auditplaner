@@ -3158,6 +3158,9 @@ async function saveEntry(){
   } else if(window._pendingLat&&window._pendingLng){
     lat=window._pendingLat;lng=window._pendingLng;
     window._pendingLat=null;window._pendingLng=null;
+  } else if(editId&&(()=>{const o=data.find(e=>e.id===editId);return o&&o.lat&&o.lng&&(o.addr||'').trim()===addr;})()){
+    // Bearbeiten ohne Adressänderung: Kartenpunkt bleibt (sonst springt er, wenn die Adresssuche diesmal anders trifft)
+    const o=data.find(e=>e.id===editId);lat=o.lat;lng=o.lng;
   } else {
     // Try PLZ-based fast geocode first
     const gFast=geocode(addr,dept);if(gFast){lat=gFast.lat;lng=gFast.lng;}
@@ -4804,6 +4807,8 @@ const SETTINGS_DEF=[
   {k:'tg_lunch_flex',l:'Eigene Mittagspause darf sich verschieben um ± …',def:30,min:0,max:90,step:5,u:'min'},
   {k:'tg_day_tol',l:'Toleranz: ein Tag darf so viel länger werden',def:15,min:0,max:60,step:5,u:'min'},
   {k:'tg_week_tol',l:'… aber alle Tage der Woche zusammen höchstens',def:30,min:0,max:120,step:5,u:'min'},
+  {k:'tg_yellow_harvest',l:'Gelbe (bald fällige) Baustellen im Umkreis mitnehmen, wenn der Tag noch Platz hat',def:1,min:0,max:1,u:'',bool:1},
+  {k:'tg_size_bonus',l:'Grosse Baustellen (20+ Personen) dürfen so viel mehr Umweg haben (10–19: 2/3, 4–9: 1/3)',def:15,min:0,max:60,step:5,u:'min'},
   {k:'tg_new_due',l:'Neue Baustellen (noch nie auditiert) vorschlagen, sobald Personal da ist (wie orange)',def:1,min:0,max:1,u:'',bool:1},
   {k:'tg_max_per_day',l:'Max. Baustellen pro Tag',def:6,min:1,max:15,u:'Stk.'},
   {k:'tg_last_start',l:'Letzter Audit-Beginn auf der Baustelle',def:15.5,min:12,max:19,step:.25,u:'Uhr'},
@@ -4887,17 +4892,17 @@ function rulesHTML(){
     `Temporäre Mitarbeitende: nur Personal-Nummern (keine Namen), pro Einheit bei jedem Import ersetzt.`,
     `Manuelle Erfassung (für Einheiten ohne brauchbare Einsatzliste): im Detail-Panel ✏️ bei «Personal» oder Admin → «Personal manuell erfassen» (mehrere Baustellen einer Abteilung). Wirkt wie ein Import-Wert (Verlauf, Trend, Tourguide), ersetzt einen vorhandenen Wert derselben KW und ändert den Status der Baustelle nicht (kein Pausieren/Reaktivieren).`]) +
   sec('compass','Tourguide',[
-    `Vorschläge nur für <b>rote (überfällige) und orange (fällige)</b> Baustellen mit Koordinaten <b>und bekanntem Personal vor Ort (mehr als 0)</b>. Gelbe und grüne Baustellen werden nie vorgeschlagen – sonst lägen Audits zu nahe beieinander. ${S('tg_new_due')>0?'<b>Neue Baustellen</b> (noch nie auditiert, ★) werden wie orange vorgeschlagen, sobald sie Personal haben (oft mehrere Einheiten am gleichen Ort).':'Neue (noch nicht fällige) Baustellen werden nicht vorgeschlagen.'} Die Personalangabe (Einsatzliste oder manuell) soll für <b>genau die geplante KW</b> vorliegen. Fehlt sie noch, gilt die letzte Liste <b>vorläufig</b> – aber nur, wenn sie höchstens 2 Wochen zurückliegt und die Baustelle in ihr und in der Woche davor Personal hatte (sonst nicht). Nach dem Personal-Import prüft der Planer alle Planungen der importierten KW und meldet Baustellen ohne Personal oder in Bauferien. Solche Baustellen werden nie vorgeschlagen, aber unter dem Vorschlag aufgelistet.`,
+    `Vorschläge nur für <b>rote (überfällige) und orange (fällige)</b> Baustellen mit Koordinaten <b>und bekanntem Personal vor Ort (mehr als 0)</b>. Grüne Baustellen werden nie vorgeschlagen. ${S('tg_yellow_harvest')>0?'<b>Gelbe</b> (bald fällige) nur, wenn sie im Umkreis von '+v('tg_harvest_min')+' min einer ohnehin geplanten Baustelle liegen und der Tag nach allen roten und orangen noch Platz hat – das spart eine zweite Fahrt in dieselbe Gegend.':'Gelbe auch nicht – sonst lägen Audits zu nahe beieinander.'} Die Ampel gilt am geplanten Audit-Tag: Wer für in 2 Wochen plant, bekommt die Baustellen, die dann rot oder orange sind. ${S('tg_new_due')>0?'<b>Neue Baustellen</b> (noch nie auditiert, ★) werden wie orange vorgeschlagen, sobald sie Personal haben (oft mehrere Einheiten am gleichen Ort).':'Neue (noch nicht fällige) Baustellen werden nicht vorgeschlagen.'} Die Personalangabe (Einsatzliste oder manuell) soll für <b>genau die geplante KW</b> vorliegen. Fehlt sie noch, gilt die letzte Liste <b>vorläufig</b> – aber nur, wenn sie höchstens 2 Wochen zurückliegt und die Baustelle in ihr und in der Woche davor Personal hatte (sonst nicht). Nach dem Personal-Import prüft der Planer alle Planungen der importierten KW und meldet Baustellen ohne Personal oder in Bauferien. Solche Baustellen werden nie vorgeschlagen, aber unter dem Vorschlag aufgelistet.`,
     `Nie: Werkhöfe (nur manuell planen), pausiert, inaktiv, ausgeschlossene Abteilungen, diese KW bereits (von irgendwem) eingeplant, 0 Personal oder keine Einsatzliste für die geplante KW, ohne Kartenpunkt (wird aufgelistet).`,
     `<b>Bauferien</b> pro Einheit (Admin → Abteilungen verwalten → 🏖): In diesen Zeiträumen plant der Tourguide dort nichts; die KW-Planung markiert betroffene Planungen («🏖 Bauferien – umplanen») und warnt beim Planen.`,
     `«Pausiert bis KW …»: Ist das Datum erreicht, wird die Baustelle automatisch reaktiviert. Der Tourguide berücksichtigt sie schon für Tage ab diesem Datum.`,
     `Kein Audit beginnt nach ${tgHM(S('tg_last_start')*60)} (viele Baustellen haben dann Feierabend). Bei 1–${v('pi_review_max')} Personen erscheint «📞 wenig Personal – vorher anrufen».`,
     `<b>Ort ausschöpfen:</b> Ist an einem Tag eine Baustelle oder ein Termin in einer Gegend, werden zuerst alle roten und orangen Baustellen im Umkreis von ${v('tg_harvest_min')} min Fahrzeit mitgenommen (soweit der Tag Platz hat) – damit man nicht wegen einer einzelnen Baustelle nochmals hinfahren muss. Das gilt für bereits geplante Baustellen, Termine und jede neu gewählte Baustelle.`,
     `<b>Hauptregion</b> (Auditoren verwalten → «Hauptregion»: Umkreis in km um einen Ort, leer = Startadresse – z.B. «30 km um Zürich»): Pro Farbe füllt der Tourguide die Tage zuerst mit Baustellen aus der Hauptregion; Baustellen ausserhalb kommen nur dazu, wenn noch Platz ist. Bei Gleichstand zählen sie wie eine bevorzugte Abteilung ★.`,
-    `Auswahl: zuerst rot, dann orange. Innerhalb derselben Farbe entscheidet der kleinste Umweg zur bestehenden Tagesroute. Liegen Umwege höchstens ${v('tg_tie_min')} min auseinander, gelten sie als gleich weit – dann entscheiden Personal-Grösse, bevorzugte Abteilung ★ und wie lange die Baustelle schon fällig ist.`,
+    `Auswahl: zuerst rot, dann orange. Innerhalb derselben Farbe entscheidet der kleinste Umweg zur bestehenden Tagesroute – <b>grosse Baustellen dürfen dabei mehr Umweg haben</b>: 20+ Personen ${v('tg_size_bonus')} min, 10–19 Personen 2/3 davon, 4–9 Personen 1/3, 1–3 Personen keinen Bonus. Liegen Umwege höchstens ${v('tg_tie_min')} min auseinander, gelten sie als gleich weit – dann entscheiden Personal-Grösse, bevorzugte Abteilung ★ und wie lange die Baustelle schon fällig ist.`,
     `Die Ampel gilt am <b>Audit-Tag</b>, nicht heute: Eine Baustelle, die heute gelb ist, aber am geplanten Tag orange, wird für diesen Tag berücksichtigt – für frühere Tage der Woche nicht.`,
-    `Keine zweite Fahrt in dieselbe Gegend in derselben Woche: Wird eine Gegend an einem Tag schon besucht, kommen ihre Baustellen nur an diesen Tag (was keinen Platz mehr hat, erscheint im Hinweis «Ort nicht ausgeschöpft»).`,
-    `Eine neue Gegend wird an einem Tag nur angefangen, wenn alle ihre roten und orangen Baustellen dort Platz haben (Ausnahmen: Gegend beim Startort; die Gegend ist ohnehin zu gross für einen Tag; oder die Baustelle ist schon mehr als ${v('tg_force_days')} Tage rot – dann wird sie auf jeden Fall eingeplant, damit nichts ewig liegen bleibt). Sonst kommt sie an einem anderen Tag oder in einer anderen Woche dran.`,
+    `Keine zweite Fahrt in dieselbe Gegend in derselben Woche: Wird eine Gegend an einem Tag schon besucht, kommen ihre Baustellen an diesen Tag. Nur was dort keinen Platz mehr hat, darf an einen weiteren gewählten Tag (sonst Hinweis «Ort nicht ausgeschöpft»).`,
+    `Eine neue Gegend wird bevorzugt an einem Tag angefangen, an dem alle ihre roten und orangen Baustellen Platz haben. Gibt es keinen solchen freien Tag mehr, wird sie trotzdem angefangen, wenn der Rest an einem anderen gewählten Tag derselben Woche Platz hat – damit keine Tage leer bleiben, ohne nächste Woche nochmals hinzufahren. Baustellen, die schon mehr als ${v('tg_force_days')} Tage rot sind, werden auf jeden Fall eingeplant.`,
     `Hinweise im Vorschlag: «Wenig wirtschaftlich», wenn ein Tag mehr Fahrzeit als Audit-/Terminzeit hat; «👥 … ist auch in der Nähe», wenn andere Auditoren am selben Tag Baustellen im Umkreis geplant haben.`,
     `Bleiben im Umkreis eines Tages Baustellen offen (Tag voll oder Personal unbekannt), zeigt der Vorschlag unter dem Tag «⚠ Ort nicht ausgeschöpft» – mit «+ trotzdem hinzufügen». Beim Ausgleich zwischen den Tagen wird keine Baustelle von ihren Nachbarn getrennt.`,
     `Audit-Dauer: 1–3 Pers. ${v('tg_min_1_3')} · 4–9 ${v('tg_min_4_9')} · 10–19 ${v('tg_min_10_19')} · 20+ ${v('tg_min_20')} · unbekannt ${v('tg_min_unknown')} min (inkl. Schreiben/Rapportieren; Fahrzeit separat).`,
@@ -4974,19 +4979,25 @@ ${groups.map(g=>`<table><tr><th colspan="3">${escH(g.grp)}</th></tr><tr><th>Eins
   w.document.open();w.document.write(html);w.document.close();
   setTimeout(()=>{try{w.focus();w.print();}catch(e){}},400);
 }
+// Selten nötige Feineinstellungen: unter «Erweitert» (eingeklappt)
+const SETTINGS_ADV=new Set(['tg_znueni_through','tg_audit_flex','tg_lunch_flex','tg_day_tol','tg_week_tol','tg_size_bonus','tg_last_start','tg_force_days','tg_tie_min','tg_fixed_pa','tg_fixed_berat','dist_audit_min','dist_day_hours','pi_react_inactive_min','pi_history_weeks','kd_streak_weeks','kd_min_pers','tt_tol_pct','tt_green','tt_orange']);
 function renderSettings(){
   const box=document.getElementById('set-body');if(!box)return;
   ['werte','regeln'].forEach(t=>{const b=document.getElementById('set-tab-'+t);if(b){b.style.borderBottomColor=t===_setTab?'var(--blue)':'transparent';b.style.color=t===_setTab?'var(--blue)':'var(--tx2)';}});
   if(_setTab==='regeln'){box.innerHTML=`<div style="display:flex;gap:6px;justify-content:flex-end;margin-bottom:10px"><button type="button" class="ui-btn" onclick="printRules(true)">🖨 Tourguide-Regeln drucken</button><button type="button" class="ui-btn" onclick="printRules(false)">🖨 Alle Regeln drucken</button></div>`+rulesHTML();return;}
   const s=deptMeta._settings||{};
-  box.innerHTML=SETTINGS_DEF.map(g=>`<div style="margin-bottom:16px">
+  const part=adv=>SETTINGS_DEF.map(g=>({...g,items:g.items.filter(i=>!!SETTINGS_ADV.has(i.k)===adv)})).filter(g=>g.items.length);
+  const nAdvChanged=SETTINGS_DEF.flatMap(g=>g.items).filter(i=>SETTINGS_ADV.has(i.k)&&s[i.k]!==undefined).length;
+  const grp=G=>G.map(g=>`<div style="margin-bottom:16px">
     <div style="font-size:12px;font-weight:700;color:var(--tx);margin-bottom:6px">${escH(g.grp)}</div>
     <div style="border:1px solid var(--bd);border-radius:8px">${g.items.map(i=>{const changed=s[i.k]!==undefined;return`<div style="display:flex;align-items:center;gap:10px;padding:7px 10px;border-bottom:1px solid var(--bd)">
       <span style="flex:1;font-size:12px;color:var(--tx)">${escH(i.l)}${changed?` <span style="font-size:10px;color:#F59E0B">(geändert, Standard ${i.bool?(i.def?'ja':'nein'):i.def})</span>`:''}</span>
       ${i.bool?`<input type="checkbox" ${S(i.k)>0?'checked':''} onchange="setSetting('${i.k}',this.checked?1:0)" style="width:18px;height:18px;margin:0 31px">`:`<input type="number" value="${S(i.k)}" min="${i.min}" max="${i.max}" step="${i.step||1}" onchange="setSetting('${i.k}',this.value)" style="width:80px;padding:5px 7px;border:1px solid ${changed?'#F59E0B':'var(--bd)'};border-radius:5px;background:var(--sf);color:var(--tx);font-size:12px;text-align:right">`}
       <span style="width:46px;font-size:11px;color:var(--tx3)">${i.bool?(S(i.k)>0?'ja':'nein'):i.u==='Uhr'?tgHM(S(i.k)*60):i.u}</span>
       <button onclick="setSetting('${i.k}','')" title="Auf Standard (${i.def}) zurücksetzen" style="background:none;border:none;cursor:pointer;color:${changed?'var(--blue)':'var(--bd)'};font-size:14px" ${changed?'':'disabled'}>↺</button>
-    </div>`;}).join('')}</div></div>`).join('')+
+    </div>`;}).join('')}</div></div>`).join('');
+  box.innerHTML=grp(part(false))+
+    `<details style="margin:4px 0 14px"${nAdvChanged?' open':''}><summary style="cursor:pointer;font-size:12px;font-weight:700;color:var(--tx2);padding:6px 0">⚙ Erweitert – Feineinstellungen, selten nötig${nAdvChanged?` <span style="color:#F59E0B">(${nAdvChanged} geändert)</span>`:''}</summary><div style="margin-top:8px">${grp(part(true))}</div></details>`+
     `<div style="text-align:right"><button onclick="resetAllSettings()" style="padding:6px 12px;border:1px solid var(--bd);border-radius:var(--rs);background:var(--sf2);font-size:11px;cursor:pointer;color:var(--tx2)">↺ Alle auf Standard</button></div>`;
 }
 // ═══ TOURGUIDE ═══
@@ -5051,21 +5062,21 @@ function tgCandidates(aud,kw,noPers,dayDates,noGeo,bfList,provIds=new Set()){
   const plannedThisKW=new Set(plans.filter(p=>p.date>=ks&&p.date<ke).map(p=>p.bsId));
   const days=dayDates||[null];
   // Ampel am Tag; eine abgelaufene Pause zählt ab ihrem Ende als nicht pausiert
-  const urgRaw=(e,ds)=>{if(e.paused&&!(ds&&pauseOverAt(e,ds)))return null;const u=tgUrgency(e.paused?{...e,paused:false}:e,ds);return u===0||u===1?u:(u===3&&S('tg_new_due')>0?1:null);};   // neu (noch nie auditiert): wie orange, sobald Personal
+  const urgRaw=(e,ds)=>{if(e.paused&&!(ds&&pauseOverAt(e,ds)))return null;const u=tgUrgency(e.paused?{...e,paused:false}:e,ds);return u===0||u===1?u:(u===3&&S('tg_new_due')>0?1:(u===2&&S('tg_yellow_harvest')>0?2:null));};   // gelb: nur zum «Ort ausschöpfen»   // neu (noch nie auditiert): wie orange, sobald Personal
   const urgAt=(e,ds)=>bauferienAt(e,ds)||!fvDayOK(e,ds)?null:urgRaw(e,ds);   // in den Bauferien der Einheit / nicht am festen Besuchstag: nie
   return data.filter(e=>{
     if(!e.active||e.type==='werkhof')return false;            // Werkhöfe nur manuell planen
     // nur rot + orange – und zwar am Audit-Tag (was heute gelb ist, kann bis dann orange sein)
     if(!days.some(ds=>urgRaw(e,ds)!==null))return false;
     if(!days.some(ds=>fvDayOK(e,ds)))return false;          // fester Besuchstag nicht unter den gewählten Tagen
-    if(!days.some(ds=>urgAt(e,ds)!==null)){if(bfList&&!plannedThisKW.has(e.id)&&e.lat)bfList.push({e,bf:days.map(ds=>bauferienAt(e,ds)).find(Boolean)});return false;}
+    if(!days.some(ds=>urgAt(e,ds)!==null)){if(bfList&&!plannedThisKW.has(e.id)&&e.lat&&days.some(ds=>(urgRaw(e,ds)??9)<=1))bfList.push({e,bf:days.map(ds=>bauferienAt(e,ds)).find(Boolean)});return false;}
     if(plannedThisKW.has(e.id))return false;                  // von irgendwem diese KW eingeplant
     if(deptParts(e.dept).some(d=>excl.has(d)))return false;   // ausgeschlossen (hart)
     if(!e.lat||!e.lng){if(noGeo)noGeo.push(e);return false;}   // ohne Kartenpunkt: auflisten
     // Nur mit Personal vor Ort: bekannt, > 0 und aktuell. Sonst NIE vorschlagen (unbekannt/veraltet werden aufgelistet).
     const ps=tgPersonalState(e,kwNum(kw),kwYear(kw));
     if(ps==='prov'){provIds.add(e.id);return true;}
-    if(ps!=='ok'){if(noPers&&(ps==='unknown'||ps==='stale'))noPers.push({e,state:ps});return false;}
+    if(ps!=='ok'){if(noPers&&(ps==='unknown'||ps==='stale')&&days.some(ds=>(urgAt(e,ds)??9)<=1))noPers.push({e,state:ps});return false;}
     return true;
   }).map(e=>{const inReg=tgInRegion(aud,e),isPref=deptParts(e.dept).some(d=>pref.has(d))||inReg;const urgDay=days.map(ds=>urgAt(e,ds));
     return{e,isPref,inReg,urgDay,urg:Math.min(...urgDay.map(u=>u===null?9:u)),pers:tgPersClass(e),min:tgAuditMin(e)};})
@@ -5171,7 +5182,7 @@ function tgSim(items){
   const day0=Math.max(S('tg_day_start')*60,tm0??0)-(firstNode!=null?D[0][firstNode]/60:0);let r=run(day0);
   // Nur wenn der ERSTE Stopp des Tages ein Termin mit Uhrzeit ist und ab Tagesbeginn nicht erreichbar:
   // entsprechend früher losfahren. Liegt etwas davor, gilt der Termin als verpasst (keine Mitternachts-Touren).
-  if(items.length&&tm0!=null&&r.sched[0].late>0){const r2=run(day0-r.sched[0].late);if(r2.late<r.late)r=r2;}
+  if(items.length&&tgTm(items[0])!=null&&r.sched[0].late>0){const r2=run(day0-r.sched[0].late);if(r2.late<r.late)r=r2;}
   return r;
 }
 const _tgBetter=(a,b)=>a.late<b.late-0.5||(Math.abs(a.late-b.late)<=0.5&&(a.lateStart<b.lateStart-0.5||(Math.abs(a.lateStart-b.lateStart)<=0.5&&a.total<b.total)));
@@ -5253,13 +5264,15 @@ async function tgCompute(){
   const minDist=(j,nodes)=>nodes.reduce((m,n)=>Math.min(m,D[j][n]/60,D[n][j]/60),Infinity);
   const tryDay=(i,d)=>{const x=pool[i],j=idxPool[i];if(x.urgDay[d]===null||sets[d].length>=maxN)return null;
     const cur=tgPlanDay(d,sets[d]).sim,p=tgPlanDay(d,sets[d].concat(j));if(!ok(d,p))return null;
-    return{i,d,x,score:p.sim.total-cur.total-x.min-S('tg_post_min')};};   // Umweg = zusätzliche Fahr-/Wartezeit ohne Audit- und Nachbearbeitungszeit
+    return{i,d,x,score:p.sim.total-cur.total-x.min-S('tg_post_min')-sizeBonus(x)};};   // Umweg = zusätzliche Fahr-/Wartezeit ohne Audit- und Nachbearbeitungszeit
+  // grosse Baustellen dürfen mehr Umweg haben: 20+ Personen = voller Bonus, 10–19 = 2/3, 4–9 = 1/3, 1–3 = 0
+  const sizeBonus=x=>S('tg_size_bonus')*([1,2/3,1/3,0,0][x.pers]||0);
   const better=(a,b)=>{if(!b)return true;
     if(a.score<b.score-tie)return true;if(b.score<a.score-tie)return false;   // deutlich kürzerer Umweg gewinnt
     return(a.x.pers-b.x.pers)||((a.x.isPref?0:1)-(b.x.isPref?0:1))||(dl(a.x.e)-dl(b.x.e))||(a.score-b.score)<0;};
-  const harvest=d=>{
+  const harvest=(d,yellow)=>{
     for(;;){let best=null;const nodes=dayNodes(d);if(!nodes.length)return;
-      remaining.forEach(i=>{if(minDist(idxPool[i],nodes)>near)return;const c=tryDay(i,d);if(c&&better(c,best))best=c;});
+      remaining.forEach(i=>{if(minDist(idxPool[i],nodes)>near)return;if(!yellow&&pool[i].urgDay[d]>1)return;const c=tryDay(i,d);if(c&&better(c,best))best=c;});
       if(!best)return;sets[d].push(idxPool[best.i]);remaining.delete(best.i);}
   };
   // Neue Gegend nur anfangen, wenn ihre roten/orangen Baustellen an diesem Tag ganz Platz haben – ausser die
@@ -5267,33 +5280,46 @@ async function tgCompute(){
   // überfällig (tg_force_days, damit nichts ewig liegen bleibt). Sonst später/an einem anderen Tag.
   const mayOpen=(i,d)=>{
     const j=idxPool[i];if(minDist(j,[0,...dayNodes(d)])<=near)return true;
-    if(sets.some((_,d2)=>d2!==d&&minDist(j,dayNodes(d2))<=near))return false; // Gegend wird schon an einem anderen Tag besucht – keine 2. Fahrt
+    if(sets.some((_,d2)=>d2!==d&&minDist(j,dayNodes(d2))<=near&&tryDay(i,d2)))return false; // Gegend wird an einem anderen Tag besucht und hat dort noch Platz – keine 2. Fahrt
     if(-dl(pool[i].e,parseDate(_tgCalc.days[d].ds).getTime())>=S('due_overdue_days')+S('tg_force_days'))return true; // lange überfällig: immer
-    const all=[j,...[...remaining].filter(k=>k!==i&&pool[k].urgDay[d]!==null&&minDist(idxPool[k],[j])<=near).map(k=>idxPool[k])];
+    const all=[j,...[...remaining].filter(k=>k!==i&&pool[k].urgDay[d]!=null&&pool[k].urgDay[d]<=1&&minDist(idxPool[k],[j])<=near).map(k=>idxPool[k])];
     if(all.length===1)return true;
     if(sets[d].length+all.length<=maxN&&ok(d,tgPlanDay(d,sets[d].concat(all))))return true;
+    // Gegend passt heute nicht ganz:
+    //  - ein anderer gewählter Tag ist noch leer und nimmt sie ganz auf -> dort (warten)
+    //  - ein anderer gewählter Tag dieser Woche nimmt den Rest auf -> heute anfangen, Rest dort (statt Tage leer zu lassen)
+    //  - sonst wie früher: nur anfangen, wenn sie ohnehin nicht an einen Tag passt (keine 2. Fahrt in der nächsten Woche)
+    if(sets.some((s2,d2)=>d2!==d&&!dayNodes(d2).length&&all.length<=maxN&&ok(d2,tgPlanDay(d2,all))))return false;
+    const rest=all.slice(1);
+    if(sets.some((s2,d2)=>d2!==d&&pool[i].urgDay[d2]!=null&&s2.length+rest.length<=maxN&&ok(d2,tgPlanDay(d2,s2.concat(rest)))))return true;
     return!(all.length<=maxN&&ok(d,tgPlanDay(d,all)));
   };
   sets.forEach((_,d)=>harvest(d));
   // Hauptregion (Umkreis um die Startadresse) zuerst: pro Farbe erst Baustellen in der Region, dann die übrigen
   const hasReg=pool.some(x=>x.inReg);
-  [0,1].forEach(cls=>[true,false].forEach(regOnly=>{if(regOnly&&!hasReg)return;
+  // ganz zuerst: Baustellen, die schon länger als tg_force_days rot sind (dürfen nicht von anderen verdrängt werden)
+  const isForce=(i,d)=>-dl(pool[i].e,parseDate(_tgCalc.days[d].ds).getTime())>=S('due_overdue_days')+S('tg_force_days');
+  [0,1].forEach(cls=>['force',true,false].forEach(regOnly=>{if(regOnly===true&&!hasReg)return;if(regOnly==='force'&&cls!==0)return;
     for(;;){
       let best=null;
-      remaining.forEach(i=>{if(regOnly&&!pool[i].inReg)return;sets.forEach((_,d)=>{if(pool[i].urgDay[d]!==cls)return;const c=tryDay(i,d);if(c&&better(c,best)&&mayOpen(i,d))best=c;});});
+      remaining.forEach(i=>{if(regOnly===true&&!pool[i].inReg)return;sets.forEach((_,d)=>{if(pool[i].urgDay[d]!==cls)return;if(regOnly==='force'&&!isForce(i,d))return;const c=tryDay(i,d);if(c&&better(c,best)&&mayOpen(i,d))best=c;});});
       if(!best)break;
       sets[best.d].push(idxPool[best.i]);remaining.delete(best.i);
       harvest(best.d);
     }
   }));
-  const skipped=pool.filter((_,i)=>remaining.has(i));
+  // zum Schluss: gelbe (bald fällige) Baustellen im Umkreis mitnehmen, wo der Tag noch Platz hat (spart eine 2. Fahrt)
+  if(S('tg_yellow_harvest')>0)sets.forEach((_,d)=>harvest(d,true));
+  const skipped=pool.filter((x,i)=>remaining.has(i)&&x.urg<=1);   // gelbe, nicht mitgenommene sind kein «fehlt»
   // Ausgleich zwischen den Tagen (neue Baustellen verschieben/tauschen), bereits geplante bleiben.
   // Eine Baustelle wird nicht von ihren Nachbarn (Umkreis) weg auf einen anderen Tag verschoben.
   const fixedSet=new Set(fixedNodes.flat());
   const cost=ss=>{let mx=0,sum=0;for(let d=0;d<ss.length;d++){if(ss[d].length>maxN)return Infinity;const p=tgPlanDay(d,ss[d]);if(!ok(d,p,ss))return Infinity;mx=Math.max(mx,p.sim.total);sum+=p.sim.total;}return mx*3+sum;};
   const evNodes=_tgCalc.days.map(dd=>dd.events.filter(ev=>ev.node!=null).map(ev=>ev.node));
   const hasNb=(j,list,d)=>minDist(j,[...list.filter(x=>x!==j),...evNodes[d]])<=near;
-  const mayMove=(j,a,b)=>!hasNb(j,sets[a],a)||hasNb(j,sets[b],b);
+  const urgOfNode=new Map(pool.map((x,i)=>[idxPool[i],x.urgDay]));
+  // nur auf Tage, an denen die Baustelle infrage kommt – und nicht auf einen Tag, an dem sie nur gelb ist (wenn sie anderswo rot/orange ist)
+  const mayMove=(j,a,b)=>{const u=urgOfNode.get(j)||[];return u[b]!=null&&(u[b]<=1||u[a]>1)&&(!hasNb(j,sets[a],a)||hasNb(j,sets[b],b));};
   let cur=cost(sets),t0=Date.now(),imp=true;
   while(imp&&Date.now()-t0<5000){imp=false;
     for(let a=0;a<sets.length&&!imp;a++)for(let b=0;b<sets.length&&!imp;b++){if(a===b)continue;
@@ -5337,10 +5363,10 @@ function tgRender(){
         if(it.t==='ev'){const ev=it.ev;return lunchRow+`<div style="display:flex;align-items:center;gap:6px;padding:4px 0;font-size:12px;border-top:1px solid var(--bd)">${time}
           <span style="flex:1;min-width:0">${ev.icon} <b>${escH(ev.label)}</b>${ev.time!=null?` <span style="font-size:10px;color:${sc.late>0.5?'#DC2626':'#0369A1'}">(fix ${tgHM(ev.time)}${sc.late>0.5?', '+Math.round(sc.late)+' min zu spät':''})</span>`:''}${ev.sub?` <span style="font-size:10px;color:var(--tx3)">· ${escH(ev.sub)}</span>`:''}${ev.node==null&&ev.kind==='rp'?' <span style="font-size:10px;color:#B45309">(ohne Adresse – keine Fahrzeit)</span>':''}</span>
           <span style="font-size:10px;color:var(--tx3);white-space:nowrap">${ev.dur} min</span></div>`;}
-        const j=it.node,e=R.nodeEntry.get(j),fixed=R.fixedIds.has(j),ud=(R.urgOf.get(j)||[])[d],s=ud===0?'overdue':ud===1?(status(e)==='new'?'new':'due'):status(e);
+        const j=it.node,e=R.nodeEntry.get(j),fixed=R.fixedIds.has(j),ud=(R.urgOf.get(j)||[])[d],s=ud===0?'overdue':ud===1?(status(e)==='new'?'new':'due'):ud===2?'soon':status(e);
         return lunchRow+`<div style="display:flex;align-items:center;gap:6px;padding:4px 0;font-size:12px;border-top:1px solid var(--bd)">${time}
           <span style="width:8px;height:8px;border-radius:50%;flex-shrink:0;background:${fixed?'#6366F1':stCol[s]||'#10B981'}"></span>
-          <span style="flex:1;min-width:0">${bsLabel(e)}${R.prefOf.get(j)?' <span style="color:#10B981" title="Bevorzugt (Abteilung oder Hauptregion)">★</span>':''}${fixed?' <span style="font-size:10px;color:#6366F1">(bereits geplant)</span>':''}${s==='new'?' <span style="font-size:10px;color:#7C3AED" title="Noch nie auditiert – wird vorgeschlagen, sobald Personal da ist">(neu)</span>':''}${C.fixT&&C.fixT.has(j)&&fvTime(e)!==C.fixT.get(j)?` <span style="font-size:10px;color:${sc.late>0.5?'#DC2626':'#0369A1'}" title="Geplanter Termin mit Uhrzeit">(Termin ${tgHM(C.fixT.get(j))}${sc.late>0.5?', '+Math.round(sc.late)+' min zu spät':''})</span>`:''}${fvTime(e)!=null&&!(C.fixT&&C.fixT.has(j)&&fvTime(e)!==C.fixT.get(j))?` <span style="font-size:10px;color:${sc.late>0.5?'#DC2626':'#0369A1'}" title="Fester Besuchstermin ${fvLabel(e)}">(fix ${tgHM(fvTime(e))}${sc.late>0.5?', '+Math.round(sc.late)+' min zu spät':''}${fvDayOK(e,C.days[d].ds)?'':', falscher Tag'})</span>`:''}</span>
+          <span style="flex:1;min-width:0">${bsLabel(e)}${R.prefOf.get(j)?' <span style="color:#10B981" title="Bevorzugt (Abteilung oder Hauptregion)">★</span>':''}${fixed?' <span style="font-size:10px;color:#6366F1">(bereits geplant)</span>':''}${s==='new'?' <span style="font-size:10px;color:#7C3AED" title="Noch nie auditiert – wird vorgeschlagen, sobald Personal da ist">(neu)</span>':''}${ud===2&&!fixed?' <span style="font-size:10px;color:#A16207" title="Bald fällig – mitgenommen, weil du ohnehin in der Gegend bist (spart eine 2. Fahrt)">(gelb, liegt am Weg)</span>':''}${C.fixT&&C.fixT.has(j)&&fvTime(e)!==C.fixT.get(j)?` <span style="font-size:10px;color:${sc.late>0.5?'#DC2626':'#0369A1'}" title="Geplanter Termin mit Uhrzeit">(Termin ${tgHM(C.fixT.get(j))}${sc.late>0.5?', '+Math.round(sc.late)+' min zu spät':''})</span>`:''}${fvTime(e)!=null&&!(C.fixT&&C.fixT.has(j)&&fvTime(e)!==C.fixT.get(j))?` <span style="font-size:10px;color:${sc.late>0.5?'#DC2626':'#0369A1'}" title="Fester Besuchstermin ${fvLabel(e)}">(fix ${tgHM(fvTime(e))}${sc.late>0.5?', '+Math.round(sc.late)+' min zu spät':''}${fvDayOK(e,C.days[d].ds)?'':', falscher Tag'})</span>`:''}</span>
           ${tgPersTag(e)}
           ${sc.joint?`<span style="font-size:10px;color:#0369A1;white-space:nowrap" title="Gleicher Ort wie die Einheit davor: ein gemeinsamer Rundgang, Dauer nach den Personen aller Einheiten zusammen. Nachbearbeitung zählt pro Einheit.">🔗 ${Math.round(sc.end-sc.start)>0?'+'+Math.round(sc.end-sc.start)+' min':'im selben Rundgang'}</span>`:''}<span style="font-size:10px;color:var(--tx3);white-space:nowrap;${sc.joint?'display:none':''}"${sc.short>0.5?` title="${Math.round(sc.short)} min kürzer, damit es vor der Pause fertig ist"`:''}>${sc.short>0.5?`${Math.round(C.dur.get(j)-sc.short)} <span style="color:#B45309">(−${Math.round(sc.short)})</span>`:C.dur.get(j)} min${e.zeitbedarf?' fix':''}</span>
           ${fixed?'':`<select onchange="tgMove(${j},+this.value)" style="font-size:10px;padding:1px 3px;border:1px solid var(--bd);border-radius:4px;background:var(--sf);color:var(--tx2)">${R.days.map((di,dd)=>`<option value="${dd}"${dd===d?' selected':''}>${names[di]}</option>`).join('')}</select>
@@ -5382,7 +5408,7 @@ function tgLeftNearHTML(d,active){
   const planned=new Set(R.sets.flat().filter(j=>!R.removed.has(j)));
   const dist=j=>nodes.reduce((m,n)=>Math.min(m,C.D[j][n]/60,C.D[n][j]/60),Infinity);
   const rows=[];
-  (R.leftPool||[]).forEach(o=>{if(planned.has(o.j)||o.x.urgDay[d]===null)return;const m=dist(o.j);if(m<=near)rows.push({e:o.x.e,m,j:o.j});});
+  (R.leftPool||[]).forEach(o=>{if(planned.has(o.j)||o.x.urgDay[d]==null||o.x.urgDay[d]>1)return;const m=dist(o.j);if(m<=near)rows.push({e:o.x.e,m,j:o.j});});
   // Ohne aktuelles Personal: nur zur Info (kein Audit ohne Personal) – Distanz geschätzt (Luftlinie)
   const pts=nodes.map(n=>n===0?R.home:(R.nodeEntry.get(n)||C.days[d].events.find(ev=>ev.node===n)||{})).filter(p=>p&&p.lat);
   const est=e=>pts.reduce((m,p)=>Math.min(m,haversine(p.lat,p.lng,e.lat,e.lng)*1.35/50*60),Infinity);
