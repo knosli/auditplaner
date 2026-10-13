@@ -5171,7 +5171,7 @@ function tgSim(items){
   const day0=Math.max(S('tg_day_start')*60,tm0??0)-(firstNode!=null?D[0][firstNode]/60:0);let r=run(day0);
   // Nur wenn der ERSTE Stopp des Tages ein Termin mit Uhrzeit ist und ab Tagesbeginn nicht erreichbar:
   // entsprechend früher losfahren. Liegt etwas davor, gilt der Termin als verpasst (keine Mitternachts-Touren).
-  if(items.length&&tm0!=null&&r.sched[0].late>0){const r2=run(day0-r.sched[0].late);if(r2.late<r.late)r=r2;}
+  if(items.length&&tgTm(items[0])!=null&&r.sched[0].late>0){const r2=run(day0-r.sched[0].late);if(r2.late<r.late)r=r2;}
   return r;
 }
 const _tgBetter=(a,b)=>a.late<b.late-0.5||(Math.abs(a.late-b.late)<=0.5&&(a.lateStart<b.lateStart-0.5||(Math.abs(a.lateStart-b.lateStart)<=0.5&&a.total<b.total)));
