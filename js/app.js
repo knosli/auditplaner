@@ -150,6 +150,9 @@ const FV_DAYS=['Mo','Di','Mi','Do','Fr'];
 function fvTime(e){const t=e&&e.fixVisit&&e.fixVisit.time;if(!t||!/^\d{1,2}:\d{2}$/.test(t))return null;const[h,m]=t.split(':').map(Number);return h*60+m;}
 function fvDayOK(e,ds){if(fvTime(e)==null)return true;const d=e.fixVisit.days||[];if(!d.length||!ds)return true;return d.includes((parseDate(ds).getDay()+6)%7);}
 function fvLabel(e){return fvTime(e)==null?'':((e.fixVisit.days||[]).length?e.fixVisit.days.map(i=>FV_DAYS[i]).join('/')+' ':'')+e.fixVisit.time;}
+// Planung mit Uhrzeit (einmaliger Termin, z.B. Begehung 13:30): p.time 'HH:MM'
+function planTimeMin(p){const t=p&&p.time;if(!t||!/^\d{1,2}:\d{2}$/.test(t))return null;const[h,m]=t.split(':').map(Number);return h*60+m;}
+function planTimeTag(p){return planTimeMin(p)==null?'':`<span style="font-weight:700;color:#0369A1" title="Termin mit Uhrzeit">🕖 ${escH(p.time)}</span> `;}
 function dl(e,now){
   // Nie auditierte Baustellen: Rhythmus läuft ab Erfassungsdatum
   const ref=e.lastAudit||e.resumeFrom||e.createdAt;
@@ -757,7 +760,9 @@ function confirmPlan(){
   }
   if(onVac(aud,dt))showToast(`⚠️ ${aud.split(' ').pop()} hat Ferien!`,4000);
   {const bf=bauferienAt(data.find(x=>x.id===selId),dt);if(bf)setTimeout(()=>showToast(`🏖 ${bf.dept} hat Bauferien (${fd(bf.von)}–${fd(bf.bis)}) – niemand auf der Baustelle!`,5000),onVac(aud,dt)?4100:0);}
-  plans.push({bsId:e.id,auditor:aud,date:dt});plans.sort((a,b)=>a.date.localeCompare(b.date));
+  const _pt=(document.getElementById('plan-time')||{}).value||'';
+  plans.push(_pt?{bsId:e.id,auditor:aud,date:dt,time:_pt}:{bsId:e.id,auditor:aud,date:dt});plans.sort((a,b)=>a.date.localeCompare(b.date)||(a.time||'').localeCompare(b.time||''));
+  {const t=document.getElementById('plan-time');if(t)t.value='';}
   log('Geplant',e.name,'#6366F1',aud);
   document.getElementById('plan-form').style.display='none';
   _planMode='kw';setPlanMode('kw');
@@ -2496,7 +2501,7 @@ function renderKW(){
         ${kwP.length?`<div style="display:flex;gap:3px"><button onclick="kwRoute(${kw})"><i class="ti ti-map-2"></i></button><button onclick="kwPrint(${kw})"><i class="ti ti-printer"></i></button></div>`:''}
       </div>
       ${fer.map(f=>`<div class="kwfer">🌴 ${f.auditor.split(' ').pop()}: ${f.label}</div>`).join('')}
-      ${kwP.length?kwP.map(p=>{const e=data.find(x=>x.id===p.bsId);const c=p.auditor&&p.auditor!=='Unbekannt'?aC(p.auditor):'#9CA3AF';const dn=['So','Mo','Di','Mi','Do','Fr','Sa'][parseDate(p.date).getDay()];return`<div class="kwe" onclick="openCalPop(${p._i})"><div class="kwen">${e?((e.type==='werkhof'?'🏠 ':'')+e.name):'⚠ Baustelle gelöscht'}</div>${kwMetaLine(e,kw,'1px 0',p.date)}<span class="kwea" style="background:${c}">${p.auditor==='Unbekannt'?'? Zuteilen':p.auditor.split(' ').pop()}</span><div class="kwed">${dn} ${fd(p.date)}</div></div>`;}).join(''):`<div class="kwemp">Keine Planungen</div>`}
+      ${kwP.length?kwP.map(p=>{const e=data.find(x=>x.id===p.bsId);const c=p.auditor&&p.auditor!=='Unbekannt'?aC(p.auditor):'#9CA3AF';const dn=['So','Mo','Di','Mi','Do','Fr','Sa'][parseDate(p.date).getDay()];return`<div class="kwe" onclick="openCalPop(${p._i})"><div class="kwen">${planTimeTag(p)}${e?((e.type==='werkhof'?'🏠 ':'')+e.name):'⚠ Baustelle gelöscht'}</div>${kwMetaLine(e,kw,'1px 0',p.date)}<span class="kwea" style="background:${c}">${p.auditor==='Unbekannt'?'? Zuteilen':p.auditor.split(' ').pop()}</span><div class="kwed">${dn} ${fd(p.date)}</div></div>`;}).join(''):`<div class="kwemp">Keine Planungen</div>`}
     </div>`;
   }).join('');
 }
@@ -2549,7 +2554,7 @@ function renderWeekView(kw){
       ${dayAudits.map(h=>{const e=data.find(x=>x.id===h.eId);return`<div class="kwe" style="background:#F0FDF4;border-left:3px solid #10B981;cursor:pointer" onclick="openAuditUndo(${h.eId},'${h.date}')"><div class="kwe-top"><div class="kwen" style="color:#065F46">✓ ${e&&e.type==='werkhof'?'🏠 ':''}${pspPre(h.ePsp)}${h.eName}</div>${kwMetaLine(e,kw,'0 0 1px')}<span class="kwea" style="background:${aC(h.auditor||'')}">${(h.auditor||'?').split(' ').pop()}</span></div></div>`;}).join('')}
       ${(()=>{const paP=personAudits.filter(p=>p.planned&&p.date===ds&&(!audFilter||p.auditor===audFilter));return paP.map(p=>{const col=p.auditor?aC(p.auditor):'#9CA3AF';return`<div class="kwe"><div class="kwe-top" onclick="openPersonAuditPop(${p.id})" style="cursor:pointer"><div class="kwen">👤 ${p.person}${p.bs?' · '+p.bs:''}</div><span class="kwea" style="background:${col}">${p.auditor?p.auditor.split(' ').pop():'? Zuteilen'}</span></div><div class="kwe-move" style="display:flex;gap:2px;padding:2px 6px 3px;border-top:1px solid var(--bd)"><button onclick="movePersonAudit(${p.id},'${kwToDate(kw-1)}',4)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">←</button>${days.map((day,dj)=>`<button onclick="movePersonAudit(${p.id},'${kwToDate(kw)}',${dj})" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:${dj===di?'var(--blue)':'var(--sf2)'};color:${dj===di?'#fff':'var(--tx2)'};font-size:9px;cursor:pointer;line-height:1.4">${day}</button>`).join('')}<button onclick="movePersonAudit(${p.id},'${kwToDate(kw+1)}',0)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">→</button></div></div>`;}).join('');})()}
       ${(()=>{const paDone=personAudits.filter(p=>!p.planned&&p.date===ds&&(!audFilter||p.auditor===audFilter));return paDone.map(p=>{const audCol=aC(p.auditor||'');return`<div class="kwe" style="background:#FFFBEB;border-left:3px solid #F59E0B;cursor:pointer" onclick="openPersonAuditDoneUndo(${p.id})"><div class="kwe-top"><div class="kwen" style="color:#B45309">✓ 👤 ${p.person}${p.bs?' · '+p.bs:''}</div><span class="kwea" style="background:${audCol}">${(p.auditor||'?').split(' ').pop()}</span></div></div>`;}).join('');})()}
-      ${dayP.length?dayP.map(p=>{const e=data.find(x=>x.id===p.bsId);const col=p.auditor&&p.auditor!=='Unbekannt'?aC(p.auditor):'#9CA3AF';const isSel=multiAuditMode&&planned.has(p.bsId);return`<div class="kwe" style="${isSel?'background:#EFF6FF;border-left:3px solid var(--blue)':''}"><div class="kwe-top" onclick="${multiAuditMode?`toggleKWAuditSel(${p.bsId})`:`openCalPop(${p._i})`}" style="cursor:pointer"><div class="kwen">${isSel?'☑ ':''}${e?((e.type==='werkhof'?'🏠 ':'')+pspPre(e.psp)+e.name):'⚠ Baustelle gelöscht'}</div>${kwMetaLine(e,kw,'0 0 1px',p.date)}<span class="kwea" style="background:${col}">${p.auditor==='Unbekannt'||!p.auditor?'? Zuteilen':p.auditor.split(' ').pop()}</span></div>${!multiAuditMode?`<div class="kwe-move" style="display:flex;gap:2px;padding:2px 6px 3px;border-top:1px solid var(--bd)"><button onclick="movePlan(${p._i},'${kwToDate(kw-1)}',4)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4" title="Vorwoche Fr">←</button>${days.map((day,dj)=>`<button onclick="movePlan(${p._i},'${kwToDate(kw)}',${dj})" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:${dj===di?'var(--blue)':'var(--sf2)'};color:${dj===di?'#fff':'var(--tx2)'};font-size:9px;cursor:pointer;line-height:1.4">${day}</button>`).join('')}<button onclick="movePlan(${p._i},'${kwToDate(kw+1)}',0)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4" title="Nächste Woche Mo">→</button></div>`:''}
+      ${dayP.length?dayP.map(p=>{const e=data.find(x=>x.id===p.bsId);const col=p.auditor&&p.auditor!=='Unbekannt'?aC(p.auditor):'#9CA3AF';const isSel=multiAuditMode&&planned.has(p.bsId);return`<div class="kwe" style="${isSel?'background:#EFF6FF;border-left:3px solid var(--blue)':''}"><div class="kwe-top" onclick="${multiAuditMode?`toggleKWAuditSel(${p.bsId})`:`openCalPop(${p._i})`}" style="cursor:pointer"><div class="kwen">${isSel?'☑ ':''}${planTimeTag(p)}${e?((e.type==='werkhof'?'🏠 ':'')+pspPre(e.psp)+e.name):'⚠ Baustelle gelöscht'}</div>${kwMetaLine(e,kw,'0 0 1px',p.date)}<span class="kwea" style="background:${col}">${p.auditor==='Unbekannt'||!p.auditor?'? Zuteilen':p.auditor.split(' ').pop()}</span></div>${!multiAuditMode?`<div class="kwe-move" style="display:flex;gap:2px;padding:2px 6px 3px;border-top:1px solid var(--bd)"><button onclick="movePlan(${p._i},'${kwToDate(kw-1)}',4)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4" title="Vorwoche Fr">←</button>${days.map((day,dj)=>`<button onclick="movePlan(${p._i},'${kwToDate(kw)}',${dj})" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:${dj===di?'var(--blue)':'var(--sf2)'};color:${dj===di?'#fff':'var(--tx2)'};font-size:9px;cursor:pointer;line-height:1.4">${day}</button>`).join('')}<button onclick="movePlan(${p._i},'${kwToDate(kw+1)}',0)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4" title="Nächste Woche Mo">→</button></div>`:''}
 </div>`;}).join(''):`<div class="kwemp">Frei</div>`}
     </td>`;
   });
@@ -2747,7 +2752,8 @@ function openCalPop(idx){
     audSel.innerHTML='<option value="">— Auditor wählen —</option>'+auditors.map(a=>`<option value="${a}"${a===p.auditor?' selected':''}>${a}</option>`).join('');
   }
   // Date picker
-  document.getElementById('pop-ai').innerHTML=`<label style="font-size:11px;color:var(--tx2);display:block;margin-bottom:3px">Datum Audit:</label><input type="date" id="pop-date" value="${p.date}" style="width:100%;padding:6px 8px;border:1px solid var(--bd);border-radius:6px;background:var(--sf2);color:var(--tx);font-size:12px">`;
+  document.getElementById('pop-ai').innerHTML=`<label style="font-size:11px;color:var(--tx2);display:block;margin-bottom:3px">Datum Audit:</label><input type="date" id="pop-date" value="${p.date}" style="width:100%;padding:6px 8px;border:1px solid var(--bd);border-radius:6px;background:var(--sf2);color:var(--tx);font-size:12px">
+    <label style="font-size:11px;color:var(--tx2);display:block;margin:8px 0 3px">Uhrzeit <span style="color:var(--tx3)">– optional, einmaliger Termin (z.B. Begehung)</span>:</label><input type="time" id="pop-time" value="${escH(p.time||'')}" style="width:100%;padding:6px 8px;border:1px solid var(--bd);border-radius:6px;background:var(--sf2);color:var(--tx);font-size:12px">`;
   document.getElementById('calpop').style.display='block';
   document.getElementById('calpop-bg').style.display='block';
 }
@@ -2823,6 +2829,7 @@ function popAct(action){
   // Get precise date from picker (user may have changed it)
   const dateEl=document.getElementById('pop-date');
   const useDate=dateEl?dateEl.value:p.date;
+  {const tEl=document.getElementById('pop-time');if(tEl){if(tEl.value)p.time=tEl.value;else delete p.time;}}
   if(action==='assign'){
     if(!p.auditor||p.auditor==='Unbekannt'){showToast('Bitte Auditor wählen');return;}
     if(useDate)p.date=useDate;
@@ -3028,6 +3035,9 @@ function saveAudMeta2(name){
   const homeV=(document.getElementById('am-home-'+id_)?.value||'').trim();
   if(homeV!==(meta.home||'')){meta.home=homeV;meta.homeLat=null;meta.homeLng=null;if(homeV)tgGeocodeHome(name,homeV);}
   const chips=[...document.querySelectorAll('#am-depts-'+id_+' span[data-d]')];
+  {const rk=+(document.getElementById('am-region-'+id_)?.value||0);if(rk>0)meta.regionKm=rk;else delete meta.regionKm;
+   const rp=(document.getElementById('am-regplace-'+id_)?.value||'').trim();
+   if(rp!==(meta.regionPlace||'')){if(rp){meta.regionPlace=rp;meta.regionLat=null;meta.regionLng=null;tgGeocodeRegion(name,rp);}else{delete meta.regionPlace;delete meta.regionLat;delete meta.regionLng;}}}
   if(chips.length){meta.prefDepts=chips.filter(x=>x.dataset.st==='pref').map(x=>x.dataset.d);meta.exclDepts=chips.filter(x=>x.dataset.st==='excl').map(x=>x.dataset.d);}
   auditorMeta[name]=meta;
   saveAudMeta();
@@ -3089,6 +3099,8 @@ function renderAudAdminList(){
         <div style="font-size:11px;font-weight:700;color:var(--tx);margin-bottom:6px"><i class="ti ti-compass" style="color:var(--blue)"></i> Tourguide</div>
         <label style="font-size:10px;color:var(--tx2);display:block;margin-bottom:2px">Startadresse (Rundtour ab/bis hier)</label>
         <input id="am-home-${id}" value="${escH(meta.home||'')}" placeholder="Strasse Nr, PLZ Ort" style="width:100%;padding:5px 7px;border:1px solid var(--bd);border-radius:5px;background:var(--sf);color:var(--tx);font-size:12px;margin-bottom:8px">
+        <label style="font-size:10px;color:var(--tx2);display:block;margin-bottom:2px">Hauptregion <span style="color:var(--tx3)">(leer = keine) – Baustellen darin schlägt der Tourguide zuerst vor</span></label>
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;flex-wrap:wrap"><input id="am-region-${id}" type="number" min="0" max="200" step="5" value="${meta.regionKm||''}" placeholder="z.B. 30" style="width:80px;padding:5px 7px;border:1px solid var(--bd);border-radius:5px;background:var(--sf);color:var(--tx);font-size:12px"><span style="font-size:12px;color:var(--tx2)">km um</span><input id="am-regplace-${id}" value="${escH(meta.regionPlace||'')}" placeholder="Ort (leer = Startadresse)" style="flex:1;min-width:140px;padding:5px 7px;border:1px solid var(--bd);border-radius:5px;background:var(--sf);color:var(--tx);font-size:12px">${meta.regionKm>0?`<span style="font-size:11px;color:var(--tx3)">· ${data.filter(e=>e.active&&tgInRegion(a,e)).length} aktive Baustellen darin</span>`:''}</div>
         <label style="font-size:10px;color:var(--tx2);display:block;margin-bottom:4px">Abteilungen – antippen zum Wechseln: neutral → <b style="color:#10B981">★ bevorzugt</b> → <b style="color:#EF4444">⛔ ausgeschlossen</b></label>
         <div id="am-depts-${id}" style="display:flex;flex-wrap:wrap;gap:4px">${getAllDepts().map(d=>{const st=(meta.prefDepts||[]).includes(d)?'pref':(meta.exclDepts||[]).includes(d)?'excl':'';return`<span data-d="${escH(d)}" data-st="${st}" onclick="tgCycleDept(this)" style="${tgChipStyle(st)}">${tgChipLbl(st)}${escH(d)}</span>`;}).join('')}</div>
       </div>
@@ -3819,7 +3831,7 @@ function renderMobPlan(){
         <span style="font-size:10px;font-weight:700;color:${col}">GEPLANT</span>
         <span style="font-size:11px;color:var(--tx3)">${e.dept||''}</span>
       </div>
-      <div style="font-size:16px;font-weight:700;color:var(--tx);margin-bottom:4px;line-height:1.3">${pspPre(e.psp)}${e.name}</div>
+      <div style="font-size:16px;font-weight:700;color:var(--tx);margin-bottom:4px;line-height:1.3">${planTimeTag(p)}${pspPre(e.psp)}${e.name}</div>
       <div style="font-size:12px;color:var(--tx2)">${e.addr||''}</div>
       ${mobPersHTML(e)?`<div style="margin-top:5px">${mobPersHTML(e)}</div>`:''}
       ${e.bc?`<div style="font-size:11px;color:var(--tx3);margin-bottom:10px">BC: ${e.bc}</div>`:'<div style="margin-bottom:10px"></div>'}
@@ -4881,6 +4893,7 @@ function rulesHTML(){
     `«Pausiert bis KW …»: Ist das Datum erreicht, wird die Baustelle automatisch reaktiviert. Der Tourguide berücksichtigt sie schon für Tage ab diesem Datum.`,
     `Kein Audit beginnt nach ${tgHM(S('tg_last_start')*60)} (viele Baustellen haben dann Feierabend). Bei 1–${v('pi_review_max')} Personen erscheint «📞 wenig Personal – vorher anrufen».`,
     `<b>Ort ausschöpfen:</b> Ist an einem Tag eine Baustelle oder ein Termin in einer Gegend, werden zuerst alle roten und orangen Baustellen im Umkreis von ${v('tg_harvest_min')} min Fahrzeit mitgenommen (soweit der Tag Platz hat) – damit man nicht wegen einer einzelnen Baustelle nochmals hinfahren muss. Das gilt für bereits geplante Baustellen, Termine und jede neu gewählte Baustelle.`,
+    `<b>Hauptregion</b> (Auditoren verwalten → «Hauptregion»: Umkreis in km um einen Ort, leer = Startadresse – z.B. «30 km um Zürich»): Pro Farbe füllt der Tourguide die Tage zuerst mit Baustellen aus der Hauptregion; Baustellen ausserhalb kommen nur dazu, wenn noch Platz ist. Bei Gleichstand zählen sie wie eine bevorzugte Abteilung ★.`,
     `Auswahl: zuerst rot, dann orange. Innerhalb derselben Farbe entscheidet der kleinste Umweg zur bestehenden Tagesroute. Liegen Umwege höchstens ${v('tg_tie_min')} min auseinander, gelten sie als gleich weit – dann entscheiden Personal-Grösse, bevorzugte Abteilung ★ und wie lange die Baustelle schon fällig ist.`,
     `Die Ampel gilt am <b>Audit-Tag</b>, nicht heute: Eine Baustelle, die heute gelb ist, aber am geplanten Tag orange, wird für diesen Tag berücksichtigt – für frühere Tage der Woche nicht.`,
     `Keine zweite Fahrt in dieselbe Gegend in derselben Woche: Wird eine Gegend an einem Tag schon besucht, kommen ihre Baustellen nur an diesen Tag (was keinen Platz mehr hat, erscheint im Hinweis «Ort nicht ausgeschöpft»).`,
@@ -4888,8 +4901,9 @@ function rulesHTML(){
     `Hinweise im Vorschlag: «Wenig wirtschaftlich», wenn ein Tag mehr Fahrzeit als Audit-/Terminzeit hat; «👥 … ist auch in der Nähe», wenn andere Auditoren am selben Tag Baustellen im Umkreis geplant haben.`,
     `Bleiben im Umkreis eines Tages Baustellen offen (Tag voll oder Personal unbekannt), zeigt der Vorschlag unter dem Tag «⚠ Ort nicht ausgeschöpft» – mit «+ trotzdem hinzufügen». Beim Ausgleich zwischen den Tagen wird keine Baustelle von ihren Nachbarn getrennt.`,
     `Audit-Dauer: 1–3 Pers. ${v('tg_min_1_3')} · 4–9 ${v('tg_min_4_9')} · 10–19 ${v('tg_min_10_19')} · 20+ ${v('tg_min_20')} · unbekannt ${v('tg_min_unknown')} min (inkl. Schreiben/Rapportieren; Fahrzeit separat).`,
-    `Tag: <b>Das erste Audit beginnt um ${tgHM(S('tg_day_start')*60)}</b> – losgefahren wird entsprechend früher (Fahrzeit ab Startadresse). Max. ${v('tg_day_hours')} h Arbeitszeit (inkl. aller Fahrten und Wartezeiten, ohne Mittagspause) plus <b>${v('tg_post_min')} min Nachbearbeitung pro Baustelle</b> am Ende des Tages (Audit-Bericht; bei 4 Baustellen also 4 × ${v('tg_post_min')} min) – beides zusammen muss in den Arbeitstag passen. <b>Toleranz:</b> Ein Tag darf bis ${v('tg_day_tol')} min länger werden, alle Tage der Woche zusammen aber höchstens ${v('tg_week_tol')} min – damit keine Baustelle wegen ein paar Minuten wegfällt, aber auch nicht jeder Tag länger wird. Max. ${v('tg_max_per_day')} Baustellen.`,
+    `Tag: <b>Das erste Audit beginnt um ${tgHM(S('tg_day_start')*60)}</b> – losgefahren wird entsprechend früher (Fahrzeit ab Startadresse). Max. ${v('tg_day_hours')} h Arbeitszeit (inkl. aller Fahrten und Wartezeiten, ohne Mittagspause) plus <b>${v('tg_post_min')} min Nachbearbeitung pro Baustelle</b> am Ende des Tages (Audit-Bericht; bei 4 Baustellen also 4 × ${v('tg_post_min')} min) – Wartezeiten im Tag (z.B. vor einem Termin) werden dafür angerechnet – beides zusammen muss in den Arbeitstag passen. <b>Toleranz:</b> Ein Tag darf bis ${v('tg_day_tol')} min länger werden, alle Tage der Woche zusammen aber höchstens ${v('tg_week_tol')} min – damit keine Baustelle wegen ein paar Minuten wegfällt, aber auch nicht jeder Tag länger wird. Max. ${v('tg_max_per_day')} Baustellen.`,
     `<b>Mehrere Einheiten am gleichen Ort</b> (gleiche Adresse/Koordinaten): ein gemeinsamer Rundgang – die Audit-Dauer richtet sich nach den Personen <u>aller</u> Einheiten zusammen (z.B. 3 + 4 + 2 = 9 Personen → Dauer für 4–9 Personen), die Nachbearbeitung zählt aber pro Einheit. Im Vorschlag mit «🔗 +x min» markiert.`,
+    `<b>Einmaliger Termin</b> (z.B. Begehung 13:30): beim Planen einer Baustelle (Detail-Panel → Planen, oder Klick auf die Planung in der KW-Planung) eine Uhrzeit angeben. Der Tourguide behandelt diese Planung als fixen Termin und plant die übrigen Baustellen des Tages darum herum.`,
     `<b>Fester Besuchstermin</b> (Bearbeiten → «Fester Besuchstermin», z.B. Do 07:30, Dauer = Zeitbedarf): Die Baustelle wird nur an diesen Wochentagen vorgeschlagen und beginnt genau zu dieser Zeit – wie ein Termin mit fixer Uhrzeit (gilt auch über Znüni/Mittag). Beim Planen in der KW-Planung wird der feste Wochentag übernommen.`,
     `<b>Znüni der Baustellen ${tgHM(S('tg_znueni_start')*60)}–${tgHM(S('tg_znueni_start')*60+S('tg_znueni_dur'))} (${v('tg_znueni_dur')} min):</b> In dieser Zeit beginnt kein Audit (auch kein Personen-Audit oder Beratung) – wer im Znüni ankommt, beginnt danach. ${S('tg_znueni_through')>0?'Ein <b>laufendes Audit darf durchs Znüni laufen</b> (Besprechung mit dem Bauleiter), z.B. Beginn 08:30.':'Ein Audit, das nicht vor dem Znüni fertig ist, beginnt erst danach.'} Fahren ist in dieser Zeit möglich; Warten zählt zur Arbeitszeit. Dauer 0 = kein Znüni.`,
     `<b>Audit-Dauer flexibel:</b> Würde ein Baustellen-Audit nur wenige Minuten ins Znüni oder in den Baustellen-Mittag laufen, wird es um bis zu ${v('tg_audit_flex')} min kürzer geplant (im Vorschlag «(−x)»), statt ganz nach hinten zu rutschen.`,
@@ -5028,6 +5042,9 @@ function tgPersonalState(e,targetKW,targetYear){
 }
 // Pause «bis KW …» abgelaufen (bzw. am Audit-Tag abgelaufen)?
 function pauseOverAt(e,ds){return!!(e.paused&&e.pauseUntil&&e.pauseUntil<=ds);}
+// Hauptregion eines Auditors: Umkreis (km) um einen Ort (leer = Startadresse), Auditoren verwalten
+function tgRegionCenter(m){return m.regionPlace?(m.regionLat&&m.regionLng?[+m.regionLat,+m.regionLng]:null):(m.homeLat&&m.homeLng?[+m.homeLat,+m.homeLng]:null);}
+function tgInRegion(aud,e){const m=auditorMeta[aud]||{},c=tgRegionCenter(m);return!!(m.regionKm>0&&c&&e&&e.lat&&e.lng&&haversine(c[0],c[1],+e.lat,+e.lng)<=+m.regionKm);}
 function tgCandidates(aud,kw,noPers,dayDates,noGeo,bfList,provIds=new Set()){
   const m=auditorMeta[aud]||{};const pref=new Set(m.prefDepts||[]),excl=new Set(m.exclDepts||[]);
   const ks=kwToDate(kw),ke=kwToDate(kw+1);
@@ -5050,8 +5067,8 @@ function tgCandidates(aud,kw,noPers,dayDates,noGeo,bfList,provIds=new Set()){
     if(ps==='prov'){provIds.add(e.id);return true;}
     if(ps!=='ok'){if(noPers&&(ps==='unknown'||ps==='stale'))noPers.push({e,state:ps});return false;}
     return true;
-  }).map(e=>{const isPref=deptParts(e.dept).some(d=>pref.has(d));const urgDay=days.map(ds=>urgAt(e,ds));
-    return{e,isPref,urgDay,urg:Math.min(...urgDay.map(u=>u===null?9:u)),pers:tgPersClass(e),min:tgAuditMin(e)};})
+  }).map(e=>{const inReg=tgInRegion(aud,e),isPref=deptParts(e.dept).some(d=>pref.has(d))||inReg;const urgDay=days.map(ds=>urgAt(e,ds));
+    return{e,isPref,inReg,urgDay,urg:Math.min(...urgDay.map(u=>u===null?9:u)),pers:tgPersClass(e),min:tgAuditMin(e)};})
     // Priorität: 1) Ampel (rot vor orange)  2) Personal-Grösse (mehr Personal = höheres Risiko)  3) bevorzugte Abteilung  4) am längsten fällig
     .sort((a,b)=>a.urg-b.urg||a.pers-b.pers||(a.isPref?0:1)-(b.isPref?0:1)||dl(a.e)-dl(b.e));
 }
@@ -5141,13 +5158,16 @@ function tgSim(items){
     if(need()&&items.length&&t+back>LS){if(t>=W0&&t<=W1){takeLunch(items.length,t);t+=LD;}else if(t<W0&&t+back>W1){takeLunch(items.length,W0);t+=LD;}}
     t+=back;
     // Nachbearbeitung der Audits am Ende des Tages (pro Baustelle) – zählt zur Arbeitszeit
-    const post=items.filter(it=>it.t==='bs').length*S('tg_post_min');
-    return{start,end:t,total:t-start-lunch+post,post,drive,wait:Math.max(0,wait),late,lateStart,aud,evt,lunch,lunchAt,lunchStart,sched};
+    // Wartezeiten (z.B. vor einem Termin) werden für die Nachbearbeitung genutzt – nur der Rest kommt am Ende dazu
+    const post=items.filter(it=>it.t==='bs').length*S('tg_post_min'),postInWait=Math.min(post,Math.max(0,wait));
+    return{start,end:t,total:t-start-lunch+post-postInWait,post,postInWait,drive,wait:Math.max(0,wait),late,lateStart,aud,evt,lunch,lunchAt,lunchStart,sched};
   };
   // Tagesbeginn = Beginn des ersten Audits/Stopps: so früh losfahren, dass man um diese Zeit beim ersten Stopp ist
   const firstNode=items.length?(items[0].t==='bs'?items[0].node:items[0].ev.node):null;
   // (ist der erste Stopp ein Termin mit späterer Uhrzeit: pünktlich dort sein statt früh hinfahren und warten)
-  const tm0=items.length?tgTm(items[0]):null;
+  // (gilt nur, wenn ALLE Stopps des Tages fixe Uhrzeiten haben – sonst beginnt der Tag zum Tagesbeginn und der Morgen
+  //  wird mit Baustellen gefüllt, statt bis zum ersten Termin frei zu bleiben)
+  const tm0=items.length&&items.every(it=>tgTm(it)!=null)?tgTm(items[0]):null;
   const day0=Math.max(S('tg_day_start')*60,tm0??0)-(firstNode!=null?D[0][firstNode]/60:0);let r=run(day0);
   // Nur wenn der ERSTE Stopp des Tages ein Termin mit Uhrzeit ist und ab Tagesbeginn nicht erreichbar:
   // entsprechend früher losfahren. Liegt etwas davor, gilt der Termin als verpasst (keine Mitternachts-Touren).
@@ -5205,7 +5225,9 @@ async function tgCompute(){
   const loc=new Map(),persN=new Map();
   fixedAll.forEach(e=>{const j=idxFixed.get(e.id),k=tgLocKey(e);if(k){loc.set(j,k);persN.set(j,tgPersCount(e));}});
   pool.forEach((x,i)=>{const k=tgLocKey(x.e);if(k){loc.set(idxPool[i],k);persN.set(idxPool[i],tgPersCount(x.e));}});
-  const fixT=new Map();fixedAll.forEach(e=>{if(fvTime(e)!=null)fixT.set(idxFixed.get(e.id),fvTime(e));});pool.forEach((x,i)=>{if(fvTime(x.e)!=null)fixT.set(idxPool[i],fvTime(x.e));});
+  const fixT=new Map();fixedAll.forEach(e=>{if(fvTime(e)!=null)fixT.set(idxFixed.get(e.id),fvTime(e));});
+  // einmaliger Termin: Planung dieser Woche mit Uhrzeit (geht dem festen Besuchstermin vor)
+  plans.filter(p=>p.auditor===aud&&dayDates.includes(p.date)&&planTimeMin(p)!=null&&idxFixed.has(p.bsId)).forEach(p=>fixT.set(idxFixed.get(p.bsId),planTimeMin(p)));pool.forEach((x,i)=>{if(fvTime(x.e)!=null)fixT.set(idxPool[i],fvTime(x.e));});
   _tgCalc={D,dur,fixT,loc,persN,cache:new Map(),days:dayDates.map((ds,d)=>({ds,events:events[d]}))};
   const dayLen=S('tg_day_hours')*60,maxN=S('tg_max_per_day');
   const fixedNodes=fixedPlans.map(list=>list.map(e=>idxFixed.get(e.id)));
@@ -5253,15 +5275,17 @@ async function tgCompute(){
     return!(all.length<=maxN&&ok(d,tgPlanDay(d,all)));
   };
   sets.forEach((_,d)=>harvest(d));
-  [0,1].forEach(cls=>{
+  // Hauptregion (Umkreis um die Startadresse) zuerst: pro Farbe erst Baustellen in der Region, dann die übrigen
+  const hasReg=pool.some(x=>x.inReg);
+  [0,1].forEach(cls=>[true,false].forEach(regOnly=>{if(regOnly&&!hasReg)return;
     for(;;){
       let best=null;
-      remaining.forEach(i=>{sets.forEach((_,d)=>{if(pool[i].urgDay[d]!==cls)return;const c=tryDay(i,d);if(c&&better(c,best)&&mayOpen(i,d))best=c;});});
+      remaining.forEach(i=>{if(regOnly&&!pool[i].inReg)return;sets.forEach((_,d)=>{if(pool[i].urgDay[d]!==cls)return;const c=tryDay(i,d);if(c&&better(c,best)&&mayOpen(i,d))best=c;});});
       if(!best)break;
       sets[best.d].push(idxPool[best.i]);remaining.delete(best.i);
       harvest(best.d);
     }
-  });
+  }));
   const skipped=pool.filter((_,i)=>remaining.has(i));
   // Ausgleich zwischen den Tagen (neue Baustellen verschieben/tauschen), bereits geplante bleiben.
   // Eine Baustelle wird nicht von ihren Nachbarn (Umkreis) weg auf einen anderen Tag verschoben.
@@ -5300,12 +5324,12 @@ function tgRender(){
     h+=`<div style="margin-bottom:10px;padding:10px 12px;background:var(--sf2);border-radius:10px;border-left:3px solid var(--blue)">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;gap:8px;flex-wrap:wrap">
         <span style="font-size:13px;font-weight:700;color:var(--blue)">${names[R.days[d]]} ${fd(C.days[d].ds)} · ${bsN} Baustellen</span>
-        <span style="font-size:12px;font-weight:700;color:${sim.total>dayLen+S('tg_day_tol')+0.5?'#EF4444':sim.total>dayLen+0.5?'#D97706':'var(--tx)'}" title="${sim.total>dayLen+0.5?`${Math.round(sim.total-dayLen)} min über ${fmt(dayLen)}`+(sim.total<=dayLen+S('tg_day_tol')+0.5?' – innerhalb der Toleranz':' – mehr als die Toleranz'):''}">${P.items.length?`🏠 ${tgHM(sim.start)} → 🏠 ${tgHM(sim.end)}${sim.post?` <span title="Nachbearbeitung der Audits am Ende des Tages">+ 📝 ${fmt(sim.post)}</span>`:''} · `:''}≈ ${fmt(sim.total)} / ${fmt(dayLen)}</span>
+        <span style="font-size:12px;font-weight:700;color:${sim.total>dayLen+S('tg_day_tol')+0.5?'#EF4444':sim.total>dayLen+0.5?'#D97706':'var(--tx)'}" title="${sim.total>dayLen+0.5?`${Math.round(sim.total-dayLen)} min über ${fmt(dayLen)}`+(sim.total<=dayLen+S('tg_day_tol')+0.5?' – innerhalb der Toleranz':' – mehr als die Toleranz'):''}">${P.items.length?`🏠 ${tgHM(sim.start)} → 🏠 ${tgHM(sim.end)}${sim.post-(sim.postInWait||0)>0.5?` <span title="Nachbearbeitung der Audits am Ende des Tages">+ 📝 ${fmt(sim.post-(sim.postInWait||0))}</span>`:''} · `:''}≈ ${fmt(sim.total)} / ${fmt(dayLen)}</span>
       </div>
       <div style="height:6px;background:var(--bd);border-radius:3px;overflow:hidden;display:flex;margin-bottom:3px">
-        <div style="width:${sim.drive/dayLen*100}%;background:#F59E0B" title="Fahrzeit"></div><div style="width:${sim.aud/dayLen*100}%;background:#3B82F6" title="Audits"></div><div style="width:${sim.evt/dayLen*100}%;background:#0EA5E9" title="Termine"></div><div style="width:${(sim.post||0)/dayLen*100}%;background:#8B5CF6" title="Nachbearbeitung"></div><div style="width:${sim.wait/dayLen*100}%;background:repeating-linear-gradient(45deg,#CBD5E1,#CBD5E1 3px,transparent 3px,transparent 6px)" title="Wartezeit"></div>
+        <div style="width:${sim.drive/dayLen*100}%;background:#F59E0B" title="Fahrzeit"></div><div style="width:${sim.aud/dayLen*100}%;background:#3B82F6" title="Audits"></div><div style="width:${sim.evt/dayLen*100}%;background:#0EA5E9" title="Termine"></div><div style="width:${((sim.post||0)-(sim.postInWait||0))/dayLen*100}%;background:#8B5CF6" title="Nachbearbeitung (ohne den Teil in Wartezeiten)"></div><div style="width:${sim.wait/dayLen*100}%;background:repeating-linear-gradient(45deg,#CBD5E1,#CBD5E1 3px,transparent 3px,transparent 6px)" title="Wartezeit"></div>
       </div>
-      <div style="font-size:10px;color:var(--tx3);margin-bottom:6px">🚗 ${fmt(sim.drive)} · 🏗️ ${fmt(sim.aud)}${sim.evt?` · 📋 ${fmt(sim.evt)} Termine`:''}${sim.post?` · 📝 ${fmt(sim.post)} Nachbearbeitung (${bsN} × ${S('tg_post_min')} min)`:''}${sim.wait>1?` · ⏳ ${fmt(sim.wait)} Wartezeit`:''}${sim.lunch?` · 🍽 ${fmt(sim.lunch)} Mittag (nicht in der Arbeitszeit)`:''}</div>
+      <div style="font-size:10px;color:var(--tx3);margin-bottom:6px">🚗 ${fmt(sim.drive)} · 🏗️ ${fmt(sim.aud)}${sim.evt?` · 📋 ${fmt(sim.evt)} Termine`:''}${sim.post?` · 📝 ${fmt(sim.post)} Nachbearbeitung (${bsN} × ${S('tg_post_min')} min${sim.postInWait>0.5?`, davon ${fmt(sim.postInWait)} in Wartezeiten`:''})`:''}${sim.wait>1?` · ⏳ ${fmt(sim.wait)} Wartezeit`:''}${sim.lunch?` · 🍽 ${fmt(sim.lunch)} Mittag (nicht in der Arbeitszeit)`:''}</div>
       ${econHtml}
       ${sim.lateStart>0.5?`<div style="font-size:11px;color:#B45309;margin-bottom:6px">⚠ Ein Audit beginnt nach ${tgHM(S('tg_last_start')*60)} – viele Baustellen haben dann schon Feierabend.</div>`:''}
       ${sim.late>0.5?`<div style="font-size:11px;color:#DC2626;margin-bottom:6px">⚠ Ein Termin ist so nicht rechtzeitig erreichbar (${Math.round(sim.late)} min zu spät) – bitte Termin oder Tag prüfen.</div>`:''}
@@ -5316,7 +5340,7 @@ function tgRender(){
         const j=it.node,e=R.nodeEntry.get(j),fixed=R.fixedIds.has(j),ud=(R.urgOf.get(j)||[])[d],s=ud===0?'overdue':ud===1?(status(e)==='new'?'new':'due'):status(e);
         return lunchRow+`<div style="display:flex;align-items:center;gap:6px;padding:4px 0;font-size:12px;border-top:1px solid var(--bd)">${time}
           <span style="width:8px;height:8px;border-radius:50%;flex-shrink:0;background:${fixed?'#6366F1':stCol[s]||'#10B981'}"></span>
-          <span style="flex:1;min-width:0">${bsLabel(e)}${R.prefOf.get(j)?' <span style="color:#10B981" title="Bevorzugte Abteilung">★</span>':''}${fixed?' <span style="font-size:10px;color:#6366F1">(bereits geplant)</span>':''}${s==='new'?' <span style="font-size:10px;color:#7C3AED" title="Noch nie auditiert – wird vorgeschlagen, sobald Personal da ist">(neu)</span>':''}${fvTime(e)!=null?` <span style="font-size:10px;color:${sc.late>0.5?'#DC2626':'#0369A1'}" title="Fester Besuchstermin ${fvLabel(e)}">(fix ${tgHM(fvTime(e))}${sc.late>0.5?', '+Math.round(sc.late)+' min zu spät':''}${fvDayOK(e,C.days[d].ds)?'':', falscher Tag'})</span>`:''}</span>
+          <span style="flex:1;min-width:0">${bsLabel(e)}${R.prefOf.get(j)?' <span style="color:#10B981" title="Bevorzugt (Abteilung oder Hauptregion)">★</span>':''}${fixed?' <span style="font-size:10px;color:#6366F1">(bereits geplant)</span>':''}${s==='new'?' <span style="font-size:10px;color:#7C3AED" title="Noch nie auditiert – wird vorgeschlagen, sobald Personal da ist">(neu)</span>':''}${C.fixT&&C.fixT.has(j)&&fvTime(e)!==C.fixT.get(j)?` <span style="font-size:10px;color:${sc.late>0.5?'#DC2626':'#0369A1'}" title="Geplanter Termin mit Uhrzeit">(Termin ${tgHM(C.fixT.get(j))}${sc.late>0.5?', '+Math.round(sc.late)+' min zu spät':''})</span>`:''}${fvTime(e)!=null&&!(C.fixT&&C.fixT.has(j)&&fvTime(e)!==C.fixT.get(j))?` <span style="font-size:10px;color:${sc.late>0.5?'#DC2626':'#0369A1'}" title="Fester Besuchstermin ${fvLabel(e)}">(fix ${tgHM(fvTime(e))}${sc.late>0.5?', '+Math.round(sc.late)+' min zu spät':''}${fvDayOK(e,C.days[d].ds)?'':', falscher Tag'})</span>`:''}</span>
           ${tgPersTag(e)}
           ${sc.joint?`<span style="font-size:10px;color:#0369A1;white-space:nowrap" title="Gleicher Ort wie die Einheit davor: ein gemeinsamer Rundgang, Dauer nach den Personen aller Einheiten zusammen. Nachbearbeitung zählt pro Einheit.">🔗 ${Math.round(sc.end-sc.start)>0?'+'+Math.round(sc.end-sc.start)+' min':'im selben Rundgang'}</span>`:''}<span style="font-size:10px;color:var(--tx3);white-space:nowrap;${sc.joint?'display:none':''}"${sc.short>0.5?` title="${Math.round(sc.short)} min kürzer, damit es vor der Pause fertig ist"`:''}>${sc.short>0.5?`${Math.round(C.dur.get(j)-sc.short)} <span style="color:#B45309">(−${Math.round(sc.short)})</span>`:C.dur.get(j)} min${e.zeitbedarf?' fix':''}</span>
           ${fixed?'':`<select onchange="tgMove(${j},+this.value)" style="font-size:10px;padding:1px 3px;border:1px solid var(--bd);border-radius:4px;background:var(--sf);color:var(--tx2)">${R.days.map((di,dd)=>`<option value="${dd}"${dd===d?' selected':''}>${names[di]}</option>`).join('')}</select>
@@ -5428,7 +5452,7 @@ function tgUpdateDays(){
   const m=auditorMeta[aud]||{};
   const _inf=document.getElementById('tg-info');
   _inf.title=[`Startadresse: ${(aud===currentUser&&localStorage.getItem('audit_start'))||m.home||'–'}`,(m.prefDepts||[]).length?'★ Bevorzugt: '+m.prefDepts.join(', '):'',(m.exclDepts||[]).length?'⛔ Ausgeschlossen: '+m.exclDepts.join(', '):''].filter(Boolean).join('\n');
-  _inf.innerHTML=`Startadresse: <b>${escH((aud===currentUser&&localStorage.getItem('audit_start'))||m.home||'– nicht hinterlegt –')}</b>${(m.prefDepts||[]).length?` · ★ ${m.prefDepts.map(escH).join(', ')}`:''}${(m.exclDepts||[]).length?` · ⛔ ${m.exclDepts.map(escH).join(', ')}`:''}`;
+  _inf.innerHTML=`Startadresse: <b>${escH((aud===currentUser&&localStorage.getItem('audit_start'))||m.home||'– nicht hinterlegt –')}</b>${m.regionKm>0?` · ◎ Hauptregion ${m.regionKm} km um ${escH(m.regionPlace||'Startadresse')}${tgRegionCenter(m)?'':' (Ort nicht gefunden)'}`:''}${(m.prefDepts||[]).length?` · ★ ${m.prefDepts.map(escH).join(', ')}`:''}${(m.exclDepts||[]).length?` · ⛔ ${m.exclDepts.map(escH).join(', ')}`:''}`;
   document.getElementById('tg-result').innerHTML='';document.getElementById('tg-apply').style.display='none';
 }
 function openTourguide(){
@@ -5454,6 +5478,15 @@ function tgCycleDept(el){
   const nx={'':'pref',pref:'excl',excl:''}[el.dataset.st||''];
   el.dataset.st=nx;el.setAttribute('style',tgChipStyle(nx));
   el.textContent=tgChipLbl(nx)+el.dataset.d;
+}
+// Mittelpunkt der Hauptregion (Ort statt Startadresse)
+async function tgGeocodeRegion(aud,addr){
+  try{
+    const r=await fetch(`https://api3.geo.admin.ch/rest/services/api/SearchServer?searchText=${encodeURIComponent(addr)}&type=locations&limit=1&sr=4326&lang=de`);
+    const d=await r.json();const a=d.results&&d.results[0]&&d.results[0].attrs;
+    if(a&&auditorMeta[aud]){auditorMeta[aud].regionLat=a.lat;auditorMeta[aud].regionLng=a.lon;saveAudMeta();renderAuditors();}
+    else showToast('⚠ Ort der Hauptregion von '+aud+' nicht gefunden',3000);
+  }catch(e){}
 }
 async function tgGeocodeHome(aud,addr){
   try{

@@ -11,8 +11,8 @@ Beratungen, Rapporten und Ferien der Auditoren. Sprache der Oberfläche: Deutsch
 - Vor jedem PR: App im Browser laden (Desktop- und Mobile-Breite) und in der Konsole
   prüfen, dass keine JavaScript-Fehler auftreten.
 - Bei jeder Änderung an der App die Versionsnummer erhöhen, und zwar überall in
-  `index.html`: im Header (`<span ... title="Version">v3.18</span>`) und in den Links
-  `css/style.css?v=3.18`, `js/merge.js?v=3.18` und `js/app.js?v=3.18`. Der `?v=`-Zusatz
+  `index.html`: im Header (`<span ... title="Version">v3.20</span>`) und in den Links
+  `css/style.css?v=3.20`, `js/merge.js?v=3.20` und `js/app.js?v=3.20`. Der `?v=`-Zusatz
   sorgt dafür, dass Browser nach einem Update keine alte Datei aus dem Cache verwenden.
 - Tests für die Zusammenführung: `node tests/merge.test.js` (muss grün sein).
 - Keine Browser-Dialoge (`confirm`, `prompt`, `alert`): `askConfirm()`, `askText()`,
@@ -76,12 +76,16 @@ global; das HTML ruft sie direkt über `onclick="..."` auf.
   «Ort ausschöpfen» (`harvest`, Umkreis `tg_harvest_min`), neue Gegend nur wenn sie ganz
   Platz hat (`mayOpen`), Gleichstand ±`tg_tie_min` → Grösse/★/Fälligkeit
   Ampel gilt am Audit-Tag (`status(e,now)`, `x.urgDay[d]`), keine 2. Fahrt in dieselbe Gegend pro
-  Woche, lange rot (`tg_force_days`) immer; Nachbearbeitung `tg_post_min` pro Baustelle zählt zur Tageslänge (`tgSim` → `post`);
+  Woche, lange rot (`tg_force_days`) immer; Nachbearbeitung `tg_post_min` pro Baustelle zählt zur Tageslänge (`tgSim` → `post`), Wartezeiten
+  werden angerechnet (`postInWait`); Tag mit flexiblen Stopps beginnt immer zum Tagesbeginn;
   Toleranz: Tag ≤ `tg_day_tol` über `tg_day_hours`, Überzeit aller Tage zusammen ≤ `tg_week_tol` (`ok`/`weekOver` in `tgCompute`);
   `tg_day_start` = Beginn des ersten Audits (Abfahrt um die Fahrzeit früher, `tgSim`);
   Neue Baustellen (Status `new`) wie orange, sobald Personal (`tg_new_due`, bool, `urgRaw` in `tgCandidates`);
   Gleicher Ort (`tgLocKey`, Koordinaten 4 Stellen): gemeinsamer Rundgang, Dauer = `tgMinForCount`(Personen aller
   Einheiten), nur die Differenz pro weiterer Einheit (`sched[].joint`); Nachbearbeitung pro Einheit;
+  Hauptregion pro Auditor `auditorMeta[a].regionKm` + `regionPlace` (Umkreis um Ort, leer = Startadresse; `tgInRegion`/`tgRegionCenter`/`tgGeocodeRegion`): pro Farbe erst Region, dann Rest;
+  Einmaliger Termin: Planung mit `p.time` 'HH:MM' (`planTimeMin`/`planTimeTag`, Planen-Formular `plan-time`, Popup `pop-time`)
+  → fixe Uhrzeit im Tourguide (`fixT`, geht `fixVisit` vor);
   Fester Besuchstermin pro Baustelle `e.fixVisit={days:[0..4],time:'HH:MM'}` (`fvTime`/`fvDayOK`/`fvLabel`): nur an diesen
   Tagen vorgeschlagen, im Tag als fixe Uhrzeit (`_tgCalc.fixT`, `tgTm`); KW-Planung übernimmt den Wochentag;
   Znüni der Baustellen `tg_znueni_start`+`tg_znueni_dur`: kein Audit-Beginn; laufendes darf durch (`tg_znueni_through`, bool);
