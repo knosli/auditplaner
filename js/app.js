@@ -3035,6 +3035,9 @@ function saveAudMeta2(name){
   const homeV=(document.getElementById('am-home-'+id_)?.value||'').trim();
   if(homeV!==(meta.home||'')){meta.home=homeV;meta.homeLat=null;meta.homeLng=null;if(homeV)tgGeocodeHome(name,homeV);}
   const chips=[...document.querySelectorAll('#am-depts-'+id_+' span[data-d]')];
+  {const rk=+(document.getElementById('am-region-'+id_)?.value||0);if(rk>0)meta.regionKm=rk;else delete meta.regionKm;
+   const rp=(document.getElementById('am-regplace-'+id_)?.value||'').trim();
+   if(rp!==(meta.regionPlace||'')){if(rp){meta.regionPlace=rp;meta.regionLat=null;meta.regionLng=null;tgGeocodeRegion(name,rp);}else{delete meta.regionPlace;delete meta.regionLat;delete meta.regionLng;}}}
   if(chips.length){meta.prefDepts=chips.filter(x=>x.dataset.st==='pref').map(x=>x.dataset.d);meta.exclDepts=chips.filter(x=>x.dataset.st==='excl').map(x=>x.dataset.d);}
   auditorMeta[name]=meta;
   saveAudMeta();
@@ -3096,6 +3099,8 @@ function renderAudAdminList(){
         <div style="font-size:11px;font-weight:700;color:var(--tx);margin-bottom:6px"><i class="ti ti-compass" style="color:var(--blue)"></i> Tourguide</div>
         <label style="font-size:10px;color:var(--tx2);display:block;margin-bottom:2px">Startadresse (Rundtour ab/bis hier)</label>
         <input id="am-home-${id}" value="${escH(meta.home||'')}" placeholder="Strasse Nr, PLZ Ort" style="width:100%;padding:5px 7px;border:1px solid var(--bd);border-radius:5px;background:var(--sf);color:var(--tx);font-size:12px;margin-bottom:8px">
+        <label style="font-size:10px;color:var(--tx2);display:block;margin-bottom:2px">Hauptregion <span style="color:var(--tx3)">(leer = keine) – Baustellen darin schlägt der Tourguide zuerst vor</span></label>
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;flex-wrap:wrap"><input id="am-region-${id}" type="number" min="0" max="200" step="5" value="${meta.regionKm||''}" placeholder="z.B. 30" style="width:80px;padding:5px 7px;border:1px solid var(--bd);border-radius:5px;background:var(--sf);color:var(--tx);font-size:12px"><span style="font-size:12px;color:var(--tx2)">km um</span><input id="am-regplace-${id}" value="${escH(meta.regionPlace||'')}" placeholder="Ort (leer = Startadresse)" style="flex:1;min-width:140px;padding:5px 7px;border:1px solid var(--bd);border-radius:5px;background:var(--sf);color:var(--tx);font-size:12px">${meta.regionKm>0?`<span style="font-size:11px;color:var(--tx3)">· ${data.filter(e=>e.active&&tgInRegion(a,e)).length} aktive Baustellen darin</span>`:''}</div>
         <label style="font-size:10px;color:var(--tx2);display:block;margin-bottom:4px">Abteilungen – antippen zum Wechseln: neutral → <b style="color:#10B981">★ bevorzugt</b> → <b style="color:#EF4444">⛔ ausgeschlossen</b></label>
         <div id="am-depts-${id}" style="display:flex;flex-wrap:wrap;gap:4px">${getAllDepts().map(d=>{const st=(meta.prefDepts||[]).includes(d)?'pref':(meta.exclDepts||[]).includes(d)?'excl':'';return`<span data-d="${escH(d)}" data-st="${st}" onclick="tgCycleDept(this)" style="${tgChipStyle(st)}">${tgChipLbl(st)}${escH(d)}</span>`;}).join('')}</div>
       </div>
@@ -4888,6 +4893,7 @@ function rulesHTML(){
     `«Pausiert bis KW …»: Ist das Datum erreicht, wird die Baustelle automatisch reaktiviert. Der Tourguide berücksichtigt sie schon für Tage ab diesem Datum.`,
     `Kein Audit beginnt nach ${tgHM(S('tg_last_start')*60)} (viele Baustellen haben dann Feierabend). Bei 1–${v('pi_review_max')} Personen erscheint «📞 wenig Personal – vorher anrufen».`,
     `<b>Ort ausschöpfen:</b> Ist an einem Tag eine Baustelle oder ein Termin in einer Gegend, werden zuerst alle roten und orangen Baustellen im Umkreis von ${v('tg_harvest_min')} min Fahrzeit mitgenommen (soweit der Tag Platz hat) – damit man nicht wegen einer einzelnen Baustelle nochmals hinfahren muss. Das gilt für bereits geplante Baustellen, Termine und jede neu gewählte Baustelle.`,
+    `<b>Hauptregion</b> (Auditoren verwalten → «Hauptregion»: Umkreis in km um einen Ort, leer = Startadresse – z.B. «30 km um Zürich»): Pro Farbe füllt der Tourguide die Tage zuerst mit Baustellen aus der Hauptregion; Baustellen ausserhalb kommen nur dazu, wenn noch Platz ist. Bei Gleichstand zählen sie wie eine bevorzugte Abteilung ★.`,
     `Auswahl: zuerst rot, dann orange. Innerhalb derselben Farbe entscheidet der kleinste Umweg zur bestehenden Tagesroute. Liegen Umwege höchstens ${v('tg_tie_min')} min auseinander, gelten sie als gleich weit – dann entscheiden Personal-Grösse, bevorzugte Abteilung ★ und wie lange die Baustelle schon fällig ist.`,
     `Die Ampel gilt am <b>Audit-Tag</b>, nicht heute: Eine Baustelle, die heute gelb ist, aber am geplanten Tag orange, wird für diesen Tag berücksichtigt – für frühere Tage der Woche nicht.`,
     `Keine zweite Fahrt in dieselbe Gegend in derselben Woche: Wird eine Gegend an einem Tag schon besucht, kommen ihre Baustellen nur an diesen Tag (was keinen Platz mehr hat, erscheint im Hinweis «Ort nicht ausgeschöpft»).`,
@@ -5036,6 +5042,9 @@ function tgPersonalState(e,targetKW,targetYear){
 }
 // Pause «bis KW …» abgelaufen (bzw. am Audit-Tag abgelaufen)?
 function pauseOverAt(e,ds){return!!(e.paused&&e.pauseUntil&&e.pauseUntil<=ds);}
+// Hauptregion eines Auditors: Umkreis (km) um einen Ort (leer = Startadresse), Auditoren verwalten
+function tgRegionCenter(m){return m.regionPlace?(m.regionLat&&m.regionLng?[+m.regionLat,+m.regionLng]:null):(m.homeLat&&m.homeLng?[+m.homeLat,+m.homeLng]:null);}
+function tgInRegion(aud,e){const m=auditorMeta[aud]||{},c=tgRegionCenter(m);return!!(m.regionKm>0&&c&&e&&e.lat&&e.lng&&haversine(c[0],c[1],+e.lat,+e.lng)<=+m.regionKm);}
 function tgCandidates(aud,kw,noPers,dayDates,noGeo,bfList,provIds=new Set()){
   const m=auditorMeta[aud]||{};const pref=new Set(m.prefDepts||[]),excl=new Set(m.exclDepts||[]);
   const ks=kwToDate(kw),ke=kwToDate(kw+1);
@@ -5058,8 +5067,8 @@ function tgCandidates(aud,kw,noPers,dayDates,noGeo,bfList,provIds=new Set()){
     if(ps==='prov'){provIds.add(e.id);return true;}
     if(ps!=='ok'){if(noPers&&(ps==='unknown'||ps==='stale'))noPers.push({e,state:ps});return false;}
     return true;
-  }).map(e=>{const isPref=deptParts(e.dept).some(d=>pref.has(d));const urgDay=days.map(ds=>urgAt(e,ds));
-    return{e,isPref,urgDay,urg:Math.min(...urgDay.map(u=>u===null?9:u)),pers:tgPersClass(e),min:tgAuditMin(e)};})
+  }).map(e=>{const inReg=tgInRegion(aud,e),isPref=deptParts(e.dept).some(d=>pref.has(d))||inReg;const urgDay=days.map(ds=>urgAt(e,ds));
+    return{e,isPref,inReg,urgDay,urg:Math.min(...urgDay.map(u=>u===null?9:u)),pers:tgPersClass(e),min:tgAuditMin(e)};})
     // Priorität: 1) Ampel (rot vor orange)  2) Personal-Grösse (mehr Personal = höheres Risiko)  3) bevorzugte Abteilung  4) am längsten fällig
     .sort((a,b)=>a.urg-b.urg||a.pers-b.pers||(a.isPref?0:1)-(b.isPref?0:1)||dl(a.e)-dl(b.e));
 }
@@ -5266,15 +5275,17 @@ async function tgCompute(){
     return!(all.length<=maxN&&ok(d,tgPlanDay(d,all)));
   };
   sets.forEach((_,d)=>harvest(d));
-  [0,1].forEach(cls=>{
+  // Hauptregion (Umkreis um die Startadresse) zuerst: pro Farbe erst Baustellen in der Region, dann die übrigen
+  const hasReg=pool.some(x=>x.inReg);
+  [0,1].forEach(cls=>[true,false].forEach(regOnly=>{if(regOnly&&!hasReg)return;
     for(;;){
       let best=null;
-      remaining.forEach(i=>{sets.forEach((_,d)=>{if(pool[i].urgDay[d]!==cls)return;const c=tryDay(i,d);if(c&&better(c,best)&&mayOpen(i,d))best=c;});});
+      remaining.forEach(i=>{if(regOnly&&!pool[i].inReg)return;sets.forEach((_,d)=>{if(pool[i].urgDay[d]!==cls)return;const c=tryDay(i,d);if(c&&better(c,best)&&mayOpen(i,d))best=c;});});
       if(!best)break;
       sets[best.d].push(idxPool[best.i]);remaining.delete(best.i);
       harvest(best.d);
     }
-  });
+  }));
   const skipped=pool.filter((_,i)=>remaining.has(i));
   // Ausgleich zwischen den Tagen (neue Baustellen verschieben/tauschen), bereits geplante bleiben.
   // Eine Baustelle wird nicht von ihren Nachbarn (Umkreis) weg auf einen anderen Tag verschoben.
@@ -5329,7 +5340,7 @@ function tgRender(){
         const j=it.node,e=R.nodeEntry.get(j),fixed=R.fixedIds.has(j),ud=(R.urgOf.get(j)||[])[d],s=ud===0?'overdue':ud===1?(status(e)==='new'?'new':'due'):status(e);
         return lunchRow+`<div style="display:flex;align-items:center;gap:6px;padding:4px 0;font-size:12px;border-top:1px solid var(--bd)">${time}
           <span style="width:8px;height:8px;border-radius:50%;flex-shrink:0;background:${fixed?'#6366F1':stCol[s]||'#10B981'}"></span>
-          <span style="flex:1;min-width:0">${bsLabel(e)}${R.prefOf.get(j)?' <span style="color:#10B981" title="Bevorzugte Abteilung">★</span>':''}${fixed?' <span style="font-size:10px;color:#6366F1">(bereits geplant)</span>':''}${s==='new'?' <span style="font-size:10px;color:#7C3AED" title="Noch nie auditiert – wird vorgeschlagen, sobald Personal da ist">(neu)</span>':''}${C.fixT&&C.fixT.has(j)&&fvTime(e)!==C.fixT.get(j)?` <span style="font-size:10px;color:${sc.late>0.5?'#DC2626':'#0369A1'}" title="Geplanter Termin mit Uhrzeit">(Termin ${tgHM(C.fixT.get(j))}${sc.late>0.5?', '+Math.round(sc.late)+' min zu spät':''})</span>`:''}${fvTime(e)!=null&&!(C.fixT&&C.fixT.has(j)&&fvTime(e)!==C.fixT.get(j))?` <span style="font-size:10px;color:${sc.late>0.5?'#DC2626':'#0369A1'}" title="Fester Besuchstermin ${fvLabel(e)}">(fix ${tgHM(fvTime(e))}${sc.late>0.5?', '+Math.round(sc.late)+' min zu spät':''}${fvDayOK(e,C.days[d].ds)?'':', falscher Tag'})</span>`:''}</span>
+          <span style="flex:1;min-width:0">${bsLabel(e)}${R.prefOf.get(j)?' <span style="color:#10B981" title="Bevorzugt (Abteilung oder Hauptregion)">★</span>':''}${fixed?' <span style="font-size:10px;color:#6366F1">(bereits geplant)</span>':''}${s==='new'?' <span style="font-size:10px;color:#7C3AED" title="Noch nie auditiert – wird vorgeschlagen, sobald Personal da ist">(neu)</span>':''}${C.fixT&&C.fixT.has(j)&&fvTime(e)!==C.fixT.get(j)?` <span style="font-size:10px;color:${sc.late>0.5?'#DC2626':'#0369A1'}" title="Geplanter Termin mit Uhrzeit">(Termin ${tgHM(C.fixT.get(j))}${sc.late>0.5?', '+Math.round(sc.late)+' min zu spät':''})</span>`:''}${fvTime(e)!=null&&!(C.fixT&&C.fixT.has(j)&&fvTime(e)!==C.fixT.get(j))?` <span style="font-size:10px;color:${sc.late>0.5?'#DC2626':'#0369A1'}" title="Fester Besuchstermin ${fvLabel(e)}">(fix ${tgHM(fvTime(e))}${sc.late>0.5?', '+Math.round(sc.late)+' min zu spät':''}${fvDayOK(e,C.days[d].ds)?'':', falscher Tag'})</span>`:''}</span>
           ${tgPersTag(e)}
           ${sc.joint?`<span style="font-size:10px;color:#0369A1;white-space:nowrap" title="Gleicher Ort wie die Einheit davor: ein gemeinsamer Rundgang, Dauer nach den Personen aller Einheiten zusammen. Nachbearbeitung zählt pro Einheit.">🔗 ${Math.round(sc.end-sc.start)>0?'+'+Math.round(sc.end-sc.start)+' min':'im selben Rundgang'}</span>`:''}<span style="font-size:10px;color:var(--tx3);white-space:nowrap;${sc.joint?'display:none':''}"${sc.short>0.5?` title="${Math.round(sc.short)} min kürzer, damit es vor der Pause fertig ist"`:''}>${sc.short>0.5?`${Math.round(C.dur.get(j)-sc.short)} <span style="color:#B45309">(−${Math.round(sc.short)})</span>`:C.dur.get(j)} min${e.zeitbedarf?' fix':''}</span>
           ${fixed?'':`<select onchange="tgMove(${j},+this.value)" style="font-size:10px;padding:1px 3px;border:1px solid var(--bd);border-radius:4px;background:var(--sf);color:var(--tx2)">${R.days.map((di,dd)=>`<option value="${dd}"${dd===d?' selected':''}>${names[di]}</option>`).join('')}</select>
@@ -5441,7 +5452,7 @@ function tgUpdateDays(){
   const m=auditorMeta[aud]||{};
   const _inf=document.getElementById('tg-info');
   _inf.title=[`Startadresse: ${(aud===currentUser&&localStorage.getItem('audit_start'))||m.home||'–'}`,(m.prefDepts||[]).length?'★ Bevorzugt: '+m.prefDepts.join(', '):'',(m.exclDepts||[]).length?'⛔ Ausgeschlossen: '+m.exclDepts.join(', '):''].filter(Boolean).join('\n');
-  _inf.innerHTML=`Startadresse: <b>${escH((aud===currentUser&&localStorage.getItem('audit_start'))||m.home||'– nicht hinterlegt –')}</b>${(m.prefDepts||[]).length?` · ★ ${m.prefDepts.map(escH).join(', ')}`:''}${(m.exclDepts||[]).length?` · ⛔ ${m.exclDepts.map(escH).join(', ')}`:''}`;
+  _inf.innerHTML=`Startadresse: <b>${escH((aud===currentUser&&localStorage.getItem('audit_start'))||m.home||'– nicht hinterlegt –')}</b>${m.regionKm>0?` · ◎ Hauptregion ${m.regionKm} km um ${escH(m.regionPlace||'Startadresse')}${tgRegionCenter(m)?'':' (Ort nicht gefunden)'}`:''}${(m.prefDepts||[]).length?` · ★ ${m.prefDepts.map(escH).join(', ')}`:''}${(m.exclDepts||[]).length?` · ⛔ ${m.exclDepts.map(escH).join(', ')}`:''}`;
   document.getElementById('tg-result').innerHTML='';document.getElementById('tg-apply').style.display='none';
 }
 function openTourguide(){
@@ -5467,6 +5478,15 @@ function tgCycleDept(el){
   const nx={'':'pref',pref:'excl',excl:''}[el.dataset.st||''];
   el.dataset.st=nx;el.setAttribute('style',tgChipStyle(nx));
   el.textContent=tgChipLbl(nx)+el.dataset.d;
+}
+// Mittelpunkt der Hauptregion (Ort statt Startadresse)
+async function tgGeocodeRegion(aud,addr){
+  try{
+    const r=await fetch(`https://api3.geo.admin.ch/rest/services/api/SearchServer?searchText=${encodeURIComponent(addr)}&type=locations&limit=1&sr=4326&lang=de`);
+    const d=await r.json();const a=d.results&&d.results[0]&&d.results[0].attrs;
+    if(a&&auditorMeta[aud]){auditorMeta[aud].regionLat=a.lat;auditorMeta[aud].regionLng=a.lon;saveAudMeta();renderAuditors();}
+    else showToast('⚠ Ort der Hauptregion von '+aud+' nicht gefunden',3000);
+  }catch(e){}
 }
 async function tgGeocodeHome(aud,addr){
   try{

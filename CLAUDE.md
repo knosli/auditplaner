@@ -11,8 +11,8 @@ Beratungen, Rapporten und Ferien der Auditoren. Sprache der Oberfläche: Deutsch
 - Vor jedem PR: App im Browser laden (Desktop- und Mobile-Breite) und in der Konsole
   prüfen, dass keine JavaScript-Fehler auftreten.
 - Bei jeder Änderung an der App die Versionsnummer erhöhen, und zwar überall in
-  `index.html`: im Header (`<span ... title="Version">v3.19</span>`) und in den Links
-  `css/style.css?v=3.19`, `js/merge.js?v=3.19` und `js/app.js?v=3.19`. Der `?v=`-Zusatz
+  `index.html`: im Header (`<span ... title="Version">v3.20</span>`) und in den Links
+  `css/style.css?v=3.20`, `js/merge.js?v=3.20` und `js/app.js?v=3.20`. Der `?v=`-Zusatz
   sorgt dafür, dass Browser nach einem Update keine alte Datei aus dem Cache verwenden.
 - Tests für die Zusammenführung: `node tests/merge.test.js` (muss grün sein).
 - Keine Browser-Dialoge (`confirm`, `prompt`, `alert`): `askConfirm()`, `askText()`,
@@ -83,6 +83,7 @@ global; das HTML ruft sie direkt über `onclick="..."` auf.
   Neue Baustellen (Status `new`) wie orange, sobald Personal (`tg_new_due`, bool, `urgRaw` in `tgCandidates`);
   Gleicher Ort (`tgLocKey`, Koordinaten 4 Stellen): gemeinsamer Rundgang, Dauer = `tgMinForCount`(Personen aller
   Einheiten), nur die Differenz pro weiterer Einheit (`sched[].joint`); Nachbearbeitung pro Einheit;
+  Hauptregion pro Auditor `auditorMeta[a].regionKm` + `regionPlace` (Umkreis um Ort, leer = Startadresse; `tgInRegion`/`tgRegionCenter`/`tgGeocodeRegion`): pro Farbe erst Region, dann Rest;
   Einmaliger Termin: Planung mit `p.time` 'HH:MM' (`planTimeMin`/`planTimeTag`, Planen-Formular `plan-time`, Popup `pop-time`)
   → fixe Uhrzeit im Tourguide (`fixT`, geht `fixVisit` vor);
   Fester Besuchstermin pro Baustelle `e.fixVisit={days:[0..4],time:'HH:MM'}` (`fvTime`/`fvDayOK`/`fvLabel`): nur an diesen
