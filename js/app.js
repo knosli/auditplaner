@@ -108,6 +108,7 @@ function hasBeratPlan(e){
 // now (optional): Zeitpunkt in ms, an dem die Ampel gelten soll (Standard: jetzt). Tourguide nutzt den Audit-Tag.
 function status(e,now){
   if(!e.active)return'inactive';
+  if(e.noAudit)return'noaudit';   // läuft, wird aber nicht auditiert (Sicherheit nicht bei uns)
   if(e.paused)return'paused';
   if(hasP(e))return'planned';
   if(hasBeratPlan(e))return'beratung';
@@ -159,7 +160,7 @@ function dl(e,now){
   if(!ref)return-999;
   return Math.round((parseDate(ref).getTime()+e.rhythm*86400000-(now||Date.now()))/86400000);
 }
-function dotC(e){if(planned.has(e.id))return'#10B981';if(e.type==='werkhof')return'#EA580C';const s=status(e);if(s==='paused')return'rgba(148,163,184,.75)';if(s==='planned')return'#6366F1';if(s==='beratung')return'#8B5CF6';if(s==='overdue')return'#EF4444';if(s==='due')return'#F59E0B';if(s==='soon')return'#FDE047';return'#10B981';}
+function dotC(e){if(planned.has(e.id))return'#10B981';if(e.type==='werkhof')return'#EA580C';const s=status(e);if(s==='noaudit')return'#64748B';if(s==='paused')return'rgba(148,163,184,.75)';if(s==='planned')return'#6366F1';if(s==='beratung')return'#8B5CF6';if(s==='overdue')return'#EF4444';if(s==='due')return'#F59E0B';if(s==='soon')return'#FDE047';return'#10B981';}
 // ═══ STORAGE ═══
 let saveT=null;
 function save(){clearTimeout(saveT);try{if(sbConnected&&sbBase)setSyncState('saving');}catch(e){}saveT=setTimeout(()=>{saveT=null;saveLocal();if(!sbConnected)showToast('💾',1200);sbPush();},900);}
@@ -476,8 +477,8 @@ function renderList(){
     });
   }else list.sort((a,b)=>dl(a)-dl(b));
   if(!data.length){document.getElementById('bslist').innerHTML=`<div class="empty-s"><h3>Keine Baustellen</h3><p>Über «+ Neue Baustelle» erfassen oder ein Backup laden.</p></div>`;return;}
-  const tc={overdue:'tov',due:'tdu',soon:'tsn',ok:'tok',new:'tnew',paused:'tpa',inactive:'tin',planned:'tpl',beratung:'tpl'};
-  const sl=e=>{const s=status(e);if(s==='planned'){const p=plans.filter(x=>x.bsId===e.id&&x.date>=today()).sort((a,b)=>a.date.localeCompare(b.date))[0];return p?`KW ${dateToKW(p.date)}`:'Geplant';}if(s==='overdue')return`${Math.abs(dl(e))-10}T überfällig`;if(s==='due')return`${Math.abs(dl(e))}T über`;if(s==='soon')return`in ${dl(e)}T`;if(s==='new')return'Neu – kein Audit';if(dl(e)===-999)return'Kein Audit';if(s==='beratung')return'Beratung geplant';if(s==='paused')return'Pausiert';if(s==='inactive')return'Inaktiv';return`in ${dl(e)}T`;};
+  const tc={overdue:'tov',due:'tdu',soon:'tsn',ok:'tok',new:'tnew',paused:'tpa',inactive:'tin',planned:'tpl',beratung:'tpl',noaudit:'tpa'};
+  const sl=e=>{const s=status(e);if(s==='planned'){const p=plans.filter(x=>x.bsId===e.id&&x.date>=today()).sort((a,b)=>a.date.localeCompare(b.date))[0];return p?`KW ${dateToKW(p.date)}`:'Geplant';}if(s==='overdue')return`${Math.abs(dl(e))-10}T überfällig`;if(s==='due')return`${Math.abs(dl(e))}T über`;if(s==='soon')return`in ${dl(e)}T`;if(s==='new')return'Neu – kein Audit';if(s==='noaudit')return'🛡 Kein Audit (nicht im Lead)';if(dl(e)===-999)return'Kein Audit';if(s==='beratung')return'Beratung geplant';if(s==='paused')return'Pausiert';if(s==='inactive')return'Inaktiv';return`in ${dl(e)}T`;};
   const _cardHTML=e=>{
     const s=status(e),ip=planned.has(e.id);
     const chk=(planMode||multiPlanMode||multiAuditMode)&&e.active&&!e.paused?`<div class="pchk${ip?' on':''}" onclick="togPI(event,${e.id})">${ip?'✓':''}</div>`:'';
@@ -663,6 +664,7 @@ function selEntry(id){
   if(e.active){pb.style.display='';pb.textContent=e.paused?'▶ Reaktivieren':'⏸ Pausieren';pb.className=e.paused?'bg':'bpu';}else pb.style.display='none';
   const puEl=document.getElementById('dp-pause-until');
   if(puEl){if(e.paused&&e.pauseUntil){const kw=dateToKW(e.pauseUntil);const d=parseDate(e.pauseUntil);puEl.textContent='⏸ Pausiert bis KW '+kw+' ('+d.getDate()+'.'+(d.getMonth()+1)+'.)';puEl.style.display='block';}else if(e.paused){const pd=e.pausedAt,lim=S('pause_to_inactive');puEl.textContent='⏸ Pausiert'+(pd?' seit '+fd(pd):' (unbegrenzt)')+(pd&&lim>0&&e.type!=='werkhof'?' – wird ab '+fd(ferISO(new Date(parseDate(pd).getTime()+(lim+1)*86400000)))+' automatisch inaktiv':'');puEl.style.display='block';}
+    else if(e.noAudit&&e.active!==false){puEl.textContent='🛡 Kein Audit – Sicherheit nicht bei uns. Baustelle läuft (Personal wird erfasst), keine Ampel, nie im Tourguide.';puEl.style.display='block';}
     else if(e.active===false&&e.inactiveAt){puEl.textContent='◼ Inaktiv seit '+fd(e.inactiveAt)+(e.extDone?' · in Audit-App erledigt':' · in Audit-App noch nachtragen');puEl.style.display='block';}else puEl.style.display='none';}
   ab.textContent=e.active?'⚫ Inaktiv':'✓ Aktivieren';ab.className=e.active?'bt2':'bg';
   document.getElementById('dp').style.display='block';
@@ -803,6 +805,8 @@ function confirmPause(){const e=data.find(x=>x.id===selId);if(!e)return;e.paused
 function pauseTrack(){
   const t=today();
   data.forEach(e=>{
+    // früher «dauerhaft ausgeschlossen» = dauerhaft pausiert -> jetzt «Kein Audit» (läuft, nie auditiert, nie automatisch inaktiv)
+    if(e.excludeFromPersonalReview&&e.paused&&/^Dauerhaft ausgeschlossen/.test(e.pauseReason||'')){e.noAudit=true;e.paused=false;e.pauseReason=null;}
     if(e.paused&&e.active!==false&&!e.pausedAt){
       const m=/KW\s*(\d{1,2})/.exec(e.pauseReason||'');let d=t;
       if(m){let yr=curIsoYear(),mo=isoMonday(+m[1],yr);if(mo>parseDate(t))mo=isoMonday(+m[1],yr-1);d=ferISO(mo);}
@@ -818,7 +822,7 @@ function autoInactivateLongPaused(){
   pauseTrack();
   const t=parseDate(today()).getTime();let n=0;
   data.forEach(e=>{
-    if(e.active===false||!e.paused||e.pauseUntil||!e.pausedAt||e.type==='werkhof')return;
+    if(e.active===false||!e.paused||e.pauseUntil||!e.pausedAt||e.type==='werkhof'||e.noAudit||e.excludeFromPersonalReview)return;
     const dd=Math.round((t-parseDate(e.pausedAt).getTime())/86400000);
     if(dd>days){markInactive(e,`Automatisch: ${dd} Tage pausiert`+(e.pauseReason?` (${e.pauseReason})`:''));log('Inaktiv ◼ (automatisch, '+dd+' Tage pausiert)',e.name,'#6B7280','');n++;}
   });
@@ -3164,7 +3168,7 @@ function renderAudAdminList(){
   }).join('');
 }
 
-function openAdd(){editId=null;FV_DAYS.forEach((_,i)=>{const c=document.getElementById('f-fv-'+i);if(c)c.checked=false;});{const t=document.getElementById('f-fv-time');if(t)t.value='';}{const k=document.getElementById('m-to-kd');if(k)k.style.display='none';}window._newSitePersonal=null;window._pendingLat=null;window._pendingLng=null;{const z=document.getElementById('f-zb');if(z)z.value='';}{const la=document.getElementById('f-lat'),ln=document.getElementById('f-lng');if(la)la.value='';if(ln)ln.value='';}document.getElementById('m-title').textContent='Neue Baustelle';document.getElementById('form-s').style.display='block';(document.getElementById('imp-s')||{style:{},classList:{remove(){}}}).style.display='none';(document.getElementById('json-s')||{style:{},classList:{remove(){}}}).style.display='none';document.getElementById('m-save').style.display='';['f-name','f-addr','f-psp','f-sap','f-prv','f-bc','f-note'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});fillFDept('');setDefaultRhythm('baustelle');document.getElementById('f-last').value='';document.getElementById('f-type').value='baustelle';document.getElementById('addr-suggestions').style.display='none';const hint=document.getElementById('f-addr-hint');if(hint)hint.textContent='';document.getElementById('mbg').classList.add('open');}
+function openAdd(){editId=null;{const c=document.getElementById('f-noaudit');if(c)c.checked=false;}FV_DAYS.forEach((_,i)=>{const c=document.getElementById('f-fv-'+i);if(c)c.checked=false;});{const t=document.getElementById('f-fv-time');if(t)t.value='';}{const k=document.getElementById('m-to-kd');if(k)k.style.display='none';}window._newSitePersonal=null;window._pendingLat=null;window._pendingLng=null;{const z=document.getElementById('f-zb');if(z)z.value='';}{const la=document.getElementById('f-lat'),ln=document.getElementById('f-lng');if(la)la.value='';if(ln)ln.value='';}document.getElementById('m-title').textContent='Neue Baustelle';document.getElementById('form-s').style.display='block';(document.getElementById('imp-s')||{style:{},classList:{remove(){}}}).style.display='none';(document.getElementById('json-s')||{style:{},classList:{remove(){}}}).style.display='none';document.getElementById('m-save').style.display='';['f-name','f-addr','f-psp','f-sap','f-prv','f-bc','f-note'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});fillFDept('');setDefaultRhythm('baustelle');document.getElementById('f-last').value='';document.getElementById('f-type').value='baustelle';document.getElementById('addr-suggestions').style.display='none';const hint=document.getElementById('f-addr-hint');if(hint)hint.textContent='';document.getElementById('mbg').classList.add('open');}
 function openEdit(id){
   {const k=document.getElementById('m-to-kd');if(k)k.style.display=document.body.classList.contains('admin-mode')?'':'none';}
   // Reset manual marker
@@ -3191,6 +3195,7 @@ function openEdit(id){
   document.getElementById('f-zb').value=e.zeitbedarf||'';
   FV_DAYS.forEach((_,i)=>{const c=document.getElementById('f-fv-'+i);if(c)c.checked=!!(e.fixVisit&&(e.fixVisit.days||[]).includes(i));});
   {const t=document.getElementById('f-fv-time');if(t)t.value=(e.fixVisit&&e.fixVisit.time)||'';}
+  {const c=document.getElementById('f-noaudit');if(c)c.checked=!!e.noAudit;}
   document.getElementById('f-last').value=e.lastAudit||'';
   document.getElementById('f-note').value=e.note||'';
   document.getElementById('f-type').value=e.type||'baustelle';
@@ -3226,7 +3231,8 @@ async function saveEntry(){
   let rh=+document.getElementById('f-rh').value;if(type==='werkhof'&&rh===S('rh_baustelle'))rh=S('rh_werkhof');
   const _zb=+document.getElementById('f-zb').value||0;
   const _fvT=(document.getElementById('f-fv-time')||{}).value||'',_fvD=FV_DAYS.map((_,i)=>i).filter(i=>document.getElementById('f-fv-'+i)?.checked);
-  const entry={id:editId||Date.now(),name,addr,zeitbedarf:_zb>0?_zb:undefined,fixVisit:_fvT?{days:_fvD,time:_fvT}:undefined,psp:document.getElementById('f-psp').value.trim(),sap:name,prv:document.getElementById('f-prv').value.trim(),bc:document.getElementById('f-bc').value.trim(),dept,rhythm:rh,type,lastAudit:document.getElementById('f-last').value||null,lastKW:null,note:document.getElementById('f-note').value.trim(),auditor:editId?data.find(e=>e.id===editId)?.auditor:null,active:true,paused:false,auditHistory:[],plannedKW:[],lat,lng};
+  const entry={id:editId||Date.now(),name,addr,zeitbedarf:_zb>0?_zb:undefined,fixVisit:_fvT?{days:_fvD,time:_fvT}:undefined,noAudit:document.getElementById('f-noaudit')?.checked||undefined,psp:document.getElementById('f-psp').value.trim(),sap:name,prv:document.getElementById('f-prv').value.trim(),bc:document.getElementById('f-bc').value.trim(),dept,rhythm:rh,type,lastAudit:document.getElementById('f-last').value||null,lastKW:null,note:document.getElementById('f-note').value.trim(),auditor:editId?data.find(e=>e.id===editId)?.auditor:null,active:true,paused:false,auditHistory:[],plannedKW:[],lat,lng};
+  if(!entry.noAudit)entry.excludeFromPersonalReview=undefined;   // «Kein Audit» aus -> auch Import-Ausschluss aufheben
   if(editId){const old=data.find(e=>e.id===editId);if(old){entry.active=old.active!==false;entry.lastKW=old.lastKW??null;entry.auditor=old.auditor;entry.paused=old.paused;entry.pauseReason=old.pauseReason;entry.auditHistory=old.auditHistory||[];entry.plannedKW=old.plannedKW||[];}data[data.findIndex(e=>e.id===editId)]={...old,...entry};}
   else{entry.createdAt=today();data.push(entry);if(window._newSitePersonal)piApplyNewSite(entry);}
   log(editId?'Bearbeitet':'Hinzugefügt',name,editId?'#F59E0B':'#3B82F6','');
@@ -4745,7 +4751,7 @@ function rulesHTML(){
     `Fälligkeit = letztes Audit + Rhythmus der Baustelle.`,
     `<span style="color:#EAB308">●</span> Bald fällig ab ${v('due_soon_days')} Tagen vor Fälligkeit · <span style="color:#F59E0B">●</span> fällig ab Fälligkeitstag · <span style="color:#EF4444">●</span> überfällig ab ${v('due_overdue_days')} Tagen danach.`,
     `Noch nie auditierte Baustellen (★ auf der Karte): Frist läuft ab Erfassung – violett = neu, orange = fällig, rot = überfällig. Werkhöfe gelten nie als «neu» (Audit-Rhythmus dort weniger wichtig).`,
-    `Geplante Baustellen (blau) und geplante Beratungen (violett) werden nicht als fällig gezählt; pausierte und inaktive gar nicht.`]) +
+    `Geplante Baustellen (blau) und geplante Beratungen (violett) werden nicht als fällig gezählt; pausierte und inaktive gar nicht. <b>🛡 Kein Audit</b> (Bearbeiten → Häkchen, z.B. Sicherheit nicht bei uns im Lead): Die Baustelle läuft weiter und der Personal-Import erfasst ihr Personal, aber sie hat keine Ampel, zählt nie als fällig, kommt nie in den Tourguide, wird nie pausiert vorgeschlagen und nie automatisch inaktiv.`]) +
   sec('refresh','Rhythmus',[
     `Standard beim Erfassen: Baustelle ${v('rh_baustelle')} Tage, GU ${v('rh_gu')} Tage, Werkhof ${v('rh_werkhof')} Tage. Pro Baustelle individuell änderbar.`,
     `Feld «Zeitbedarf» (nur Spezialbaustellen): feste Audit-Dauer, übersteuert die Schätzung nach Personal.`]) +
@@ -5604,7 +5610,7 @@ function piComputeMissing(){
   const matched=new Set();
   ['pause','review','reactivate','noop','reactivateInactive','inactiveInfo','excluded'].forEach(k=>(b[k]||[]).forEach(it=>{if(it.match&&it.match.entry)matched.add(it.match.entry.id);}));
   const cov=new Set(covered.map(x=>x.dept));
-  b.missing=data.filter(e=>e.active&&!e.paused&&e.type!=='werkhof'&&!e.excludeFromPersonalReview&&!matched.has(e.id)&&deptParts(e.dept).some(d=>cov.has(d)))
+  b.missing=data.filter(e=>e.active&&!e.paused&&!e.noAudit&&e.type!=='werkhof'&&!e.excludeFromPersonalReview&&!matched.has(e.id)&&deptParts(e.dept).some(d=>cov.has(d)))
     .sort((x,y)=>(x.dept||'').localeCompare(y.dept||'')||x.name.localeCompare(y.name))
     .map(e=>({name:e.name,psp:e.psp,count:null,match:{entry:e},isNew:!e.lastAudit&&!e.resumeFrom}));
   _piPending.coverage={quellen,covered,partial,unmapped:quellen.filter(q=>!qm[q])};
@@ -5893,7 +5899,7 @@ async function runPersonalImport(file){
       // Dauerhaft von der Personal-Import-Prüfung ausgeschlossen (z.B. Baustellen in Gefängnissen
       // o.ä., die nie auditiert werden) - wird nie mehr in einen Entscheidungs-Eimer gesteckt,
       // egal wie viele Personen laut Liste dort eingeteilt sind.
-      if(e.excludeFromPersonalReview){buckets.excluded.push(item);return;}
+      if(e.excludeFromPersonalReview||e.noAudit){buckets.excluded.push(item);return;}
       if(m.wasInactive){
         // Inaktive Baustelle taucht auf einer Einsatzliste auf -> eigene Kategorie, nie
         // automatisch reaktiviert. Nur bei mehr als 1 Person schlagen wir Reaktivierung vor.
@@ -6023,8 +6029,7 @@ async function piExcludePermanently(idx){
   const e=data.find(x=>x.id===item.match.entry.id);
   if(!e)return;
   if(!await askConfirm(`«${e.name}» dauerhaft von der Personal-Import-Prüfung ausschliessen?\n\nWird sofort pausiert und taucht künftig nie mehr in "Prüfen" auf, egal wie viele Personen dort laut Einsatzliste eingeteilt sind. Kann jederzeit wieder rückgängig gemacht werden.`,{ok:'Ausschliessen'}))return;
-  e.excludeFromPersonalReview=true;
-  e.paused=true;e.pauseReason='Dauerhaft ausgeschlossen (Personal-Import)';e.pauseUntil=null;
+  e.excludeFromPersonalReview=true;e.noAudit=true;   // läuft weiter, wird aber nie auditiert (statt dauerhaft pausiert)
   log('Dauerhaft ausgeschlossen 🔇 (Personal-Import)',e.name,'#6B7280','');
   _piPending.buckets.review.splice(idx,1);
   _piPending.buckets.excluded.push(item);
@@ -6035,7 +6040,7 @@ async function piExcludePermanently(idx){
 function piUnexclude(entryId){
   const e=data.find(x=>x.id===entryId);
   if(!e)return;
-  e.excludeFromPersonalReview=false;
+  e.excludeFromPersonalReview=false;delete e.noAudit;
   log('Ausschluss aufgehoben (Personal-Import)',e.name,'#3B82F6','');
   saveNow();renderAll();
   if(_piPending){_piPending.buckets.excluded=_piPending.buckets.excluded.filter(it=>it.match.entry.id!==entryId);piRenderPreview();}
