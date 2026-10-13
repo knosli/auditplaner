@@ -33,7 +33,7 @@ if('serviceWorker' in navigator){
 <link rel="stylesheet" href="vendor/markercluster/MarkerCluster.css?v=1.5.3">
 <link rel="stylesheet" href="vendor/markercluster/MarkerCluster.Default.css?v=1.5.3">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
-<link rel="stylesheet" href="css/style.css?v=3.18">
+<link rel="stylesheet" href="css/style.css?v=3.19">
 </head>
 <body>
 <div id="app" style="display:none">
@@ -61,7 +61,7 @@ if('serviceWorker' in navigator){
   <div id="presence-bar" style="display:flex;align-items:center;gap:4px;margin-left:4px"></div>
   <button onclick="toggleDark()" class="hb" title="Dark Mode" style="font-size:14px">🌙</button>
   <button onclick="openGuide()" class="hb" title="Anleitung" style="font-size:14px">❓</button>
-  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v3.18</span>
+  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v3.19</span>
   <button onclick="doLogout()" class="hb" title="Abmelden" style="font-size:14px" id="logout-btn">⏻</button>
   <button onclick="toggleMobileView()" id="mobile-btn" class="hb" title="Mobile Ansicht" style="font-size:14px">📱</button>
   <div id="more-w" class="admin-only">
@@ -199,6 +199,7 @@ if('serviceWorker' in navigator){
           <button id="plan-mode-kw" onclick="setPlanMode('kw')" style="flex:1;padding:5px 8px;border:none;background:var(--blue);color:#fff;cursor:pointer;font-size:11px;font-weight:600">KW <input type="number" id="plan-kw" min="1" max="53" placeholder="30" onclick="event.stopPropagation();setPlanMode('kw')" style="width:40px;padding:1px 4px;border:1px solid rgba(255,255,255,.4);border-radius:3px;font-size:11px;background:rgba(255,255,255,.2);color:#fff" onchange="setStickyPlanKW(this.value)"></button>
           <button id="plan-mode-date" onclick="setPlanMode('date')" style="flex:1;padding:5px 8px;border:none;border-left:1px solid var(--bd);background:var(--sf2);color:var(--tx);cursor:pointer;font-size:11px;font-weight:600">Datum <input type="date" id="plan-date" onclick="event.stopPropagation();setPlanMode('date')" style="padding:1px 3px;border:1px solid var(--bd);border-radius:3px;font-size:10px;background:var(--sf);color:var(--tx)"></button>
         </div>
+        <label title="Nur für einmalige Termine auf der Baustelle (z.B. Begehung 13:30). Der Tourguide plant den Tag dann um diese Zeit herum.">Uhrzeit <span style="font-weight:400;color:var(--tx3)">– optional, z.B. Begehung</span></label><input type="time" id="plan-time" style="margin-bottom:6px">
         <button class="cfm bl" onclick="confirmPlan()">+ Planung speichern</button>
       </div>
       <div class="dkf" id="note-form">
@@ -1089,8 +1090,8 @@ if('serviceWorker' in navigator){
 <script src="vendor/leaflet/leaflet.js?v=1.9.4"></script>
 <script src="vendor/markercluster/leaflet.markercluster.js?v=1.5.3"></script>
 <script src="vendor/xlsx/xlsx.full.min.js?v=0.18.5"></script>
-<script src="js/merge.js?v=3.18"></script>
-<script src="js/app.js?v=3.18"></script>
+<script src="js/merge.js?v=3.19"></script>
+<script src="js/app.js?v=3.19"></script>
 <!-- ONBOARDING GUIDE MODAL -->
 <div id="guide-bg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:5000;align-items:center;justify-content:center">
   <div style="background:var(--sf);border-radius:16px;width:560px;max-width:95vw;max-height:90vh;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.4);display:flex;flex-direction:column">
