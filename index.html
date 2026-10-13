@@ -33,7 +33,7 @@ if('serviceWorker' in navigator){
 <link rel="stylesheet" href="vendor/markercluster/MarkerCluster.css?v=1.5.3">
 <link rel="stylesheet" href="vendor/markercluster/MarkerCluster.Default.css?v=1.5.3">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
-<link rel="stylesheet" href="css/style.css?v=3.22">
+<link rel="stylesheet" href="css/style.css?v=3.23">
 </head>
 <body>
 <div id="app" style="display:none">
@@ -61,7 +61,7 @@ if('serviceWorker' in navigator){
   <div id="presence-bar" style="display:flex;align-items:center;gap:4px;margin-left:4px"></div>
   <button onclick="toggleDark()" class="hb" title="Dark Mode" style="font-size:14px">🌙</button>
   <button onclick="openGuide()" class="hb" title="Anleitung" style="font-size:14px">❓</button>
-  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v3.22</span>
+  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v3.23</span>
   <button onclick="doLogout()" class="hb" title="Abmelden" style="font-size:14px" id="logout-btn">⏻</button>
   <button onclick="toggleMobileView()" id="mobile-btn" class="hb" title="Mobile Ansicht" style="font-size:14px">📱</button>
   <div id="more-w" class="admin-only">
@@ -403,7 +403,6 @@ if('serviceWorker' in navigator){
         </select>
         <button onclick="calToday()" style="padding:6px 14px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf);cursor:pointer;font-size:12px;font-weight:600;color:var(--blue)">Heute</button>
         <button onclick="openTourguide()" style="padding:6px 14px;border-radius:var(--rs);border:1px solid var(--blue);background:var(--blue);cursor:pointer;font-size:12px;font-weight:600;color:#fff"><i class="ti ti-compass"></i> Tourguide</button>
-        <button onclick="openDistribute()" style="padding:6px 14px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf);cursor:pointer;font-size:12px;font-weight:600;color:var(--tx)"><i class="ti ti-layout-distribute-horizontal"></i> Verteilen</button>
         <button onclick="openKWPrintDialog()" style="padding:6px 14px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf);cursor:pointer;font-size:12px;font-weight:600;color:var(--tx)"><i class="ti ti-printer"></i> Drucken</button>
         <button onclick="openICSDialog()" style="padding:6px 14px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf);cursor:pointer;font-size:12px;font-weight:600;color:var(--tx)"><i class="ti ti-calendar-plus"></i> Outlook</button>
         <h3 id="cal-ti" style="flex:1;text-align:center;font-size:13px;font-weight:700;color:var(--tx)"><i class="ti ti-calendar-week" style="color:var(--blue)"></i> KW-Übersicht</h3>
@@ -857,51 +856,7 @@ if('serviceWorker' in navigator){
 </div>
 
 <!-- DISTRIBUTE MODAL -->
-<div id="dist-bg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:4000;align-items:center;justify-content:center">
-  <div style="background:var(--sf);border-radius:12px;padding:24px;width:680px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)">
-    <h3 style="font-size:15px;font-weight:700;color:var(--tx);margin-bottom:4px"><i class="ti ti-layout-distribute-horizontal" style="color:var(--blue)"></i> Baustellen auf die Woche verteilen</h3>
-    <p style="font-size:12px;color:var(--tx2);margin-bottom:16px">Die Baustellen werden so verteilt, dass die Tage möglichst <b>gleich lang</b> sind: Fahrzeit (Rundtour ab Startadresse) + Zeit pro Audit inkl. Rapportieren + bereits geplante Termine (Rapporte etc.). Ferientage werden ausgelassen, Unterschied höchstens 1 Baustelle pro Tag.</p>
-    
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
-      <div><label style="font-size:11px;font-weight:600;color:var(--tx2);display:block;margin-bottom:4px">Auditor</label>
-        <select id="dist-aud" style="width:100%;padding:7px 9px;border:1px solid var(--bd);border-radius:var(--rs);background:var(--sf2);color:var(--tx);font-size:12px"></select>
-      </div>
-      <div><label style="font-size:11px;font-weight:600;color:var(--tx2);display:block;margin-bottom:4px">Kalenderwoche</label>
-        <select id="dist-kw" style="width:100%;padding:7px 9px;border:1px solid var(--bd);border-radius:var(--rs);background:var(--sf2);color:var(--tx);font-size:12px"></select>
-      </div>
-    </div>
 
-    <div style="margin-bottom:14px">
-      <label style="font-size:11px;font-weight:600;color:var(--tx2);display:block;margin-bottom:8px">Verfügbare Tage</label>
-      <div style="display:flex;gap:6px;flex-wrap:wrap" id="dist-days">
-        <label style="display:flex;align-items:center;gap:4px;padding:6px 12px;background:var(--sf2);border:1px solid var(--bd);border-radius:8px;cursor:pointer;font-size:12px;font-weight:600"><input type="checkbox" value="0" checked style="cursor:pointer" onchange="document.getElementById('dist-preview').style.display='none';document.getElementById('dist-confirm-btn').style.display='none'"><span class="dd-lbl">Mo</span></label>
-        <label style="display:flex;align-items:center;gap:4px;padding:6px 12px;background:var(--sf2);border:1px solid var(--bd);border-radius:8px;cursor:pointer;font-size:12px;font-weight:600"><input type="checkbox" value="1" checked style="cursor:pointer" onchange="document.getElementById('dist-preview').style.display='none';document.getElementById('dist-confirm-btn').style.display='none'"><span class="dd-lbl">Di</span></label>
-        <label style="display:flex;align-items:center;gap:4px;padding:6px 12px;background:var(--sf2);border:1px solid var(--bd);border-radius:8px;cursor:pointer;font-size:12px;font-weight:600"><input type="checkbox" value="2" checked style="cursor:pointer" onchange="document.getElementById('dist-preview').style.display='none';document.getElementById('dist-confirm-btn').style.display='none'"><span class="dd-lbl">Mi</span></label>
-        <label style="display:flex;align-items:center;gap:4px;padding:6px 12px;background:var(--sf2);border:1px solid var(--bd);border-radius:8px;cursor:pointer;font-size:12px;font-weight:600"><input type="checkbox" value="3" checked style="cursor:pointer" onchange="document.getElementById('dist-preview').style.display='none';document.getElementById('dist-confirm-btn').style.display='none'"><span class="dd-lbl">Do</span></label>
-        <label style="display:flex;align-items:center;gap:4px;padding:6px 12px;background:var(--sf2);border:1px solid var(--bd);border-radius:8px;cursor:pointer;font-size:12px;font-weight:600"><input type="checkbox" value="4" checked style="cursor:pointer" onchange="document.getElementById('dist-preview').style.display='none';document.getElementById('dist-confirm-btn').style.display='none'"><span class="dd-lbl">Fr</span></label>
-      </div>
-    </div>
-
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;font-size:12px;color:var(--tx2)">
-      <label style="font-weight:600" title="Inkl. Rapportieren, Nachbearbeitung etc.">Ø Dauer pro Audit (inkl. Rapportieren)</label>
-      <input type="number" id="dist-auditmin" min="10" max="240" step="5" style="width:70px;padding:6px 8px;border:1px solid var(--bd);border-radius:var(--rs);background:var(--sf2);color:var(--tx);font-size:12px"> min
-    </div>
-    <div id="dist-info" style="padding:10px 12px;background:var(--sf2);border-radius:8px;font-size:12px;color:var(--tx2);margin-bottom:14px">
-      Auditor und KW wählen um Vorschau zu sehen...
-    </div>
-
-    <div id="dist-preview" style="display:none;margin-bottom:14px">
-      <div style="font-size:12px;font-weight:600;color:var(--tx);margin-bottom:8px">Vorschau Verteilung:</div>
-      <div id="dist-preview-content"></div>
-    </div>
-
-    <div style="display:flex;gap:8px;justify-content:flex-end">
-      <button onclick="document.getElementById('dist-bg').style.display='none'" style="padding:8px 16px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf2);cursor:pointer;font-size:12px;color:var(--tx)">Abbrechen</button>
-      <button onclick="previewDistribute()" style="padding:8px 16px;border-radius:var(--rs);border:none;background:var(--blue);color:#fff;cursor:pointer;font-size:12px;font-weight:600">🔍 Vorschau</button>
-      <button onclick="confirmDistribute()" id="dist-confirm-btn" style="display:none;padding:8px 16px;border-radius:var(--rs);border:none;background:#10B981;color:#fff;cursor:pointer;font-size:12px;font-weight:600">✓ Übernehmen</button>
-    </div>
-  </div>
-</div>
 
 <!-- MARKER ADJUST MODAL -->
 <div id="marker-adj-bg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:5500;align-items:center;justify-content:center">
@@ -1090,8 +1045,8 @@ if('serviceWorker' in navigator){
 <script src="vendor/leaflet/leaflet.js?v=1.9.4"></script>
 <script src="vendor/markercluster/leaflet.markercluster.js?v=1.5.3"></script>
 <script src="vendor/xlsx/xlsx.full.min.js?v=0.18.5"></script>
-<script src="js/merge.js?v=3.22"></script>
-<script src="js/app.js?v=3.22"></script>
+<script src="js/merge.js?v=3.23"></script>
+<script src="js/app.js?v=3.23"></script>
 <!-- ONBOARDING GUIDE MODAL -->
 <div id="guide-bg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:5000;align-items:center;justify-content:center">
   <div style="background:var(--sf);border-radius:16px;width:560px;max-width:95vw;max-height:90vh;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.4);display:flex;flex-direction:column">
