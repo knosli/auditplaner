@@ -805,8 +805,9 @@ function confirmPause(){const e=data.find(x=>x.id===selId);if(!e)return;e.paused
 function pauseTrack(){
   const t=today();
   data.forEach(e=>{
-    // früher «dauerhaft ausgeschlossen» = dauerhaft pausiert -> jetzt «Kein Audit» (läuft, nie auditiert, nie automatisch inaktiv)
-    if(e.excludeFromPersonalReview&&e.paused&&/^Dauerhaft ausgeschlossen/.test(e.pauseReason||'')){e.noAudit=true;e.paused=false;e.pauseReason=null;}
+    // v3.25 hatte «dauerhaft ausgeschlossen» fälschlich in «Kein Audit» umgewandelt -> zurück: pausiert + ausgeschlossen
+    // («Kein Audit» setzt nur das Häkchen im Bearbeiten-Dialog, nie zusammen mit excludeFromPersonalReview)
+    if(e.noAudit&&e.excludeFromPersonalReview){delete e.noAudit;e.paused=true;e.pauseReason='Dauerhaft ausgeschlossen (Personal-Import)';e.pauseUntil=null;}
     if(e.paused&&e.active!==false&&!e.pausedAt){
       const m=/KW\s*(\d{1,2})/.exec(e.pauseReason||'');let d=t;
       if(m){let yr=curIsoYear(),mo=isoMonday(+m[1],yr);if(mo>parseDate(t))mo=isoMonday(+m[1],yr-1);d=ferISO(mo);}
@@ -3232,7 +3233,7 @@ async function saveEntry(){
   const _zb=+document.getElementById('f-zb').value||0;
   const _fvT=(document.getElementById('f-fv-time')||{}).value||'',_fvD=FV_DAYS.map((_,i)=>i).filter(i=>document.getElementById('f-fv-'+i)?.checked);
   const entry={id:editId||Date.now(),name,addr,zeitbedarf:_zb>0?_zb:undefined,fixVisit:_fvT?{days:_fvD,time:_fvT}:undefined,noAudit:document.getElementById('f-noaudit')?.checked||undefined,psp:document.getElementById('f-psp').value.trim(),sap:name,prv:document.getElementById('f-prv').value.trim(),bc:document.getElementById('f-bc').value.trim(),dept,rhythm:rh,type,lastAudit:document.getElementById('f-last').value||null,lastKW:null,note:document.getElementById('f-note').value.trim(),auditor:editId?data.find(e=>e.id===editId)?.auditor:null,active:true,paused:false,auditHistory:[],plannedKW:[],lat,lng};
-  if(!entry.noAudit)entry.excludeFromPersonalReview=undefined;   // «Kein Audit» aus -> auch Import-Ausschluss aufheben
+  if(entry.noAudit)entry.excludeFromPersonalReview=undefined;   // «Kein Audit» deckt den Import-Ausschluss mit ab
   if(editId){const old=data.find(e=>e.id===editId);if(old){entry.active=old.active!==false;entry.lastKW=old.lastKW??null;entry.auditor=old.auditor;entry.paused=old.paused;entry.pauseReason=old.pauseReason;entry.auditHistory=old.auditHistory||[];entry.plannedKW=old.plannedKW||[];}data[data.findIndex(e=>e.id===editId)]={...old,...entry};}
   else{entry.createdAt=today();data.push(entry);if(window._newSitePersonal)piApplyNewSite(entry);}
   log(editId?'Bearbeitet':'Hinzugefügt',name,editId?'#F59E0B':'#3B82F6','');
@@ -6029,7 +6030,8 @@ async function piExcludePermanently(idx){
   const e=data.find(x=>x.id===item.match.entry.id);
   if(!e)return;
   if(!await askConfirm(`«${e.name}» dauerhaft von der Personal-Import-Prüfung ausschliessen?\n\nWird sofort pausiert und taucht künftig nie mehr in "Prüfen" auf, egal wie viele Personen dort laut Einsatzliste eingeteilt sind. Kann jederzeit wieder rückgängig gemacht werden.`,{ok:'Ausschliessen'}))return;
-  e.excludeFromPersonalReview=true;e.noAudit=true;   // läuft weiter, wird aber nie auditiert (statt dauerhaft pausiert)
+  e.excludeFromPersonalReview=true;
+  e.paused=true;e.pauseReason='Dauerhaft ausgeschlossen (Personal-Import)';e.pauseUntil=null;
   log('Dauerhaft ausgeschlossen 🔇 (Personal-Import)',e.name,'#6B7280','');
   _piPending.buckets.review.splice(idx,1);
   _piPending.buckets.excluded.push(item);
