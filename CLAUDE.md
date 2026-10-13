@@ -11,8 +11,8 @@ Beratungen, Rapporten und Ferien der Auditoren. Sprache der Oberfläche: Deutsch
 - Vor jedem PR: App im Browser laden (Desktop- und Mobile-Breite) und in der Konsole
   prüfen, dass keine JavaScript-Fehler auftreten.
 - Bei jeder Änderung an der App die Versionsnummer erhöhen, und zwar überall in
-  `index.html`: im Header (`<span ... title="Version">v3.23</span>`) und in den Links
-  `css/style.css?v=3.23`, `js/merge.js?v=3.23` und `js/app.js?v=3.23`. Der `?v=`-Zusatz
+  `index.html`: im Header (`<span ... title="Version">v3.24</span>`) und in den Links
+  `css/style.css?v=3.24`, `js/merge.js?v=3.24` und `js/app.js?v=3.24`. Der `?v=`-Zusatz
   sorgt dafür, dass Browser nach einem Update keine alte Datei aus dem Cache verwenden.
 - Tests für die Zusammenführung: `node tests/merge.test.js` (muss grün sein).
 - Keine Browser-Dialoge (`confirm`, `prompt`, `alert`): `askConfirm()`, `askText()`,
@@ -115,6 +115,9 @@ global; das HTML ruft sie direkt über `onclick="..."` auf.
   (`piWeekRecord`, Teil-Importe ersetzen nur ihre Einheiten), Anzeige `openPersonalWeeks`/`piWeekRows`
   (ältere Wochen rückwirkend aus `personalHistory`). Temporäre = separate Liste, nicht in den
   Personenzahlen der Einträge → im Total dazugezählt (`total` = `own` + `tempN`)
+  Pause → inaktiv: `e.pausedAt` (automatisch in `pauseTrack` beim Speichern), nach `pause_to_inactive` Tagen ohne
+  «pausiert bis» inaktiv (`autoInactivateLongPaused` in `autoResumeExpired`); `markInactive` setzt `inactiveAt`/`inactiveReason`/
+  `extDone`; Admin → «Inaktiv gesetzt (Audit-App)» (`openInactList`, PSP kopieren, abhaken)
   «+ Neue Baustelle» aus Import/Sammelbox/Kundendienst: Personal wird beim Speichern übernommen
   (`piNewSitePending` → `window._newSitePersonal` → `piApplyNewSite` in `saveEntry`); `sbAssign` ebenfalls
 - ~5969 Supabase-Verbindung (`sbFetch`, `sbInit`)

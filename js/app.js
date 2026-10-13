@@ -662,7 +662,8 @@ function selEntry(id){
   const pb=document.getElementById('dp-pb'),ab=document.getElementById('dp-ab');
   if(e.active){pb.style.display='';pb.textContent=e.paused?'▶ Reaktivieren':'⏸ Pausieren';pb.className=e.paused?'bg':'bpu';}else pb.style.display='none';
   const puEl=document.getElementById('dp-pause-until');
-  if(puEl){if(e.paused&&e.pauseUntil){const kw=dateToKW(e.pauseUntil);const d=parseDate(e.pauseUntil);puEl.textContent='⏸ Pausiert bis KW '+kw+' ('+d.getDate()+'.'+(d.getMonth()+1)+'.)';puEl.style.display='block';}else if(e.paused){puEl.textContent='⏸ Pausiert (unbegrenzt)';puEl.style.display='block';}else puEl.style.display='none';}
+  if(puEl){if(e.paused&&e.pauseUntil){const kw=dateToKW(e.pauseUntil);const d=parseDate(e.pauseUntil);puEl.textContent='⏸ Pausiert bis KW '+kw+' ('+d.getDate()+'.'+(d.getMonth()+1)+'.)';puEl.style.display='block';}else if(e.paused){const pd=e.pausedAt,lim=S('pause_to_inactive');puEl.textContent='⏸ Pausiert'+(pd?' seit '+fd(pd):' (unbegrenzt)')+(pd&&lim>0&&e.type!=='werkhof'?' – wird ab '+fd(ferISO(new Date(parseDate(pd).getTime()+(lim+1)*86400000)))+' automatisch inaktiv':'');puEl.style.display='block';}
+    else if(e.active===false&&e.inactiveAt){puEl.textContent='◼ Inaktiv seit '+fd(e.inactiveAt)+(e.extDone?' · in Audit-App erledigt':' · in Audit-App noch nachtragen');puEl.style.display='block';}else puEl.style.display='none';}
   ab.textContent=e.active?'⚫ Inaktiv':'✓ Aktivieren';ab.className=e.active?'bt2':'bg';
   document.getElementById('dp').style.display='block';
   // Karte unsichtbar (z.B. schmaler Bildschirm): nicht fliegen – Leaflet rechnet sonst mit Grösse 0 (NaN-Fehler)
@@ -795,8 +796,62 @@ function togglePause(){const e=data.find(x=>x.id===selId);if(!e)return;if(e.paus
 }}
 function confirmPause(){const e=data.find(x=>x.id===selId);if(!e)return;e.paused=true;e.pauseReason=document.getElementById('pause-r').value.trim();e.pauseUntil=document.getElementById('pause-u').value||null;log('Pausiert ⏸',e.name,'#94A3B8','');document.getElementById('pause-form').style.display='none';renderAll();selEntry(selId);}
 // «Pausiert bis KW …»: ist das Datum erreicht, wird die Baustelle automatisch reaktiviert
+// ═══ PAUSE → INAKTIV ═══
+// pausedAt: seit wann pausiert (wird für jede Pause automatisch gesetzt, egal woher). Bestehende Pausen ohne Datum:
+// KW aus dem Grund («… (KW 38)» → Montag dieser KW), sonst heute. Inaktiv-Felder: inactiveAt, inactiveReason,
+// extDone (= in der externen Audit-App nachgetragen) – Liste unter Admin → «Inaktiv gesetzt».
+function pauseTrack(){
+  const t=today();
+  data.forEach(e=>{
+    if(e.paused&&e.active!==false&&!e.pausedAt){
+      const m=/KW\s*(\d{1,2})/.exec(e.pauseReason||'');let d=t;
+      if(m){let yr=curIsoYear(),mo=isoMonday(+m[1],yr);if(mo>parseDate(t))mo=isoMonday(+m[1],yr-1);d=ferISO(mo);}
+      e.pausedAt=d;
+    }else if(!e.paused&&e.pausedAt)delete e.pausedAt;
+    if(e.active!==false&&e.inactiveAt){delete e.inactiveAt;delete e.inactiveReason;delete e.extDone;}
+  });
+}
+function markInactive(e,reason){e.active=false;e.paused=false;delete e.pausedAt;e.inactiveAt=today();e.inactiveReason=reason;e.extDone=false;}
+// länger als pause_to_inactive Tage pausiert (ohne festes Ende «pausiert bis») -> automatisch inaktiv
+function autoInactivateLongPaused(){
+  const days=S('pause_to_inactive');if(!(days>0))return 0;
+  pauseTrack();
+  const t=parseDate(today()).getTime();let n=0;
+  data.forEach(e=>{
+    if(e.active===false||!e.paused||e.pauseUntil||!e.pausedAt||e.type==='werkhof')return;
+    const dd=Math.round((t-parseDate(e.pausedAt).getTime())/86400000);
+    if(dd>days){markInactive(e,`Automatisch: ${dd} Tage pausiert`+(e.pauseReason?` (${e.pauseReason})`:''));log('Inaktiv ◼ (automatisch, '+dd+' Tage pausiert)',e.name,'#6B7280','');n++;}
+  });
+  return n;
+}
+// Admin → «Inaktiv gesetzt»: Baustellen, die (automatisch oder von Hand) inaktiv wurden – zum Nachtragen in der Audit-App
+let _inactShowAll=false;
+function inactList(){return data.filter(e=>e.active===false&&e.inactiveAt).sort((a,b)=>b.inactiveAt.localeCompare(a.inactiveAt)||(a.psp||'').localeCompare(b.psp||''));}
+function updateInactBadge(){const b=document.getElementById('inact-badge');if(b){const n=inactList().filter(e=>!e.extDone).length;b.textContent=n?`(${n})`:'';}}
+function openInactList(){admModal('◼ Inaktiv gesetzt – in der Audit-App nachtragen','<div id="inact-body"></div>',true);renderInactList();}
+function renderInactList(){
+  const el=document.getElementById('inact-body');if(!el)return;
+  const all=inactList(),open=all.filter(e=>!e.extDone),rows=_inactShowAll?all:open;
+  el.innerHTML=`<p>Baustellen, die im Planer inaktiv gesetzt wurden – automatisch (länger als ${S('pause_to_inactive')} Tage pausiert, einstellbar unter Einstellungen → Personal-Import) oder von Hand. In der Audit-App ebenfalls inaktiv setzen und hier abhaken.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0">
+      <button type="button" class="ui-btn ui-btn-pri" onclick="copyInactPsp()" ${open.length?'':'disabled'}>📋 PSP-Nummern kopieren (${open.length} offen)</button>
+      <button type="button" class="ui-btn" onclick="inactDoneAll()" ${open.length?'':'disabled'}>✓ Alle offenen erledigt</button>
+      <label style="font-size:12px;color:var(--tx2);display:flex;align-items:center;gap:4px"><input type="checkbox" ${_inactShowAll?'checked':''} onchange="_inactShowAll=this.checked;renderInactList()"> auch erledigte zeigen</label>
+    </div>
+    ${rows.length?`<div style="overflow-x:auto"><table class="adm-tbl"><tr><th>PSP</th><th>Baustelle</th><th>Abteilung</th><th>Inaktiv seit</th><th>Grund</th><th style="text-align:center">In Audit-App erledigt</th></tr>
+    ${rows.map(e=>`<tr style="${e.extDone?'opacity:.55':''}"><td style="white-space:nowrap"><b>${escH(e.psp||'–')}</b></td><td>${escH(e.name)}</td><td>${escH(e.dept||'–')}</td><td style="white-space:nowrap">${fd(e.inactiveAt)}</td><td style="font-size:11px;color:var(--tx2)">${escH(e.inactiveReason||'')}</td>
+      <td style="text-align:center"><input type="checkbox" ${e.extDone?'checked':''} onchange="setInactDone(${e.id},this.checked)" style="width:18px;height:18px"></td></tr>`).join('')}</table></div>`
+    :`<p style="color:var(--tx3)">${all.length?'Alles erledigt ✓':'Noch keine Baustelle inaktiv gesetzt.'}</p>`}`;
+}
+function setInactDone(id,v){const e=data.find(x=>x.id===id);if(!e)return;e.extDone=!!v;saveNow();updateInactBadge();renderInactList();}
+function inactDoneAll(){undoPoint('Alle als «in Audit-App erledigt» markiert',()=>{renderInactList();updateInactBadge();});inactList().forEach(e=>{e.extDone=true;});saveNow();updateInactBadge();renderInactList();}
+function copyInactPsp(){
+  const t=inactList().filter(e=>!e.extDone).map(e=>e.psp||e.name).join('\n');
+  (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>showToast('📋 PSP-Nummern kopiert',2000)).catch(()=>uiDialog({msg:'PSP-Nummern (markieren und kopieren):\n\n'+t}));
+}
 function autoResumeExpired(){
   const t=today();let n=0;
+  {const k=autoInactivateLongPaused();if(k){saveNow();renderAll();updateInactBadge();setTimeout(()=>showToast(`◼ ${k} Baustelle(n) automatisch inaktiv – länger als ${S('pause_to_inactive')} Tage pausiert. Admin → «Inaktiv gesetzt» (für die Audit-App)`,6000),4500);}}
   data.forEach(e=>{if(pauseOverAt(e,t)){const r=e.pauseUntil;e.paused=false;e.pauseReason=null;e.pauseUntil=null;e.resumeFrom=null;
     const hist=(e.auditHistory||[]).slice().sort((a,b)=>b.date.localeCompare(a.date));
     if(hist.length){e.lastAudit=hist[0].date;e.lastKW=hist[0].kw;e.auditor=hist[0].auditor;}
@@ -830,7 +885,7 @@ function confirmResume(){
   saveNow();renderAll();selEntry(selId);
 }
 function editSel(){if(selId)openEdit(selId);}
-function toggleActive(){const e=data.find(x=>x.id===selId);if(!e)return;e.active=!e.active;if(!e.active)e.paused=false;log(e.active?'Aktiviert':'Inaktiv',e.name,e.active?'#10B981':'#6B7280','');renderAll();selEntry(selId);}
+function toggleActive(){const e=data.find(x=>x.id===selId);if(!e)return;if(e.active!==false)markInactive(e,'Manuell'+(e.paused&&e.pauseReason?` (war pausiert: ${e.pauseReason})`:''));else e.active=true;updateInactBadge();log(e.active?'Aktiviert':'Inaktiv',e.name,e.active?'#10B981':'#6B7280','');renderAll();selEntry(selId);}
 // ═══ TIMELINE ═══
 function log(action,name,color,who){tlog.unshift({ts:new Date().toISOString(),action,name,color,who:who||'',by:currentUser||''});if(tlog.length>60)tlog.pop();renderTL();save();}
 function renderTL(){
@@ -2870,7 +2925,7 @@ function toggleMore(ev){
   const m=document.getElementById('more-m');
   const badge=document.getElementById('sb-count-badge');
   if(badge){const n=(window._piCollectBox||[]).length;badge.textContent=n?`(${n})`:'';}
-  updateTempWorkersBadge();
+  updateTempWorkersBadge();updateInactBadge();
   if(m.style.display!=='none'){m.style.display='none';return;}
   // Move menu to body to escape any overflow/z-index stacking context
   if(m.parentElement!==document.body)document.body.appendChild(m);
@@ -4640,6 +4695,7 @@ const SETTINGS_DEF=[
   {k:'tg_fixed_berat',l:'Geplante Beratung belegt',def:45,min:0,max:480,u:'min'},
   {k:'tg_post_min',l:'Nachbearbeitung pro Baustelle (Audit-Bericht, am Ende des Tages)',def:35,min:0,max:120,u:'min'}]},
  {grp:'Personal-Import',items:[
+  {k:'pause_to_inactive',l:'Pausierte Baustelle automatisch inaktiv nach … Tagen (0 = nie; nicht bei «pausiert bis»)',def:28,min:0,max:365,u:'Tage'},
   {k:'pi_review_max',l:'«Prüfen» bis … Personen (darüber: läuft)',def:2,min:0,max:20,u:'Pers.'},
   {k:'pi_react_inactive_min',l:'Inaktive Baustelle: Reaktivierung vorschlagen ab',def:2,min:1,max:50,u:'Pers.'},
   {k:'pi_history_weeks',l:'Personalverlauf aufbewahren',def:52,min:4,max:260,u:'Wochen'},
@@ -4700,7 +4756,7 @@ function rulesHTML(){
     `«Nicht auf der Liste»: aktive Baustellen einer Abteilung, deren Einsatzlisten <u>alle</u> importiert wurden, die aber auf keiner stehen → Pausieren vorgeschlagen (neu erfasste nicht vorausgewählt).`,
     `Gespeichert wird die Personalzahl bei allen erkannten Baustellen (auch dauerhaft ausgeschlossene), «nicht auf der Liste» erhält 0. Verlauf: ${v('pi_history_weeks')} Wochen.`,
     `<b>Kundendienst-Liste</b> (Admin → Kundendienst-Liste, oder «🔧 Kundendienst» bei unbekannten Einträgen und in der Sammelbox): Einträge ohne passende Baustelle, deren PSP-Nummer (genau oder inkl. aller Unternummern, z.B. 4225280.xx) oder Name (Stichwort, z.B. «Kundenarbeiten», «Divers») auf der Liste steht, werden übersprungen – nicht «unbekannt», nicht in der Sammelbox. Echte Baustellen sind nie betroffen. Die Sammelbox führt doppelte Einträge (gleiche PSP und Name) zusammen. In der Sammelbox als Kundendienst gemerkte Einträge erscheinen sofort unter den erkannten Kundendienst-Einträgen. Eine bereits erfasste Baustelle, die eigentlich Kundendienst ist: Bearbeiten → «🔧 Ist Kundendienst» (nur Admin) – sie kommt auf die Liste (inkl. ihrer Listen-Nummern), ihr Personalverlauf wird übernommen und die Baustelle samt offener Planungen gelöscht (Rückgängig möglich). Unter Admin → Kundendienst-Liste stehen alle erkannten Kundendienst-Einträge (PSP, Name, Einheit, Personen, zuletzt gesehen) – nachgeführt bei jedem übernommenen Import, nach ${PI_KD_KEEP_WEEKS} Wochen ohne Erscheinen entfernt. Pro Eintrag wird der Personalverlauf der letzten ${PI_KD_HIST_WEEKS} Wochen gezeigt (Einheit importiert, Eintrag fehlt = 0). Hat ein Kundendienst-Auftrag ${v('kd_streak_weeks')} Wochen am Stück Personal (in der neuesten Liste mindestens ${v('kd_min_pers')}), erscheint «🔔 Audit prüfen» und nach dem Import ein Hinweis; mit «+ Baustelle» wird er zur normalen Baustelle.`,
-    `Jeder übernommene Import speichert zusätzlich eine Wochen-Zusammenfassung pro Einheit (Personen laut Einsatzlisten, davon Kundendienst, Einsatzorte, Anzahl Temporäre – die Temporären stehen auf einer separaten Liste und werden fürs Total dazugezählt): Admin → Personal-Übersicht, mit Verlauf; ältere Wochen rückwirkend aus dem Personalverlauf der Baustellen. Werkhöfe sind vom Import komplett ausgenommen. Unbekannte Einträge: zuordnen (Alias wird gemerkt), neu anlegen oder in die Sammelbox. Beim Zuordnen oder Neu-Anlegen (aus Import, Sammelbox oder Kundendienst-Liste) wird die Personalzahl der Liste gleich übernommen; aus der Kundendienst-Liste der ganze Verlauf.`,
+    `Jeder übernommene Import speichert zusätzlich eine Wochen-Zusammenfassung pro Einheit (Personen laut Einsatzlisten, davon Kundendienst, Einsatzorte, Anzahl Temporäre – die Temporären stehen auf einer separaten Liste und werden fürs Total dazugezählt): Admin → Personal-Übersicht, mit Verlauf; ältere Wochen rückwirkend aus dem Personalverlauf der Baustellen. <b>Pausiert → inaktiv:</b> Eine Baustelle, die länger als ${v('pause_to_inactive')} Tage pausiert ist (ohne festes Ende «pausiert bis»), wird automatisch inaktiv gesetzt. Alle inaktiv gesetzten Baustellen (automatisch oder von Hand) stehen unter Admin → «Inaktiv gesetzt (Audit-App)» mit PSP-Nummer zum Nachtragen in der Audit-App und Abhaken. Werkhöfe sind vom Import komplett ausgenommen. Unbekannte Einträge: zuordnen (Alias wird gemerkt), neu anlegen oder in die Sammelbox. Beim Zuordnen oder Neu-Anlegen (aus Import, Sammelbox oder Kundendienst-Liste) wird die Personalzahl der Liste gleich übernommen; aus der Kundendienst-Liste der ganze Verlauf.`,
     `KW-Planung: Jede Baustellen-Karte zeigt 👷 das Personal der KW, in der sie geplant ist (Import oder manuell). Gibt es dafür keinen Wert, steht grau kursiv der zuletzt bekannte Wert mit seiner KW, ohne Angabe «–». Eine 0 ist rot. Werkhöfe zeigen nichts.`,
     `Temporäre Mitarbeitende: nur Personal-Nummern (keine Namen), pro Einheit bei jedem Import ersetzt.`,
     `Manuelle Erfassung (für Einheiten ohne brauchbare Einsatzliste): im Detail-Panel ✏️ bei «Personal» oder Admin → «Personal manuell erfassen» (mehrere Baustellen einer Abteilung). Wirkt wie ein Import-Wert (Verlauf, Trend, Tourguide), ersetzt einen vorhandenen Wert derselben KW und ändert den Status der Baustelle nicht (kein Pausieren/Reaktivieren).`]) +
@@ -6735,6 +6791,7 @@ function sbApply(vals){
 }
 // Lokale Kopie (für schnellen Start), immer vollständig
 function saveLocal(){
+  try{pauseTrack();}catch(e){}
   try{
     localStorage.setItem(SK,JSON.stringify({data,plans,tlog,auditors,ferien,ferienWunsch,rapporte,ghostAudits:window._ghostAudits||[],personAudits,v:4}));
     localStorage.setItem('anliker_persons',JSON.stringify(persons));
