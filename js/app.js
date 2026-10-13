@@ -3293,192 +3293,8 @@ function moveBeratPlan(id,ks,dayOffset){
 }
 let _adjMap=null,_adjMarker=null,_adjLat=null,_adjLng=null;
 
-let _distResult=null;
-
-function openDistribute(){
-  // Populate auditor dropdown
-  const audSel=document.getElementById('dist-aud');
-  const isAdmin=document.body.classList.contains('admin-mode');
-  if(isAdmin){
-    audSel.innerHTML=auditors.map(a=>`<option value="${a}"${a===currentUser?' selected':''}>${a}</option>`).join('');
-  } else {
-    audSel.innerHTML=`<option value="${currentUser}">${currentUser}</option>`;
-  }
-  // Populate KW dropdown
-  const kwSel=document.getElementById('dist-kw');
-  const curKW=dateToKW(today());
-  kwSel.innerHTML=Array.from({length:20},(_,i)=>{
-    const kw=curKW+i-1;
-    return`<option value="${kw}"${kw===curKW?' selected':''}>${kwLabel(kw)}</option>`;
-  }).filter(Boolean).join('');
-  // Reset
-  _distResult=null;
-  document.getElementById('dist-preview').style.display='none';
-  document.getElementById('dist-confirm-btn').style.display='none';
-  document.getElementById('dist-info').textContent='Auditor und KW wählen um Vorschau zu sehen...';
-  document.getElementById('dist-bg').style.display='flex';
-  updateDistInfo();
-  kwSel.onchange=updateDistInfo;
-  audSel.onchange=updateDistInfo;
-  const amEl=document.getElementById('dist-auditmin');if(amEl)amEl.onchange=updateDistInfo;
-}
-
-function distDayDate(kw,di){return rpAddDays(kwToDate(kw),di);}
-// Fixe Zeit pro Tag (min): Rapporte mit Dauer, geplante Personen-Audits/Beratungen mit Audit-Dauer
-function distFixedMin(aud,ds,auditMin){
-  const rp=rapporte.filter(r=>r.date===ds&&r.auditor===aud).reduce((s,r)=>s+(r.dur||60),0);
-  const pa=personAudits.filter(p=>p.planned&&p.date===ds&&p.auditor===aud).length*auditMin;
-  const bp=beratPlan.filter(p=>p.date===ds&&p.auditor===aud).length*auditMin;
-  return rp+pa+bp;
-}
+// Auditor hat an diesem Tag Ferien? (Tourguide)
 function distIsFerien(aud,ds){return ferien.some(f=>f.auditor===aud&&f.von<=ds&&f.bis>=ds);}
-function updateDistInfo(){
-  const aud=document.getElementById('dist-aud').value;
-  const kw=+document.getElementById('dist-kw').value;
-  const amEl=document.getElementById('dist-auditmin');
-  if(amEl&&!amEl.value)amEl.value=localStorage.getItem('dist_audit_min_v3')||String(S('dist_audit_min'));
-  const ks=kwToDate(kw),ke=kwToDate(kw+1);
-  const kwPlans=plans.filter(p=>p.date>=ks&&p.date<ke&&p.auditor===aud);
-  const withCoords=kwPlans.filter(p=>{const e=data.find(x=>x.id===p.bsId);return e&&e.lat&&e.lng;});
-  // Ferientage automatisch abwählen und markieren
-  const names=['Mo','Di','Mi','Do','Fr'];const notes=[];
-  document.querySelectorAll('#dist-days input').forEach(cb=>{
-    const di=+cb.value,ds=distDayDate(kw,di);
-    const fer=distIsFerien(aud,ds);
-    if(fer){cb.checked=false;cb.disabled=true;}else cb.disabled=false;
-    cb.parentElement.style.opacity=fer?'.45':'1';
-    const sp=cb.parentElement.querySelector('.dd-lbl');if(sp)sp.textContent=names[di]+(fer?' 🌴 Ferien':'');
-    const fx=distFixedMin(aud,ds,+amEl.value||S('dist_audit_min'));
-    if(!fer&&fx)notes.push(`${names[di]}: ${Math.round(fx)} min belegt`);
-  });
-  document.getElementById('dist-info').innerHTML=
-    `${kwPlans.length} Baustellen in ${kwLabel(kw)} für ${aud} – ${withCoords.length} mit Koordinaten`+
-    (notes.length?`<div style="margin-top:4px;font-size:11px;color:var(--tx3)">Bereits geplant: ${notes.join(' · ')}</div>`:'');
-  document.getElementById('dist-preview').style.display='none';
-  document.getElementById('dist-confirm-btn').style.display='none';
-}
-function getCheckedDays(){
-  return Array.from(document.getElementById('dist-days').querySelectorAll('input:checked'))
-    .map(cb=>+cb.value).sort();
-}
-
-// Schnelle Tour-Schätzung (Nearest-Neighbour + 2-Opt) für die Suche; exakte Reihenfolge danach per solveRoute
-function distTourSec(D,set){
-  if(!set.length)return 0;
-  let rem=set.slice(),seq=[],cur=0;
-  while(rem.length){let bi=0;rem.forEach((j,i)=>{if(D[cur][j]<D[cur][rem[bi]])bi=i;});cur=rem.splice(bi,1)[0];seq.push(cur);}
-  const cost=s=>{let c=0,p=0;s.forEach(j=>{c+=D[p][j];p=j;});return c+D[p][0];};
-  let best=cost(seq),imp=true;
-  while(imp){imp=false;for(let i=0;i<seq.length-1;i++)for(let k=i+1;k<seq.length;k++){const cand=seq.slice(0,i).concat(seq.slice(i,k+1).reverse(),seq.slice(k+1));const cc=cost(cand);if(cc<best-1){seq=cand;best=cc;imp=true;}}}
-  return best;
-}
-async function previewDistribute(){
-  const aud=document.getElementById('dist-aud').value;
-  const kw=+document.getElementById('dist-kw').value;
-  const days=getCheckedDays();
-  const auditMin=Math.max(5,+document.getElementById('dist-auditmin').value||S('dist_audit_min'));
-  try{localStorage.setItem('dist_audit_min_v3',String(auditMin));}catch(e){}
-  if(!days.length){showToast('Bitte mindestens einen Tag wählen');return;}
-  const ks=kwToDate(kw),ke=kwToDate(kw+1);
-  const kwPlans=plans.filter(p=>p.date>=ks&&p.date<ke&&p.auditor===aud);
-  if(!kwPlans.length){showToast('Keine Planungen für diese KW und Auditor');return;}
-  const entries=kwPlans.map(p=>({plan:p,e:data.find(x=>x.id===p.bsId)})).filter(x=>x.e);
-  const withCoords=entries.filter(x=>x.e.lat&&x.e.lng);
-  const withoutCoords=entries.filter(x=>!x.e.lat||!x.e.lng);
-  const info=document.getElementById('dist-info');const oldInfo=info.innerHTML;
-  info.innerHTML='⏳ Berechne Fahrzeiten und beste Verteilung…';
-  await new Promise(r=>setTimeout(r,30));
-  const home=(await getHomeCoords())||(withCoords.length?{lat:withCoords.reduce((s,x)=>s+x.e.lat,0)/withCoords.length,lng:withCoords.reduce((s,x)=>s+x.e.lng,0)/withCoords.length}:{lat:47,lng:8});
-  const pts=[home,...withCoords.map(x=>({lat:x.e.lat,lng:x.e.lng}))];
-  const{D,src}=await getDurationMatrix(pts);
-  const k=days.length,N=withCoords.length;
-  const fixed=days.map(di=>distFixedMin(aud,distDayDate(kw,di),auditMin));
-  // Zielanzahl pro Tag: gleichmässig; bei ungleich belegten Tagen anteilig nach freier Zeit (±1)
-  const DAYMIN=S('dist_day_hours')*60;
-  const free=fixed.map(f=>Math.max(60,DAYMIN-f));
-  const hasFixed=fixed.some(f=>f>0);
-  let target=hasFixed?free.map(f=>N*f/free.reduce((a,b)=>a+b,0)):days.map(()=>N/k);
-  let base=target.map(t=>Math.floor(t));let rest=N-base.reduce((a,b)=>a+b,0);
-  target.map((t,i)=>[t-Math.floor(t),i]).sort((a,b)=>b[0]-a[0]).slice(0,rest).forEach(([,i])=>base[i]++);
-  const lo=base.map(b=>hasFixed?Math.max(0,b-1):Math.floor(N/k)),hi=base.map(b=>hasFixed?b+1:Math.ceil(N/k));
-  // Startlösung: Sektoren rund um die Startadresse (nach Winkel), in Zielgrössen geschnitten
-  const idx=withCoords.map((x,i)=>({i:i+1,a:Math.atan2(x.e.lat-home.lat,x.e.lng-home.lng)})).sort((p,q)=>p.a-q.a).map(p=>p.i);
-  // besten Startwinkel wählen (Schnitt zwischen den am weitesten entfernten Nachbarn)
-  let bestRot=0,bestGap=-1;
-  for(let r=0;r<idx.length;r++){const a=pts[idx[r]],b=pts[idx[(r+idx.length-1)%idx.length]];const g=haversine(a.lat,a.lng,b.lat,b.lng);if(g>bestGap){bestGap=g;bestRot=r;}}
-  const ring=idx.slice(bestRot).concat(idx.slice(0,bestRot));
-  let groups=[],pos=0;base.forEach(n=>{groups.push(ring.slice(pos,pos+n));pos+=n;});
-  // Lokale Suche: Verschieben/Tauschen, Ziel = längster Tag möglichst kurz + Gesamtzeit
-  const cache={};
-  const dayCost=(d,set)=>{const key=d+':'+set.slice().sort((a,b)=>a-b).join(',');if(key in cache)return cache[key];return cache[key]=distTourSec(D,set)+set.length*auditMin*60+fixed[d]*60;};
-  const total=gs=>{const cs=gs.map((s,d)=>dayCost(d,s));return Math.max(...cs)*3+cs.reduce((a,b)=>a+b,0);};
-  let cur=total(groups),t0=Date.now(),improved=true;
-  while(improved&&Date.now()-t0<6000){
-    improved=false;
-    for(let a=0;a<k&&!improved;a++)for(let b=0;b<k&&!improved;b++){if(a===b)continue;
-      // verschieben a->b
-      if(groups[a].length>lo[a]&&groups[b].length<hi[b])for(let x=0;x<groups[a].length;x++){
-        const ga=groups[a].filter((_,j)=>j!==x),gb=groups[b].concat(groups[a][x]);
-        const g2=groups.slice();g2[a]=ga;g2[b]=gb;const v=total(g2);
-        if(v<cur-1){groups=g2;cur=v;improved=true;break;}
-      }
-      // tauschen
-      if(!improved)for(let x=0;x<groups[a].length&&!improved;x++)for(let y=0;y<groups[b].length;y++){
-        const ga=groups[a].slice(),gb=groups[b].slice();const t=ga[x];ga[x]=gb[y];gb[y]=t;
-        const g2=groups.slice();g2[a]=ga;g2[b]=gb;const v=total(g2);
-        if(v<cur-1){groups=g2;cur=v;improved=true;break;}
-      }
-    }
-  }
-  info.innerHTML=oldInfo;
-  _distResult={aud,kw,days,auditMin,fixed,D,src,withCoords,withoutCoords,groups};
-  renderDistPreview();
-}
-function distDayStats(d){
-  const R=_distResult,set=R.groups[d];
-  const order=set.length?solveRoute(R.D,0,set,0):[];
-  let drive=0,p=0;order.forEach(j=>{drive+=R.D[p][j];p=j;});if(order.length)drive+=R.D[p][0];
-  const auditT=set.length*R.auditMin,fx=R.fixed[d];
-  return{order,drive:drive/60,auditT,fx,total:drive/60+auditT+fx};
-}
-function renderDistPreview(){
-  const R=_distResult;const names=['Mo','Di','Mi','Do','Fr'];
-  const fmt=m=>{m=Math.round(m);return Math.floor(m/60)+':'+String(m%60).padStart(2,'0')+' h';};
-  const st=R.groups.map((_,d)=>distDayStats(d));
-  const maxT=Math.max(...st.map(s=>s.total),1);
-  document.getElementById('dist-preview-content').innerHTML=
-    `<div style="font-size:10px;color:${R.src==='ors'?'#10B981':'#F59E0B'};margin-bottom:8px">${R.src==='ors'?'✓ Fahrzeiten über Strassennetz':'⚠ Fahrzeiten geschätzt (Luftlinie)'} · Rundtour ab/bis Startadresse</div>`+
-    st.map((s,d)=>`<div style="margin-bottom:8px;padding:8px 10px;background:var(--sf2);border-radius:8px;border-left:3px solid var(--blue)">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px">
-        <span style="font-size:12px;font-weight:700;color:var(--blue)">${names[R.days[d]]} ${fd(distDayDate(R.kw,R.days[d]))} – ${s.order.length} Baustellen</span>
-        <span style="font-size:11px;font-weight:700;color:var(--tx)">≈ ${fmt(s.total)}</span>
-      </div>
-      <div style="height:6px;background:var(--bd);border-radius:3px;overflow:hidden;display:flex;margin-bottom:4px">
-        <div title="Fahrzeit" style="width:${s.drive/maxT*100}%;background:#F59E0B"></div><div title="Audits" style="width:${s.auditT/maxT*100}%;background:#3B82F6"></div><div title="Termine" style="width:${s.fx/maxT*100}%;background:#0EA5E9"></div>
-      </div>
-      <div style="font-size:10px;color:var(--tx3);margin-bottom:4px">🚗 ${fmt(s.drive)} · 🏗️ ${fmt(s.auditT)}${s.fx?` · 📋 ${fmt(s.fx)} Termine`:''}</div>
-      ${s.order.map(j=>{const x=R.withCoords[j-1];return`<div style="display:flex;align-items:center;justify-content:space-between;gap:6px;font-size:11px;color:var(--tx2);padding:1px 0">• ${x.e.name}
-        <select onchange="distMoveItem(${j},+this.value)" style="font-size:10px;padding:1px 3px;border:1px solid var(--bd);border-radius:4px;background:var(--sf);color:var(--tx2)">${R.days.map((di,dd)=>`<option value="${dd}"${dd===d?' selected':''}>${names[di]}</option>`).join('')}</select></div>`;}).join('')}
-    </div>`).join('')+
-    (R.withoutCoords.length?`<div style="padding:8px 10px;background:#FEF3C7;border-radius:8px;font-size:11px;color:#92400E">⚠️ ${R.withoutCoords.length} Baustelle(n) ohne Koordinaten werden auf die Tage mit den wenigsten Baustellen verteilt.</div>`:'');
-  document.getElementById('dist-preview').style.display='block';
-  document.getElementById('dist-confirm-btn').style.display='inline-block';
-}
-function distMoveItem(j,toD){
-  const R=_distResult;
-  R.groups=R.groups.map(g=>g.filter(x=>x!==j));R.groups[toD].push(j);
-  renderDistPreview();
-}
-function confirmDistribute(){
-  const R=_distResult;if(!R||!R.groups)return;
-  const counts=R.groups.map(g=>g.length);
-  R.groups.forEach((g,d)=>{const ds=distDayDate(R.kw,R.days[d]);g.forEach(j=>{R.withCoords[j-1].plan.date=ds;});});
-  // ohne Koordinaten: jeweils auf den Tag mit den wenigsten Baustellen
-  R.withoutCoords.forEach(x=>{const d=counts.indexOf(Math.min(...counts));x.plan.date=distDayDate(R.kw,R.days[d]);counts[d]++;});
-  saveNow();renderKW();renderAll();
-  document.getElementById('dist-bg').style.display='none';
-  showToast('✓ Baustellen verteilt: '+counts.join(' / '),3000);
-}
 
 
 
@@ -4779,7 +4595,7 @@ function stickFooter(box){
   box.dataset.stickyDone='1';
 }
 function initStickyFooters(){
-  ['dist-bg','aud-admin-bg','pi-bg','pisb-bg','rpe-bg','tw-bg','dept-bg','rpt-bg','guide-bg'].forEach(id=>{
+  ['aud-admin-bg','pi-bg','pisb-bg','rpe-bg','tw-bg','dept-bg','rpt-bg','guide-bg'].forEach(id=>{
     const ov=document.getElementById(id);if(ov)stickFooter(ov.firstElementChild);
   });
   document.querySelectorAll('.mbg > .modal').forEach(stickFooter);
@@ -4823,9 +4639,6 @@ const SETTINGS_DEF=[
   {k:'tg_fixed_pa',l:'Geplantes Personen-Audit belegt',def:45,min:0,max:480,u:'min'},
   {k:'tg_fixed_berat',l:'Geplante Beratung belegt',def:45,min:0,max:480,u:'min'},
   {k:'tg_post_min',l:'Nachbearbeitung pro Baustelle (Audit-Bericht, am Ende des Tages)',def:35,min:0,max:120,u:'min'}]},
- {grp:'Verteilen (KW-Planung)',items:[
-  {k:'dist_audit_min',l:'Ø Dauer pro Audit (Vorschlag)',def:60,min:5,max:480,u:'min'},
-  {k:'dist_day_hours',l:'Tageslänge für Anteilsberechnung',def:8.5,min:2,max:14,step:.5,u:'Std.'}]},
  {grp:'Personal-Import',items:[
   {k:'pi_review_max',l:'«Prüfen» bis … Personen (darüber: läuft)',def:2,min:0,max:20,u:'Pers.'},
   {k:'pi_react_inactive_min',l:'Inaktive Baustelle: Reaktivierung vorschlagen ab',def:2,min:1,max:50,u:'Pers.'},
@@ -4918,9 +4731,6 @@ function rulesHTML(){
     `Rapporte ohne Uhrzeit, geplante Personen-Audits (${v('tg_fixed_pa')} min) und Beratungen (${v('tg_fixed_berat')} min) sind Stopps an ihrem Ort, Reihenfolge frei optimiert. Rapporte ohne Adresse zählen nur als Zeit (keine Fahrt).`,
     `Füllt nur auf – bereits Geplantes bleibt. Reicht die Arbeit nicht für alle Tage, bleibt ein Tag frei statt überall halbe Tage.`,
     `Startadresse: auf dem eigenen Gerät gesetzte hat Vorrang, sonst die in «Auditoren verwalten».`]) +
-  sec('layout-distribute-horizontal','Verteilen (KW-Planung)',[
-    `Verteilt die bereits geplanten Baustellen einer KW auf die gewählten Tage: max. 1 Baustelle Unterschied pro Tag, möglichst gleich lange Tage (Fahrzeit + Ø ${v('dist_audit_min')} min pro Audit + bestehende Termine).`,
-    `Ferientage werden automatisch ausgelassen. Termine (Rapporte etc.) zählen beim Verteilen nur als belegte Zeit – für einen Tagesablauf mit Uhrzeiten und Adressen den Tourguide verwenden.`]) +
   sec('route','Routen (Handy)',[
     `Der Tagesplan ist immer sortiert: automatisch beim Öffnen eines Tages und sobald sich die offenen Stopps ändern (erledigt, neu geplant, verschoben, abgesagt).`,
     `Start: nach einem erledigten Stopp ab dieser Baustelle, sonst ab aktuellem GPS-Standort (wenn höchstens 15 min alt) bzw. ab Startadresse; Ende an der Startadresse. «📍 Sortieren» berechnet neu ab dem aktuellen Standort.`,
@@ -4943,7 +4753,7 @@ function rulesHTML(){
     `Rapporte: ein Termin mit allen Teilnehmenden – Umrandung = geplant, gefüllt mit ✓ = teilgenommen.`]) +
   sec('beach','Ferien',[
     `Wunschferien: jeder trägt eigene ein, alle sehen alle; Admins bestätigen → werden fixe Ferien.`,
-    `Überschneidung wird ab ${v('wf_overlap')} Personen gleichzeitig rot markiert. Fixe Ferien sperren Tage in Tourguide und Verteilen.`]);
+    `Überschneidung wird ab ${v('wf_overlap')} Personen gleichzeitig rot markiert. Fixe Ferien sperren Tage im Tourguide.`]);
 }
 let _setTab='werte';
 function openSettings(){_setTab='werte';renderSettings();document.getElementById('set-bg').style.display='flex';}
@@ -4980,7 +4790,7 @@ ${groups.map(g=>`<table><tr><th colspan="3">${escH(g.grp)}</th></tr><tr><th>Eins
   setTimeout(()=>{try{w.focus();w.print();}catch(e){}},400);
 }
 // Selten nötige Feineinstellungen: unter «Erweitert» (eingeklappt)
-const SETTINGS_ADV=new Set(['tg_znueni_through','tg_audit_flex','tg_lunch_flex','tg_day_tol','tg_week_tol','tg_size_bonus','tg_last_start','tg_force_days','tg_tie_min','tg_fixed_pa','tg_fixed_berat','dist_audit_min','dist_day_hours','pi_react_inactive_min','pi_history_weeks','kd_streak_weeks','kd_min_pers','tt_tol_pct','tt_green','tt_orange']);
+const SETTINGS_ADV=new Set(['tg_znueni_through','tg_audit_flex','tg_lunch_flex','tg_day_tol','tg_week_tol','tg_size_bonus','tg_last_start','tg_force_days','tg_tie_min','tg_fixed_pa','tg_fixed_berat','pi_react_inactive_min','pi_history_weeks','kd_streak_weeks','kd_min_pers','tt_tol_pct','tt_green','tt_orange']);
 function renderSettings(){
   const box=document.getElementById('set-body');if(!box)return;
   ['werte','regeln'].forEach(t=>{const b=document.getElementById('set-tab-'+t);if(b){b.style.borderBottomColor=t===_setTab?'var(--blue)':'transparent';b.style.color=t===_setTab?'var(--blue)':'var(--tx2)';}});
