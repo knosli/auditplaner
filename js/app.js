@@ -117,17 +117,21 @@ function status(e,now){
     const wh=e.type==='werkhof';
     if(!e.createdAt)return wh?'ok':'new';
     const dn=dl(e,now);
-    if(dn<-S('due_overdue_days'))return'overdue';
+    if(dn<-dueOverDays(e))return'overdue';
     if(dn<=0)return'due';
-    if(wh&&dn<=S('due_soon_days'))return'soon';
+    if(wh&&dn<=dueSoonDays(e))return'soon';
     return wh?'ok':'new';
   }
   const d=dl(e,now);
-  if(d<-S('due_overdue_days'))return'overdue';
+  if(d<-dueOverDays(e))return'overdue';
   if(d<=0)return'due';
-  if(d<=S('due_soon_days'))return'soon';
+  if(d<=dueSoonDays(e))return'soon';
   return'ok';
 }
+// Ampel-Fristen im Verhältnis zum Rhythmus (z.B. 35 %), höchstens due_soon_days / due_overdue_days Tage:
+// kurze Rhythmen (1–3 Wochen) werden früher gelb/rot, ab 4 Wochen bleibt es bei den festen Tagen.
+function dueSoonDays(e){return Math.min(S('due_soon_days'),Math.round((+e.rhythm||28)*S('due_soon_pct')/100));}
+function dueOverDays(e){return Math.min(S('due_overdue_days'),Math.max(S('due_overdue_min'),Math.round((+e.rhythm||28)*S('due_overdue_pct')/100)));}
 // Erfassungsdatum für nie auditierte Baustellen: die interne ID ist der Erfassungs- bzw. Importzeitpunkt
 // (Date.now()) -> daraus das echte Datum ableiten. Ein später gesetztes Datum (z.B. Migration «heute»)
 // wird durch das frühere ID-Datum ersetzt. Ohne plausible ID: heute (Frist läuft ab jetzt).
@@ -478,7 +482,7 @@ function renderList(){
   }else list.sort((a,b)=>dl(a)-dl(b));
   if(!data.length){document.getElementById('bslist').innerHTML=`<div class="empty-s"><h3>Keine Baustellen</h3><p>Über «+ Neue Baustelle» erfassen oder ein Backup laden.</p></div>`;return;}
   const tc={overdue:'tov',due:'tdu',soon:'tsn',ok:'tok',new:'tnew',paused:'tpa',inactive:'tin',planned:'tpl',beratung:'tpl',noaudit:'tpa'};
-  const sl=e=>{const s=status(e);if(s==='planned'){const p=plans.filter(x=>x.bsId===e.id&&x.date>=today()).sort((a,b)=>a.date.localeCompare(b.date))[0];return p?`KW ${dateToKW(p.date)}`:'Geplant';}if(s==='overdue')return`${Math.abs(dl(e))-10}T überfällig`;if(s==='due')return`${Math.abs(dl(e))}T über`;if(s==='soon')return`in ${dl(e)}T`;if(s==='new')return'Neu – kein Audit';if(s==='noaudit')return'🛡 Kein Audit (nicht im Lead)';if(dl(e)===-999)return'Kein Audit';if(s==='beratung')return'Beratung geplant';if(s==='paused')return'Pausiert';if(s==='inactive')return'Inaktiv';return`in ${dl(e)}T`;};
+  const sl=e=>{const s=status(e);if(s==='planned'){const p=plans.filter(x=>x.bsId===e.id&&x.date>=today()).sort((a,b)=>a.date.localeCompare(b.date))[0];return p?`KW ${dateToKW(p.date)}`:'Geplant';}if(s==='overdue')return`${Math.abs(dl(e))-dueOverDays(e)}T überfällig`;if(s==='due')return`${Math.abs(dl(e))}T über`;if(s==='soon')return`in ${dl(e)}T`;if(s==='new')return'Neu – kein Audit';if(s==='noaudit')return'🛡 Kein Audit (nicht im Lead)';if(dl(e)===-999)return'Kein Audit';if(s==='beratung')return'Beratung geplant';if(s==='paused')return'Pausiert';if(s==='inactive')return'Inaktiv';return`in ${dl(e)}T`;};
   const _cardHTML=e=>{
     const s=status(e),ip=planned.has(e.id);
     const chk=(planMode||multiPlanMode||multiAuditMode)&&e.active&&!e.paused?`<div class="pchk${ip?' on':''}" onclick="togPI(event,${e.id})">${ip?'✓':''}</div>`:'';
@@ -3245,7 +3249,7 @@ let _guideStep=0;
 const GUIDE_STEPS=[
   {icon:'👋',title:'Willkommen beim Audit Planer!',text:'<p style="font-size:14px;color:var(--tx2);line-height:1.8;margin-bottom:20px">Der <strong>Anliker Audit Planer</strong> hilft dem Audit-Team, Baustellenaudits und Personen-Audits zu planen, erfassen und überwachen – für alle Auditoren gemeinsam und in Echtzeit.</p><div style="padding:12px 16px;background:#EFF6FF;border-radius:10px;font-size:13px;color:#1D4ED8;line-height:1.6">💡 Diese Anleitung ist jederzeit über den <strong>❓</strong> Button oben rechts abrufbar.</div>'},
   {icon:'🏗️',title:'Neue Baustelle erfassen',menuHint:'Button: + Neu',text:'<div style="display:flex;flex-direction:column;gap:14px"><div style="padding:14px;background:var(--sf2);border-radius:10px"><div style="font-weight:700;font-size:13px;margin-bottom:10px">So findest du den Button:</div><div style="background:#1A1D2E;border-radius:8px;padding:8px 12px;display:flex;align-items:center;gap:6px"><span style="padding:5px 10px;background:#10B981;border-radius:6px;font-size:12px;font-weight:600;color:#fff">✦ Neu</span><span style="color:rgba(255,255,255,.4);font-size:12px">← oben im Header</span></div></div><div style="padding:14px;background:#FEF3C7;border-radius:10px;border-left:3px solid #F59E0B"><div style="font-weight:700;font-size:13px;margin-bottom:8px;color:#92400E">⚠️ Wichtig: Korrekte Adresse</div><div style="font-size:12px;color:#92400E;line-height:1.7">Die Adresse wird für Kartenpositionierung und Google Maps verwendet.<br><br><span style="background:#fff;border-radius:4px;padding:2px 6px">✓ Richtig:</span> <strong>«Bahnhofstrasse 12, 6000 Luzern»</strong><br><span style="background:#fff;border-radius:4px;padding:2px 6px">✗ Falsch:</span> «Bahnhofstrasse» oder «12-14»<br><br>Falls keine genaue Adresse bekannt: <strong>nächste Nachbaradresse</strong> verwenden.</div></div><div style="padding:10px 14px;background:var(--sf2);border-radius:8px;font-size:12px;color:var(--tx2)">💡 PSP, PrV und BC sind wichtig für Suche und Übersicht.</div></div>'},
-  {icon:'🗺️',title:'Karte – Ampelsystem & Zeichen',menuHint:'Reiter: Karte',text:(function(){var r=[['#EF4444','🔴 Überfällig','&gt;10 Tage über dem Rhythmus'],['#F97316','🟠 Fällig','0–10 Tage über dem Rhythmus'],['#EAB308','🟡 Bald fällig','≤10 Tage bis zur Fälligkeit'],['#10B981','🟢 OK','&gt;10 Tage bis zur Fälligkeit'],['#6366F1','🔵 Geplant','Audit-Termin vorhanden'],['#8B5CF6','🟣 Beratung','Beratungstermin geplant'],['#7C3AED','★ Neu','Noch nie auditiert'],['#94A3B8','⏸ Pausiert','Rhythmus unterbrochen'],['#6B7280','◼ Inaktiv','Baustelle abgeschlossen'],['#EA580C','🏠 Werkhof','Werkhof-Standort'],['#7C3AED','◆ GU','Generalunternehmung']];return '<p style="font-size:12px;color:var(--tx2);margin-bottom:8px">Jede Baustelle hat einen <strong>Audit-Rhythmus</strong> (Standard: 4 Wochen):</p><div style="display:flex;flex-direction:column;gap:4px">'+r.map(function(x){return '<div style="display:flex;align-items:center;gap:10px;padding:5px 8px;background:var(--sf2);border-radius:6px"><div style="width:12px;height:12px;border-radius:50%;background:'+x[0]+';flex-shrink:0"></div><div style="font-weight:600;font-size:11px;min-width:100px">'+x[1]+'</div><div style="font-size:11px;color:var(--tx2)">'+x[2]+'</div></div>';}).join('')+'</div>';})()},
+  {icon:'🗺️',title:'Karte – Ampelsystem & Zeichen',menuHint:'Reiter: Karte',text:(function(){var r=[['#EF4444','🔴 Überfällig','länger über dem Rhythmus (bei 4 Wochen &gt;10 Tage)'],['#F97316','🟠 Fällig','Rhythmus erreicht (bei 4 Wochen 0–10 Tage darüber)'],['#EAB308','🟡 Bald fällig','kurz vor Fälligkeit (bei 4 Wochen ≤10 Tage)'],['#10B981','🟢 OK','noch genug Zeit bis zur Fälligkeit'],['#6366F1','🔵 Geplant','Audit-Termin vorhanden'],['#8B5CF6','🟣 Beratung','Beratungstermin geplant'],['#7C3AED','★ Neu','Noch nie auditiert'],['#94A3B8','⏸ Pausiert','Rhythmus unterbrochen'],['#6B7280','◼ Inaktiv','Baustelle abgeschlossen'],['#EA580C','🏠 Werkhof','Werkhof-Standort'],['#7C3AED','◆ GU','Generalunternehmung']];return '<p style="font-size:12px;color:var(--tx2);margin-bottom:8px">Jede Baustelle hat einen <strong>Audit-Rhythmus</strong> (Standard: 4 Wochen):</p><div style="display:flex;flex-direction:column;gap:4px">'+r.map(function(x){return '<div style="display:flex;align-items:center;gap:10px;padding:5px 8px;background:var(--sf2);border-radius:6px"><div style="width:12px;height:12px;border-radius:50%;background:'+x[0]+';flex-shrink:0"></div><div style="font-weight:600;font-size:11px;min-width:100px">'+x[1]+'</div><div style="font-size:11px;color:var(--tx2)">'+x[2]+'</div></div>';}).join('')+'</div>';})()},
   {icon:'🔍',title:'Filter & Suche',menuHint:'Filter oben links',text:'<div style="display:flex;flex-direction:column;gap:12px"><div style="padding:14px;background:var(--sf2);border-radius:10px"><div style="font-weight:700;font-size:13px;margin-bottom:8px">📂 Abteilungs-Filter</div><div style="font-size:13px;color:var(--tx2);line-height:1.6">Dropdown direkt unter dem Header (oben links) → Abteilung wählen → Karte und Liste zeigen nur diese Abteilung. Kombinierbar mit Statusfilter.</div></div><div style="padding:14px;background:var(--sf2);border-radius:10px"><div style="font-weight:700;font-size:13px;margin-bottom:8px">🚦 Status-Filter</div><div style="font-size:13px;color:var(--tx2);line-height:1.6">Zweites Dropdown oben links → Überfällig / Fällig / OK etc. → kombinierbar mit Abteilungs-Filter.</div></div><div style="padding:14px;background:var(--sf2);border-radius:10px"><div style="font-weight:700;font-size:13px;margin-bottom:6px">🔎 Suche</div><div style="font-size:13px;color:var(--tx2)">Suchfeld oben links – sucht in Name, Adresse, PSP, PrV, BC. Bei aktiver Suche auch pausierte und inaktive Baustellen sichtbar.</div></div></div>'},
   {icon:'📋',title:'Detail-Panel – Buttons erklärt',menuHint:'Klick auf Baustelle',text:(function(){var b=[['#10B981','✓ Auditiert','Audit als erledigt erfassen'],['#8B5CF6','💬 Beratung','Beratungstermin erfassen oder planen'],['#6366F1','📅 Planen','Audit-Termin planen (KW oder Datum)'],['#6B7280','📝 Notiz','Interne Notiz zur Baustelle'],['#3B82F6','✏️ Bearbeiten','Baustellen-Daten bearbeiten'],['#94A3B8','⏸ Pausieren','Baustelle pausieren (optional bis KW)'],['#6B7280','Inaktiv','Als abgeschlossen markieren']];return '<p style="font-size:12px;color:var(--tx2);margin-bottom:8px">Baustelle anklicken → Detail-Panel öffnet sich rechts:</p><div style="display:flex;flex-direction:column;gap:6px">'+b.map(function(x){return '<div style="display:flex;align-items:center;gap:10px;padding:7px 10px;background:var(--sf2);border-radius:8px"><span style="padding:3px 8px;background:'+x[0]+';color:#fff;border-radius:5px;font-size:11px;font-weight:600;white-space:nowrap">'+x[1]+'</span><span style="font-size:12px;color:var(--tx2)">'+x[2]+'</span></div>';}).join('')+'</div><div style="padding:8px 12px;background:#FEF3C7;border-radius:8px;font-size:11px;color:#92400E;margin-top:6px">⚠️ Löschen ist nur im Admin-Modus sichtbar.</div>';})()},
   {icon:'📅',title:'KW-Planung',menuHint:'Reiter: KW-Planung',text:'<div style="display:flex;flex-direction:column;gap:12px"><div style="padding:14px;background:var(--sf2);border-radius:10px"><div style="font-weight:700;font-size:13px;margin-bottom:6px">📋 Wochenübersicht</div><div style="font-size:13px;color:var(--tx2);line-height:1.6">Mo–Fr mit allen geplanten Audits. <span style="background:#F0FDF4;color:#065F46;padding:1px 5px;border-radius:3px;font-size:11px">✓ Grün = erledigt</span> Auditor-Badge in seiner Farbe = geplant. BC des Baustellenleiters wird angezeigt.</div></div><div style="padding:14px;background:var(--sf2);border-radius:10px"><div style="font-weight:700;font-size:13px;margin-bottom:6px">↔️ Termine verschieben</div><div style="font-size:13px;color:var(--tx2)">Auf geplanten Eintrag klicken → Tages-Buttons Mo/Di/Mi/Do/Fr → Termin verschiebt. ← → für andere Woche.</div></div><div style="padding:14px;background:var(--sf2);border-radius:10px"><div style="font-weight:700;font-size:13px;margin-bottom:6px">📧 Outlook & 🖨️ Drucken</div><div style="font-size:13px;color:var(--tx2)">Buttons neben «Heute» → Auditor + KW wählen → .ics Export für Outlook (07:00–17:00) oder PDF-Druck.</div></div></div>'},
@@ -4667,8 +4671,11 @@ document.addEventListener('DOMContentLoaded',()=>setTimeout(initStickyFooters,30
 // Alle definierten Werte an einer Stelle; gespeichert in deptMeta._settings (über Supabase synchronisiert).
 const SETTINGS_DEF=[
  {grp:'Fälligkeit (Ampel)',items:[
-  {k:'due_soon_days',l:'«Bald fällig» (gelb) ab … Tage vor Fälligkeit',def:10,min:0,max:60,u:'Tage'},
-  {k:'due_overdue_days',l:'«Überfällig» (rot) ab … Tage nach Fälligkeit',def:10,min:0,max:90,u:'Tage'}]},
+  {k:'due_soon_pct',l:'«Bald fällig» (gelb) im letzten … % des Rhythmus vor Fälligkeit',def:35,min:0,max:100,u:'%'},
+  {k:'due_soon_days',l:'… aber höchstens … Tage vor Fälligkeit',def:10,min:0,max:60,u:'Tage'},
+  {k:'due_overdue_pct',l:'«Überfällig» (rot) ab … % des Rhythmus nach Fälligkeit',def:35,min:0,max:200,u:'%'},
+  {k:'due_overdue_min',l:'… aber frühestens … Tage nach Fälligkeit',def:2,min:0,max:30,u:'Tage'},
+  {k:'due_overdue_days',l:'… und spätestens … Tage nach Fälligkeit',def:10,min:0,max:90,u:'Tage'}]},
  {grp:'Standard-Rhythmus beim Erfassen',items:[
   {k:'rh_baustelle',l:'Baustelle',def:28,min:7,max:365,u:'Tage'},
   {k:'rh_gu',l:'Generalunternehmung (GU)',def:42,min:7,max:365,u:'Tage'},
@@ -4750,7 +4757,7 @@ function rulesHTML(){
   return`<div style="font-size:11px;color:var(--tx3);margin-bottom:12px">Übersicht der Regeln, nach denen der Planer arbeitet. Blaue Zahlen sind im Tab «Werte» einstellbar.</div>`+
   sec('traffic-lights','Status & Ampel',[
     `Fälligkeit = letztes Audit + Rhythmus der Baustelle.`,
-    `<span style="color:#EAB308">●</span> Bald fällig ab ${v('due_soon_days')} Tagen vor Fälligkeit · <span style="color:#F59E0B">●</span> fällig ab Fälligkeitstag · <span style="color:#EF4444">●</span> überfällig ab ${v('due_overdue_days')} Tagen danach.`,
+    `<span style="color:#EAB308">●</span> Bald fällig im letzten ${v('due_soon_pct')} % des Rhythmus vor Fälligkeit (höchstens ${v('due_soon_days')} Tage) · <span style="color:#F59E0B">●</span> fällig ab Fälligkeitstag · <span style="color:#EF4444">●</span> überfällig ${v('due_overdue_pct')} % des Rhythmus danach (mindestens ${v('due_overdue_min')}, höchstens ${v('due_overdue_days')} Tage). Beispiele: ${[7,14,21,28].map(r=>{const e={rhythm:r};return `${r/7} Wo.: gelb ab Tag ${r-dueSoonDays(e)}, rot ab Tag ${r+dueOverDays(e)+1}`;}).join(' · ')}.`,
     `Noch nie auditierte Baustellen (★ auf der Karte): Frist läuft ab Erfassung – violett = neu, orange = fällig, rot = überfällig. Werkhöfe gelten nie als «neu» (Audit-Rhythmus dort weniger wichtig).`,
     `Geplante Baustellen (blau) und geplante Beratungen (violett) werden nicht als fällig gezählt; pausierte und inaktive gar nicht. <b>🛡 Kein Audit</b> (Bearbeiten → Häkchen, z.B. Sicherheit nicht bei uns im Lead): Die Baustelle läuft weiter und der Personal-Import erfasst ihr Personal, aber sie hat keine Ampel, zählt nie als fällig, kommt nie in den Tourguide, wird nie pausiert vorgeschlagen und nie automatisch inaktiv.`]) +
   sec('refresh','Rhythmus',[
@@ -4853,7 +4860,7 @@ ${groups.map(g=>`<table><tr><th colspan="3">${escH(g.grp)}</th></tr><tr><th>Eins
   setTimeout(()=>{try{w.focus();w.print();}catch(e){}},400);
 }
 // Selten nötige Feineinstellungen: unter «Erweitert» (eingeklappt)
-const SETTINGS_ADV=new Set(['tg_znueni_through','tg_audit_flex','tg_lunch_flex','tg_day_tol','tg_week_tol','tg_size_bonus','tg_last_start','tg_force_days','tg_tie_min','tg_fixed_pa','tg_fixed_berat','pi_react_inactive_min','pi_history_weeks','kd_streak_weeks','kd_min_pers','tt_tol_pct','tt_green','tt_orange']);
+const SETTINGS_ADV=new Set(['due_soon_days','due_overdue_min','due_overdue_days','tg_znueni_through','tg_audit_flex','tg_lunch_flex','tg_day_tol','tg_week_tol','tg_size_bonus','tg_last_start','tg_force_days','tg_tie_min','tg_fixed_pa','tg_fixed_berat','pi_react_inactive_min','pi_history_weeks','kd_streak_weeks','kd_min_pers','tt_tol_pct','tt_green','tt_orange']);
 function renderSettings(){
   const box=document.getElementById('set-body');if(!box)return;
   ['werte','regeln'].forEach(t=>{const b=document.getElementById('set-tab-'+t);if(b){b.style.borderBottomColor=t===_setTab?'var(--blue)':'transparent';b.style.color=t===_setTab?'var(--blue)':'var(--tx2)';}});
@@ -5154,7 +5161,7 @@ async function tgCompute(){
   const mayOpen=(i,d)=>{
     const j=idxPool[i];if(minDist(j,[0,...dayNodes(d)])<=near)return true;
     if(sets.some((_,d2)=>d2!==d&&minDist(j,dayNodes(d2))<=near&&tryDay(i,d2)))return false; // Gegend wird an einem anderen Tag besucht und hat dort noch Platz – keine 2. Fahrt
-    if(-dl(pool[i].e,parseDate(_tgCalc.days[d].ds).getTime())>=S('due_overdue_days')+S('tg_force_days'))return true; // lange überfällig: immer
+    if(-dl(pool[i].e,parseDate(_tgCalc.days[d].ds).getTime())>=dueOverDays(pool[i].e)+S('tg_force_days'))return true; // lange überfällig: immer
     const all=[j,...[...remaining].filter(k=>k!==i&&pool[k].urgDay[d]!=null&&pool[k].urgDay[d]<=1&&minDist(idxPool[k],[j])<=near).map(k=>idxPool[k])];
     if(all.length===1)return true;
     if(sets[d].length+all.length<=maxN&&ok(d,tgPlanDay(d,sets[d].concat(all))))return true;
@@ -5171,7 +5178,7 @@ async function tgCompute(){
   // Hauptregion (Umkreis um die Startadresse) zuerst: pro Farbe erst Baustellen in der Region, dann die übrigen
   const hasReg=pool.some(x=>x.inReg);
   // ganz zuerst: Baustellen, die schon länger als tg_force_days rot sind (dürfen nicht von anderen verdrängt werden)
-  const isForce=(i,d)=>-dl(pool[i].e,parseDate(_tgCalc.days[d].ds).getTime())>=S('due_overdue_days')+S('tg_force_days');
+  const isForce=(i,d)=>-dl(pool[i].e,parseDate(_tgCalc.days[d].ds).getTime())>=dueOverDays(pool[i].e)+S('tg_force_days');
   [0,1].forEach(cls=>['force',true,false].forEach(regOnly=>{if(regOnly===true&&!hasReg)return;if(regOnly==='force'&&cls!==0)return;
     for(;;){
       let best=null;
