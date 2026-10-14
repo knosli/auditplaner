@@ -33,7 +33,7 @@ if('serviceWorker' in navigator){
 <link rel="stylesheet" href="vendor/markercluster/MarkerCluster.css?v=1.5.3">
 <link rel="stylesheet" href="vendor/markercluster/MarkerCluster.Default.css?v=1.5.3">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
-<link rel="stylesheet" href="css/style.css?v=3.26">
+<link rel="stylesheet" href="css/style.css?v=3.27">
 </head>
 <body>
 <div id="app" style="display:none">
@@ -61,7 +61,7 @@ if('serviceWorker' in navigator){
   <div id="presence-bar" style="display:flex;align-items:center;gap:4px;margin-left:4px"></div>
   <button onclick="toggleDark()" class="hb" title="Dark Mode" style="font-size:14px">🌙</button>
   <button onclick="openGuide()" class="hb" title="Anleitung" style="font-size:14px">❓</button>
-  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v3.26</span>
+  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v3.27</span>
   <button onclick="doLogout()" class="hb" title="Abmelden" style="font-size:14px" id="logout-btn">⏻</button>
   <button onclick="toggleMobileView()" id="mobile-btn" class="hb" title="Mobile Ansicht" style="font-size:14px">📱</button>
   <div id="more-w" class="admin-only">
@@ -108,9 +108,9 @@ if('serviceWorker' in navigator){
 <!-- STATS -->
 <div id="stats">
   <div class="stat" id="st-all" onclick="statFlt('all')"><div class="sdot" style="background:var(--blue)"></div><div><div class="sn" id="sn-t">0</div><div class="sl">Aktiv</div></div></div>
-  <div class="stat" id="st-ov" onclick="statFlt('overdue')"><div class="sdot" style="background:var(--red)"></div><div><div class="sn" style="color:var(--red)" id="sn-o">0</div><div class="sl">Überfällig &gt;10T</div></div></div>
-  <div class="stat" id="st-du" onclick="statFlt('due')"><div class="sdot" style="background:var(--orange)"></div><div><div class="sn" style="color:var(--orange)" id="sn-d">0</div><div class="sl">Fällig 0–10T</div></div></div>
-  <div class="stat" id="st-sn" onclick="statFlt('soon')"><div class="sdot" style="background:#FDE047"></div><div><div class="sn" style="color:#854D0E" id="sn-s">0</div><div class="sl">Bald fällig ≤10T</div></div></div>
+  <div class="stat" id="st-ov" onclick="statFlt('overdue')"><div class="sdot" style="background:var(--red)"></div><div><div class="sn" style="color:var(--red)" id="sn-o">0</div><div class="sl">Überfällig</div></div></div>
+  <div class="stat" id="st-du" onclick="statFlt('due')"><div class="sdot" style="background:var(--orange)"></div><div><div class="sn" style="color:var(--orange)" id="sn-d">0</div><div class="sl">Fällig</div></div></div>
+  <div class="stat" id="st-sn" onclick="statFlt('soon')"><div class="sdot" style="background:#FDE047"></div><div><div class="sn" style="color:#854D0E" id="sn-s">0</div><div class="sl">Bald fällig</div></div></div>
   <div class="stat" id="st-ok" onclick="statFlt('ok')"><div class="sdot" style="background:var(--green)"></div><div><div class="sn" style="color:var(--green)" id="sn-k">0</div><div class="sl">OK</div></div></div>
   <div class="stat" id="st-nw" onclick="statFlt('new')"><div class="sdot" style="background:#7C3AED;clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)"></div><div><div class="sn" style="color:#7C3AED" id="sn-nw">0</div><div class="sl">Neu</div></div></div>
   <div class="stat" id="st-pl" onclick="statFlt('planned')"><div class="sdot" style="background:var(--planned)"></div><div><div class="sn" style="color:var(--planned)" id="sn-pl">0</div><div class="sl">Geplant</div></div></div>
@@ -126,8 +126,8 @@ if('serviceWorker' in navigator){
       <div class="sb-frow">
         <select id="dsel"><option value="">Alle Abteilungen</option></select>
         <select id="stsel"><option value="">Alle Status</option>
-          <option value="overdue">Überfällig &gt;10T</option><option value="due">Fällig 0–10T</option>
-          <option value="soon">Bald fällig ≤10T</option><option value="new">Kein Audit</option><option value="ok">OK</option>
+          <option value="overdue">Überfällig</option><option value="due">Fällig</option>
+          <option value="soon">Bald fällig</option><option value="new">Kein Audit</option><option value="ok">OK</option>
           <option value="planned">Geplant</option><option value="paused">Pausiert</option>
           <option value="inactive">Inaktiv</option>
         </select>
@@ -638,8 +638,8 @@ if('serviceWorker' in navigator){
 <!-- LEGEND + TIMELINE -->
 <div id="leg">
   <div class="li"><div class="ld" style="background:#EF4444"></div>Überfällig</div>
-  <div class="li"><div class="ld" style="background:#F97316"></div>Fällig 0–10T</div>
-  <div class="li"><div class="ld" style="background:#FDE047"></div>Bald fällig ≤10T</div>
+  <div class="li"><div class="ld" style="background:#F97316"></div>Fällig</div>
+  <div class="li"><div class="ld" style="background:#FDE047"></div>Bald fällig</div>
   <div class="li"><div class="ld" style="background:#10B981"></div>OK</div>
   <div class="li" title="Stern = noch nie auditiert. Violett = neu, orange = fällig, rot = überfällig (Frist ab Erfassung)"><span style="font-size:14px;color:#7C3AED;line-height:1">★</span><span style="font-size:14px;color:#F59E0B;line-height:1;margin-left:-2px">★</span><span style="font-size:14px;color:#EF4444;line-height:1;margin-left:-2px">★</span> Nie auditiert (neu / fällig / überfällig)</div>
   <div class="li"><div class="ld" style="background:#6366F1"></div>Geplant</div>
@@ -1048,8 +1048,8 @@ if('serviceWorker' in navigator){
 <script src="vendor/leaflet/leaflet.js?v=1.9.4"></script>
 <script src="vendor/markercluster/leaflet.markercluster.js?v=1.5.3"></script>
 <script src="vendor/xlsx/xlsx.full.min.js?v=0.18.5"></script>
-<script src="js/merge.js?v=3.26"></script>
-<script src="js/app.js?v=3.26"></script>
+<script src="js/merge.js?v=3.27"></script>
+<script src="js/app.js?v=3.27"></script>
 <!-- ONBOARDING GUIDE MODAL -->
 <div id="guide-bg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:5000;align-items:center;justify-content:center">
   <div style="background:var(--sf);border-radius:16px;width:560px;max-width:95vw;max-height:90vh;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.4);display:flex;flex-direction:column">
