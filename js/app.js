@@ -300,6 +300,8 @@ function renderMarkers(){
   const sf=document.getElementById('stsel')?.value||'';
   const dayPlanOn=window._dayPlanMode;
   const dayPlanDate=document.getElementById('dayplan-date')?.value||today();
+  const dayPlanAud=dayPlanWho();   // Admin: anderer Auditor oder '__all'; sonst immer der eigene
+  const dpPlans=new Map();          // Baustelle → Planungen des Tages (für Farbe/Tooltip bei «alle»)
   const ms=[];
   const visible=[];
   data.forEach(e=>{
@@ -308,8 +310,9 @@ function renderMarkers(){
     // Nutzer eingeplant sind - überschreibt alle anderen Filter, da es ein bewusst enger
     // Fokus-Modus ist (nur der eigene Tagesplan, sonst nichts).
     if(dayPlanOn){
-      const hasPlanToday=plans.some(p=>p.bsId===e.id&&p.date===dayPlanDate&&p.auditor===currentUser);
-      if(!hasPlanToday)return;
+      const pl=plans.filter(p=>p.bsId===e.id&&p.date===dayPlanDate&&(dayPlanAud==='__all'||p.auditor===dayPlanAud));
+      if(!pl.length)return;
+      dpPlans.set(e.id,pl);
       visible.push(e);
       return;
     }
@@ -355,8 +358,9 @@ function renderMarkers(){
   groups.forEach(group=>{
     if(group.length===1){
       const e=group[0];
-      const m=L.marker([e.lat,e.lng],{icon:makeIcon(e,selId===e.id)});
-      m.bindTooltip(`<div style="font-size:12px;font-weight:600;color:#1A1D2E;max-width:200px">${e.name}<br><span style="font-weight:400;color:#6B7280;font-size:11px">${e.addr||''}</span></div>`,{direction:'top',offset:[0,-8],opacity:1,className:'bs-tooltip'});
+      const dpl=dpPlans.get(e.id);
+      const m=L.marker([e.lat,e.lng],{icon:dpl&&dayPlanAud==='__all'?dayPlanIcon(dpl,selId===e.id):makeIcon(e,selId===e.id)});
+      m.bindTooltip(`<div style="font-size:12px;font-weight:600;color:#1A1D2E;max-width:200px">${e.name}<br><span style="font-weight:400;color:#6B7280;font-size:11px">${e.addr||''}</span>${dpl?`<br><span style="font-weight:600;font-size:11px">${dpl.map(p=>`<span style="color:${aC(p.auditor)}">● ${escH(p.auditor)}</span>${p.time?' '+escH(p.time):''}`).join('<br>')}</span>`:''}</div>`,{direction:'top',offset:[0,-8],opacity:1,className:'bs-tooltip'});
       m.on('click',ev=>{
         if((planMode||multiPlanMode||multiAuditMode)&&e.active&&!e.paused){
           ev.originalEvent.stopPropagation();
@@ -2744,12 +2748,34 @@ function renderPAPins(list){
   _paPinsLayer.addTo(map);
 }
 
+// Tagesplanung auf der Karte: Admins können einen anderen Auditor oder alle wählen (#dayplan-aud)
+function dayPlanWho(){
+  const sel=document.getElementById('dayplan-aud');
+  if(!document.body.classList.contains('admin-mode')||!sel||!sel.value)return currentUser;
+  return sel.value;
+}
+function dayPlanFillAud(){
+  const sel=document.getElementById('dayplan-aud');if(!sel)return;
+  const adm=document.body.classList.contains('admin-mode');
+  sel.style.display=adm?'block':'none';
+  if(!adm)return;
+  const cur=sel.value||currentUser||'';
+  const list=auditors.filter(a=>a!==currentUser).slice().sort((a,b)=>a.localeCompare(b));
+  sel.innerHTML=(currentUser?`<option value="${escH(currentUser)}">Ich (${escH(currentUser)})</option>`:'')+list.map(a=>`<option value="${escH(a)}">${escH(a)}</option>`).join('')+'<option value="__all">Alle Auditoren</option>';
+  sel.value=[...sel.options].some(o=>o.value===cur)?cur:(currentUser||'__all');
+}
+function dayPlanIcon(pl,sel){
+  const auds=[...new Set(pl.map(p=>p.auditor))];const c=aC(auds[0]);
+  return L.divIcon({className:'',iconSize:[30,30],iconAnchor:[15,15],
+    html:`<div style="width:${sel?30:26}px;height:${sel?30:26}px;border-radius:50%;background:${c};border:2.5px solid ${auds.length>1?aC(auds[1]):'#fff'};display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,.35)">${escH(auds.map(audCode).join('/').slice(0,5))}</div>`});
+}
 function toggleDayPlanMode(){
   window._dayPlanMode=!window._dayPlanMode;
   const btn=document.getElementById('dayplan-toggle');
   const panel=document.getElementById('dayplan-panel');
   const dateEl=document.getElementById('dayplan-date');
   if(dateEl&&!dateEl.value)dateEl.value=today();
+  dayPlanFillAud();
   if(window._dayPlanMode){
     btn.style.background='var(--blue)';btn.style.color='#fff';btn.style.borderColor='var(--blue)';
     panel.style.display='block';
