@@ -16,6 +16,17 @@ body{font-family:'Inter',sans-serif;font-size:13px;color:var(--tx);background:va
   body.full-view #tabs::-webkit-scrollbar,body.full-view #stats::-webkit-scrollbar{display:none}
 }
 @media(max-width:1023px){body.full-view #mob-back{display:flex;background:var(--blue);border-color:transparent;color:#fff;flex-shrink:0}}
+/* Volle Ansicht auf dem Handy: KW-Planung passt in die Bildschirmbreite (Hochformat: Tage untereinander),
+   Detail-Panel liegt über der Baustellen-Liste statt dahinter */
+@media(max-width:1023px){
+  body.full-view #cal-view,body.full-view #cal-main{min-width:0;max-width:100vw}
+  body.full-view .calnav{flex-wrap:wrap}
+}
+@media(max-width:767px){
+  body.full-view #kwgrid,body.full-view #kwgrid>tbody,body.full-view #kwgrid>tbody>tr{display:block;width:100%!important}
+  body.full-view #kwgrid td.kwcol{display:block;width:auto!important;min-height:0;margin-bottom:8px}
+  body.full-view #dp{position:fixed;left:8px;right:8px;width:auto;top:96px;max-height:calc(100vh - 110px);overflow-y:auto;z-index:1200}
+}
 button,input,select,textarea{font-family:inherit;font-size:13px}
 #app{display:flex;flex-direction:column;height:100vh}
 /* HEADER */

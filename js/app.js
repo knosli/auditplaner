@@ -2931,7 +2931,7 @@ function toggleMore(ev){
   const badge=document.getElementById('sb-count-badge');
   if(badge){const n=(window._piCollectBox||[]).length;badge.textContent=n?`(${n})`:'';}
   updateTempWorkersBadge();updateInactBadge();
-  if(m.style.display!=='none'){m.style.display='none';return;}
+  if(getComputedStyle(m).display!=='none'){m.style.display='none';return;}   // CSS-Start = versteckt (style.display ist dann leer)
   // Move menu to body to escape any overflow/z-index stacking context
   if(m.parentElement!==document.body)document.body.appendChild(m);
   const btn=ev?ev.currentTarget:document.getElementById('more-w').querySelector('button');
@@ -2942,6 +2942,7 @@ function toggleMore(ev){
     m.style.right=(window.innerWidth-r.right)+'px';
     m.style.left='auto';
     m.style.zIndex='99999';
+    m.style.maxHeight=Math.max(200,window.innerHeight-r.bottom-12)+'px';m.style.overflowY='auto';   // kleine Bildschirme / Querformat: scrollen
   }
   m.style.display='block';
 }
