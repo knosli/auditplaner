@@ -621,7 +621,7 @@ function selEntry(id){
     const berats=(e.beratungen||[]).map(b=>({...b,_type:'berat'}));
     const combined=[...audits,...berats].sort((a,b)=>b.date.localeCompare(a.date));
     if(combined.length){
-      const rowStyle='display:grid;grid-template-columns:110px 1fr auto;align-items:center;gap:4px;padding:4px 12px;font-size:11px;border-bottom:1px solid var(--bd)';
+      const rowStyle='display:grid;grid-template-columns:130px 1fr auto;align-items:center;gap:4px;padding:4px 12px;font-size:11px;border-bottom:1px solid var(--bd)';
       const showAll=histEl.dataset.expanded==='1';
       const visible=showAll?combined:combined.slice(0,4);
       histEl.innerHTML=`<div style="font-size:11px;font-weight:600;color:var(--tx2);margin:8px 0 4px;padding:0 12px">Verlauf</div>`+
@@ -652,14 +652,14 @@ function selEntry(id){
       let html='<div style="font-size:11px;font-weight:600;color:var(--tx2);margin:8px 0 4px;padding:0 12px">Planungen</div>';
       ePlans.forEach(p=>{
         html+=`<div style="${rowStyle}">
-          <span style="color:#6366F1">📅 ${fd(p.date)}</span>
+          <span style="color:#6366F1">📅 ${fd(p.date)}${p.time?' · '+escH(p.time):''}</span>
           <span style="color:var(--tx2)">${p.auditor||'Unbekannt'}</span>
           <button onclick="delPlan('${p.id||p.date}',${e.id},'${p.date}')" style="background:none;border:none;cursor:pointer;color:#EF4444;font-size:13px;padding:0 2px">🗑</button>
         </div>`;
       });
       eBeratPlans.forEach(p=>{
         html+=`<div style="${rowStyle}">
-          <span style="color:#8B5CF6">💬 ${fd(p.date)}</span>
+          <span style="color:#8B5CF6">💬 ${fd(p.date)}${p.time?' · '+escH(p.time):''}</span>
           <span style="color:var(--tx2)">${p.auditor||'Unbekannt'}${p.note?' · '+p.note:''}</span>
           <button onclick="delBeratPlan(${p.id})" style="background:none;border:none;cursor:pointer;color:#EF4444;font-size:13px;padding:0 2px">🗑</button>
         </div>`;
@@ -709,7 +709,8 @@ function setStickyPlanKW(kw){
 function showF(w){
   ['audit-form','plan-form','note-form','pause-form','resume-form','delc'].forEach(x=>document.getElementById(x).style.display='none');
   if(w==='audit'){document.getElementById('audit-form').style.display='block';if(currentUser){const ap=document.getElementById('aud-pick');if(ap)[...ap.options].forEach(o=>{if(o.text===currentUser||o.value===currentUser)ap.value=o.value;});};document.getElementById('aud-date').value=today();}
-  if(w==='plan'){
+  if(w==='plan'||w==='berat'){
+    _planKind=w==='berat'?'berat':'audit';
     document.getElementById('plan-form').style.display='block';
     if(currentUser){const pa=document.getElementById('plan-aud');if(pa)[...pa.options].forEach(o=>{if(o.text===currentUser||o.value===currentUser)pa.value=o.value;});}
     // Default: KW mode. Zuletzt gewählte KW bleibt stehen (bis man sie ändert), solange sie nicht
@@ -718,6 +719,8 @@ function showF(w){
     setPlanMode('kw');
     document.getElementById('plan-kw').value=kwNum(getStickyPlanKW());
     document.getElementById('plan-date').value='';
+    {const t=document.getElementById('plan-time');if(t)t.value='';const n=document.getElementById('plan-note');if(n)n.value='';}
+    planKindUI();
   }
   if(w==='note'){const e=data.find(x=>x.id===selId);document.getElementById('note-form').style.display='block';document.getElementById('note-inp').value=e?.note||'';}
 }
@@ -746,7 +749,25 @@ function confirmAudit(){
   setTimeout(()=>selEntry(sid),100);
   showToast('✓ Audit erfasst',2000);
 }
-let _planMode='kw';
+let _planMode='kw',_planKind='audit';
+// Planen und Beratung im Detail-Panel: dasselbe Formular. Beratung = immer genaues Datum + Uhrzeit (+ Notiz).
+function planKindUI(){
+  const b=_planKind==='berat';
+  const ttl=document.getElementById('plan-title');if(ttl)ttl.innerHTML=b?'💬 Beratung planen':'📅 Audit planen';
+  const kwBtn=document.getElementById('plan-mode-kw');if(kwBtn)kwBtn.style.display=b?'none':'';
+  if(b){setPlanMode('date');const d=document.getElementById('plan-date');if(d&&!d.value)d.value=today();}
+  const lbl=document.getElementById('plan-time-lbl');if(lbl)lbl.innerHTML=b?'Uhrzeit <span style="font-weight:400;color:#FCA5A5">– erforderlich</span>':'Uhrzeit <span style="font-weight:400;color:var(--tx3)">– optional, z.B. Begehung (braucht ein Datum)</span>';
+  const nr=document.getElementById('plan-note-row');if(nr)nr.style.display=b?'block':'none';
+  const sv=document.getElementById('plan-save');if(sv){sv.textContent=b?'+ Beratung speichern':'+ Planung speichern';sv.style.background=b?'#8B5CF6':'';}
+}
+// Uhrzeit = einmaliger Termin an einem bestimmten Tag -> im KW-Modus auf Datum umschalten (Montag der KW vorschlagen)
+function planTimeInput(){
+  const t=document.getElementById('plan-time');if(!t||!t.value||_planMode!=='kw')return;
+  const kv=document.getElementById('plan-kw').value;
+  setPlanMode('date');
+  if(kv){document.getElementById('plan-date').value=kwToDate(kwFromInput(kv));}
+  showToast('🕖 Termin mit Uhrzeit: bitte den genauen Tag wählen',3500);
+}
 function setPlanMode(mode){
   _planMode=mode;
   const kwBtn=document.getElementById('plan-mode-kw');
@@ -757,6 +778,7 @@ function setPlanMode(mode){
   else document.getElementById('plan-kw').value='';
 }
 function confirmPlan(){
+  if(_planKind==='berat')return confirmPlanBerat();
   const aud=document.getElementById('plan-aud').value;
   const kwVal=document.getElementById('plan-kw').value;
   if(kwVal)setStickyPlanKW(kwFromInput(kwVal));
@@ -772,13 +794,29 @@ function confirmPlan(){
   if(onVac(aud,dt))showToast(`⚠️ ${aud.split(' ').pop()} hat Ferien!`,4000);
   {const bf=bauferienAt(data.find(x=>x.id===selId),dt);if(bf)setTimeout(()=>showToast(`🏖 ${bf.dept} hat Bauferien (${fd(bf.von)}–${fd(bf.bis)}) – niemand auf der Baustelle!`,5000),onVac(aud,dt)?4100:0);}
   const _pt=(document.getElementById('plan-time')||{}).value||'';
-  plans.push(_pt?{bsId:e.id,auditor:aud,date:dt,time:_pt}:{bsId:e.id,auditor:aud,date:dt});plans.sort((a,b)=>a.date.localeCompare(b.date)||(a.time||'').localeCompare(b.time||''));
+  if(_pt&&_planMode==='kw'){planTimeInput();return;}
+  plans.push(_pt?{bsId:e.id,auditor:aud,date:dt,time:_pt,id:Date.now()+Math.random()}:{bsId:e.id,auditor:aud,date:dt,id:Date.now()+Math.random()});plans.sort((a,b)=>a.date.localeCompare(b.date)||(a.time||'').localeCompare(b.time||''));
   {const t=document.getElementById('plan-time');if(t)t.value='';}
   log('Geplant',e.name,'#6366F1',aud);
   document.getElementById('plan-form').style.display='none';
   _planMode='kw';setPlanMode('kw');
   document.getElementById('plan-kw').value='';document.getElementById('plan-date').value='';
   saveNow();renderAll();selEntry(selId);
+}
+function confirmPlanBerat(){
+  const aud=document.getElementById('plan-aud').value;
+  const dt=document.getElementById('plan-date').value;
+  const tm=(document.getElementById('plan-time')||{}).value||'';
+  const note=((document.getElementById('plan-note')||{}).value||'').trim();
+  if(!aud||!dt||!tm){showToast('Beratung: Auditor, Datum und Uhrzeit erforderlich',3000);return;}
+  const e=data.find(x=>x.id===selId);if(!e)return;
+  if(onVac(aud,dt))showToast(`⚠️ ${aud.split(' ').pop()} hat Ferien!`,4000);
+  beratPlan.push({id:Date.now()+Math.random(),bsId:e.id,date:dt,kw:dateToKW(dt),auditor:aud,note,time:tm});
+  log('Beratung geplant 💬',e.name,'#8B5CF6',aud);
+  document.getElementById('plan-form').style.display='none';
+  _planKind='audit';
+  saveNow();renderAll();if(curView==='cal')renderKW();selEntry(selId);
+  showToast('💬 Beratung geplant: '+fd(dt)+' '+tm,2500);
 }
 function saveNote(){const note=document.getElementById('note-inp').value.trim();const e=data.find(x=>x.id===selId);if(!e)return;e.note=note;log(note?'Notiz':'Notiz gelöscht',e.name,'#8B5CF6','');document.getElementById('note-form').style.display='none';save();selEntry(selId);}
 function clearLastAudit(){
@@ -2617,7 +2655,7 @@ function renderWeekView(kw){
       </div>
       ${fer.map(f=>`<div class="kwfer">🌴 ${f.auditor.split(' ').pop()}: ${f.label}</div>`).join('')}
       ${(()=>{const gids=[...new Set(rapporte.filter(r=>r.date===ds&&(!audFilter||r.auditor===audFilter)).map(r=>r.groupId))];const gs=gids.map(g=>rapporte.filter(x=>x.groupId===g&&x.date===ds)).filter(m=>m.length).sort((a,b)=>(a[0].time||'').localeCompare(b[0].time||''));return gs.map(mem=>{const r=mem[0];const anyPlan=mem.some(m=>m.planned);return`<div class="kwe" style="border-left:3px solid #0EA5E9;${anyPlan?'':'background:#F0F9FF'}"><div class="kwe-top" onclick="openRapportEdit(${r.id})" style="cursor:pointer"><div class="kwen" style="color:#0369A1">${anyPlan?'':'✓ '}📋 ${r.type}${r.seriesId?' 🔁':''}${r.time?' '+r.time:''}${(r.dept||r.ort)?`<div style="font-size:10px;font-weight:400;color:var(--tx3)">${[r.dept,r.ort].filter(Boolean).join(' · ')}</div>`:''}</div><span style="display:flex;gap:3px;flex-wrap:wrap;margin-top:2px">${mem.map(m=>m.planned?`<span class="kwea" title="${m.auditor}: geplant" style="background:transparent;border:1.5px solid ${aC(m.auditor)};color:${aC(m.auditor)}">${m.auditor.split(' ').pop()}</span>`:`<span class="kwea" title="${m.auditor}: teilgenommen" style="background:${aC(m.auditor)}">✓ ${m.auditor.split(' ').pop()}</span>`).join('')}</span></div>${anyPlan?`<div class="kwe-move" style="display:flex;gap:2px;padding:2px 6px 3px;border-top:1px solid var(--bd)"><button onclick="moveRapportTo(${r.id},'${rpAddDays(kwToDate(kw),-3)}')" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">←</button>${days.map((day,dj)=>`<button onclick="moveRapportTo(${r.id},'${rpAddDays(kwToDate(kw),dj)}')" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:${rpAddDays(kwToDate(kw),dj)===ds?'#0EA5E9':'var(--sf2)'};color:${rpAddDays(kwToDate(kw),dj)===ds?'#fff':'var(--tx2)'};font-size:9px;cursor:pointer;line-height:1.4">${day}</button>`).join('')}<button onclick="moveRapportTo(${r.id},'${kwToDate(kw+1)}')" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">→</button></div>`:''}</div>`;}).join('');})()}
-      ${(()=>{const bp=beratPlan.filter(p=>p.date===ds&&(!audFilter||p.auditor===audFilter));return bp.map(p=>{const e=data.find(x=>x.id===p.bsId);const audCol=aC(p.auditor||'');return`<div class="kwe" style="border-left:3px solid #8B5CF6"><div class="kwe-top" onclick="openBeratPlanPop(${p.id})" style="cursor:pointer"><div class="kwen">💬 ${e?pspPre(e.psp)+e.name:'⚠ Baustelle gelöscht'}</div>${kwMetaLine(e,kw,'0 0 1px',p.date)}<span class="kwea" style="background:${audCol}">${(p.auditor||'?').split(' ').pop()}</span></div>${p.note?`<div style="font-size:10px;color:#7C3AED;padding:2px 6px 3px">${p.note}</div>`:''}<div class="kwe-move" style="display:flex;gap:2px;padding:2px 6px 3px;border-top:1px solid var(--bd)"><button onclick="moveBeratPlan(${p.id},'${kwToDate(kw-1)}',4)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">←</button>${days.map((day,dj)=>`<button onclick="moveBeratPlan(${p.id},'${kwToDate(kw)}',${dj})" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:${dj===di?'var(--blue)':'var(--sf2)'};color:${dj===di?'#fff':'var(--tx2)'};font-size:9px;cursor:pointer;line-height:1.4">${day}</button>`).join('')}<button onclick="moveBeratPlan(${p.id},'${kwToDate(kw+1)}',0)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">→</button></div></div>`;}).join('');})()}
+      ${(()=>{const bp=beratPlan.filter(p=>p.date===ds&&(!audFilter||p.auditor===audFilter));return bp.map(p=>{const e=data.find(x=>x.id===p.bsId);const audCol=aC(p.auditor||'');return`<div class="kwe" style="border-left:3px solid #8B5CF6"><div class="kwe-top" onclick="openBeratPlanPop(${p.id})" style="cursor:pointer"><div class="kwen">💬 ${planTimeTag(p)}${e?pspPre(e.psp)+e.name:'⚠ Baustelle gelöscht'}</div>${kwMetaLine(e,kw,'0 0 1px',p.date)}<span class="kwea" style="background:${audCol}">${(p.auditor||'?').split(' ').pop()}</span></div>${p.note?`<div style="font-size:10px;color:#7C3AED;padding:2px 6px 3px">${p.note}</div>`:''}<div class="kwe-move" style="display:flex;gap:2px;padding:2px 6px 3px;border-top:1px solid var(--bd)"><button onclick="moveBeratPlan(${p.id},'${kwToDate(kw-1)}',4)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">←</button>${days.map((day,dj)=>`<button onclick="moveBeratPlan(${p.id},'${kwToDate(kw)}',${dj})" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:${dj===di?'var(--blue)':'var(--sf2)'};color:${dj===di?'#fff':'var(--tx2)'};font-size:9px;cursor:pointer;line-height:1.4">${day}</button>`).join('')}<button onclick="moveBeratPlan(${p.id},'${kwToDate(kw+1)}',0)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">→</button></div></div>`;}).join('');})()}
       ${(()=>{const done=data.flatMap(e=>(e.beratungen||[]).filter(b=>b.date===ds).map(b=>({...b,eName:e.name,ePsp:e.psp,eId:e.id})));return done.map(b=>{const bAudCol=aC(b.auditor||'');return`<div class="kwe" style="background:#F5F3FF;border-left:3px solid #8B5CF6;cursor:pointer" onclick="openBeratDoneUndo(${b.eId},${b.id})"><div class="kwe-top"><div class="kwen" style="color:#7C3AED">✓ 💬 ${pspPre(b.ePsp)}${b.eName}</div>${kwMetaLine(data.find(x=>x.id===b.eId),kw,'0 0 1px')}<span class="kwea" style="background:${bAudCol}">${(b.auditor||'?').split(' ').pop()}</span></div>${b.note?`<div style="font-size:10px;color:#7C3AED;padding:2px 6px 3px">${b.note}</div>`:''}</div>`;}).join('');})()}
       ${dayAudits.map(h=>{const e=data.find(x=>x.id===h.eId);return`<div class="kwe" style="background:#F0FDF4;border-left:3px solid #10B981;cursor:pointer" onclick="openAuditUndo(${h.eId},'${h.date}')"><div class="kwe-top"><div class="kwen" style="color:#065F46">✓ ${e&&e.type==='werkhof'?'🏠 ':''}${pspPre(h.ePsp)}${h.eName}</div>${kwMetaLine(e,kw,'0 0 1px')}<span class="kwea" style="background:${aC(h.auditor||'')}">${(h.auditor||'?').split(' ').pop()}</span></div></div>`;}).join('')}
       ${(()=>{const paP=personAudits.filter(p=>p.planned&&p.date===ds&&(!audFilter||p.auditor===audFilter));return paP.map(p=>{const col=p.auditor?aC(p.auditor):'#9CA3AF';return`<div class="kwe"><div class="kwe-top" onclick="openPersonAuditPop(${p.id})" style="cursor:pointer"><div class="kwen">👤 ${p.person}${p.bs?' · '+p.bs:''}</div><span class="kwea" style="background:${col}">${p.auditor?p.auditor.split(' ').pop():'? Zuteilen'}</span></div><div class="kwe-move" style="display:flex;gap:2px;padding:2px 6px 3px;border-top:1px solid var(--bd)"><button onclick="movePersonAudit(${p.id},'${kwToDate(kw-1)}',4)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">←</button>${days.map((day,dj)=>`<button onclick="movePersonAudit(${p.id},'${kwToDate(kw)}',${dj})" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:${dj===di?'var(--blue)':'var(--sf2)'};color:${dj===di?'#fff':'var(--tx2)'};font-size:9px;cursor:pointer;line-height:1.4">${day}</button>`).join('')}<button onclick="movePersonAudit(${p.id},'${kwToDate(kw+1)}',0)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">→</button></div></div>`;}).join('');})()}
@@ -3277,7 +3315,7 @@ const GUIDE_STEPS=[
   {icon:'🏗️',title:'Neue Baustelle erfassen',menuHint:'Button: + Neu',text:'<div style="display:flex;flex-direction:column;gap:14px"><div style="padding:14px;background:var(--sf2);border-radius:10px"><div style="font-weight:700;font-size:13px;margin-bottom:10px">So findest du den Button:</div><div style="background:#1A1D2E;border-radius:8px;padding:8px 12px;display:flex;align-items:center;gap:6px"><span style="padding:5px 10px;background:#10B981;border-radius:6px;font-size:12px;font-weight:600;color:#fff">✦ Neu</span><span style="color:rgba(255,255,255,.4);font-size:12px">← oben im Header</span></div></div><div style="padding:14px;background:#FEF3C7;border-radius:10px;border-left:3px solid #F59E0B"><div style="font-weight:700;font-size:13px;margin-bottom:8px;color:#92400E">⚠️ Wichtig: Korrekte Adresse</div><div style="font-size:12px;color:#92400E;line-height:1.7">Die Adresse wird für Kartenpositionierung und Google Maps verwendet.<br><br><span style="background:#fff;border-radius:4px;padding:2px 6px">✓ Richtig:</span> <strong>«Bahnhofstrasse 12, 6000 Luzern»</strong><br><span style="background:#fff;border-radius:4px;padding:2px 6px">✗ Falsch:</span> «Bahnhofstrasse» oder «12-14»<br><br>Falls keine genaue Adresse bekannt: <strong>nächste Nachbaradresse</strong> verwenden.</div></div><div style="padding:10px 14px;background:var(--sf2);border-radius:8px;font-size:12px;color:var(--tx2)">💡 PSP, PrV und BC sind wichtig für Suche und Übersicht.</div></div>'},
   {icon:'🗺️',title:'Karte – Ampelsystem & Zeichen',menuHint:'Reiter: Karte',text:(function(){var r=[['#EF4444','🔴 Überfällig','länger über dem Rhythmus (bei 4 Wochen &gt;10 Tage)'],['#F97316','🟠 Fällig','Rhythmus erreicht (bei 4 Wochen 0–10 Tage darüber)'],['#EAB308','🟡 Bald fällig','kurz vor Fälligkeit (bei 4 Wochen ≤10 Tage)'],['#10B981','🟢 OK','noch genug Zeit bis zur Fälligkeit'],['#6366F1','🔵 Geplant','Audit-Termin vorhanden'],['#8B5CF6','🟣 Beratung','Beratungstermin geplant'],['#7C3AED','★ Neu','Noch nie auditiert'],['#94A3B8','⏸ Pausiert','Rhythmus unterbrochen'],['#6B7280','◼ Inaktiv','Baustelle abgeschlossen'],['#EA580C','🏠 Werkhof','Werkhof-Standort'],['#7C3AED','◆ GU','Generalunternehmung']];return '<p style="font-size:12px;color:var(--tx2);margin-bottom:8px">Jede Baustelle hat einen <strong>Audit-Rhythmus</strong> (Standard: 4 Wochen):</p><div style="display:flex;flex-direction:column;gap:4px">'+r.map(function(x){return '<div style="display:flex;align-items:center;gap:10px;padding:5px 8px;background:var(--sf2);border-radius:6px"><div style="width:12px;height:12px;border-radius:50%;background:'+x[0]+';flex-shrink:0"></div><div style="font-weight:600;font-size:11px;min-width:100px">'+x[1]+'</div><div style="font-size:11px;color:var(--tx2)">'+x[2]+'</div></div>';}).join('')+'</div>';})()},
   {icon:'🔍',title:'Filter & Suche',menuHint:'Filter oben links',text:'<div style="display:flex;flex-direction:column;gap:12px"><div style="padding:14px;background:var(--sf2);border-radius:10px"><div style="font-weight:700;font-size:13px;margin-bottom:8px">📂 Abteilungs-Filter</div><div style="font-size:13px;color:var(--tx2);line-height:1.6">Dropdown direkt unter dem Header (oben links) → Abteilung wählen → Karte und Liste zeigen nur diese Abteilung. Kombinierbar mit Statusfilter.</div></div><div style="padding:14px;background:var(--sf2);border-radius:10px"><div style="font-weight:700;font-size:13px;margin-bottom:8px">🚦 Status-Filter</div><div style="font-size:13px;color:var(--tx2);line-height:1.6">Zweites Dropdown oben links → Überfällig / Fällig / OK etc. → kombinierbar mit Abteilungs-Filter.</div></div><div style="padding:14px;background:var(--sf2);border-radius:10px"><div style="font-weight:700;font-size:13px;margin-bottom:6px">🔎 Suche</div><div style="font-size:13px;color:var(--tx2)">Suchfeld oben links – sucht in Name, Adresse, PSP, PrV, BC. Bei aktiver Suche auch pausierte und inaktive Baustellen sichtbar.</div></div></div>'},
-  {icon:'📋',title:'Detail-Panel – Buttons erklärt',menuHint:'Klick auf Baustelle',text:(function(){var b=[['#10B981','✓ Auditiert','Audit als erledigt erfassen'],['#8B5CF6','💬 Beratung','Beratungstermin erfassen oder planen'],['#6366F1','📅 Planen','Audit-Termin planen (KW oder Datum)'],['#6B7280','📝 Notiz','Interne Notiz zur Baustelle'],['#3B82F6','✏️ Bearbeiten','Baustellen-Daten bearbeiten'],['#94A3B8','⏸ Pausieren','Baustelle pausieren (optional bis KW)'],['#6B7280','Inaktiv','Als abgeschlossen markieren']];return '<p style="font-size:12px;color:var(--tx2);margin-bottom:8px">Baustelle anklicken → Detail-Panel öffnet sich rechts:</p><div style="display:flex;flex-direction:column;gap:6px">'+b.map(function(x){return '<div style="display:flex;align-items:center;gap:10px;padding:7px 10px;background:var(--sf2);border-radius:8px"><span style="padding:3px 8px;background:'+x[0]+';color:#fff;border-radius:5px;font-size:11px;font-weight:600;white-space:nowrap">'+x[1]+'</span><span style="font-size:12px;color:var(--tx2)">'+x[2]+'</span></div>';}).join('')+'</div><div style="padding:8px 12px;background:#FEF3C7;border-radius:8px;font-size:11px;color:#92400E;margin-top:6px">⚠️ Löschen ist nur im Admin-Modus sichtbar.</div>';})()},
+  {icon:'📋',title:'Detail-Panel – Buttons erklärt',menuHint:'Klick auf Baustelle',text:(function(){var b=[['#6366F1','📅 Planen','Audit planen (KW oder Datum, optional mit Uhrzeit)'],['#8B5CF6','💬 Beratung','Beratung planen – immer mit Datum und Uhrzeit'],['#3B82F6','✏️ Bearbeiten','Baustellen-Daten und Notiz bearbeiten'],['#94A3B8','⏸ Pausieren','Baustelle pausieren (optional bis KW)'],['#6B7280','Inaktiv','Als abgeschlossen markieren']];return '<p style="font-size:12px;color:var(--tx2);margin-bottom:8px">Baustelle anklicken → Detail-Panel öffnet sich rechts:</p><div style="display:flex;flex-direction:column;gap:6px">'+b.map(function(x){return '<div style="display:flex;align-items:center;gap:10px;padding:7px 10px;background:var(--sf2);border-radius:8px"><span style="padding:3px 8px;background:'+x[0]+';color:#fff;border-radius:5px;font-size:11px;font-weight:600;white-space:nowrap">'+x[1]+'</span><span style="font-size:12px;color:var(--tx2)">'+x[2]+'</span></div>';}).join('')+'</div><div style="padding:8px 12px;background:#FEF3C7;border-radius:8px;font-size:11px;color:#92400E;margin-top:6px">⚠️ Erledigte Audits und Beratungen werden in der Handy-Ansicht oder in der KW-Planung bestätigt.</div>';})()},
   {icon:'📅',title:'KW-Planung',menuHint:'Reiter: KW-Planung',text:'<div style="display:flex;flex-direction:column;gap:12px"><div style="padding:14px;background:var(--sf2);border-radius:10px"><div style="font-weight:700;font-size:13px;margin-bottom:6px">📋 Wochenübersicht</div><div style="font-size:13px;color:var(--tx2);line-height:1.6">Mo–Fr mit allen geplanten Audits. <span style="background:#F0FDF4;color:#065F46;padding:1px 5px;border-radius:3px;font-size:11px">✓ Grün = erledigt</span> Auditor-Badge in seiner Farbe = geplant. BC des Baustellenleiters wird angezeigt.</div></div><div style="padding:14px;background:var(--sf2);border-radius:10px"><div style="font-weight:700;font-size:13px;margin-bottom:6px">↔️ Termine verschieben</div><div style="font-size:13px;color:var(--tx2)">Auf geplanten Eintrag klicken → Tages-Buttons Mo/Di/Mi/Do/Fr → Termin verschiebt. ← → für andere Woche.</div></div><div style="padding:14px;background:var(--sf2);border-radius:10px"><div style="font-weight:700;font-size:13px;margin-bottom:6px">📧 Outlook & 🖨️ Drucken</div><div style="font-size:13px;color:var(--tx2)">Buttons neben «Heute» → Auditor + KW wählen → .ics Export für Outlook (07:00–17:00) oder PDF-Druck.</div></div></div>'},
   {icon:'🧑',title:'Personen-Audits',menuHint:'Reiter: Personen-Audits',text:'<div style="display:flex;flex-direction:column;gap:12px"><div style="padding:10px 14px;background:#FEF3C7;border-radius:8px;border-left:3px solid #F59E0B;font-size:12px;color:#92400E"><strong>📌 Wichtig:</strong> Import aller Mitarbeitenden per <strong>Juli 2026</strong>. Neue ab diesem Datum müssen <strong>manuell erfasst</strong> werden: Register-Tab → «+ Hinzufügen».</div><div style="padding:14px;background:var(--sf2);border-radius:10px"><div style="font-weight:700;font-size:13px;margin-bottom:8px">✅ Personen-Audit erfassen</div><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-size:12px;color:var(--tx2);margin-bottom:6px"><span style="padding:3px 8px;background:var(--sf);border:1px solid var(--bd);border-radius:4px">Person suchen</span><span>→</span><span style="padding:3px 8px;background:var(--sf);border:1px solid var(--bd);border-radius:4px">Datum + Auditor</span><span>→</span><span style="padding:3px 8px;background:#7C3AED;color:#fff;border-radius:4px">Erfassen</span></div><div style="font-size:11px;color:var(--tx3)">Suche nach Name oder Personalnummer. Optional: PSP, Baustelle, Notiz.</div></div><div style="padding:14px;background:var(--sf2);border-radius:10px"><div style="font-weight:700;font-size:13px;margin-bottom:6px">👥 Register & 📊 Jahresmatrix</div><div style="font-size:13px;color:var(--tx2);line-height:1.6"><strong>Register:</strong> Alle Personen – Spezialität (Bodenbeläge / Brandschutz / Asbest) direkt editierbar.<br><strong>Jahresmatrix:</strong> KW1–52 pro Person, filterbar nach Firma, Abteilung, Spezialität, Ort.</div></div></div>'},
   {icon:'📊',title:'Jahresübersicht',menuHint:'Reiter: Übersicht',text:'<div style="display:flex;flex-direction:column;gap:12px"><div style="padding:14px;background:var(--sf2);border-radius:10px"><div style="font-weight:700;font-size:13px;margin-bottom:6px">📊 Tabellarische Jahresübersicht</div><div style="font-size:13px;color:var(--tx2);line-height:1.6">Alle Baustellen mit KW1–52 Spalten – wann welcher Auditor auditiert hat. Filterbar nach Jahr und Abteilung.</div></div><div style="padding:10px 14px;background:var(--sf2);border-radius:8px;font-size:12px;color:var(--tx2)"><strong>Admin:</strong> «Excel Export» erstellt Jahresbericht als Excel (Jahresübersicht + Baustellen-Liste).</div><div style="padding:10px 14px;background:#EFF6FF;border-radius:8px;font-size:12px;color:#1D4ED8">💡 Dient als Archiv und Nachweis – ideal für Jahresberichte und Controlling.</div></div>'}
@@ -3326,14 +3364,16 @@ function openBeratPlanPop(id){
   const e=data.find(x=>x.id===p.bsId);
   document.getElementById('berat-pop-info').textContent=(e?e.name:'')+(p.auditor?' · '+p.auditor:'')+' · '+fd(p.date);
   document.getElementById('berat-pop-note').value=p.note||'';
+  {const t=document.getElementById('berat-pop-time');if(t)t.value=p.time||'';}
   document.getElementById('berat-pop-bg').style.display='flex';
 }
 function saveBeratPlanNote(){
   const p=beratPlan.find(x=>x.id===_beratPopId);if(!p)return;
   p.note=document.getElementById('berat-pop-note').value.trim();
+  {const t=document.getElementById('berat-pop-time');if(t){if(t.value)p.time=t.value;else delete p.time;}}
   saveNow();renderKW();
   document.getElementById('berat-pop-bg').style.display='none';
-  showToast('✓ Notiz gespeichert',1500);
+  showToast('✓ Gespeichert',1500);
 }
 function deleteBeratPlanPop(){
   undoPoint('Beratungs-Planung gelöscht',()=>renderKW());
@@ -3760,7 +3800,7 @@ function renderMobPlan(){
         <span style="font-size:10px;font-weight:700;color:#8B5CF6">💬 BERATUNG GEPLANT</span>
         <span style="font-size:11px;color:var(--tx3)">${e.dept||''}</span>
       </div>
-      <div style="font-size:16px;font-weight:700;color:var(--tx);margin-bottom:4px;line-height:1.3">${pspPre(e.psp)}${e.name}</div>
+      <div style="font-size:16px;font-weight:700;color:var(--tx);margin-bottom:4px;line-height:1.3">${planTimeTag(p)}${pspPre(e.psp)}${e.name}</div>
       ${mobPersHTML(e)?`<div style="margin-bottom:5px">${mobPersHTML(e)}</div>`:''}
       <div style="font-size:12px;color:var(--tx2);margin-bottom:${p.note?'4px':'10px'}">${e.addr||''}</div>
       ${p.note?`<div style="font-size:12px;color:#8B5CF6;margin-bottom:10px">📝 ${p.note}</div>`:''}
@@ -5000,7 +5040,7 @@ function tgDayEvents(aud,ds){
     ev.push({kind:'rp',icon:'📋',col:'#0EA5E9',label:r.type+(r.dept?' – '+r.dept:''),sub:r.addr||r.ort||'',time:tm,dur:+r.dur||60,lat:r.lat,lng:r.lng,addr:r.addr,ref:r});
   });
   personAudits.filter(p=>p.planned&&p.date===ds&&p.auditor===aud).forEach(p=>ev.push({kind:'pa',icon:'👤',col:'#F59E0B',label:'Personen-Audit '+p.person,sub:p.addr||p.bs||'',time:null,dur:S('tg_fixed_pa'),lat:p.lat,lng:p.lng}));
-  beratPlan.filter(p=>p.date===ds&&p.auditor===aud).forEach(p=>{const e=data.find(x=>x.id===p.bsId);ev.push({kind:'bp',icon:'💬',col:'#8B5CF6',label:'Beratung '+(e?e.name:''),sub:e?e.addr||'':'',time:null,dur:S('tg_fixed_berat'),lat:e&&e.lat,lng:e&&e.lng});});
+  beratPlan.filter(p=>p.date===ds&&p.auditor===aud).forEach(p=>{const e=data.find(x=>x.id===p.bsId);ev.push({kind:'bp',icon:'💬',col:'#8B5CF6',label:'Beratung '+(e?e.name:''),sub:e?e.addr||'':'',time:planTimeMin(p),dur:S('tg_fixed_berat'),lat:e&&e.lat,lng:e&&e.lng});});
   return ev;
 }
 async function tgGeocodeEvents(evs){

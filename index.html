@@ -33,7 +33,7 @@ if('serviceWorker' in navigator){
 <link rel="stylesheet" href="vendor/markercluster/MarkerCluster.css?v=1.5.3">
 <link rel="stylesheet" href="vendor/markercluster/MarkerCluster.Default.css?v=1.5.3">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
-<link rel="stylesheet" href="css/style.css?v=3.30">
+<link rel="stylesheet" href="css/style.css?v=3.31">
 </head>
 <body>
 <div id="app" style="display:none">
@@ -61,7 +61,7 @@ if('serviceWorker' in navigator){
   <div id="presence-bar" style="display:flex;align-items:center;gap:4px;margin-left:4px"></div>
   <button onclick="toggleDark()" class="hb" title="Dark Mode" style="font-size:14px">🌙</button>
   <button onclick="openGuide()" class="hb" title="Anleitung" style="font-size:14px">❓</button>
-  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v3.30</span>
+  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v3.31</span>
   <button onclick="doLogout()" class="hb" title="Abmelden" style="font-size:14px" id="logout-btn">⏻</button>
   <button onclick="toggleMobileView()" id="mobile-btn" class="hb" title="Mobile Ansicht" style="font-size:14px">📱</button>
   <div id="more-w" class="admin-only">
@@ -182,14 +182,12 @@ if('serviceWorker' in navigator){
         <div class="dp-cnt" id="dp-cntb" style="display:none">Audits 2026: <span id="dp-cnt"></span></div>
       </div>
       <div class="dp-acts">
-        <button class="bg" onclick="showF('audit')"><i class="ti ti-check"></i> Auditiert</button>
-        <button class="bg" onclick="openBeratungChoice()" style="background:#8B5CF6"><i class="ti ti-message-circle"></i> Beratung</button>
-        <button class="bb" onclick="showF('plan')"><i class="ti ti-calendar-plus"></i> Planen</button>
-        <button class="bt2" onclick="showF('note')"><i class="ti ti-note"></i> Notiz</button>
+        <button class="bb dp-big" onclick="showF('plan')"><i class="ti ti-calendar-plus"></i> Planen</button>
+        <button class="bg dp-big" onclick="showF('berat')" style="background:#8B5CF6"><i class="ti ti-message-circle"></i> Beratung</button>
         <button class="bt2" onclick="editSel()"><i class="ti ti-edit"></i> Bearbeiten</button>
-        <button class="br" onclick="showDel()"><i class="ti ti-trash"></i> Löschen</button>
         <button id="dp-pb" class="bpu" onclick="togglePause()"></button>
-        <button id="dp-ab" class="bt2" onclick="toggleActive()" style="grid-column:span 2"></button>
+        <button id="dp-ab" class="bt2" onclick="toggleActive()"></button>
+        <button class="br" onclick="showDel()"><i class="ti ti-trash"></i> Löschen</button>
       </div>
       <div class="dkf" id="audit-form">
         <label>Auditor</label><select id="aud-pick"><option value="">—</option></select>
@@ -197,13 +195,15 @@ if('serviceWorker' in navigator){
         <button class="cfm" onclick="confirmAudit()">✓ Bestätigen</button>
       </div>
       <div class="dkf" id="plan-form">
+        <div id="plan-title" style="font-size:12px;font-weight:700;margin-bottom:6px;color:#fff"></div>
         <label>Auditor</label><select id="plan-aud"><option value="">—</option></select>
         <div style="display:flex;gap:0;border:1px solid var(--bd);border-radius:var(--rs);overflow:hidden;margin-bottom:4px">
           <button id="plan-mode-kw" onclick="setPlanMode('kw')" style="flex:1;padding:5px 8px;border:none;background:var(--blue);color:#fff;cursor:pointer;font-size:11px;font-weight:600">KW <input type="number" id="plan-kw" min="1" max="53" placeholder="30" onclick="event.stopPropagation();setPlanMode('kw')" style="width:40px;padding:1px 4px;border:1px solid rgba(255,255,255,.4);border-radius:3px;font-size:11px;background:rgba(255,255,255,.2);color:#fff" onchange="setStickyPlanKW(this.value)"></button>
           <button id="plan-mode-date" onclick="setPlanMode('date')" style="flex:1;padding:5px 8px;border:none;border-left:1px solid var(--bd);background:var(--sf2);color:var(--tx);cursor:pointer;font-size:11px;font-weight:600">Datum <input type="date" id="plan-date" onclick="event.stopPropagation();setPlanMode('date')" style="padding:1px 3px;border:1px solid var(--bd);border-radius:3px;font-size:10px;background:var(--sf);color:var(--tx)"></button>
         </div>
-        <label title="Nur für einmalige Termine auf der Baustelle (z.B. Begehung 13:30). Der Tourguide plant den Tag dann um diese Zeit herum.">Uhrzeit <span style="font-weight:400;color:var(--tx3)">– optional, z.B. Begehung</span></label><input type="time" id="plan-time" style="margin-bottom:6px">
-        <button class="cfm bl" onclick="confirmPlan()">+ Planung speichern</button>
+        <label id="plan-time-lbl" title="Fester Termin auf der Baustelle (z.B. Begehung 13:30). Braucht ein genaues Datum. Der Tourguide plant den Tag um diese Zeit herum.">Uhrzeit <span style="font-weight:400;color:var(--tx3)">– optional, z.B. Begehung</span></label><input type="time" id="plan-time" oninput="planTimeInput()" style="margin-bottom:6px">
+        <div id="plan-note-row" style="display:none"><label>Notiz <span style="font-weight:400;color:var(--tx3)">– optional</span></label><input type="text" id="plan-note" placeholder="z.B. Thema der Beratung" style="margin-bottom:6px"></div>
+        <button class="cfm bl" id="plan-save" onclick="confirmPlan()">+ Planung speichern</button>
       </div>
       <div class="dkf" id="note-form">
         <label>Notiz</label><textarea id="note-inp" placeholder="Bemerkungen…"></textarea>
@@ -892,6 +892,8 @@ if('serviceWorker' in navigator){
     <h3 style="font-size:14px;font-weight:700;color:var(--tx);margin-bottom:4px"><i class="ti ti-message-circle" style="color:#8B5CF6"></i> Beratung</h3>
     <div id="berat-pop-info" style="font-size:11px;color:var(--tx2);margin-bottom:14px"></div>
     <div style="margin-bottom:12px">
+      <label style="font-size:11px;color:var(--tx2);display:block;margin-bottom:3px">Uhrzeit</label>
+      <input type="time" id="berat-pop-time" style="width:100%;padding:7px 9px;border:1px solid var(--bd);border-radius:var(--rs);background:var(--sf2);color:var(--tx);font-size:12px;margin-bottom:8px">
       <label style="font-size:11px;color:var(--tx2);display:block;margin-bottom:3px">Notiz</label>
       <input type="text" id="berat-pop-note" style="width:100%;padding:7px 9px;border:1px solid var(--bd);border-radius:var(--rs);background:var(--sf2);color:var(--tx);font-size:12px">
     </div>
@@ -900,7 +902,7 @@ if('serviceWorker' in navigator){
         ✓ Beratung durchgeführt
       </button>
       <div style="display:flex;gap:8px">
-        <button onclick="saveBeratPlanNote()" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx);cursor:pointer;font-size:12px">💾 Notiz speichern</button>
+        <button onclick="saveBeratPlanNote()" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx);cursor:pointer;font-size:12px">💾 Speichern</button>
         <button onclick="deleteBeratPlanPop()" style="padding:8px 12px;border-radius:8px;border:1px solid #EF4444;background:none;color:#EF4444;cursor:pointer;font-size:12px">✕ Absagen</button>
       </div>
       <button onclick="document.getElementById('berat-pop-bg').style.display='none'" style="padding:8px;border-radius:8px;border:1px solid var(--bd);background:none;color:var(--tx2);cursor:pointer;font-size:12px">Abbrechen</button>
@@ -1049,8 +1051,8 @@ if('serviceWorker' in navigator){
 <script src="vendor/leaflet/leaflet.js?v=1.9.4"></script>
 <script src="vendor/markercluster/leaflet.markercluster.js?v=1.5.3"></script>
 <script src="vendor/xlsx/xlsx.full.min.js?v=0.18.5"></script>
-<script src="js/merge.js?v=3.30"></script>
-<script src="js/app.js?v=3.30"></script>
+<script src="js/merge.js?v=3.31"></script>
+<script src="js/app.js?v=3.31"></script>
 <!-- ONBOARDING GUIDE MODAL -->
 <div id="guide-bg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:5000;align-items:center;justify-content:center">
   <div style="background:var(--sf);border-radius:16px;width:560px;max-width:95vw;max-height:90vh;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.4);display:flex;flex-direction:column">
