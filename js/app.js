@@ -5575,6 +5575,11 @@ function bsLabel(e){
 // sonst die Listenzeile nur dann, wenn nicht eindeutig über die PSP erkannt.
 function piSourcesHTML(it){
   if(!it||!it.match)return'';
+  const oth=it.otherSrc&&Object.keys(it.otherSrc).length?`<div style="font-size:10px;color:#0369A1;margin-top:2px">🔗 + ${Object.entries(it.otherSrc).map(([q,n])=>`${n} Pers. von ${escH(q)}`).join(', ')} (früher importiert, zusammengezählt)</div>`:'';
+  const wt=it.waitOther&&it.waitOther.length?`<div style="font-size:10px;color:#B45309;margin-top:2px">⏳ steht sonst auch auf ${it.waitOther.map(escH).join(', ')} – wird nicht pausiert, bis diese Liste importiert ist</div>`:'';
+  return oth+wt+piSourcesBase(it);
+}
+function piSourcesBase(it){
   const src=it.sources||[it];
   if(src.length>1)return`<div style="font-size:10px;color:#0369A1;margin-top:2px">🔗 ${src.length} Listen zusammengezählt:</div>`+src.map(s=>`<div style="font-size:10px;color:var(--tx3);margin-left:10px">📄 ${listLabel(s)} · <b>${s.count} Pers.</b></div>`).join('');
   if(it.match.how!=='psp')return`<div style="font-size:10px;color:var(--tx3);margin-top:1px">📄 Liste: ${listLabel(it)}</div>`;
@@ -5630,6 +5635,20 @@ function autoMapQuelle(q){
   const cont=depts.filter(d=>ql.includes(d.toLowerCase())).sort((a,b)=>b.length-a.length)[0];
   return cont||'';
 }
+// ═══ Dieselbe Baustelle auf mehreren Einsatzlisten (z.B. Olten TB + EB), in getrennten Importen ═══
+// personalHistory-Einträge merken die Personen pro Liste (src:{quelle:anzahl}); ein Import ersetzt nur
+// seine eigenen Listen, die anderen bleiben -> count = Summe, unabhängig von der Reihenfolge.
+function piSrcOf(it){const o={};(it.sources||[it]).forEach(x=>{const q=x.quelle||'?';o[q]=(o[q]||0)+(+x.count||0);});return o;}
+function piImportQuellen(){return new Set(((_piPending&&_piPending.rawEntries)||[]).map(r=>r.quelle||'?'));}
+// Personen dieser KW von anderen (nicht in diesem Import enthaltenen) Listen
+function piOtherSrc(e,kw,yr,qs){const h=(e.personalHistory||[]).find(x=>x.kw===kw&&x.year===yr);const o={};if(h&&h.src)Object.entries(h.src).forEach(([q,n])=>{if(!qs.has(q)&&n>0)o[q]=n;});return o;}
+// Andere Liste erwartet: in der Import-KW oder der Woche davor stand die Baustelle mit Personal auf einer Liste,
+// die in diesem Import fehlt -> nicht pausieren, auf die andere Liste warten
+function piWaitOther(e,kw,yr,qs){
+  const pv=piPrevKW(kw,yr);const out=new Set();
+  (e.personalHistory||[]).filter(h=>h.src&&((h.kw===kw&&h.year===yr)||(h.kw===pv.kw&&h.year===pv.year))).forEach(h=>Object.entries(h.src).forEach(([q,n])=>{if(!qs.has(q)&&n>0)out.add(q);}));
+  return[...out];
+}
 function piComputeMissing(){
   if(!_piPending)return;
   const b=_piPending.buckets;
@@ -5644,7 +5663,8 @@ function piComputeMissing(){
   const matched=new Set();
   ['pause','review','reactivate','noop','reactivateInactive','inactiveInfo','excluded'].forEach(k=>(b[k]||[]).forEach(it=>{if(it.match&&it.match.entry)matched.add(it.match.entry.id);}));
   const cov=new Set(covered.map(x=>x.dept));
-  b.missing=data.filter(e=>e.active&&!e.paused&&!e.noAudit&&e.type!=='werkhof'&&!e.excludeFromPersonalReview&&!matched.has(e.id)&&deptParts(e.dept).some(d=>cov.has(d)))
+  const qs=piImportQuellen(),tkw=_piPending.targetKW,tyr=_piPending.targetYear||new Date().getFullYear();
+  b.missing=data.filter(e=>e.active&&!e.paused&&!e.noAudit&&e.type!=='werkhof'&&!e.excludeFromPersonalReview&&!matched.has(e.id)&&deptParts(e.dept).some(d=>cov.has(d))&&!piWaitOther(e,tkw,tyr,qs).length)
     .sort((x,y)=>(x.dept||'').localeCompare(y.dept||'')||x.name.localeCompare(y.name))
     .map(e=>({name:e.name,psp:e.psp,count:null,match:{entry:e},isNew:!e.lastAudit&&!e.resumeFrom}));
   _piPending.coverage={quellen,covered,partial,unmapped:quellen.filter(q=>!qm[q])};
@@ -5923,9 +5943,14 @@ async function runPersonalImport(file){
       const main=list.slice().sort((a,b)=>rank(a)-rank(b))[0];
       return{...main,count:list.reduce((s,x)=>s+(+x.count||0),0),sources:list};
     });
+    const impQ=new Set(raw.map(r=>r.quelle||'?')),tYr=+payload.year||new Date().getFullYear();
     merged.forEach(item=>{
       const r=item,m=item.match;
       const e=m.entry;
+      // andere Listen derselben KW (früherer Import) dazuzählen; fehlt die andere Liste noch -> warten statt pausieren
+      item.ownCount=item.count;item.otherSrc=piOtherSrc(e,targetKW,tYr,impQ);
+      item.count+=Object.values(item.otherSrc).reduce((a,b)=>a+b,0);
+      item.waitOther=Object.keys(item.otherSrc).length?[]:piWaitOther(e,targetKW,tYr,impQ);
       // Werkhöfe dürfen NIE durch den Personal-Import pausiert/reaktiviert werden - komplett
       // überspringen, taucht in keinem Eimer auf (auch nicht als "ausgeschlossen"), hat schlicht
       // nichts mit dieser Prüfung zu tun.
@@ -5941,6 +5966,7 @@ async function runPersonalImport(file){
         else buckets.inactiveInfo.push(item);
         return;
       }
+      if(item.waitOther.length&&r.count<=S('pi_review_max')&&!e.paused){buckets.noop.push(item);return;}
       if(r.count===0){
         if(!e.paused)buckets.pause.push(item);else buckets.noop.push(item);
       }else if(r.count<=S('pi_review_max')){
@@ -6073,7 +6099,7 @@ function piOverviewRows(){
   buckets.reactivateInactive.forEach((it,i)=>box('reactivateInactive',i,false)?add(it,it.count,'🔓 wird wieder aktiv',V,1):add(it,it.count,'bleibt inaktiv',P,0));
   buckets.inactiveInfo.forEach(it=>add(it,it.count,'bleibt inaktiv',P,0));
   buckets.excluded.forEach(it=>add(it,it.count,it.match.entry.noAudit?'🛡 Kein Audit – nur Personal erfasst':'🔇 ausgeschlossen – bleibt pausiert',P,0));
-  buckets.noop.forEach(it=>add(it,it.count,it.match.entry.paused?'bleibt pausiert':'läuft weiter',it.match.entry.paused?P:G,0));
+  buckets.noop.forEach(it=>add(it,it.count,it.match.entry.paused?'bleibt pausiert':(it.waitOther&&it.waitOther.length?'läuft weiter – wartet auf '+it.waitOther.join(', '):'läuft weiter'),it.match.entry.paused?P:G,0));
   rows.sort((a,b)=>b.chg-a.chg||a.act.localeCompare(b.act)||a.e.name.localeCompare(b.e.name));
   return rows;
 }
@@ -6624,21 +6650,25 @@ function confirmPersonalImport(){
     saveDepts();
   }
   piWeekRecord(_piPending.rawEntries||[],buckets.kundendienst||[],temporaere||[],targetKW,yr);saveDepts();
-  const recordPersonal=(e,count)=>{
+  const impQ=piImportQuellen();
+  const recordPersonal=(e,count,src)=>{
     if(!e)return;
+    // Personen pro Liste: Listen dieses Imports ersetzen, andere Listen derselben KW behalten -> Summe
+    const old=(e.personalHistory||[]).find(h=>h.kw===targetKW&&h.year===yr);
+    if(src){const o={};if(old&&old.src)Object.entries(old.src).forEach(([q,n])=>{if(!impQ.has(q))o[q]=n;});Object.assign(o,src);src=o;count=Object.values(src).reduce((a,b)=>a+b,0);}
     e.lastPersonalCount=count;
     e.lastPersonalKW=targetKW;
     // Personalverlauf: pro KW ein Wert (erneuter Import derselben KW überschreibt), max. 52 Wochen
     e.personalHistory=(e.personalHistory||[]).filter(h=>!(h.kw===targetKW&&h.year===yr));
-    e.personalHistory.push({kw:targetKW,year:yr,count});
+    e.personalHistory.push(src?{kw:targetKW,year:yr,count,src}:{kw:targetKW,year:yr,count});
     e.personalHistory.sort((a,b)=>a.year-b.year||a.kw-b.kw);
     if(e.personalHistory.length>S('pi_history_weeks'))e.personalHistory=e.personalHistory.slice(-S('pi_history_weeks'));
   };
   [...buckets.pause,...buckets.review,...buckets.reactivate,...buckets.noop,...buckets.reactivateInactive,...buckets.inactiveInfo,...(buckets.excluded||[])].forEach(it=>{
     if(!it.match)return;
-    recordPersonal(liveEntry(it),it.count);
+    recordPersonal(liveEntry(it),it.count,it.sources||it.quelle?piSrcOf(it):null);
   });
-  (buckets.missing||[]).forEach(it=>recordPersonal(liveEntry(it),0));
+  (buckets.missing||[]).forEach(it=>recordPersonal(liveEntry(it),0,{}));
   // Temporäre Mitarbeitende: PRO EINHEIT ersetzen, nicht global anhängen. Wenn eine Einheit
   // (z.B. "Terratech AG") neu importiert wird, fliegen ihre alten Nummern raus und werden durch
   // die neuen ersetzt - so verschwinden auch Nummern korrekt wieder, wenn die Person nicht mehr
