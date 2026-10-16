@@ -11,8 +11,8 @@ Beratungen, Rapporten und Ferien der Auditoren. Sprache der Oberfläche: Deutsch
 - Vor jedem PR: App im Browser laden (Desktop- und Mobile-Breite) und in der Konsole
   prüfen, dass keine JavaScript-Fehler auftreten.
 - Bei jeder Änderung an der App die Versionsnummer erhöhen, und zwar überall in
-  `index.html`: im Header (`<span ... title="Version">v3.32</span>`) und in den Links
-  `css/style.css?v=3.32`, `js/merge.js?v=3.32` und `js/app.js?v=3.32`. Der `?v=`-Zusatz
+  `index.html`: im Header (`<span ... title="Version">v3.33</span>`) und in den Links
+  `css/style.css?v=3.33`, `js/merge.js?v=3.33` und `js/app.js?v=3.33`. Der `?v=`-Zusatz
   sorgt dafür, dass Browser nach einem Update keine alte Datei aus dem Cache verwenden.
 - Tests für die Zusammenführung: `node tests/merge.test.js` (muss grün sein).
 - Keine Browser-Dialoge (`confirm`, `prompt`, `alert`): `askConfirm()`, `askText()`,
@@ -78,6 +78,8 @@ global; das HTML ruft sie direkt über `onclick="..."` auf.
   setzt `body.full-view` + `sessionStorage.ap_full` (gilt für die Sitzung), zurück über «📱 Handy» (`#mob-back`)
   Unter 1024 px darf nichts breiter als der Bildschirm sein (Tabs/Statistik scrollen seitlich), sonst zoomt
   das Handy heraus. `manifest.json`: `orientation: any` (Querformat erlaubt)
+  Volle Ansicht < 768 px: KW-Wochenansicht Tage untereinander, Detail-Panel `#dp` fixed über der Liste (CSS am Anfang von style.css);
+  Admin-Menü `toggleMore` prüft `getComputedStyle` (erster Klick öffnet) und scrollt bei wenig Höhe
 - ~4247 Login/Auth (Supabase Auth), Präsenz-Anzeige
 - ~4642 Einstellungen & Regeln (`S(k)` liest eine Einstellung; Regeltexte `rulesHTML()`, Druck `printRules()`)
 - ~4801 Tourguide / Tagesablauf-Simulation (`tg*`). Auswahl in `tgCompute`: nur rot/orange,
