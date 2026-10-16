@@ -112,7 +112,7 @@ function status(e,now){
   if(e.paused)return'paused';
   if(hasP(e))return'planned';
   if(hasBeratPlan(e))return'beratung';
-  if(!e.lastAudit&&!e.resumeFrom){
+  if(!e.lastAudit&&!e.resumeFrom&&!linkRef(e)){
     // Werkhöfe sind nie «neu» (Rhythmus dort weniger wichtig): ohne Audit nur über das Erfassungsdatum fällig
     const wh=e.type==='werkhof';
     if(!e.createdAt)return wh?'ok':'new';
@@ -158,9 +158,36 @@ function fvLabel(e){return fvTime(e)==null?'':((e.fixVisit.days||[]).length?e.fi
 // Planung mit Uhrzeit (einmaliger Termin, z.B. Begehung 13:30): p.time 'HH:MM'
 function planTimeMin(p){const t=p&&p.time;if(!t||!/^\d{1,2}:\d{2}$/.test(t))return null;const[h,m]=t.split(':').map(Number);return h*60+m;}
 function planTimeTag(p){return planTimeMin(p)==null?'':`<span style="font-weight:700;color:#0369A1" title="Termin mit Uhrzeit">🕖 ${escH(p.time)}</span> `;}
+// ═══ Verknüpfte Baustellen (gemeinsam auditieren, z.B. Tiefbau + Hochbau am selben Ort) ═══
+// e.linkGroup = gemeinsame Kennung. Noch nie auditierte Mitglieder übernehmen den Takt der Gruppe (letztes Audit der
+// anderen, linkRef) -> alle werden zusammen fällig. Danach zählt pro Einheit das EIGENE Audit (ein Bericht pro Einheit,
+// jede Baustelle wird einzeln bestätigt). Planen im Detail-Panel plant alle mit, Tourguide = ein Rundgang.
+function linkMembers(e){if(!e||!e.linkGroup)return[];return data.filter(x=>x.id!==e.id&&x.linkGroup===e.linkGroup&&x.active!==false);}
+function linkRef(e){if(!e||!e.linkGroup)return null;let r=null;linkMembers(e).forEach(x=>{const d=x.lastAudit||x.resumeFrom;if(d&&(!r||d>r))r=d;});return r;}
+function linkSites(aId,bId){
+  const a=data.find(x=>x.id===aId),b=data.find(x=>x.id===bId);if(!a||!b||a===b)return;
+  const g=a.linkGroup||b.linkGroup||('L'+Date.now().toString(36));
+  [a.linkGroup,b.linkGroup].filter(x=>x&&x!==g).forEach(old=>data.forEach(x=>{if(x.linkGroup===old)x.linkGroup=g;}));
+  a.linkGroup=g;b.linkGroup=g;
+  log('Verknüpft 🔗',a.name+' + '+b.name,'#0369A1','');
+}
+function unlinkSite(id){
+  const e=data.find(x=>x.id===id);if(!e||!e.linkGroup)return;
+  const g=e.linkGroup;delete e.linkGroup;
+  const rest=data.filter(x=>x.linkGroup===g);if(rest.length===1)delete rest[0].linkGroup;
+  log('Verknüpfung gelöst',e.name,'#0369A1','');
+}
+function linkFormRefresh(id){
+  const cur=document.getElementById('f-link-cur');if(!cur)return;
+  const e=id?data.find(x=>x.id===id):null,m=e?data.filter(x=>x.id!==e.id&&e.linkGroup&&x.linkGroup===e.linkGroup):[];
+  cur.innerHTML=m.length?m.map(x=>`<div style="display:flex;align-items:center;gap:6px;font-size:12px;padding:3px 0">🔗 ${bsLabel(x)}<button type="button" onclick="unlinkSite(${x.id});linkFormRefresh(${e.id});saveNow();renderAll()" style="margin-left:auto;padding:2px 8px;border:1px solid var(--bd);border-radius:6px;background:var(--sf2);color:var(--tx2);font-size:11px;cursor:pointer">lösen</button></div>`).join(''):'';
+  const pk=document.getElementById('f-link-pick');if(pk)pk.innerHTML=bsPickerHTML('f-link-sel','width:100%');
+}
 function dl(e,now){
-  // Nie auditierte Baustellen: Rhythmus läuft ab Erfassungsdatum
-  const ref=e.lastAudit||e.resumeFrom||e.createdAt;
+  // Nie auditierte Baustellen: Rhythmus läuft ab Erfassungsdatum – verknüpfte ab dem letzten Audit der Gruppe
+  let ref=e.lastAudit||e.resumeFrom;
+  if(!ref)ref=linkRef(e);
+  ref=ref||e.createdAt;
   if(!ref)return-999;
   return Math.round((parseDate(ref).getTime()+e.rhythm*86400000-(now||Date.now()))/86400000);
 }
@@ -586,6 +613,7 @@ function selEntry(id){
   document.getElementById('dp-prv').textContent=e.prv||'—';
   const bcEl=document.getElementById('dp-bc');if(bcEl)bcEl.textContent=e.bc||'—';
   document.getElementById('dp-dept').textContent=e.dept||'—';
+  {const r=document.getElementById('dp-link-row');if(r){const m=linkMembers(e);r.style.display=m.length?'':'none';document.getElementById('dp-link').innerHTML=m.map(x=>`<a href="#" onclick="event.preventDefault();selEntry(${x.id})" style="color:#7DD3FC">${escH(x.name)}</a>`).join(', ');}}
   {const r=document.getElementById('dp-fv-row');if(r){r.style.display=fvTime(e)!=null?'':'none';document.getElementById('dp-fv').textContent=fvTime(e)!=null?'🕖 '+fvLabel(e)+(e.zeitbedarf?' · '+e.zeitbedarf+' min':''):'';}}
   document.getElementById('dp-rh').textContent=rhLabel(e.rhythm,true);
   {const zr=document.getElementById('dp-zb-row');if(zr){zr.style.display=e.zeitbedarf?'':'none';if(e.zeitbedarf)document.getElementById('dp-zb').textContent=e.zeitbedarf+' min (fix)';}}
@@ -799,6 +827,9 @@ function confirmPlan(){
   plans.push(_pt?{bsId:e.id,auditor:aud,date:dt,time:_pt,id:Date.now()+Math.random()}:{bsId:e.id,auditor:aud,date:dt,id:Date.now()+Math.random()});plans.sort((a,b)=>a.date.localeCompare(b.date)||(a.time||'').localeCompare(b.time||''));
   {const t=document.getElementById('plan-time');if(t)t.value='';}
   log('Geplant',e.name,'#6366F1',aud);usageWF('plan:panel','',dt);
+  {const lm=linkMembers(e).filter(x=>!x.paused&&!x.noAudit&&!plans.some(p=>p.bsId===x.id&&p.date===dt));
+   lm.forEach(x=>plans.push(_pt?{bsId:x.id,auditor:aud,date:dt,time:_pt,id:Date.now()+Math.random()}:{bsId:x.id,auditor:aud,date:dt,id:Date.now()+Math.random()}));
+   if(lm.length)setTimeout(()=>showToast('🔗 Verknüpfte Baustelle(n) mitgeplant: '+lm.map(x=>x.name).join(', '),4000),300);}
   document.getElementById('plan-form').style.display='none';
   _planMode='kw';setPlanMode('kw');
   document.getElementById('plan-kw').value='';document.getElementById('plan-date').value='';
@@ -3170,7 +3201,7 @@ function renderAudAdminList(){
   }).join('');
 }
 
-function openAdd(){editId=null;{const c=document.getElementById('f-noaudit');if(c)c.checked=false;}FV_DAYS.forEach((_,i)=>{const c=document.getElementById('f-fv-'+i);if(c)c.checked=false;});{const t=document.getElementById('f-fv-time');if(t)t.value='';}{const k=document.getElementById('m-to-kd');if(k)k.style.display='none';}window._newSitePersonal=null;window._pendingLat=null;window._pendingLng=null;{const z=document.getElementById('f-zb');if(z)z.value='';}{const la=document.getElementById('f-lat'),ln=document.getElementById('f-lng');if(la)la.value='';if(ln)ln.value='';}document.getElementById('m-title').textContent='Neue Baustelle';document.getElementById('form-s').style.display='block';(document.getElementById('imp-s')||{style:{},classList:{remove(){}}}).style.display='none';(document.getElementById('json-s')||{style:{},classList:{remove(){}}}).style.display='none';document.getElementById('m-save').style.display='';['f-name','f-addr','f-psp','f-sap','f-prv','f-bc','f-note'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});fillFDept('');setDefaultRhythm('baustelle');document.getElementById('f-last').value='';document.getElementById('f-type').value='baustelle';document.getElementById('addr-suggestions').style.display='none';const hint=document.getElementById('f-addr-hint');if(hint)hint.textContent='';document.getElementById('mbg').classList.add('open');}
+function openAdd(){editId=null;linkFormRefresh(null);{const c=document.getElementById('f-noaudit');if(c)c.checked=false;}FV_DAYS.forEach((_,i)=>{const c=document.getElementById('f-fv-'+i);if(c)c.checked=false;});{const t=document.getElementById('f-fv-time');if(t)t.value='';}{const k=document.getElementById('m-to-kd');if(k)k.style.display='none';}window._newSitePersonal=null;window._pendingLat=null;window._pendingLng=null;{const z=document.getElementById('f-zb');if(z)z.value='';}{const la=document.getElementById('f-lat'),ln=document.getElementById('f-lng');if(la)la.value='';if(ln)ln.value='';}document.getElementById('m-title').textContent='Neue Baustelle';document.getElementById('form-s').style.display='block';(document.getElementById('imp-s')||{style:{},classList:{remove(){}}}).style.display='none';(document.getElementById('json-s')||{style:{},classList:{remove(){}}}).style.display='none';document.getElementById('m-save').style.display='';['f-name','f-addr','f-psp','f-sap','f-prv','f-bc','f-note'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});fillFDept('');setDefaultRhythm('baustelle');document.getElementById('f-last').value='';document.getElementById('f-type').value='baustelle';document.getElementById('addr-suggestions').style.display='none';const hint=document.getElementById('f-addr-hint');if(hint)hint.textContent='';document.getElementById('mbg').classList.add('open');}
 function openEdit(id){
   {const k=document.getElementById('m-to-kd');if(k)k.style.display=document.body.classList.contains('admin-mode')?'':'none';}
   // Reset manual marker
@@ -3180,6 +3211,7 @@ function openEdit(id){
   if(lngEl)lngEl.value='';
   document.getElementById('f-addr-hint').textContent='';
   const e=data.find(x=>x.id===id);if(!e)return;
+  linkFormRefresh(id);
   editId=id;window._pendingLat=null;window._pendingLng=null;
   document.getElementById('m-title').textContent='Bearbeiten';
   document.getElementById('form-s').style.display='block';
@@ -3238,7 +3270,17 @@ async function saveEntry(){
   if(editId){const old=data.find(e=>e.id===editId);if(old){entry.active=old.active!==false;entry.lastKW=old.lastKW??null;entry.auditor=old.auditor;entry.paused=old.paused;entry.pauseReason=old.pauseReason;entry.auditHistory=old.auditHistory||[];entry.plannedKW=old.plannedKW||[];}data[data.findIndex(e=>e.id===editId)]={...old,...entry};}
   else{entry.createdAt=today();data.push(entry);if(window._newSitePersonal)piApplyNewSite(entry);}
   log(editId?'Bearbeitet':'Hinzugefügt',name,editId?'#F59E0B':'#3B82F6','');
+  const _lk=+((document.getElementById('f-link-sel')||{}).value||0),_isNew=!editId;
+  if(_lk&&_lk!==entry.id)linkSites(entry.id,_lk);
   closeModal();renderAll();buildCalBS();buildDF();if(entry.lat)selEntry(entry.id);saveNow();
+  // neue Baustelle am selben Ort wie eine bestehende: Verknüpfen anbieten (gemeinsam auditieren)
+  const _e=data.find(x=>x.id===entry.id);
+  if(_isNew&&!_lk&&_e&&_e.lat){
+    const same=data.filter(x=>x.id!==_e.id&&x.active!==false&&x.lat&&x.type!=='werkhof'&&Math.abs(x.lat-_e.lat)<0.0008&&Math.abs(x.lng-_e.lng)<0.0011&&!(_e.linkGroup&&x.linkGroup===_e.linkGroup));
+    for(const x of same){
+      if(await askConfirm(`Am selben Ort gibt es schon «${x.name}»${x.dept?' ('+x.dept+')':''}.\n\nBeide gemeinsam auditieren (verknüpfen)? Dann werden sie immer zusammen fällig und zusammen geplant.`,{ok:'🔗 Verknüpfen'})){linkSites(_e.id,x.id);saveNow();renderAll();selEntry(_e.id);}
+    }
+  }
 }
 // ═══ ONBOARDING GUIDE ═══
 const GUIDE_KEY='anliker_guide_seen';
@@ -4704,7 +4746,7 @@ function rulesHTML(){
     `Fälligkeit = letztes Audit + Rhythmus der Baustelle.`,
     `<span style="color:#EAB308">●</span> Bald fällig im letzten ${v('due_soon_pct')} % des Rhythmus vor Fälligkeit (höchstens ${v('due_soon_days')} Tage) · <span style="color:#F59E0B">●</span> fällig ab Fälligkeitstag · <span style="color:#EF4444">●</span> überfällig ${v('due_overdue_pct')} % des Rhythmus danach (mindestens ${v('due_overdue_min')}, höchstens ${v('due_overdue_days')} Tage). Beispiele: ${[7,14,21,28].map(r=>{const e={rhythm:r};return `${r/7} Wo.: gelb ab Tag ${r-dueSoonDays(e)}, rot ab Tag ${r+dueOverDays(e)+1}`;}).join(' · ')}.`,
     `Noch nie auditierte Baustellen (★ auf der Karte): Frist läuft ab Erfassung – violett = neu, orange = fällig, rot = überfällig. Werkhöfe gelten nie als «neu» (Audit-Rhythmus dort weniger wichtig).`,
-    `Geplante Baustellen (blau) und geplante Beratungen (violett) werden nicht als fällig gezählt; pausierte und inaktive gar nicht. <b>🛡 Kein Audit</b> (Bearbeiten → Häkchen, z.B. Sicherheit nicht bei uns im Lead): Die Baustelle läuft weiter und der Personal-Import erfasst ihr Personal, aber sie hat keine Ampel, zählt nie als fällig, kommt nie in den Tourguide, wird nie pausiert vorgeschlagen und nie automatisch inaktiv.`]) +
+    `Geplante Baustellen (blau) und geplante Beratungen (violett) werden nicht als fällig gezählt; pausierte und inaktive gar nicht. <b>🔗 Verknüpfte Baustellen</b> (Bearbeiten → «Gemeinsam auditieren mit», z.B. Tiefbau + Hochbau am selben Ort): Eine neue, noch nie auditierte Baustelle übernimmt den Takt der Gruppe (ab deren letztem Audit) und wird so zusammen mit den anderen fällig; danach zählt pro Einheit das eigene Audit (jede wird einzeln bestätigt, ein Bericht pro Einheit). «Planen» plant die verknüpften mit und der Tourguide macht einen gemeinsamen Rundgang. <b>🛡 Kein Audit</b> (Bearbeiten → Häkchen, z.B. Sicherheit nicht bei uns im Lead): Die Baustelle läuft weiter und der Personal-Import erfasst ihr Personal, aber sie hat keine Ampel, zählt nie als fällig, kommt nie in den Tourguide, wird nie pausiert vorgeschlagen und nie automatisch inaktiv.`]) +
   sec('refresh','Rhythmus',[
     `Standard beim Erfassen: Baustelle ${v('rh_baustelle')} Tage, GU ${v('rh_gu')} Tage, Werkhof ${v('rh_werkhof')} Tage. Pro Baustelle individuell änderbar.`,
     `Feld «Zeitbedarf» (nur Spezialbaustellen): feste Audit-Dauer, übersteuert die Schätzung nach Personal.`]) +
@@ -4840,7 +4882,12 @@ function tgMinForCount(n){
   if(n<=3)return S('tg_min_1_3');if(n<=9)return S('tg_min_4_9');if(n<=19)return S('tg_min_10_19');return S('tg_min_20');
 }
 // Gleicher Ort (gleiche Koordinaten auf ~10 m): Einheiten dort werden in EINEM Rundgang auditiert
-function tgLocKey(e){return e&&e.lat&&e.lng&&!e.zeitbedarf&&fvTime(e)==null&&tgPersCount(e)!=null?(+e.lat).toFixed(4)+','+(+e.lng).toFixed(4):null;}
+function tgLocKey(e){
+  if(!(e&&e.lat&&e.lng&&!e.zeitbedarf&&fvTime(e)==null&&tgPersCount(e)!=null))return null;
+  // verknüpfte Baustellen in unmittelbarer Nähe (~300 m): ein gemeinsamer Rundgang, auch wenn die Koordinaten leicht abweichen
+  if(e.linkGroup){const m=linkMembers(e).filter(x=>x.lat&&x.lng);if(m.length&&m.every(x=>Math.abs(x.lat-e.lat)<0.003&&Math.abs(x.lng-e.lng)<0.004))return'L:'+e.linkGroup;}
+  return(+e.lat).toFixed(4)+','+(+e.lng).toFixed(4);
+}
 // Personal-Klasse für die Priorität: 0 = 20+, 1 = 10-19, 2 = 4-9, 3 = 1-3, 4 = unbekannt (kein Import)
 function tgPersClass(e){
   const n=e.lastPersonalKW!==undefined?e.lastPersonalCount:null;
