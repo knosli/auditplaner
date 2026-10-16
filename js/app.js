@@ -310,7 +310,8 @@ function renderMarkers(){
     // Nutzer eingeplant sind - überschreibt alle anderen Filter, da es ein bewusst enger
     // Fokus-Modus ist (nur der eigene Tagesplan, sonst nichts).
     if(dayPlanOn){
-      const pl=plans.filter(p=>p.bsId===e.id&&p.date===dayPlanDate&&(dayPlanAud==='__all'||p.auditor===dayPlanAud));
+      const mine=p=>p.bsId===e.id&&p.date===dayPlanDate&&(dayPlanAud==='__all'||p.auditor===dayPlanAud);
+      const pl=[...plans.filter(mine),...beratPlan.filter(mine).map(b=>({...b,_berat:1}))];
       if(!pl.length)return;
       dpPlans.set(e.id,pl);
       visible.push(e);
@@ -360,7 +361,7 @@ function renderMarkers(){
       const e=group[0];
       const dpl=dpPlans.get(e.id);
       const m=L.marker([e.lat,e.lng],{icon:dpl&&dayPlanAud==='__all'?dayPlanIcon(dpl,selId===e.id):makeIcon(e,selId===e.id)});
-      m.bindTooltip(`<div style="font-size:12px;font-weight:600;color:#1A1D2E;max-width:200px">${e.name}<br><span style="font-weight:400;color:#6B7280;font-size:11px">${e.addr||''}</span>${dpl?`<br><span style="font-weight:600;font-size:11px">${dpl.map(p=>`<span style="color:${aC(p.auditor)}">● ${escH(p.auditor)}</span>${p.time?' '+escH(p.time):''}`).join('<br>')}</span>`:''}</div>`,{direction:'top',offset:[0,-8],opacity:1,className:'bs-tooltip'});
+      m.bindTooltip(`<div style="font-size:12px;font-weight:600;color:#1A1D2E;max-width:200px">${e.name}<br><span style="font-weight:400;color:#6B7280;font-size:11px">${e.addr||''}</span>${dpl?`<br><span style="font-weight:600;font-size:11px">${dpl.map(p=>`<span style="color:${aC(p.auditor)}">● ${p._berat?'💬 Beratung · ':''}${escH(p.auditor)}</span>${p.time?' '+escH(p.time):''}`).join('<br>')}</span>`:''}</div>`,{direction:'top',offset:[0,-8],opacity:1,className:'bs-tooltip'});
       m.on('click',ev=>{
         if((planMode||multiPlanMode||multiAuditMode)&&e.active&&!e.paused){
           ev.originalEvent.stopPropagation();
@@ -368,7 +369,6 @@ function renderMarkers(){
           updPB();renderMarkers();renderList();
         } else selEntry(e.id);
       });
-      m.on('contextmenu',ev=>{ev.originalEvent.preventDefault();showQA(e.id,ev.originalEvent.clientX,ev.originalEvent.clientY);});
       markers[e.id]=m;ms.push(m);
     }else{
       // Mehrere Baustellen am selben Ort → Auswahl-Marker mit Anzahl
@@ -741,6 +741,7 @@ function confirmAudit(){
   if(!e.auditHistory)e.auditHistory=[];
   const exists=e.auditHistory.some(h=>h.date===dt&&h.auditor===aud);
   if(!exists)e.auditHistory.push({date:dt,kw:dateToKW(dt),auditor:aud});
+  usageWF('audit:panel');
   plans=plans.filter(p=>!(p.bsId===e.id&&p.date<=dt));
   log('Auditiert ✓',e.name,'#10B981',aud);
   document.getElementById('audit-form').style.display='none';
@@ -797,7 +798,7 @@ function confirmPlan(){
   if(_pt&&_planMode==='kw'){planTimeInput();return;}
   plans.push(_pt?{bsId:e.id,auditor:aud,date:dt,time:_pt,id:Date.now()+Math.random()}:{bsId:e.id,auditor:aud,date:dt,id:Date.now()+Math.random()});plans.sort((a,b)=>a.date.localeCompare(b.date)||(a.time||'').localeCompare(b.time||''));
   {const t=document.getElementById('plan-time');if(t)t.value='';}
-  log('Geplant',e.name,'#6366F1',aud);
+  log('Geplant',e.name,'#6366F1',aud);usageWF('plan:panel','',dt);
   document.getElementById('plan-form').style.display='none';
   _planMode='kw';setPlanMode('kw');
   document.getElementById('plan-kw').value='';document.getElementById('plan-date').value='';
@@ -812,7 +813,7 @@ function confirmPlanBerat(){
   const e=data.find(x=>x.id===selId);if(!e)return;
   if(onVac(aud,dt))showToast(`⚠️ ${aud.split(' ').pop()} hat Ferien!`,4000);
   beratPlan.push({id:Date.now()+Math.random(),bsId:e.id,date:dt,kw:dateToKW(dt),auditor:aud,note,time:tm});
-  log('Beratung geplant 💬',e.name,'#8B5CF6',aud);
+  log('Beratung geplant 💬',e.name,'#8B5CF6',aud);usageWF('berat','',dt);
   document.getElementById('plan-form').style.display='none';
   _planKind='audit';
   saveNow();renderAll();if(curView==='cal')renderKW();selEntry(selId);
@@ -1040,7 +1041,7 @@ function applyMultiAudit(){
     e.lastAudit=dt;e.lastKW=dateToKW(dt);e.auditor=aud;
     if(!e.auditHistory)e.auditHistory=[];
     if(!e.auditHistory.some(h=>h.date===dt&&h.auditor===aud))
-      e.auditHistory.push({date:dt,kw:dateToKW(dt),auditor:aud});
+      e.auditHistory.push({date:dt,kw:dateToKW(dt),auditor:aud});usageWF('audit:multi');
     plans=plans.filter(p=>!(p.bsId===+id&&p.date<=dt));
     log('Auditiert ✓',e.name,'#10B981',aud);
     count++;
@@ -1126,7 +1127,7 @@ function applyMultiPlan(){
   let count=0;
   planned.forEach(id=>{
     plans=plans.filter(p=>!(p.bsId===id&&p.date===date));
-    plans.push({bsId:+id,auditor:aud,date,id:Date.now()+Math.random()});
+    plans.push({bsId:+id,auditor:aud,date,id:Date.now()+Math.random()});usageWF('plan:multi','',date);
     const e=data.find(x=>x.id===+id);
     if(e)log('Geplant 📅',e.name,'#6366F1',aud);
     count++;
@@ -2147,10 +2148,10 @@ function renderRapporte(){
       <span style="width:92px;flex-shrink:0;color:var(--tx2)">${fd(r.date)}${r.time?'<br><span style="font-size:10px">'+r.time+' Uhr</span>':''}</span>
       <span style="flex:1;min-width:0"><b>${r.type}</b>${r.seriesId?' <span title="Teil einer Serie" style="font-size:10px;color:#0284C7">🔁</span>':''}${r.dept?' · '+r.dept:''}${r.ort?` <span style="color:var(--tx2)">· ${r.ort}</span>`:''}${r.addr?`<div style="font-size:11px;color:var(--tx2)">📍 ${r.addr}</div>`:''}${r.note?`<div style="font-size:11px;color:var(--tx3)">${r.note}</div>`:''}</span>
       <span style="display:flex;gap:3px;flex-shrink:0">${rpGroup(r).map(m=>{const cd=(AUD_CODES[m.auditor]||m.auditor.split(' ').map(w=>w[0]).join('')).slice(0,4);return m.planned?`<span title="${m.auditor}: geplant" style="width:22px;height:22px;border-radius:50%;border:2px solid ${aC(m.auditor)};color:${aC(m.auditor)};font-size:8px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box">${cd}</span>`:`<span title="${m.auditor}: teilgenommen" style="width:22px;height:22px;border-radius:50%;background:${aC(m.auditor)};color:#fff;font-size:8px;font-weight:700;display:inline-flex;align-items:center;justify-content:center">✓</span>`;}).join('')}</span>
-      ${(()=>{const mine=rpGroup(r).find(m=>m.auditor===currentUser);const target=mine||(isAdmin?r:null);if(!target)return'';return`${mine&&mine.planned&&isPlan?`<button onclick="confirmRapport(${mine.id})" style="padding:4px 9px;border:none;border-radius:6px;background:#10B981;color:#fff;font-size:11px;cursor:pointer;white-space:nowrap">✓ Teilgenommen</button>`:''}<button onclick="openRapportEdit(${target.id})" title="Bearbeiten / Absagen" style="padding:4px 8px;border:1px solid var(--bd);border-radius:6px;background:var(--sf2);font-size:11px;cursor:pointer">✏️</button>${isPlan?`<button onclick="exportRapportICS(${target.id})" title="${r.seriesId?'Ganze Serie':'Termin'} nach Outlook exportieren" style="padding:4px 7px;border:1px solid var(--bd);border-radius:6px;background:var(--sf2);font-size:11px;cursor:pointer">⬇️ Outlook</button>`:''}`;})()}
+      ${(()=>{const mine=rpGroup(r).find(m=>m.auditor===currentUser);const target=mine||(isAdmin?r:null);if(!target)return'';return`${mine&&mine.planned&&isPlan?`<button onclick="confirmRapport(${mine.id})" style="padding:4px 9px;border:none;border-radius:6px;background:#10B981;color:#fff;font-size:11px;cursor:pointer;white-space:nowrap">✓ Teilgenommen</button>`:''}<button onclick="openRapportEdit(${target.id})" title="Bearbeiten / Absagen" style="padding:4px 8px;border:1px solid var(--bd);border-radius:6px;background:var(--sf2);font-size:11px;cursor:pointer">✏️</button>`;})()}
     </div>`;
   document.getElementById('rp-list').innerHTML=
-    `<div style="display:flex;align-items:center;justify-content:space-between;margin:4px 0 6px"><span style="font-size:11px;font-weight:700;color:#0284C7">📅 Geplant (${planned.length})</span>${planned.length?`<button onclick="exportMyRapporteICS()" style="padding:4px 10px;border:1px solid var(--bd);border-radius:6px;background:var(--sf2);font-size:11px;cursor:pointer">⬇️ Alle meine geplanten → Outlook</button>`:''}</div>`+
+    `<div style="display:flex;align-items:center;justify-content:space-between;margin:4px 0 6px"><span style="font-size:11px;font-weight:700;color:#0284C7">📅 Geplant (${planned.length})</span>${planned.length?``:''}</div>`+
     (plannedShown.length?plannedShown.map(r=>row(r,true)+(r.seriesId&&seriesCount[r.seriesId]>1?`<div style="font-size:10px;color:#0284C7;padding:0 10px 6px 112px;background:#F0F9FF;border-bottom:1px solid var(--bd)">🔁 nächster Termin der Serie · danach noch ${seriesCount[r.seriesId]-1} weitere bis ${fd(seriesLast[r.seriesId])} <a href="#" onclick="event.preventDefault();_rpShowAllSeries=!_rpShowAllSeries;renderRapporte()" style="color:#0284C7">${_rpShowAllSeries?'Serien zusammenfassen':'alle anzeigen'}</a></div>`:'')).join(''):'<div style="font-size:11px;color:var(--tx3);padding:6px">Keine geplanten Rapporte.</div>')+
     `<div style="font-size:11px;font-weight:700;color:var(--tx2);margin:16px 0 6px">✅ Teilgenommen ${yr} (${list.length})</div>`+
     (list.length?list.map(r=>row(r,false)).join(''):'<div style="font-size:11px;color:var(--tx3);padding:6px">Keine Rapporte in diesem Jahr.</div>');
@@ -2258,17 +2259,6 @@ function buildRappICS(list){
   });
   L.push('END:VCALENDAR');
   return L.join('\r\n');
-}
-function exportRapportICS(id){
-  const r=rapporte.find(x=>x.id===id);if(!r)return;
-  dlICS(buildRappICS([r]),`rapport_${r.type.replace(/\W+/g,'_')}_${r.date}.ics`);
-  showToast(r.seriesId?'🔁 Serie → Outlook (Datei öffnen/importieren)':'📅 Termin → Outlook',3000);
-}
-function exportMyRapporteICS(){
-  const mine=rapporte.filter(r=>r.planned&&(!currentUser||(r.auditors||[]).includes(currentUser)));
-  if(!mine.length){showToast('Keine geplanten Rapporte für dich');return;}
-  dlICS(buildRappICS(mine),`rapporte_${(currentUser||'alle').split(' ').pop()}.ics`);
-  showToast('📅 Geplante Rapporte → Outlook',2500);
 }
 let _rpeId=null;
 // Bearbeiten gilt immer für den ganzen Termin (Gruppe); Status (geplant / teilgenommen / abgesagt)
@@ -2692,7 +2682,7 @@ function movePlan(planIdx,ks,dayOffset){
   if(planIdx<0||planIdx>=plans.length)return;
   const d=parseDate(ks);d.setDate(d.getDate()+dayOffset);
   const newDate=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-  plans[planIdx].date=newDate;
+  plans[planIdx].date=newDate;usageWF('plan:move','',newDate);
   saveNow();renderKW();renderCalSB();updateStats();
   showToast('📅 Verschoben auf '+fd(newDate),2000);
 }
@@ -2716,50 +2706,6 @@ function renderCalSB(){
 
 // ═══ Personen-Audits Panel (Kartenansicht) - reine Übersichtsliste, verändert die Karte nicht ═══
 let _paPinsLayer=null;
-function togglePAPanel(){
-  const p=document.getElementById('pa-panel');
-  const opening=p.style.display==='none';
-  p.style.display=opening?'block':'none';
-  if(opening){
-    const dEl=document.getElementById('pa-panel-date');
-    if(!dEl.value)dEl.value=today();
-    const audSel=document.getElementById('pa-panel-aud');
-    if(audSel&&!audSel.dataset.filled){
-      audSel.innerHTML=`<option value="__me__">👤 Nur ich (${currentUser||'—'})</option>`+
-        `<option value="">Alle Auditoren</option>`+
-        auditors.map(a=>`<option value="${a}">${a}</option>`).join('');
-      audSel.value='__me__';
-      audSel.dataset.filled='1';
-    }
-    renderPAPanel();
-  }
-}
-function renderPAPanel(){
-  const dEl=document.getElementById('pa-panel-date');
-  const ds=dEl.value||today();
-  const audSel=document.getElementById('pa-panel-aud');
-  const audFilterVal=audSel?audSel.value:'__me__';
-  const audFilter=audFilterVal==='__me__'?currentUser:(audFilterVal||null);
-  const list=personAudits.filter(p=>p.planned&&p.date===ds&&(!audFilter||p.auditor===audFilter)).sort((a,b)=>(a.auditor||'').localeCompare(b.auditor||'')||a.person.localeCompare(b.person));
-  const badge=document.getElementById('pa-panel-badge');
-  if(badge)badge.textContent=list.length||'';
-  const el=document.getElementById('pa-panel-list');
-  if(!list.length){el.innerHTML='<div style="font-size:12px;color:var(--tx3);padding:8px 0">Keine geplanten Personen-Audits an diesem Tag.</div>';}
-  else{
-    el.innerHTML=list.map((p,pi)=>{
-      const col=aC(p.auditor||'');
-      return`<div onclick="${p.lat&&p.lng?`map.setView([${p.lat},${p.lng}],15)`:''}" style="padding:8px 10px;background:var(--sf2);border-radius:8px;margin-bottom:6px;border-left:3px solid ${col};${p.lat&&p.lng?'cursor:pointer':''}">
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:2px">
-          <span style="font-size:12px;font-weight:700;color:var(--tx)">${p.lat&&p.lng?'📍 ':''}${p.person}</span>
-          <span style="font-size:9px;font-weight:700;color:#fff;background:${col};padding:2px 6px;border-radius:6px;flex-shrink:0">${(p.auditor||'?').split(' ').pop()}</span>
-        </div>
-        ${(p.addr||p.bs)?`<div style="font-size:11px;color:var(--tx2)">${p.addr||p.bs}</div>`:''}
-        ${p.kat?`<div style="font-size:10px;color:var(--tx3)">${p.kat}</div>`:''}
-      </div>`;
-    }).join('');
-  }
-  renderPAPins(list);
-}
 // Eigene Pin-Ebene für geplante Personen-Audits - klassische Tropfen-Pin-Form, damit sie sich
 // klar von den Baustellen-Icons unterscheiden. Verändert die bestehende Baustellen-Karte nicht.
 function renderPAPins(list){
@@ -2821,7 +2767,7 @@ function toggleDayPlanMode(){
     btn.style.background='var(--sf)';btn.style.color='var(--tx)';btn.style.borderColor='var(--bd)';
     panel.style.display='none';
   }
-  renderMarkers();
+  renderMarkers();updatePAPanelBadge();
 }
 function toggleSidebar(){
   const sb=document.getElementById('sidebar');
@@ -2971,27 +2917,13 @@ function popAct(action){
     // Add to auditHistory so it appears in detail panel and can be deleted
     if(!e.auditHistory)e.auditHistory=[];
     const exists=e.auditHistory.some(h=>h.date===auditDate&&h.auditor===p.auditor);
-    if(!exists)e.auditHistory.push({date:auditDate,kw:dateToKW(auditDate),auditor:p.auditor});
+    if(!exists)e.auditHistory.push({date:auditDate,kw:dateToKW(auditDate),auditor:p.auditor});usageWF('audit:kw');
     log('Auditiert ✓',e.name,'#10B981',p.auditor);
   }else log('Nicht besucht ✗',e.name,'#EF4444',p.auditor||'—');
   plans.splice(popIdx,1);closeCalPop();saveNow();renderAll();
   if(curView==='cal'){renderCalSB();renderKW();}
 }
 // ═══ QUICK AUDIT ═══
-function showQA(id,x,y){const e=data.find(x=>x.id===id);if(!e||e.paused||!e.active)return;qaId=id;document.getElementById('qa-n').textContent=e.name;document.getElementById('qa-auds').innerHTML=auditors.map(a=>{const c=aC(a),ini=a.split(' ').map(w=>w[0]).join('');return`<button class="qaub" onclick="qaConf('${a.replace(/'/g,"\\'")}')"><span style="width:18px;height:18px;border-radius:50%;background:${c};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0">${ini}</span>${a}</button>`;}).join('');const qa=document.getElementById('qa');qa.style.display='block';const vw=window.innerWidth,vh=window.innerHeight;qa.style.left=Math.min(x,vw-200)+'px';qa.style.top=Math.min(y,vh-190)+'px';}
-function qaConf(aud){
-  const e=data.find(x=>x.id===qaId);if(!e)return;
-  const dt=today();
-  e.lastAudit=dt;e.lastKW=dateToKW(dt);e.auditor=aud;
-  // Add to auditHistory so it can be deleted later
-  if(!e.auditHistory)e.auditHistory=[];
-  const exists=e.auditHistory.some(h=>h.date===dt&&h.auditor===aud);
-  if(!exists)e.auditHistory.push({date:dt,kw:dateToKW(dt),auditor:aud});
-  plans=plans.filter(p=>!(p.bsId===e.id&&p.date<=dt));
-  log('Auditiert ✓',e.name,'#10B981',aud);
-  saveNow();closeQA();renderAll();selEntry(qaId);
-  showToast('✓ Audit erfasst',2000);
-}
 function closeQA(){document.getElementById('qa').style.display='none';qaId=null;}
 // ═══ MORE MENU ═══
 function toggleMore(ev){
@@ -3530,60 +3462,6 @@ function confirmMarkerAdj(){
   showToast('✓ Marker-Position übernommen – jetzt Speichern',2500);
 }
 
-function openBeratungChoice(){
-  if(!selId)return;
-  const e=data.find(x=>x.id===+selId);if(!e)return;
-  document.getElementById('berat-choice-name').textContent=e.name;
-  document.getElementById('berat-choice-bg').style.display='flex';
-}
-function openBeratungPlan(){
-  if(!selId)return;
-  const e=data.find(x=>x.id===+selId);if(!e)return;
-  document.getElementById('berat-plan-bs-name').textContent=e.name+' · '+e.addr;
-  document.getElementById('berat-plan-date').value=today();
-  document.getElementById('berat-plan-note').value='';
-  const sel=document.getElementById('berat-plan-aud');
-  sel.innerHTML=auditors.map(a=>`<option value="${a}"${a===currentUser?' selected':''}>${a}</option>`).join('');
-  document.getElementById('berat-plan-bg').style.display='flex';
-}
-function confirmBeratungPlan(){
-  if(!selId)return;
-  const e=data.find(x=>x.id===+selId);if(!e)return;
-  const dt=document.getElementById('berat-plan-date').value;
-  const aud=document.getElementById('berat-plan-aud').value;
-  const note=document.getElementById('berat-plan-note').value.trim();
-  if(!dt||!aud){showToast('Datum und Auditor erforderlich');return;}
-  beratPlan.push({id:Date.now()+Math.random(),bsId:+selId,date:dt,kw:dateToKW(dt),auditor:aud,note});
-  document.getElementById('berat-plan-bg').style.display='none';
-  saveNow();renderKW();selEntry(selId);
-  showToast('💬 Beratung geplant',2000);
-}
-function openBeratung(){
-  if(!selId)return;
-  const e=data.find(x=>x.id===+selId);if(!e)return;
-  document.getElementById('berat-bs-name').textContent=e.name+' · '+e.addr;
-  document.getElementById('berat-date').value=today();
-  document.getElementById('berat-note').value='';
-  const sel=document.getElementById('berat-aud');
-  sel.innerHTML=auditors.map(a=>`<option value="${a}"${a===currentUser?' selected':''}>${a}</option>`).join('');
-  document.getElementById('berat-bg').style.display='flex';
-}
-
-function confirmBeratung(){
-  if(!selId)return;
-  const e=data.find(x=>x.id===+selId);if(!e)return;
-  const dt=document.getElementById('berat-date').value;
-  const aud=document.getElementById('berat-aud').value;
-  const note=document.getElementById('berat-note').value.trim();
-  if(!dt||!aud){showToast('Datum und Auditor erforderlich');return;}
-  if(!e.beratungen)e.beratungen=[];
-  e.beratungen.push({id:Date.now(),date:dt,kw:dateToKW(dt),auditor:aud,note});
-  log('Beratung 💬',e.name,'#8B5CF6',aud);
-  document.getElementById('berat-bg').style.display='none';
-  saveNow();selEntry(selId);
-  showToast('💬 Beratung erfasst',2000);
-}
-
 function toggleMobileView(){
   const mv=document.getElementById('mobile-view');
   const isOpen=mv.style.display!=='none';
@@ -3931,7 +3809,7 @@ function mobPlanFor(id){
   const aud=currentUser||auditors[0]||'';
   if(!aud){showToast('Bitte zuerst Benutzer wählen');return;}
   if(plans.some(p=>p.bsId===id&&p.date===dt)){showToast('Bereits geplant für diesen Tag');renderMobPlan();return;}
-  plans.push({bsId:id,auditor:aud,date:dt,id:Date.now()+Math.random()});
+  plans.push({bsId:id,auditor:aud,date:dt,id:Date.now()+Math.random()});usageWF('plan:mob','',dt);
   log('Geplant',e.name,'#6366F1',aud);
   saveNow();renderMobPlan();
   showToast('📅 '+e.name+' geplant',2500);
@@ -4363,7 +4241,7 @@ function confirmMobAudit(){
   if(!dt||!aud){showToast('Datum und Auditor erforderlich');return;}
   e.lastAudit=dt;e.lastKW=dateToKW(dt);e.auditor=aud;
   if(!e.auditHistory)e.auditHistory=[];
-  if(!e.auditHistory.some(h=>h.date===dt))e.auditHistory.push({date:dt,kw:dateToKW(dt),auditor:aud});
+  if(!e.auditHistory.some(h=>h.date===dt))e.auditHistory.push({date:dt,kw:dateToKW(dt),auditor:aud});usageWF('audit:mob');
   plans=plans.filter(p=>!(p.bsId===_mobSelId&&p.date<=dt));
   log('Auditiert ✓',e.name,'#10B981',aud);
   closeMobAudit();saveNow();renderMobPlan();
@@ -5404,7 +5282,7 @@ function tgApply(){
     if(R.fixedIds.has(j)||R.removed.has(j))return;
     const e=R.nodeEntry.get(j),ds=_tgCalc.days[d].ds;
     if(plans.some(p=>p.bsId===e.id&&p.date===ds))return;
-    plans.push({bsId:e.id,auditor:R.aud,date:ds,id:Date.now()+Math.random()});n++;
+    plans.push({bsId:e.id,auditor:R.aud,date:ds,id:Date.now()+Math.random()});n++;usageWF('plan:tg','',ds);
   }));
   plans.sort((a,b)=>a.date.localeCompare(b.date));
   saveNow();renderAll();if(curView==='cal')renderKW();
@@ -6671,6 +6549,7 @@ function sbCreate(ci){
 }
 function confirmPersonalImport(){
   if(!_piPending)return;
+  usageWF('import');
   const{buckets,targetKW,temporaere}=_piPending;
   // Immer die AKTUELLE Baustelle aus data per ID nachschlagen, statt der beim Öffnen der
   // Vorschau gespeicherten Referenz zu vertrauen - falls in der Zwischenzeit ein
@@ -7759,19 +7638,106 @@ function exportICSWeek(audFilter,kw){
 
 // exportICSWeek with audFilter defined above
 
+// ═══ NUTZUNG & ARBEITSABLAUF (anonym) ═══
+// Zählt Klicks auf Knöpfe/Auswahlen (Schlüssel = aufgerufene Funktion, z.B. «setView:cal») und Arbeitsschritte
+// («wf:…», z.B. Planung erstellt, Audit bestätigt) mit Wochentag und Stunde, bei Planungen die Vorlaufzeit.
+// Ohne Namen: pro Gerät eine Zufalls-ID. Gesammelt in deptMeta._usage.dev[geraet][schluessel]={n,wd[7],h[24],l,ld[3]},
+// alle 5 Minuten (und beim Verlassen) gespeichert. Auswertung: Admin → «Nutzung & Arbeitsablauf».
+let _usagePending={};
+const USAGE_SKIP=/^(toggleMore|event|close|hide|stopPropagation|preventDefault|if|return)/;
+function usageDev(){let d=null;try{d=localStorage.getItem('ap_usage_dev');if(!d){d='g'+Math.random().toString(36).slice(2,8);localStorage.setItem('ap_usage_dev',d);}}catch(e){}return d||'g0';}
+function usageAdd(key,label,ld){
+  try{
+    const now=new Date(),wd=(now.getDay()+6)%7,h=now.getHours();
+    const u=_usagePending[key]||(_usagePending[key]={n:0,wd:[0,0,0,0,0,0,0],h:Array(24).fill(0),l:''});
+    u.n++;u.wd[wd]++;u.h[h]++;if(label&&!u.l)u.l=String(label).replace(/\s+/g,' ').trim().slice(0,50);
+    if(ld!=null){u.ld=u.ld||[0,0,0];u.ld[Math.max(0,Math.min(2,ld))]++;}
+  }catch(e){}
+}
+// Arbeitsschritt; bei Planungen: Vorlauf 0 = diese Woche, 1 = nächste Woche, 2 = später
+function usageWF(key,label,planDate){
+  let ld=null;if(planDate){try{ld=dateToKW(planDate)-dateToKW(today())+(isoYear(planDate)-isoYear(today()))*52;ld=ld<=0?0:ld===1?1:2;}catch(e){}}
+  usageAdd('wf:'+key,label,ld);
+}
+function usageKeyOf(el,attr){
+  const code=(el.getAttribute(attr)||'');
+  const re=/(?<![\w$.])([A-Za-z_$][\w$]*)\(\s*(?:'([^'\\]{1,24})')?/g;let m;
+  while((m=re.exec(code))){if(USAGE_SKIP.test(m[1]))continue;return m[1]+(m[2]?':'+m[2]:'');}
+  return null;
+}
+function usageLabelOf(el){return(el.innerText||el.title||el.getAttribute('aria-label')||el.id||'').split('\n')[0];}
+document.addEventListener('click',ev=>{try{const el=ev.target.closest&&ev.target.closest('[onclick]');if(!el)return;const k=usageKeyOf(el,'onclick');if(k)usageAdd(k,usageLabelOf(el));}catch(e){}},true);
+document.addEventListener('change',ev=>{try{const el=ev.target;if(!el||!el.getAttribute||!el.getAttribute('onchange'))return;const k=usageKeyOf(el,'onchange');if(k)usageAdd(k,el.title||el.id);}catch(e){}},true);
+function usageFlush(){
+  try{
+    if(!Object.keys(_usagePending).length||!currentUser||typeof deptMeta==='undefined'||!deptMeta)return;
+    const U=deptMeta._usage=deptMeta._usage||{since:today(),dev:{}};U.dev=U.dev||{};
+    const D=U.dev[usageDev()]=U.dev[usageDev()]||{};
+    Object.entries(_usagePending).forEach(([k,p])=>{
+      const t=D[k]||(D[k]={n:0,wd:[0,0,0,0,0,0,0],h:Array(24).fill(0),l:''});
+      t.n+=p.n;p.wd.forEach((v,i)=>t.wd[i]=(t.wd[i]||0)+v);p.h.forEach((v,i)=>t.h[i]=(t.h[i]||0)+v);if(p.l&&!t.l)t.l=p.l;
+      if(p.ld){t.ld=t.ld||[0,0,0];p.ld.forEach((v,i)=>t.ld[i]+=v);}
+    });
+    _usagePending={};saveDepts();
+  }catch(e){console.warn('usage',e);}
+}
+setInterval(usageFlush,5*60*1000);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')usageFlush();});
+const USAGE_WF_LABEL={'wf:plan:panel':'Audit geplant (Detail-Panel)','wf:plan:multi':'Audits geplant (Mehrfach-Planung)','wf:plan:mob':'Audit geplant (Handy)','wf:plan:tg':'Audit geplant (Tourguide übernommen)','wf:plan:move':'Planung verschoben (KW-Planung)','wf:berat':'Beratung geplant','wf:audit:mob':'Audit bestätigt (Handy)','wf:audit:kw':'Audit bestätigt (KW-Planung)','wf:audit:multi':'Audits bestätigt (Mehrfach)','wf:audit:panel':'Audit bestätigt (Detail-Panel)','wf:import':'Personal-Import übernommen'};
+function usageAgg(){
+  const U=(deptMeta&&deptMeta._usage)||{dev:{}};const out={};
+  // eigene, noch nicht gespeicherte Klicks mitzählen
+  const devs=Object.values(U.dev||{}).concat([_usagePending]);
+  devs.forEach(D=>Object.entries(D||{}).forEach(([k,t])=>{
+    const o=out[k]||(out[k]={n:0,wd:[0,0,0,0,0,0,0],h:Array(24).fill(0),l:'',ld:[0,0,0]});
+    o.n+=t.n||0;(t.wd||[]).forEach((v,i)=>o.wd[i]+=v||0);(t.h||[]).forEach((v,i)=>o.h[i]+=v||0);if(t.l&&!o.l)o.l=t.l;(t.ld||[]).forEach((v,i)=>o.ld[i]+=v||0);
+  }));
+  return{since:U.since,devN:Object.keys(U.dev||{}).length,rows:out};
+}
+function openUsage(){admModal('📊 Nutzung & Arbeitsablauf','<div id="usage-body"></div>',true);usageFlush();renderUsage();}
+let _usageShowAll=false;
+function renderUsage(){
+  const el=document.getElementById('usage-body');if(!el)return;
+  const A=usageAgg(),WD=['Mo','Di','Mi','Do','Fr','Sa','So'];
+  const bars=a=>{const mx=Math.max(1,...a);return`<span style="display:inline-flex;gap:2px;align-items:flex-end;height:22px">${a.map((v,i)=>`<span title="${WD[i]}: ${v}" style="display:inline-flex;flex-direction:column;align-items:center;font-size:8px;color:var(--tx3)"><span style="width:12px;height:${Math.round(v/mx*14)+1}px;background:${v?'var(--blue)':'var(--bd)'};border-radius:2px"></span>${WD[i][0]}</span>`).join('')}</span>`;};
+  const peak=h=>{const s=h.reduce((a,v)=>a+v,0);if(!s)return'–';let best=0,bi=0;for(let i=0;i<24;i++){const w=h[i]+(h[i+1]||0);if(w>best){best=w;bi=i;}}return`${bi}–${bi+2} Uhr`;};
+  const rows=Object.entries(A.rows);
+  const wf=rows.filter(([k])=>k.startsWith('wf:')).sort((a,b)=>b[1].n-a[1].n);
+  const btn=rows.filter(([k])=>!k.startsWith('wf:')).sort((a,b)=>b[1].n-a[1].n);
+  // nie benutzt: Knöpfe/Auswahlen, die gerade im HTML vorhanden sind, aber nie gezählt wurden
+  const seen=new Set(rows.map(([k])=>k)),never=new Map();
+  document.querySelectorAll('[onclick],[onchange]').forEach(x=>{if(x.closest('#usage-body'))return;['onclick','onchange'].forEach(a=>{if(!x.getAttribute(a))return;const k=usageKeyOf(x,a);if(k&&!seen.has(k)&&!never.has(k))never.set(k,usageLabelOf(x)||k);});});
+  const tbl=(list,lead)=>`<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11px;color:var(--tx)"><thead><tr style="color:var(--tx3);text-align:left"><th style="padding:4px">Funktion</th><th style="padding:4px;text-align:right">Anzahl</th><th style="padding:4px">Wochentage</th><th style="padding:4px">meist</th>${lead?'<th style="padding:4px">Vorlauf (diese / nächste / spätere Woche)</th>':''}</tr></thead><tbody>${list.map(([k,o])=>`<tr style="border-top:1px solid var(--bd)"><td style="padding:4px">${escH(USAGE_WF_LABEL[k]||o.l||k)}<div style="font-size:9px;color:var(--tx3)">${escH(k)}</div></td><td style="padding:4px;text-align:right;font-weight:700">${o.n}</td><td style="padding:4px">${bars(o.wd)}</td><td style="padding:4px;white-space:nowrap">${peak(o.h)}</td>${lead?`<td style="padding:4px">${o.ld.some(Boolean)?o.ld.join(' / '):'–'}</td>`:''}</tr>`).join('')||'<tr><td colspan="5" style="padding:6px;color:var(--tx3)">Noch keine Daten.</td></tr>'}</tbody></table></div>`;
+  const shownBtn=_usageShowAll?btn:btn.slice(0,25);
+  el.innerHTML=`<p style="font-size:12px;color:var(--tx2)">Gezählt seit <b>${A.since?fd(A.since):'heute'}</b> · ${A.devN} Gerät(e) · ohne Namen. Wird alle 5 Minuten gespeichert. Nach 3–4 Wochen zeigt die Liste, welche Funktionen nie oder selten gebraucht werden und wann im Team was gemacht wird.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0">
+      <button type="button" class="ui-btn ui-btn-pri" onclick="usageCopy()">📋 Auswertung kopieren</button>
+      <button type="button" class="ui-btn" onclick="usageReset()">↺ Zähler zurücksetzen</button>
+    </div>
+    <h3 style="font-size:13px;margin:14px 0 4px">🔁 Arbeitsablauf</h3>${tbl(wf,true)}
+    <h3 style="font-size:13px;margin:16px 0 4px">🖱 Knöpfe & Funktionen (${btn.length})</h3>${tbl(shownBtn,false)}
+    ${btn.length>25?`<label style="font-size:11px;color:var(--tx2);display:flex;gap:4px;align-items:center;margin-top:4px"><input type="checkbox" ${_usageShowAll?'checked':''} onchange="_usageShowAll=this.checked;renderUsage()"> alle ${btn.length} zeigen</label>`:''}
+    <details style="margin-top:14px"><summary style="cursor:pointer;font-size:13px;font-weight:700">💤 Nie benutzt (${never.size})</summary>
+      <div style="font-size:11px;color:var(--tx3);margin:4px 0">Knöpfe, die im Moment auf der Seite vorhanden sind (inkl. Menüs und geöffneter Fenster), aber seit Beginn der Zählung nie angeklickt wurden.</div>
+      ${[...never].sort((a,b)=>a[1].localeCompare(b[1])).map(([k,l])=>`<div style="font-size:11px;padding:2px 0">${escH(l)} <span style="color:var(--tx3);font-size:9px">${escH(k)}</span></div>`).join('')}
+    </details>`;
+}
+function usageCopy(){
+  const A=usageAgg();const lines=['Nutzung seit '+(A.since||'?')+', Geräte: '+A.devN];
+  Object.entries(A.rows).sort((a,b)=>b[1].n-a[1].n).forEach(([k,o])=>lines.push([k,USAGE_WF_LABEL[k]||o.l,o.n,'wd='+o.wd.join(','),'h='+o.h.map((v,i)=>v?i+':'+v:'').filter(Boolean).join(' '),o.ld.some(Boolean)?'vorlauf='+o.ld.join('/'):''].join(' | ')));
+  const t=lines.join('\n');
+  (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>showToast('📋 Auswertung kopiert',2000)).catch(()=>uiDialog({msg:t}));
+}
+async function usageReset(){
+  if(!await askConfirm('Alle Nutzungszähler zurücksetzen? Die Zählung beginnt dann neu.',{ok:'Zurücksetzen'}))return;
+  deptMeta._usage={since:today(),dev:{}};_usagePending={};saveDepts();renderUsage();
+}
 // ═══ RENDER ALL ═══
 function renderAll(){renderMarkers();renderList();updateStats();renderTL();updatePAPanelBadge();if(curView==='cal'){renderCalSB();renderKW();}if(curView==='aud'){renderAuditors();renderFerList();renderWunschFerien();renderPA();}}
+// Personen-Audits erscheinen nur noch in «Meine Tagesplanung» (eigener Knopf auf der Karte entfernt)
 function updatePAPanelBadge(){
-  const badge=document.getElementById('pa-panel-badge');
-  const audSel=document.getElementById('pa-panel-aud');
-  const audFilterVal=audSel&&audSel.dataset.filled?audSel.value:'__me__';
-  const audFilter=audFilterVal==='__me__'?currentUser:(audFilterVal||null);
-  const todayList=personAudits.filter(p=>p.planned&&p.date===today()&&(!audFilter||p.auditor===audFilter));
-  if(badge)badge.textContent=todayList.length||'';
-  // Pins für heute sind standardmässig sichtbar, auch ohne geöffnetes Panel - ausser der
-  // Nutzer hat im Panel bereits ein anderes Datum gewählt, dann bleibt dessen Auswahl massgeblich.
-  const dEl=document.getElementById('pa-panel-date');
-  if(!dEl||!dEl.value||dEl.value===today())renderPAPins(todayList);
+  const ds=document.getElementById('dayplan-date')?.value||today(),who=dayPlanWho();
+  renderPAPins(window._dayPlanMode?personAudits.filter(p=>p.planned&&p.date===ds&&(who==='__all'||p.auditor===who)):[]);
 }
 // ═══ INIT ═══
 document.addEventListener('DOMContentLoaded',()=>{

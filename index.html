@@ -33,7 +33,7 @@ if('serviceWorker' in navigator){
 <link rel="stylesheet" href="vendor/markercluster/MarkerCluster.css?v=1.5.3">
 <link rel="stylesheet" href="vendor/markercluster/MarkerCluster.Default.css?v=1.5.3">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
-<link rel="stylesheet" href="css/style.css?v=3.31">
+<link rel="stylesheet" href="css/style.css?v=3.32">
 </head>
 <body>
 <div id="app" style="display:none">
@@ -61,7 +61,7 @@ if('serviceWorker' in navigator){
   <div id="presence-bar" style="display:flex;align-items:center;gap:4px;margin-left:4px"></div>
   <button onclick="toggleDark()" class="hb" title="Dark Mode" style="font-size:14px">🌙</button>
   <button onclick="openGuide()" class="hb" title="Anleitung" style="font-size:14px">❓</button>
-  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v3.31</span>
+  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v3.32</span>
   <button onclick="doLogout()" class="hb" title="Abmelden" style="font-size:14px" id="logout-btn">⏻</button>
   <button onclick="toggleMobileView()" id="mobile-btn" class="hb" title="Mobile Ansicht" style="font-size:14px">📱</button>
   <div id="more-w" class="admin-only">
@@ -82,6 +82,7 @@ if('serviceWorker' in navigator){
       <button onclick="openTempWorkers();toggleMore()"><i class="ti ti-user-question"></i> Temporäre Mitarbeitende <span id="tw-count-badge"></span></button>
       <button onclick="openPersonalBulk();toggleMore()"><i class="ti ti-user-edit"></i> Personal manuell erfassen</button>
       <div style="height:1px;background:var(--bd);margin:4px 0"></div>
+      <button onclick="openUsage();toggleMore()"><i class="ti ti-chart-bar"></i> Nutzung & Arbeitsablauf</button>
       <button onclick="openHistory();toggleMore()"><i class="ti ti-history"></i> Verlauf & Wiederherstellen</button>
       <button onclick="openAuditLog();toggleMore()"><i class="ti ti-list-details"></i> Änderungsprotokoll</button>
       <button onclick="openAdminGuide();toggleMore()"><i class="ti ti-help"></i> Anleitung & SQL</button>
@@ -138,20 +139,10 @@ if('serviceWorker' in navigator){
   <button id="sb-toggle" onclick="toggleSidebar()" title="Sidebar ein/ausblenden">‹</button>
   <div id="mapzone">
     <div id="map"></div>
-    <button id="pa-panel-toggle" onclick="togglePAPanel()" title="Personen-Audits des Tages" style="position:absolute;top:14px;right:14px;z-index:500;background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:8px 12px;cursor:pointer;font-size:12px;font-weight:600;color:var(--tx);box-shadow:0 2px 8px rgba(0,0,0,.15);display:flex;align-items:center;gap:6px">👤 Personen-Audits <span id="pa-panel-badge" style="background:var(--blue);color:#fff;border-radius:10px;padding:1px 6px;font-size:10px"></span></button>
-    <button id="dayplan-toggle" onclick="toggleDayPlanMode()" title="Nur meine geplanten Baustellen-Audits eines Tages anzeigen" style="position:absolute;top:60px;right:14px;z-index:500;background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:8px 12px;cursor:pointer;font-size:12px;font-weight:600;color:var(--tx);box-shadow:0 2px 8px rgba(0,0,0,.15);display:flex;align-items:center;gap:6px">📅 Meine Tagesplanung</button>
+    <button id="dayplan-toggle" onclick="toggleDayPlanMode()" title="Meine Planungen eines Tages: Audits, Beratungen und Personen-Audits" style="position:absolute;top:60px;right:14px;z-index:500;background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:8px 12px;cursor:pointer;font-size:12px;font-weight:600;color:var(--tx);box-shadow:0 2px 8px rgba(0,0,0,.15);display:flex;align-items:center;gap:6px">📅 Meine Tagesplanung</button>
     <div id="dayplan-panel" style="display:none;position:absolute;top:106px;right:14px;z-index:500;background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:10px 12px;box-shadow:0 2px 8px rgba(0,0,0,.15)">
-      <input type="date" id="dayplan-date" onchange="renderMarkers()" style="padding:6px 8px;border:1px solid var(--bd);border-radius:8px;background:var(--sf2);color:var(--tx);font-size:12px">
-      <select id="dayplan-aud" onchange="renderMarkers()" title="Admin: Tagesplanung eines anderen Auditors oder aller anzeigen" style="display:none;margin-top:6px;width:100%;padding:6px 8px;border:1px solid var(--bd);border-radius:8px;background:var(--sf2);color:var(--tx);font-size:12px"></select>
-    </div>
-    <div id="pa-panel" style="display:none;position:absolute;top:60px;right:14px;z-index:500;width:300px;max-height:70vh;overflow-y:auto;background:var(--sf);border:1px solid var(--bd);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.2);padding:14px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-        <div style="font-size:13px;font-weight:700;color:var(--tx)">👤 Personen-Audits</div>
-        <button onclick="togglePAPanel()" style="border:none;background:none;cursor:pointer;color:var(--tx3);font-size:16px;line-height:1">✕</button>
-      </div>
-      <input type="date" id="pa-panel-date" onchange="renderPAPanel()" style="width:100%;padding:7px 9px;border:1px solid var(--bd);border-radius:8px;background:var(--sf2);color:var(--tx);font-size:12px;margin-bottom:8px">
-      <select id="pa-panel-aud" onchange="renderPAPanel()" style="width:100%;padding:7px 9px;border:1px solid var(--bd);border-radius:8px;background:var(--sf2);color:var(--tx);font-size:12px;margin-bottom:10px"></select>
-      <div id="pa-panel-list"></div>
+      <input type="date" id="dayplan-date" onchange="renderMarkers();updatePAPanelBadge()" style="padding:6px 8px;border:1px solid var(--bd);border-radius:8px;background:var(--sf2);color:var(--tx);font-size:12px">
+      <select id="dayplan-aud" onchange="renderMarkers();updatePAPanelBadge()" title="Admin: Tagesplanung eines anderen Auditors oder aller anzeigen" style="display:none;margin-top:6px;width:100%;padding:6px 8px;border:1px solid var(--bd);border-radius:8px;background:var(--sf2);color:var(--tx);font-size:12px"></select>
     </div>
     <div id="msrch">
       <i class="ti ti-search mi"></i>
@@ -909,65 +900,6 @@ if('serviceWorker' in navigator){
     </div>
   </div>
 </div>
-<!-- BERATUNG CHOICE MODAL -->
-<div id="berat-choice-bg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:4000;align-items:center;justify-content:center" onclick="this.style.display='none'">
-  <div style="background:var(--sf);border-radius:12px;padding:20px;width:300px;box-shadow:0 20px 60px rgba(0,0,0,.3)" onclick="event.stopPropagation()">
-    <h3 style="font-size:14px;font-weight:700;color:var(--tx);margin-bottom:6px"><i class="ti ti-message-circle" style="color:#8B5CF6"></i> Beratung</h3>
-    <div id="berat-choice-name" style="font-size:11px;color:var(--tx2);margin-bottom:16px"></div>
-    <div style="display:flex;flex-direction:column;gap:8px">
-      <button onclick="document.getElementById('berat-choice-bg').style.display='none';openBeratung()" style="padding:10px;border-radius:8px;border:none;background:#8B5CF6;color:#fff;cursor:pointer;font-size:13px;font-weight:600;text-align:left">
-        <i class="ti ti-check"></i> Jetzt erfassen <span style="font-size:11px;opacity:.8;font-weight:400">– Beratung hat stattgefunden</span>
-      </button>
-      <button onclick="document.getElementById('berat-choice-bg').style.display='none';openBeratungPlan()" style="padding:10px;border-radius:8px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx);cursor:pointer;font-size:13px;font-weight:600;text-align:left">
-        <i class="ti ti-calendar-question"></i> Planen <span style="font-size:11px;opacity:.7;font-weight:400">– zukünftiger Termin</span>
-      </button>
-    </div>
-  </div>
-</div>
-<!-- BERATUNG PLANEN MODAL -->
-<div id="berat-plan-bg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:4000;align-items:center;justify-content:center">
-  <div style="background:var(--sf);border-radius:12px;padding:24px;width:400px;max-width:95vw;box-shadow:0 20px 60px rgba(0,0,0,.3)">
-    <h3 style="font-size:15px;font-weight:700;color:var(--tx);margin-bottom:4px"><i class="ti ti-calendar-question" style="color:#8B5CF6"></i> Beratung planen</h3>
-    <div id="berat-plan-bs-name" style="font-size:12px;color:var(--tx2);margin-bottom:16px"></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
-      <div><label style="font-size:11px;color:var(--tx2);display:block;margin-bottom:3px">Datum *</label>
-        <input type="date" id="berat-plan-date" style="width:100%;padding:7px 9px;border:1px solid var(--bd);border-radius:var(--rs);background:var(--sf2);color:var(--tx);font-size:12px">
-      </div>
-      <div><label style="font-size:11px;color:var(--tx2);display:block;margin-bottom:3px">Auditor *</label>
-        <select id="berat-plan-aud" style="width:100%;padding:7px 9px;border:1px solid var(--bd);border-radius:var(--rs);background:var(--sf2);color:var(--tx);font-size:12px"></select>
-      </div>
-    </div>
-    <div style="margin-bottom:16px"><label style="font-size:11px;color:var(--tx2);display:block;margin-bottom:3px">Notiz (optional)</label>
-      <input type="text" id="berat-plan-note" placeholder="z.B. Besprechung Brandschutzkonzept" style="width:100%;padding:7px 9px;border:1px solid var(--bd);border-radius:var(--rs);background:var(--sf2);color:var(--tx);font-size:12px">
-    </div>
-    <div style="display:flex;gap:8px;justify-content:flex-end">
-      <button onclick="document.getElementById('berat-plan-bg').style.display='none'" style="padding:8px 16px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf2);cursor:pointer;font-size:12px;color:var(--tx)">Abbrechen</button>
-      <button onclick="confirmBeratungPlan()" style="padding:8px 16px;border-radius:var(--rs);border:none;background:#8B5CF6;color:#fff;cursor:pointer;font-size:12px;font-weight:600"><i class="ti ti-calendar-question"></i> Planen</button>
-    </div>
-  </div>
-</div>
-<!-- BERATUNG MODAL -->
-<div id="berat-bg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:4000;align-items:center;justify-content:center">
-  <div style="background:var(--sf);border-radius:12px;padding:24px;width:400px;max-width:95vw;box-shadow:0 20px 60px rgba(0,0,0,.3)">
-    <h3 style="font-size:15px;font-weight:700;color:var(--tx);margin-bottom:4px"><i class="ti ti-message-circle" style="color:#8B5CF6"></i> Beratungstermin erfassen</h3>
-    <div id="berat-bs-name" style="font-size:12px;color:var(--tx2);margin-bottom:16px"></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
-      <div><label style="font-size:11px;color:var(--tx2);display:block;margin-bottom:3px">Datum *</label>
-        <input type="date" id="berat-date" style="width:100%;padding:7px 9px;border:1px solid var(--bd);border-radius:var(--rs);background:var(--sf2);color:var(--tx);font-size:12px">
-      </div>
-      <div><label style="font-size:11px;color:var(--tx2);display:block;margin-bottom:3px">Auditor *</label>
-        <select id="berat-aud" style="width:100%;padding:7px 9px;border:1px solid var(--bd);border-radius:var(--rs);background:var(--sf2);color:var(--tx);font-size:12px"></select>
-      </div>
-    </div>
-    <div style="margin-bottom:16px"><label style="font-size:11px;color:var(--tx2);display:block;margin-bottom:3px">Notiz (optional)</label>
-      <input type="text" id="berat-note" placeholder="z.B. Besprechung Brandschutzkonzept" style="width:100%;padding:7px 9px;border:1px solid var(--bd);border-radius:var(--rs);background:var(--sf2);color:var(--tx);font-size:12px">
-    </div>
-    <div style="display:flex;gap:8px;justify-content:flex-end">
-      <button onclick="document.getElementById('berat-bg').style.display='none'" style="padding:8px 16px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf2);cursor:pointer;font-size:12px;color:var(--tx)">Abbrechen</button>
-      <button onclick="confirmBeratung()" style="padding:8px 16px;border-radius:var(--rs);border:none;background:#8B5CF6;color:#fff;cursor:pointer;font-size:12px;font-weight:600"><i class="ti ti-message-circle"></i> Erfassen</button>
-    </div>
-  </div>
-</div>
 <!-- MOBILE PLAN MENU -->
 <div id="mob-plan-menu-bg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:3500;align-items:flex-end;justify-content:center" onclick="this.style.display='none'">
   <div style="background:var(--sf);border-radius:20px 20px 0 0;padding:20px;width:100%;max-width:500px" onclick="event.stopPropagation()">
@@ -1051,8 +983,8 @@ if('serviceWorker' in navigator){
 <script src="vendor/leaflet/leaflet.js?v=1.9.4"></script>
 <script src="vendor/markercluster/leaflet.markercluster.js?v=1.5.3"></script>
 <script src="vendor/xlsx/xlsx.full.min.js?v=0.18.5"></script>
-<script src="js/merge.js?v=3.31"></script>
-<script src="js/app.js?v=3.31"></script>
+<script src="js/merge.js?v=3.32"></script>
+<script src="js/app.js?v=3.32"></script>
 <!-- ONBOARDING GUIDE MODAL -->
 <div id="guide-bg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:5000;align-items:center;justify-content:center">
   <div style="background:var(--sf);border-radius:16px;width:560px;max-width:95vw;max-height:90vh;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.4);display:flex;flex-direction:column">
@@ -1362,7 +1294,6 @@ if('serviceWorker' in navigator){
       <div style="display:flex;gap:6px;flex-wrap:wrap">
         <button id="rpe-btn-done" onclick="rpeAction('done')" style="padding:8px 12px;border:none;border-radius:var(--rs);background:#10B981;color:#fff;font-size:12px;font-weight:600;cursor:pointer">✓ Ich habe teilgenommen</button>
         <button onclick="rpeAction('cancelAll')" style="padding:8px 12px;border:1px solid #FCA5A5;border-radius:var(--rs);background:#FEF2F2;color:#DC2626;font-size:12px;cursor:pointer">✕ Ganzen Termin absagen</button>
-        <button onclick="exportRapportICS(rpeMyId())" style="padding:8px 12px;border:1px solid var(--bd);border-radius:var(--rs);background:var(--sf2);color:var(--tx);font-size:12px;cursor:pointer">⬇️ Outlook</button>
       </div>
       <div style="display:flex;gap:6px">
         <button onclick="document.getElementById('rpe-bg').style.display='none'" style="padding:8px 14px;border:1px solid var(--bd);border-radius:var(--rs);background:var(--sf2);color:var(--tx);font-size:12px;cursor:pointer">Schliessen</button>
