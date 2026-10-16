@@ -11,8 +11,8 @@ Beratungen, Rapporten und Ferien der Auditoren. Sprache der Oberfläche: Deutsch
 - Vor jedem PR: App im Browser laden (Desktop- und Mobile-Breite) und in der Konsole
   prüfen, dass keine JavaScript-Fehler auftreten.
 - Bei jeder Änderung an der App die Versionsnummer erhöhen, und zwar überall in
-  `index.html`: im Header (`<span ... title="Version">v3.31</span>`) und in den Links
-  `css/style.css?v=3.31`, `js/merge.js?v=3.31` und `js/app.js?v=3.31`. Der `?v=`-Zusatz
+  `index.html`: im Header (`<span ... title="Version">v3.32</span>`) und in den Links
+  `css/style.css?v=3.32`, `js/merge.js?v=3.32` und `js/app.js?v=3.32`. Der `?v=`-Zusatz
   sorgt dafür, dass Browser nach einem Update keine alte Datei aus dem Cache verwenden.
 - Tests für die Zusammenführung: `node tests/merge.test.js` (muss grün sein).
 - Keine Browser-Dialoge (`confirm`, `prompt`, `alert`): `askConfirm()`, `askText()`,
@@ -63,8 +63,10 @@ global; das HTML ruft sie direkt über `onclick="..."` auf.
   Detail-Panel-Knöpfe: Planen | Beratung (gross), Bearbeiten | Pausieren, Inaktiv | Löschen (kein «Auditiert»/«Notiz» mehr).
   Planen und Beratung = dasselbe Formular `#plan-form` (`showF('plan'|'berat')`, `_planKind`, `planKindUI`);
   Beratung immer Datum + Uhrzeit (`confirmPlanBerat`, `beratPlan[].time`, Tourguide-Fixzeit); Uhrzeit beim Audit → Datum nötig (`planTimeInput`)
-  «Meine Tagesplanung» auf der Karte (`toggleDayPlanMode`): Admin wählt Auditor oder «alle» (`#dayplan-aud`,
-  `dayPlanWho`/`dayPlanFillAud`; bei «alle» Marker in Auditor-Farbe mit Kürzel `dayPlanIcon`)
+  «Meine Tagesplanung» auf der Karte (`toggleDayPlanMode`): Audits, Beratungen und Personen-Audits (Pins `renderPAPins` via
+  `updatePAPanelBadge`) des Tages; Admin wählt Auditor oder «alle» (`#dayplan-aud`, `dayPlanWho`/`dayPlanFillAud`;
+  bei «alle» Marker in Auditor-Farbe mit Kürzel `dayPlanIcon`). Entfernt: Rechtsklick-Schnellaudit, Personen-Audit-Knopf auf der
+  Karte, altes Beratungs-Fenster, Rapport-Outlook-Export (Outlook nur noch in der KW-Planung)
 - ~771 `setView`: Tabs Karte / KW-Planung / Auditoren / Übersicht / Personen-Audits
 - ~1102 Ferien und Wunschferien (Gantt). Fixe Ferien: nur Admin erfassen/bearbeiten/löschen;
   Wünsche: eigene oder Admin. Bearbeiten über `uiForm()` (Formular-Dialog) oder Klick auf den Balken
@@ -134,6 +136,9 @@ global; das HTML ruft sie direkt über `onclick="..."` auf.
   folgt den Häkchen) `piRenderOverview`/`piOverviewRows`/`piPrevKW`, oben in `#pi-groups`
   «+ Neue Baustelle» aus Import/Sammelbox/Kundendienst: Personal wird beim Speichern übernommen
   (`piNewSitePending` → `window._newSitePersonal` → `piApplyNewSite` in `saveEntry`); `sbAssign` ebenfalls
+- Nutzung & Arbeitsablauf (anonym, Admin → «Nutzung & Arbeitsablauf», `openUsage`): Klick-Zähler über `onclick`/`onchange`
+  (`usageKeyOf`, Schlüssel = Funktionsname[:erstes Text-Argument]) + Arbeitsschritte `usageWF('plan:panel'|…, label, planDatum)`
+  mit Wochentag/Stunde/Vorlauf; pro Gerät (`ap_usage_dev`) in `deptMeta._usage.dev`, gespeichert alle 5 min (`usageFlush`)
 - ~5969 Supabase-Verbindung (`sbFetch`, `sbInit`)
 - ~6026 Sync (`SB_FIELDS`, `sbPush`, `sbPull`, `sbMergeRemote`, Speicher-Status)
 - ~6265 Admin: Anleitung & SQL, Änderungsprotokoll, Verlauf & Wiederherstellen
