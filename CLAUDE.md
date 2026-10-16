@@ -56,7 +56,7 @@ global; das HTML ruft sie direkt über `onclick="..."` auf.
 - ~97 `status(e)`: berechnet den Status einer Baustelle
   (inactive, paused, planned, beratung, new, overdue, due, soon, ok); Werkhöfe sind nie `new`
   Verknüpfte Baustellen `e.linkGroup` (Bearbeiten «Gemeinsam auditieren mit», `linkSites`/`unlinkSite`/`linkMembers`):
-  `dl`/`status` rechnen ab dem letzten Audit der Gruppe (`linkRef`), Planen plant verknüpfte mit, `tgLocKey` = 'L:'+Gruppe (≤~300 m);
+  noch nie auditierte rechnen ab dem letzten Audit der Gruppe (`linkRef` in `dl`/`status`), danach eigenes Audit (Bericht pro Einheit), Planen plant verknüpfte mit, `tgLocKey` = 'L:'+Gruppe (≤~300 m);
   neue Baustelle am selben Ort → Verknüpfen anbieten (`saveEntry`)
   Fristen relativ zum Rhythmus: `dueSoonDays(e)`/`dueOverDays(e)` (`due_soon_pct`/`due_overdue_pct`, begrenzt durch
   `due_soon_days`/`due_overdue_min`/`due_overdue_days`) – nie feste 10 Tage annehmen

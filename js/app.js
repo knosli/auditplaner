@@ -159,8 +159,9 @@ function fvLabel(e){return fvTime(e)==null?'':((e.fixVisit.days||[]).length?e.fi
 function planTimeMin(p){const t=p&&p.time;if(!t||!/^\d{1,2}:\d{2}$/.test(t))return null;const[h,m]=t.split(':').map(Number);return h*60+m;}
 function planTimeTag(p){return planTimeMin(p)==null?'':`<span style="font-weight:700;color:#0369A1" title="Termin mit Uhrzeit">🕖 ${escH(p.time)}</span> `;}
 // ═══ Verknüpfte Baustellen (gemeinsam auditieren, z.B. Tiefbau + Hochbau am selben Ort) ═══
-// e.linkGroup = gemeinsame Kennung. Die Fälligkeit läuft ab dem letzten Audit der GANZEN Gruppe (linkRef),
-// so werden alle zusammen fällig und gemeinsam geplant (Planen im Detail-Panel plant alle mit, Tourguide = ein Rundgang).
+// e.linkGroup = gemeinsame Kennung. Noch nie auditierte Mitglieder übernehmen den Takt der Gruppe (letztes Audit der
+// anderen, linkRef) -> alle werden zusammen fällig. Danach zählt pro Einheit das EIGENE Audit (ein Bericht pro Einheit,
+// jede Baustelle wird einzeln bestätigt). Planen im Detail-Panel plant alle mit, Tourguide = ein Rundgang.
 function linkMembers(e){if(!e||!e.linkGroup)return[];return data.filter(x=>x.id!==e.id&&x.linkGroup===e.linkGroup&&x.active!==false);}
 function linkRef(e){if(!e||!e.linkGroup)return null;let r=null;linkMembers(e).forEach(x=>{const d=x.lastAudit||x.resumeFrom;if(d&&(!r||d>r))r=d;});return r;}
 function linkSites(aId,bId){
@@ -183,9 +184,9 @@ function linkFormRefresh(id){
   const pk=document.getElementById('f-link-pick');if(pk)pk.innerHTML=bsPickerHTML('f-link-sel','width:100%');
 }
 function dl(e,now){
-  // Nie auditierte Baustellen: Rhythmus läuft ab Erfassungsdatum; verknüpfte: ab dem letzten Audit der Gruppe
+  // Nie auditierte Baustellen: Rhythmus läuft ab Erfassungsdatum – verknüpfte ab dem letzten Audit der Gruppe
   let ref=e.lastAudit||e.resumeFrom;
-  {const lr=linkRef(e);if(lr&&(!ref||lr>ref))ref=lr;}
+  if(!ref)ref=linkRef(e);
   ref=ref||e.createdAt;
   if(!ref)return-999;
   return Math.round((parseDate(ref).getTime()+e.rhythm*86400000-(now||Date.now()))/86400000);
@@ -4745,7 +4746,7 @@ function rulesHTML(){
     `Fälligkeit = letztes Audit + Rhythmus der Baustelle.`,
     `<span style="color:#EAB308">●</span> Bald fällig im letzten ${v('due_soon_pct')} % des Rhythmus vor Fälligkeit (höchstens ${v('due_soon_days')} Tage) · <span style="color:#F59E0B">●</span> fällig ab Fälligkeitstag · <span style="color:#EF4444">●</span> überfällig ${v('due_overdue_pct')} % des Rhythmus danach (mindestens ${v('due_overdue_min')}, höchstens ${v('due_overdue_days')} Tage). Beispiele: ${[7,14,21,28].map(r=>{const e={rhythm:r};return `${r/7} Wo.: gelb ab Tag ${r-dueSoonDays(e)}, rot ab Tag ${r+dueOverDays(e)+1}`;}).join(' · ')}.`,
     `Noch nie auditierte Baustellen (★ auf der Karte): Frist läuft ab Erfassung – violett = neu, orange = fällig, rot = überfällig. Werkhöfe gelten nie als «neu» (Audit-Rhythmus dort weniger wichtig).`,
-    `Geplante Baustellen (blau) und geplante Beratungen (violett) werden nicht als fällig gezählt; pausierte und inaktive gar nicht. <b>🔗 Verknüpfte Baustellen</b> (Bearbeiten → «Gemeinsam auditieren mit», z.B. Tiefbau + Hochbau am selben Ort): Die Fälligkeit läuft ab dem letzten Audit der ganzen Gruppe, alle werden zusammen fällig, «Planen» plant die verknüpften mit und der Tourguide macht einen gemeinsamen Rundgang. <b>🛡 Kein Audit</b> (Bearbeiten → Häkchen, z.B. Sicherheit nicht bei uns im Lead): Die Baustelle läuft weiter und der Personal-Import erfasst ihr Personal, aber sie hat keine Ampel, zählt nie als fällig, kommt nie in den Tourguide, wird nie pausiert vorgeschlagen und nie automatisch inaktiv.`]) +
+    `Geplante Baustellen (blau) und geplante Beratungen (violett) werden nicht als fällig gezählt; pausierte und inaktive gar nicht. <b>🔗 Verknüpfte Baustellen</b> (Bearbeiten → «Gemeinsam auditieren mit», z.B. Tiefbau + Hochbau am selben Ort): Eine neue, noch nie auditierte Baustelle übernimmt den Takt der Gruppe (ab deren letztem Audit) und wird so zusammen mit den anderen fällig; danach zählt pro Einheit das eigene Audit (jede wird einzeln bestätigt, ein Bericht pro Einheit). «Planen» plant die verknüpften mit und der Tourguide macht einen gemeinsamen Rundgang. <b>🛡 Kein Audit</b> (Bearbeiten → Häkchen, z.B. Sicherheit nicht bei uns im Lead): Die Baustelle läuft weiter und der Personal-Import erfasst ihr Personal, aber sie hat keine Ampel, zählt nie als fällig, kommt nie in den Tourguide, wird nie pausiert vorgeschlagen und nie automatisch inaktiv.`]) +
   sec('refresh','Rhythmus',[
     `Standard beim Erfassen: Baustelle ${v('rh_baustelle')} Tage, GU ${v('rh_gu')} Tage, Werkhof ${v('rh_werkhof')} Tage. Pro Baustelle individuell änderbar.`,
     `Feld «Zeitbedarf» (nur Spezialbaustellen): feste Audit-Dauer, übersteuert die Schätzung nach Personal.`]) +
