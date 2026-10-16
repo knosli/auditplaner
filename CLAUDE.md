@@ -11,8 +11,8 @@ Beratungen, Rapporten und Ferien der Auditoren. Sprache der Oberfläche: Deutsch
 - Vor jedem PR: App im Browser laden (Desktop- und Mobile-Breite) und in der Konsole
   prüfen, dass keine JavaScript-Fehler auftreten.
 - Bei jeder Änderung an der App die Versionsnummer erhöhen, und zwar überall in
-  `index.html`: im Header (`<span ... title="Version">v3.27</span>`) und in den Links
-  `css/style.css?v=3.27`, `js/merge.js?v=3.27` und `js/app.js?v=3.27`. Der `?v=`-Zusatz
+  `index.html`: im Header (`<span ... title="Version">v3.28</span>`) und in den Links
+  `css/style.css?v=3.28`, `js/merge.js?v=3.28` und `js/app.js?v=3.28`. Der `?v=`-Zusatz
   sorgt dafür, dass Browser nach einem Update keine alte Datei aus dem Cache verwenden.
 - Tests für die Zusammenführung: `node tests/merge.test.js` (muss grün sein).
 - Keine Browser-Dialoge (`confirm`, `prompt`, `alert`): `askConfirm()`, `askText()`,
@@ -122,6 +122,8 @@ global; das HTML ruft sie direkt über `onclick="..."` auf.
   Pause → inaktiv: `e.pausedAt` (automatisch in `pauseTrack` beim Speichern), nach `pause_to_inactive` Tagen ohne
   «pausiert bis» inaktiv (`autoInactivateLongPaused` in `autoResumeExpired`); `markInactive` setzt `inactiveAt`/`inactiveReason`/
   `extDone`; Admin → «Inaktiv gesetzt (Audit-App)» (`openInactList`, PSP kopieren, abhaken)
+  Import-Vorschau: ausklappbare Übersicht aller erkannten Baustellen (Personal Vorwoche → Import-KW, ±, «Was passiert»;
+  folgt den Häkchen) `piRenderOverview`/`piOverviewRows`/`piPrevKW`, oben in `#pi-groups`
   «+ Neue Baustelle» aus Import/Sammelbox/Kundendienst: Personal wird beim Speichern übernommen
   (`piNewSitePending` → `window._newSitePersonal` → `piApplyNewSite` in `saveEntry`); `sbAssign` ebenfalls
 - ~5969 Supabase-Verbindung (`sbFetch`, `sbInit`)

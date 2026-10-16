@@ -6016,15 +6016,61 @@ function piRenderPreview(){
       ${buckets.inactiveInfo.map(it=>`<div style="padding:6px 10px;background:var(--sf2);border-radius:8px;margin-bottom:4px;font-size:12px;color:var(--tx3)">${bsLabel(it.match.entry)} — ${it.count} Pers.</div>`).join('')}
     </div>`;
   }
-  html=collectBoxHtml+html;
+  html=collectBoxHtml+`<details id="pi-ov" ${_piPending.ovOpen?'open':''} ontoggle="if(_piPending)_piPending.ovOpen=this.open" style="margin-bottom:14px;padding:8px 10px;background:var(--sf2);border-radius:8px"><summary id="pi-ov-sum" style="cursor:pointer;font-size:12px;font-weight:700;color:var(--tx)"></summary><div id="pi-ov-body"></div></details>`+html;
   html+=unknownGrp;
   const kd=buckets.kundendienst||[];
   if(kd.length)html+=`<details style="margin-bottom:14px"><summary style="cursor:pointer;font-size:12px;font-weight:700;color:var(--tx3)">🔧 Kundendienst – übersprungen (${kd.length})</summary>
     <div style="font-size:11px;color:var(--tx3);margin:6px 0">Stehen auf der Kundendienst-Liste (Admin → Kundendienst-Liste) und werden nicht verarbeitet.</div>
     ${kd.map(it=>`<div style="padding:5px 10px;background:var(--sf2);border-radius:8px;margin-bottom:3px;font-size:11px;color:var(--tx3)">${listLabel(it)} · ${it.count} Pers. <span style="opacity:.8">· ${escH(piIgnoreLabel(it.ignoreRule))}</span></div>`).join('')}</details>`;
   if(!html)html='<div style="font-size:12px;color:var(--tx2)">Keine Änderungen nötig – alles bereits konsistent.</div>';
-  document.getElementById('pi-groups').innerHTML=html;
+  const pg=document.getElementById('pi-groups');
+  pg.innerHTML=html;
+  if(!pg._ovListen){pg._ovListen=1;pg.addEventListener('change',e=>{if(e.target&&e.target.dataset&&e.target.dataset.key)piRenderOverview();});}
+  piRenderOverview();
   document.getElementById('pi-preview').style.display='block';
+}
+// ═══ Import-Übersicht: alle erkannten Baustellen mit Personal Vorwoche → Import-KW und was beim Übernehmen passiert ═══
+// Folgt den Häkchen (wird bei jeder Änderung neu berechnet). Ausklappbar (#pi-ov), Zustand bleibt beim Neuzeichnen.
+function piPrevKW(kw,yr){const d=new Date(isoMonday(kw,yr).getTime()-7*86400000);const ds=ferISO(d);return{kw:dateToKW(ds),year:isoYear(ds)};}
+function piOverviewRows(){
+  if(!_piPending)return[];
+  const{buckets,targetKW}=_piPending;const yr=_piPending.targetYear||new Date().getFullYear();
+  const pv=piPrevKW(targetKW,yr);
+  const box=(key,i,def)=>{const el=document.querySelector(`#pi-groups input[data-key="${key}"][data-idx="${i}"]`);return el?el.checked:def;};
+  const P='#64748B',G='#10B981',O='#F59E0B',V='#8B5CF6';
+  const rows=[];
+  const add=(it,cnt,act,col,chg)=>{const e=it.match&&it.match.entry;if(!e)return;const live=data.find(x=>x.id===e.id)||e;const prev=persForKW(live,pv.kw,pv.year);rows.push({e:live,prev:prev?prev.count:null,cnt,act,col,chg});};
+  buckets.pause.forEach((it,i)=>box('pause',i,true)?add(it,it.count,'⏸ wird pausiert (0 Personen)',P,1):add(it,it.count,'läuft weiter (Haken entfernt)',G,0));
+  (buckets.missing||[]).forEach((it,i)=>box('missing',i,!it.isNew)?add(it,0,'⏸ wird pausiert (nicht auf der Liste)',P,1):add(it,0,'läuft weiter (nicht auf der Liste)',O,0));
+  buckets.review.forEach((it,i)=>box('review',i,false)?add(it,it.count,'⏸ wird pausiert (wenig Personal)',P,1):add(it,it.count,'läuft weiter – wenig Personal',O,0));
+  buckets.reactivate.forEach((it,i)=>box('reactivate',i,true)?add(it,it.count,'▶ wird reaktiviert',G,1):add(it,it.count,'bleibt pausiert (Haken entfernt)',P,0));
+  buckets.reactivateInactive.forEach((it,i)=>box('reactivateInactive',i,false)?add(it,it.count,'🔓 wird wieder aktiv',V,1):add(it,it.count,'bleibt inaktiv',P,0));
+  buckets.inactiveInfo.forEach(it=>add(it,it.count,'bleibt inaktiv',P,0));
+  buckets.excluded.forEach(it=>add(it,it.count,it.match.entry.noAudit?'🛡 Kein Audit – nur Personal erfasst':'🔇 ausgeschlossen – bleibt pausiert',P,0));
+  buckets.noop.forEach(it=>add(it,it.count,it.match.entry.paused?'bleibt pausiert':'läuft weiter',it.match.entry.paused?P:G,0));
+  rows.sort((a,b)=>b.chg-a.chg||a.act.localeCompare(b.act)||a.e.name.localeCompare(b.e.name));
+  return rows;
+}
+function piRenderOverview(){
+  const sum=document.getElementById('pi-ov-sum'),body=document.getElementById('pi-ov-body');
+  if(!sum||!body||!_piPending)return;
+  const yr=_piPending.targetYear||new Date().getFullYear(),pv=piPrevKW(_piPending.targetKW,yr);
+  const rows=piOverviewRows();const nChg=rows.filter(r=>r.chg).length;
+  const totP=rows.reduce((s,r)=>s+(r.prev||0),0),totN=rows.reduce((s,r)=>s+(+r.cnt||0),0);
+  sum.innerHTML=`📋 Übersicht: alle ${rows.length} Baustellen · Personal KW ${pv.kw} → KW ${_piPending.targetKW} · <span style="color:var(--blue)">${nChg} Änderung(en)</span>`;
+  const only=!!_piPending.ovOnly;
+  const shown=only?rows.filter(r=>r.chg):rows;
+  const d=r=>{if(r.prev==null)return'<span style="color:var(--tx3)">neu</span>';const x=(+r.cnt||0)-r.prev;return x?`<span style="color:${x>0?'#10B981':'#EF4444'};font-weight:600">${x>0?'+':''}${x}</span>`:'<span style="color:var(--tx3)">±0</span>';};
+  const th='padding:4px 6px;text-align:left;font-weight:600;color:var(--tx3);border-bottom:1px solid var(--bd);white-space:nowrap';
+  const td='padding:4px 6px;border-bottom:1px solid var(--bd);vertical-align:top';
+  body.innerHTML=`<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:8px 0;font-size:11px;color:var(--tx2)">
+      <label style="display:flex;align-items:center;gap:5px;cursor:pointer"><input type="checkbox" ${only?'checked':''} onchange="_piPending.ovOnly=this.checked;piRenderOverview()"> nur Änderungen</label>
+      <span>Total Personal: KW ${pv.kw}: <b>${totP}</b> → KW ${_piPending.targetKW}: <b>${totN}</b></span>
+      <span style="color:var(--tx3)">folgt den Häkchen unten</span></div>
+    <div style="overflow-x:auto;max-height:50vh;overflow-y:auto"><table style="width:100%;border-collapse:collapse;font-size:11px;color:var(--tx)">
+      <thead><tr><th style="${th}">Baustelle · was passiert</th><th style="${th};text-align:right">KW ${pv.kw}</th><th style="${th};text-align:right">KW ${_piPending.targetKW}</th><th style="${th};text-align:right">±</th></tr></thead>
+      <tbody>${shown.map(r=>`<tr${r.chg?' style="background:var(--sf)"':''}><td style="${td}">${bsLabel(r.e)}<div style="margin-top:2px;color:${r.col};${r.chg?'font-weight:700':''}">${r.act}</div></td><td style="${td};text-align:right">${r.prev==null?'–':r.prev}</td><td style="${td};text-align:right;font-weight:600">${r.cnt}</td><td style="${td};text-align:right">${d(r)}</td></tr>`).join('')||`<tr><td colspan="4" style="${td};color:var(--tx3)">Keine Änderungen.</td></tr>`}</tbody>
+    </table></div>`;
 }
 
 // Baustelle DAUERHAFT von der Personal-Import-Prüfung ausschliessen (z.B. Baustellen in
