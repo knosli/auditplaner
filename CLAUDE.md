@@ -11,8 +11,8 @@ Beratungen, Rapporten und Ferien der Auditoren. Sprache der Oberfläche: Deutsch
 - Vor jedem PR: App im Browser laden (Desktop- und Mobile-Breite) und in der Konsole
   prüfen, dass keine JavaScript-Fehler auftreten.
 - Bei jeder Änderung an der App die Versionsnummer erhöhen, und zwar überall in
-  `index.html`: im Header (`<span ... title="Version">v3.35</span>`) und in den Links
-  `css/style.css?v=3.35`, `js/merge.js?v=3.35` und `js/app.js?v=3.35`. Der `?v=`-Zusatz
+  `index.html`: im Header (`<span ... title="Version">v3.36</span>`) und in den Links
+  `css/style.css?v=3.36`, `js/merge.js?v=3.36` und `js/app.js?v=3.36`. Der `?v=`-Zusatz
   sorgt dafür, dass Browser nach einem Update keine alte Datei aus dem Cache verwenden.
 - Tests für die Zusammenführung: `node tests/merge.test.js` (muss grün sein).
 - Keine Browser-Dialoge (`confirm`, `prompt`, `alert`): `askConfirm()`, `askText()`,
@@ -63,7 +63,8 @@ global; das HTML ruft sie direkt über `onclick="..."` auf.
 - ~142 `save()` (verzögert) / `saveNow()` / `load()`
 - ~147 Dialoge (`uiDialog`, `askConfirm`, `askText`) und Rückgängig (`undoPoint`)
 - ~202 Karte (Leaflet): `initMap`, `renderMarkers`, `renderList`, `selEntry` (Detail-Panel)
-  Liste links: Tag «👷 N» = Personal laut letztem Import (`listPersTag`/`listPersLast`); pausiert + Personal → «▶ Aktivieren»
+  Liste links: Tag «👷 N · KW x» = letzter Personal-Eintrag (`listPersTag`/`listPersLast`); «Personal da» + «▶ Aktivieren» nur mit
+  Personal in der AKTUELLEN KW (`listPersCur`/`persForKW`), sonst letzter Wert grau «(alt)»; Import hält 0 auch für pausierte geprüfter Abteilungen fest
   (`quickResume` → `resumeSite`, mit Rückgängig); Filter «Pausiert» sortiert mit Personal zuerst
   Detail-Panel-Knöpfe: Planen | Beratung (gross), Bearbeiten | Pausieren, Inaktiv | Löschen (kein «Auditiert»/«Notiz» mehr).
   Planen und Beratung = dasselbe Formular `#plan-form` (`showF('plan'|'berat')`, `_planKind`, `planKindUI`);

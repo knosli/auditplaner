@@ -510,7 +510,10 @@ function renderList(){
       if(ga===0){const oa=_ord[status(a)]??3,ob=_ord[status(b)]??3;if(oa!==ob)return oa-ob;}
       return dl(a)-dl(b)||a.name.localeCompare(b.name);
     });
-  }else if(statFilters.size===1&&statFilters.has('paused'))list.sort((a,b)=>(listPersN(b)??-1)-(listPersN(a)??-1)||a.name.localeCompare(b.name));   // Pausierte: mit Personal zuerst
+  }else if(statFilters.size===1&&statFilters.has('paused')){   // Pausierte: mit Personal in der aktuellen KW zuerst
+    const cur=e=>{const c=listPersCur(e);return c?c.count:-1;};
+    list.sort((a,b)=>cur(b)-cur(a)||(listPersN(b)??-1)-(listPersN(a)??-1)||a.name.localeCompare(b.name));
+  }
   else list.sort((a,b)=>dl(a)-dl(b));
   if(!data.length){document.getElementById('bslist').innerHTML=`<div class="empty-s"><h3>Keine Baustellen</h3><p>Über «+ Neue Baustelle» erfassen oder ein Backup laden.</p></div>`;return;}
   const tc={overdue:'tov',due:'tdu',soon:'tsn',ok:'tok',new:'tnew',paused:'tpa',inactive:'tin',planned:'tpl',beratung:'tpl',noaudit:'tpa'};
@@ -969,11 +972,14 @@ function resumeSite(e){
 // Liste links: Personal laut letztem Import; pausierte mit Personal direkt reaktivieren
 function listPersLast(e){const h=e.personalHistory||[];return h.length?h[h.length-1]:(e.lastPersonalKW!=null&&e.lastPersonalCount!=null?{kw:e.lastPersonalKW,count:e.lastPersonalCount}:null);}
 function listPersN(e){const h=listPersLast(e);return h?+h.count:null;}
+// Personal der AKTUELLEN KW (persForKW); fehlt sie, wird der letzte Wert grau mit seiner KW gezeigt
+function listPersCur(e){const kw=dateToKW(today()),yr=isoYear(today());const r=persForKW(e,kw,yr);return r?{kw,year:yr,count:+r.count||0}:null;}
 function listPersTag(e){
-  const h=listPersLast(e);if(!h)return'';
-  const n=+h.count||0,old=(isoYear(today())-(h.year||isoYear(today())))*52+dateToKW(today())-h.kw>3;
-  const hot=e.paused&&e.active!==false&&n>0;
-  return`<span class="tag" title="Personal laut Einsatzliste KW ${h.kw}: ${n}" style="${hot?'background:#D1FAE5;color:#047857;font-weight:700':old?'background:var(--sf2);color:var(--tx3)':'background:#E0F2FE;color:#0369A1'}">👷 ${n}${hot?' – Personal da':''}</span>${hot?`<button type="button" onclick="event.stopPropagation();quickResume(${e.id})" title="Pausierung aufheben – Baustelle wird wieder auditiert" style="padding:1px 7px;border:none;border-radius:10px;background:#10B981;color:#fff;font-size:10px;font-weight:600;cursor:pointer">▶ Aktivieren</button>`:''}`;
+  const c=listPersCur(e),h=c||listPersLast(e);if(!h)return'';
+  const n=+h.count||0;
+  const hot=e.paused&&e.active!==false&&c&&n>0;   // nur mit Personal in der aktuellen KW
+  const yr=h.year&&h.year!==isoYear(today())?'/'+h.year:'';
+  return`<span class="tag" title="${c?'Personal diese KW':'Für diese KW kein Wert – letzter Eintrag'} (KW ${h.kw}${yr}): ${n}" style="${hot?'background:#D1FAE5;color:#047857;font-weight:700':!c?'background:var(--sf2);color:var(--tx3)':'background:#E0F2FE;color:#0369A1'}">👷 ${n} · KW ${h.kw}${yr}${hot?' – Personal da':!c?' (alt)':''}</span>${hot?`<button type="button" onclick="event.stopPropagation();quickResume(${e.id})" title="Pausierung aufheben – Baustelle wird wieder auditiert" style="padding:1px 7px;border:none;border-radius:10px;background:#10B981;color:#fff;font-size:10px;font-weight:600;cursor:pointer">▶ Aktivieren</button>`:''}`;
 }
 function quickResume(id){
   const e=data.find(x=>x.id===id);if(!e||!e.paused)return;
@@ -6656,6 +6662,10 @@ function confirmPersonalImport(){
     recordPersonal(liveEntry(it),it.count,it.sources||it.quelle?piSrcOf(it):null);
   });
   (buckets.missing||[]).forEach(it=>recordPersonal(liveEntry(it),0,{}));
+  // pausierte Baustellen geprüfter Abteilungen, die nicht auf der Liste stehen: 0 festhalten (Liste links zeigt sonst alte Zahlen)
+  {const cov=new Set(((_piPending.coverage&&_piPending.coverage.covered)||[]).map(x=>x.dept));
+   const seen=new Set();['pause','review','reactivate','noop','reactivateInactive','inactiveInfo','excluded','missing'].forEach(k=>(buckets[k]||[]).forEach(it=>{if(it.match&&it.match.entry)seen.add(it.match.entry.id);}));
+   if(cov.size)data.filter(e=>e.active!==false&&e.paused&&e.type!=='werkhof'&&!seen.has(e.id)&&deptParts(e.dept).some(d=>cov.has(d))&&!piWaitOther(e,targetKW,yr,impQ).length).forEach(e=>recordPersonal(e,0,{}));}
   // Temporäre Mitarbeitende: PRO EINHEIT ersetzen, nicht global anhängen. Wenn eine Einheit
   // (z.B. "Terratech AG") neu importiert wird, fliegen ihre alten Nummern raus und werden durch
   // die neuen ersetzt - so verschwinden auch Nummern korrekt wieder, wenn die Person nicht mehr
