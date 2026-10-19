@@ -510,7 +510,8 @@ function renderList(){
       if(ga===0){const oa=_ord[status(a)]??3,ob=_ord[status(b)]??3;if(oa!==ob)return oa-ob;}
       return dl(a)-dl(b)||a.name.localeCompare(b.name);
     });
-  }else list.sort((a,b)=>dl(a)-dl(b));
+  }else if(statFilters.size===1&&statFilters.has('paused'))list.sort((a,b)=>(listPersN(b)??-1)-(listPersN(a)??-1)||a.name.localeCompare(b.name));   // Pausierte: mit Personal zuerst
+  else list.sort((a,b)=>dl(a)-dl(b));
   if(!data.length){document.getElementById('bslist').innerHTML=`<div class="empty-s"><h3>Keine Baustellen</h3><p>Über «+ Neue Baustelle» erfassen oder ein Backup laden.</p></div>`;return;}
   const tc={overdue:'tov',due:'tdu',soon:'tsn',ok:'tok',new:'tnew',paused:'tpa',inactive:'tin',planned:'tpl',beratung:'tpl',noaudit:'tpa'};
   const sl=e=>{const s=status(e);if(s==='planned'){const p=plans.filter(x=>x.bsId===e.id&&x.date>=today()).sort((a,b)=>a.date.localeCompare(b.date))[0];return p?`KW ${dateToKW(p.date)}`:'Geplant';}if(s==='overdue')return`${Math.abs(dl(e))-dueOverDays(e)}T überfällig`;if(s==='due')return`${Math.abs(dl(e))}T über`;if(s==='soon')return`in ${dl(e)}T`;if(s==='new')return'Neu – kein Audit';if(s==='noaudit')return'🛡 Kein Audit (nicht im Lead)';if(dl(e)===-999)return'Kein Audit';if(s==='beratung')return'Beratung geplant';if(s==='paused')return'Pausiert';if(s==='inactive')return'Inaktiv';return`in ${dl(e)}T`;};
@@ -529,6 +530,7 @@ function renderList(){
           ${e.lastKW?`<span class="tag tgr">KW${e.lastKW}</span>`:''}
           ${e.auditor?`<span class="tag" style="background:${aC(e.auditor)}18;color:${aC(e.auditor)}">${e.auditor.split(' ').pop()}</span>`:''}
           ${e.note?'<span class="tag tgr">📝</span>':''}
+          ${listPersTag(e)}
         </div>
       </div></div>
     </div>`;
@@ -957,13 +959,31 @@ async function checkPlansAfterImport(kwReal,yr){
   const go=await askConfirm(`⚠ ${bad.length} geplante Baustelle(n) in KW ${kwReal} ohne Personal – bitte umplanen:\n\n${txt}`,{ok:'Im Kalender anzeigen',cancel:'Später'});
   if(go){setView('cal',[...document.querySelectorAll('#tabs .tab')].find(t=>t.getAttribute('onclick').includes("'cal'")));setCalView('week');weekOff=kwIdx(ks)-dateToKW(today());renderKW();}
 }
-function confirmResume(){
-  const e=data.find(x=>x.id===selId);if(!e)return;
+function resumeSite(e){
   e.paused=false;e.pauseReason=null;e.pauseUntil=null;e.resumeFrom=null;
   // Restore lastAudit from auditHistory if available
   const hist=(e.auditHistory||[]).sort((a,b)=>b.date.localeCompare(a.date));
   if(hist.length){e.lastAudit=hist[0].date;e.lastKW=hist[0].kw;e.auditor=hist[0].auditor;}
   log('Reaktiviert ▶',e.name,'#10B981','');
+}
+// Liste links: Personal laut letztem Import; pausierte mit Personal direkt reaktivieren
+function listPersLast(e){const h=e.personalHistory||[];return h.length?h[h.length-1]:(e.lastPersonalKW!=null&&e.lastPersonalCount!=null?{kw:e.lastPersonalKW,count:e.lastPersonalCount}:null);}
+function listPersN(e){const h=listPersLast(e);return h?+h.count:null;}
+function listPersTag(e){
+  const h=listPersLast(e);if(!h)return'';
+  const n=+h.count||0,old=(isoYear(today())-(h.year||isoYear(today())))*52+dateToKW(today())-h.kw>3;
+  const hot=e.paused&&e.active!==false&&n>0;
+  return`<span class="tag" title="Personal laut Einsatzliste KW ${h.kw}: ${n}" style="${hot?'background:#D1FAE5;color:#047857;font-weight:700':old?'background:var(--sf2);color:var(--tx3)':'background:#E0F2FE;color:#0369A1'}">👷 ${n}${hot?' – Personal da':''}</span>${hot?`<button type="button" onclick="event.stopPropagation();quickResume(${e.id})" title="Pausierung aufheben – Baustelle wird wieder auditiert" style="padding:1px 7px;border:none;border-radius:10px;background:#10B981;color:#fff;font-size:10px;font-weight:600;cursor:pointer">▶ Aktivieren</button>`:''}`;
+}
+function quickResume(id){
+  const e=data.find(x=>x.id===id);if(!e||!e.paused)return;
+  undoPoint('«'+e.name+'» reaktiviert',()=>{renderAll();});
+  resumeSite(e);saveNow();renderAll();if(selId===id)selEntry(id);
+  showToast('▶ Reaktiviert: '+e.name,2500);
+}
+function confirmResume(){
+  const e=data.find(x=>x.id===selId);if(!e)return;
+  resumeSite(e);
   document.getElementById('resume-form').style.display='none';
   saveNow();renderAll();selEntry(selId);
 }
