@@ -7565,20 +7565,18 @@ function selectAddr(label,lat,lng,prefix){
 }
 
 // ═══ OUTLOOK / ICS EXPORT ═══
+// Outlook-Export: pro Auditor und Tag ein Termin «Audit Di 20.10., 3 Baustellen» mit der Liste des ganzen Tages (keine Route)
 function makeICS(events){
   const lines=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Anliker Audit Planer//DE','CALSCALE:GREGORIAN','METHOD:PUBLISH'];
-  events.forEach(ev=>{
-    const fmtDT=dt=>{const d=parseDate(dt);const pad=n=>String(n).padStart(2,'0');return d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate());};
-    const startAddr=localStorage.getItem('audit_start')||'';
-    const mapsUrl=ev.addrs.length>0?'https://www.google.com/maps/dir/'+(startAddr?encodeURIComponent(startAddr)+'/':'')+ev.addrs.map(a=>encodeURIComponent(a)).join('/')+(startAddr?'/'+encodeURIComponent(startAddr):''):'';
-    const desc=ev.items.map((it,i)=>`${i+1}. ${it.name} – ${it.addr} (${it.dept})`).join('\n')+(mapsUrl?`\n\n📍 Google Maps Route:\n${mapsUrl}`:'');
+  const fmtDT=dt=>{const d=parseDate(dt);const pad=n=>String(n).padStart(2,'0');return d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate());};
+  events.forEach((ev,i)=>{
+    const desc=ev.items.map((it,k)=>`${k+1}. ${it.name}${it.addr?' – '+it.addr:''}${it.dept?' ('+it.dept+')':''}`).join('\n');
     lines.push('BEGIN:VEVENT');
     lines.push(`DTSTART:${fmtDT(ev.date)}T050000Z`);
     lines.push(`DTEND:${fmtDT(ev.date)}T150000Z`);
-    lines.push(`SUMMARY:${ev.title}`);
-    lines.push(`DESCRIPTION:${desc.replace(/\n/g,'\\n')}`);
-    lines.push(`LOCATION:${ev.items[0]?.addr||''}`);
-    lines.push(`UID:anliker-audit-${ev.date}-${Date.now()}@anliker.ch`);
+    lines.push(`SUMMARY:${icsEsc(ev.title)}`);
+    lines.push(`DESCRIPTION:${icsEsc(desc)}`);
+    lines.push(`UID:anliker-audit-${ev.date}-${i}-${Date.now()}@anliker.ch`);
     lines.push('END:VEVENT');
   });
   lines.push('END:VCALENDAR');
@@ -7648,71 +7646,48 @@ function doICSExport(){
   }
 }
 
+// Ganzer Tag pro Auditor: Baustellen-Audits, Beratungen, Personen-Audits, Rapporte (keine Route).
+// Titel: «Audit Di 20.10., 3 Baustellen» (Anzahl Baustellen-Audits; ohne Baustelle «N Termine»);
+// bei «Alle Auditoren» zusätzlich « – Nachname», sonst wären Termine am selben Tag gleich benannt.
+function icsSiteEvents(ds,audFilter){
+  const d=parseDate(ds),day=['So','Mo','Di','Mi','Do','Fr','Sa'][d.getDay()];
+  const dt=d.toLocaleDateString('de-CH',{day:'2-digit',month:'2-digit'});
+  const byAud={};
+  const add=(aud,it)=>{const a=aud||'Unbekannt';(byAud[a]=byAud[a]||{items:[],n:0}).items.push(it);return byAud[a];};
+  rapporte.filter(r=>r.planned&&r.date===ds).forEach(r=>(r.auditors||[]).filter(a=>!audFilter||a===audFilter).forEach(a=>add(a,{name:'📋 '+r.type+(r.time?' '+r.time+' Uhr':'')+(r.dept?' – '+r.dept:''),addr:r.addr||r.ort||'',dept:r.dept||''})));
+  plans.filter(p=>p.date===ds&&(!audFilter||p.auditor===audFilter)).forEach(p=>{
+    const e=data.find(x=>x.id===p.bsId);if(!e)return;
+    add(p.auditor,{name:(p.time?p.time+' ':'')+e.name,addr:e.addr||'',dept:e.dept||''}).n++;
+  });
+  beratPlan.filter(p=>p.date===ds&&(!audFilter||p.auditor===audFilter)).forEach(p=>{
+    const e=data.find(x=>x.id===p.bsId);if(!e)return;
+    add(p.auditor,{name:'💬 '+(p.time?p.time+' ':'')+e.name+(p.note?' ('+p.note+')':''),addr:e.addr||'',dept:e.dept||''});
+  });
+  personAudits.filter(p=>p.planned&&p.date===ds&&(!audFilter||p.auditor===audFilter)).forEach(p=>add(p.auditor,{name:'👤 '+p.person+(p.bs?' – '+p.bs:'')+(p.note?' ('+p.note+')':''),addr:p.addr||'',dept:p.kat||''}));
+  return Object.entries(byAud).filter(([,g])=>g.items.length).map(([aud,g])=>({date:ds,items:g.items,
+    title:`Audit ${day} ${dt}, ${g.n?g.n+' '+(g.n===1?'Baustelle':'Baustellen'):g.items.length+' '+(g.items.length===1?'Termin':'Termine')}${audFilter?'':' – '+aud.split(' ').pop()}`}));
+}
 function exportICSDay(audFilter,kw,pickedDate){
   const targetDate=pickedDate||today();
-  let dayPlans=plans.filter(p=>p.date===targetDate);
-  if(audFilter)dayPlans=dayPlans.filter(p=>p.auditor===audFilter);
-  let dayBeratPlans=beratPlan.filter(p=>p.date===targetDate);
-  if(audFilter)dayBeratPlans=dayBeratPlans.filter(p=>p.auditor===audFilter);
-  let dayPersonAudits=personAudits.filter(p=>p.planned&&p.date===targetDate);
-  if(audFilter)dayPersonAudits=dayPersonAudits.filter(p=>p.auditor===audFilter);
-  let dayRapp=rapporte.filter(r=>r.planned&&r.date===targetDate);
-  if(audFilter)dayRapp=dayRapp.filter(r=>(r.auditors||[]).includes(audFilter));
-  if(!dayPlans.length&&!dayBeratPlans.length&&!dayPersonAudits.length&&!dayRapp.length){showToast('Keine Planungen für diesen Tag');return;}
-  const items=dayPlans.map(p=>{const e=data.find(x=>x.id===p.bsId);return e?{name:e.name,addr:e.addr||'',dept:e.dept||'',auditor:p.auditor}:null;}).filter(Boolean);
-  const beratItems2=dayBeratPlans.map(p=>{const e=data.find(x=>x.id===p.bsId);return e?{name:'💬 '+e.name+(p.note?' ('+p.note+')':''),addr:e.addr||'',dept:e.dept||'',auditor:p.auditor}:null;}).filter(Boolean);
-  const personItems=dayPersonAudits.map(p=>({name:'👤 '+p.person+(p.bs?' – '+p.bs:'')+(p.note?' ('+p.note+')':''),addr:p.addr||'',dept:p.kat||'',auditor:p.auditor}));
-  const rappItems=dayRapp.map(r=>({name:'📋 '+r.type+(r.time?' '+r.time+' Uhr':'')+(r.dept?' – '+r.dept:''),addr:r.addr||r.ort||'',dept:r.dept||'',auditor:(r.auditors||[]).join(', ')}));
-  const allItems=[...rappItems,...items,...beratItems2,...personItems];
-  const audLabel=audFilter||allItems[0]?.auditor||'Auditor';
-  const addrs=allItems.map(i=>i.addr).filter(Boolean);
-  const d=parseDate(targetDate);
-  const event={date:targetDate,title:`Audit-Route ${d.toLocaleDateString('de-CH',{weekday:'short',day:'2-digit',month:'2-digit'})} – ${audLabel} (${allItems.length} Termine)`,items:allItems,addrs};
-  dlICS(makeICS([event]),`audit_route_${targetDate}.ics`);
-  showToast('📅 Tagesroute → Outlook',2500);
+  const events=icsSiteEvents(targetDate,audFilter);
+  if(!events.length){showToast('Keine Planungen für diesen Tag');return;}
+  dlICS(makeICS(events),`audit_${targetDate}.ics`);
+  showToast('📅 Audit-Tag → Outlook',2500);
 }
 
 function exportICSWeek(audFilter,kw){
   const curKW=kw||dateToKW(today())+weekOff;
   const ks=kwToDate(curKW);
-  const dayNames=['Mo','Di','Mi','Do','Fr'];
   const events=[];
   for(let di=0;di<5;di++){
     const d=parseDate(ks);d.setDate(d.getDate()+di);
-    const ds=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-    let dayPlans=plans.filter(p=>p.date===ds);
-    if(audFilter)dayPlans=dayPlans.filter(p=>p.auditor===audFilter);
-    let dayBerats=beratPlan.filter(p=>p.date===ds);
-    if(audFilter)dayBerats=dayBerats.filter(p=>p.auditor===audFilter);
-    let dayPA=personAudits.filter(p=>p.planned&&p.date===ds);
-    if(audFilter)dayPA=dayPA.filter(p=>p.auditor===audFilter);
-    let dayRp=rapporte.filter(r=>r.planned&&r.date===ds);
-    if(audFilter)dayRp=dayRp.filter(r=>(r.auditors||[]).includes(audFilter));
-    if(!dayPlans.length&&!dayBerats.length&&!dayPA.length&&!dayRp.length)continue;
-    const byAud={};
-    dayRp.forEach(r=>(r.auditors||[]).filter(a=>!audFilter||a===audFilter).forEach(aud=>{if(!byAud[aud])byAud[aud]=[];byAud[aud].push({...r,_type:'rapp'});}));
-    dayPlans.forEach(p=>{const aud=p.auditor||'Unbekannt';if(!byAud[aud])byAud[aud]=[];byAud[aud].push({...p,_type:'audit'});});
-    dayBerats.forEach(p=>{const aud=p.auditor||'Unbekannt';if(!byAud[aud])byAud[aud]=[];byAud[aud].push({...p,_type:'berat'});});
-    dayPA.forEach(p=>{const aud=p.auditor||'Unbekannt';if(!byAud[aud])byAud[aud]=[];byAud[aud].push({...p,_type:'person'});});
-    Object.entries(byAud).forEach(([aud,ps])=>{
-      const items=ps.map(p=>{
-        if(p._type==='rapp')return{name:'📋 '+p.type+(p.time?' '+p.time+' Uhr':'')+(p.dept?' – '+p.dept:''),addr:p.addr||p.ort||'',dept:p.dept||'',auditor:aud};
-        if(p._type==='person')return{name:'👤 '+p.person+(p.bs?' – '+p.bs:'')+(p.note?' ('+p.note+')':''),addr:p.addr||'',dept:p.kat||'',auditor:aud};
-        const e=data.find(x=>x.id===p.bsId);if(!e)return null;
-        const name=p._type==='berat'?'💬 '+e.name+(p.note?' ('+p.note+')':''):e.name;
-        return{name,addr:e.addr||'',dept:e.dept||'',auditor:aud};}).filter(Boolean);
-      if(!items.length)return;
-      const addrs=items.map(i=>i.addr).filter(Boolean);
-      events.push({date:ds,title:`Audit ${dayNames[di]} ${d.toLocaleDateString('de-CH',{day:'2-digit',month:'2-digit'})} – ${aud} (${items.length} Termine)`,items,addrs});
-    });
+    events.push(...icsSiteEvents(ferISO(d),audFilter));
   }
   if(!events.length){showToast('Keine Planungen in dieser Woche');return;}
   const audLabel=audFilter?`_${audFilter.split(' ').pop()}`:'';
   dlICS(makeICS(events),`audit_kw${curKW}${audLabel}.ics`);
   showToast(`📅 KW ${curKW} (${events.length} Termine) → Outlook`,2500);
 }
-
-
 
 // exportICSWeek with audFilter defined above
 
