@@ -7569,18 +7569,31 @@ function selectAddr(label,lat,lng,prefix){
 function makeICS(events){
   const lines=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Anliker Audit Planer//DE','CALSCALE:GREGORIAN','METHOD:PUBLISH'];
   const fmtDT=dt=>{const d=parseDate(dt);const pad=n=>String(n).padStart(2,'0');return d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate());};
+  const h=t=>String(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   events.forEach((ev,i)=>{
     const desc=ev.items.map((it,k)=>`${k+1}. ${it.name}${it.addr?' – '+it.addr:''}${it.dept?' ('+it.dept+')':''}`).join('\n');
+    // Outlook zeigt Zeilenumbrüche im Text oft nicht an -> zusätzlich HTML-Version (X-ALT-DESC) mit echter Aufzählung
+    const html='<html><body><ol style="margin:0;padding-left:20px">'+ev.items.map(it=>`<li>${h(it.name)}${it.addr?'<br><span style="color:#666">'+h(it.addr)+(it.dept?' · '+h(it.dept):'')+'</span>':(it.dept?'<br><span style="color:#666">'+h(it.dept)+'</span>':'')}</li>`).join('')+'</ol></body></html>';
     lines.push('BEGIN:VEVENT');
     lines.push(`DTSTART:${fmtDT(ev.date)}T050000Z`);
     lines.push(`DTEND:${fmtDT(ev.date)}T150000Z`);
     lines.push(`SUMMARY:${icsEsc(ev.title)}`);
     lines.push(`DESCRIPTION:${icsEsc(desc)}`);
+    lines.push(`X-ALT-DESC;FMTTYPE=text/html:${html.replace(/\r?\n/g,'')}`);
     lines.push(`UID:anliker-audit-${ev.date}-${i}-${Date.now()}@anliker.ch`);
     lines.push('END:VEVENT');
   });
   lines.push('END:VCALENDAR');
-  return lines.join('\r\n');
+  return lines.map(icsFold).join('\r\n');
+}
+// Zeilen über 75 Byte falten (RFC 5545): Fortsetzung mit Leerzeichen; nicht mitten in einem UTF-8-Zeichen trennen
+function icsFold(line){
+  const enc=new TextEncoder(),dec=new TextDecoder();
+  if(enc.encode(line).length<=75)return line;
+  const out=[];let cur='',len=0,max=75;
+  for(const ch of line){const l=enc.encode(ch).length;if(len+l>max){out.push(cur);cur='';len=0;max=74;}cur+=ch;len+=l;}
+  out.push(cur);
+  return out.join('\r\n ');
 }
 
 function dlICS(content,filename){
