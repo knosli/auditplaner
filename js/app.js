@@ -7565,7 +7565,7 @@ function selectAddr(label,lat,lng,prefix){
 }
 
 // ═══ OUTLOOK / ICS EXPORT ═══
-// Outlook-Export: pro Auditor und Tag ein Termin «Audit Di 20.10., 3 Baustellen» mit der Liste der Baustellen (keine Route, keine Rapporte)
+// Outlook-Export: pro Auditor und Tag ein Termin «Audit Di 20.10., 3 Baustellen» mit der Liste des ganzen Tages (keine Route)
 function makeICS(events){
   const lines=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Anliker Audit Planer//DE','CALSCALE:GREGORIAN','METHOD:PUBLISH'];
   const fmtDT=dt=>{const d=parseDate(dt);const pad=n=>String(n).padStart(2,'0');return d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate());};
@@ -7646,22 +7646,31 @@ function doICSExport(){
   }
 }
 
-// Titel: «Audit Di 20.10., 3 Baustellen» (bei «Alle Auditoren» zusätzlich « – Nachname», sonst wären Termine gleich benannt)
+// Ganzer Tag pro Auditor: Baustellen-Audits, Beratungen, Personen-Audits, Rapporte (keine Route).
+// Titel: «Audit Di 20.10., 3 Baustellen» (Anzahl Baustellen-Audits; ohne Baustelle «N Termine»);
+// bei «Alle Auditoren» zusätzlich « – Nachname», sonst wären Termine am selben Tag gleich benannt.
 function icsSiteEvents(ds,audFilter){
   const d=parseDate(ds),day=['So','Mo','Di','Mi','Do','Fr','Sa'][d.getDay()];
   const dt=d.toLocaleDateString('de-CH',{day:'2-digit',month:'2-digit'});
   const byAud={};
+  const add=(aud,it)=>{const a=aud||'Unbekannt';(byAud[a]=byAud[a]||{items:[],n:0}).items.push(it);return byAud[a];};
+  rapporte.filter(r=>r.planned&&r.date===ds).forEach(r=>(r.auditors||[]).filter(a=>!audFilter||a===audFilter).forEach(a=>add(a,{name:'📋 '+r.type+(r.time?' '+r.time+' Uhr':'')+(r.dept?' – '+r.dept:''),addr:r.addr||r.ort||'',dept:r.dept||''})));
   plans.filter(p=>p.date===ds&&(!audFilter||p.auditor===audFilter)).forEach(p=>{
     const e=data.find(x=>x.id===p.bsId);if(!e)return;
-    const a=p.auditor||'Unbekannt';(byAud[a]=byAud[a]||[]).push({name:e.name,addr:e.addr||'',dept:e.dept||''});
+    add(p.auditor,{name:(p.time?p.time+' ':'')+e.name,addr:e.addr||'',dept:e.dept||''}).n++;
   });
-  return Object.entries(byAud).map(([aud,items])=>({date:ds,items,
-    title:`Audit ${day} ${dt}, ${items.length} ${items.length===1?'Baustelle':'Baustellen'}${audFilter?'':' – '+aud.split(' ').pop()}`}));
+  beratPlan.filter(p=>p.date===ds&&(!audFilter||p.auditor===audFilter)).forEach(p=>{
+    const e=data.find(x=>x.id===p.bsId);if(!e)return;
+    add(p.auditor,{name:'💬 '+(p.time?p.time+' ':'')+e.name+(p.note?' ('+p.note+')':''),addr:e.addr||'',dept:e.dept||''});
+  });
+  personAudits.filter(p=>p.planned&&p.date===ds&&(!audFilter||p.auditor===audFilter)).forEach(p=>add(p.auditor,{name:'👤 '+p.person+(p.bs?' – '+p.bs:'')+(p.note?' ('+p.note+')':''),addr:p.addr||'',dept:p.kat||''}));
+  return Object.entries(byAud).filter(([,g])=>g.items.length).map(([aud,g])=>({date:ds,items:g.items,
+    title:`Audit ${day} ${dt}, ${g.n?g.n+' '+(g.n===1?'Baustelle':'Baustellen'):g.items.length+' '+(g.items.length===1?'Termin':'Termine')}${audFilter?'':' – '+aud.split(' ').pop()}`}));
 }
 function exportICSDay(audFilter,kw,pickedDate){
   const targetDate=pickedDate||today();
   const events=icsSiteEvents(targetDate,audFilter);
-  if(!events.length){showToast('Keine Baustellen-Audits für diesen Tag');return;}
+  if(!events.length){showToast('Keine Planungen für diesen Tag');return;}
   dlICS(makeICS(events),`audit_${targetDate}.ics`);
   showToast('📅 Audit-Tag → Outlook',2500);
 }
@@ -7674,7 +7683,7 @@ function exportICSWeek(audFilter,kw){
     const d=parseDate(ks);d.setDate(d.getDate()+di);
     events.push(...icsSiteEvents(ferISO(d),audFilter));
   }
-  if(!events.length){showToast('Keine Baustellen-Audits in dieser Woche');return;}
+  if(!events.length){showToast('Keine Planungen in dieser Woche');return;}
   const audLabel=audFilter?`_${audFilter.split(' ').pop()}`:'';
   dlICS(makeICS(events),`audit_kw${curKW}${audLabel}.ics`);
   showToast(`📅 KW ${curKW} (${events.length} Termine) → Outlook`,2500);

@@ -69,7 +69,7 @@ global; das HTML ruft sie direkt über `onclick="..."` auf.
   Detail-Panel-Knöpfe: Planen | Beratung (gross), Bearbeiten | Pausieren, Inaktiv | Löschen (kein «Auditiert»/«Notiz» mehr).
   Planen und Beratung = dasselbe Formular `#plan-form` (`showF('plan'|'berat')`, `_planKind`, `planKindUI`);
   Beratung immer Datum + Uhrzeit (`confirmPlanBerat`, `beratPlan[].time`, Tourguide-Fixzeit); Uhrzeit beim Audit → Datum nötig (`planTimeInput`)
-  Outlook-Export (KW-Planung): nur Baustellen-Audits, ein Termin pro Auditor und Tag «Audit Di 20.10., 3 Baustellen» (`icsSiteEvents`, `makeICS`), keine Route
+  Outlook-Export (KW-Planung): ganzer Tag (Audits, Beratungen, Personen-Audits, Rapporte), ein Termin pro Auditor und Tag «Audit Di 20.10., 3 Baustellen» (`icsSiteEvents`, `makeICS`), keine Route
   «Meine Tagesplanung» auf der Karte (`toggleDayPlanMode`): Audits, Beratungen und Personen-Audits (Pins `renderPAPins` via
   `updatePAPanelBadge`) des Tages; Admin wählt Auditor oder «alle» (`#dayplan-aud`, `dayPlanWho`/`dayPlanFillAud`;
   bei «alle» Marker in Auditor-Farbe mit Kürzel `dayPlanIcon`). Entfernt: Rechtsklick-Schnellaudit, Personen-Audit-Knopf auf der
