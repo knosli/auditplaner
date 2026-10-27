@@ -44,6 +44,12 @@ body.secondary-admin .secondary-admin-only{display:revert!important}
 #more-m{display:none;position:absolute;top:38px;right:0;background:var(--sf);border:1px solid var(--bd);border-radius:var(--r);padding:4px;z-index:9999;min-width:175px;box-shadow:var(--shl)}
 #more-m button{display:flex;align-items:center;gap:7px;width:100%;padding:7px 10px;background:none;border:none;color:var(--tx);cursor:pointer;border-radius:6px;font-size:12px;text-align:left}
 #more-m button:hover{background:var(--sf2)}
+#more-w .ek-hb{min-width:16px;padding:0 4px;margin-left:2px;border-radius:8px;background:#EF4444;color:#fff;font-size:10px;font-weight:700;line-height:16px;text-align:center}
+#more-m .mm-h{padding:8px 10px 3px;margin-top:4px;border-top:1px solid var(--bd);font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--tx3)}
+#more-m .mm-h:first-child{margin-top:0;border-top:none}
+#more-m .mm-lbl{display:flex;align-items:center;gap:7px;padding:7px 10px;cursor:pointer;font-size:12px;color:var(--tx);border-radius:6px}
+#more-m .mm-lbl:hover{background:var(--sf2)}
+#more-m{min-width:230px}
 /* TABS */
 #tabs{display:flex;background:var(--sf);border-bottom:1px solid var(--bd);flex-shrink:0;padding:0 14px;position:relative;z-index:10}
 .tab{padding:9px 14px;font-size:13px;font-weight:500;color:var(--tx2);cursor:pointer;border-bottom:2.5px solid transparent;margin-bottom:-1px;background:none;border-top:none;border-left:none;border-right:none;white-space:nowrap}

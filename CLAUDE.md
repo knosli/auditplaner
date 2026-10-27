@@ -11,8 +11,8 @@ Beratungen, Rapporten und Ferien der Auditoren. Sprache der Oberfläche: Deutsch
 - Vor jedem PR: App im Browser laden (Desktop- und Mobile-Breite) und in der Konsole
   prüfen, dass keine JavaScript-Fehler auftreten.
 - Bei jeder Änderung an der App die Versionsnummer erhöhen, und zwar überall in
-  `index.html`: im Header (`<span ... title="Version">v3.38</span>`) und in den Links
-  `css/style.css?v=3.38`, `js/merge.js?v=3.38` und `js/app.js?v=3.38`. Der `?v=`-Zusatz
+  `index.html`: im Header (`<span ... title="Version">v3.39</span>`) und in den Links
+  `css/style.css?v=3.39`, `js/merge.js?v=3.39` und `js/app.js?v=3.39`. Der `?v=`-Zusatz
   sorgt dafür, dass Browser nach einem Update keine alte Datei aus dem Cache verwenden.
 - Tests für die Zusammenführung: `node tests/merge.test.js` (muss grün sein).
 - Keine Browser-Dialoge (`confirm`, `prompt`, `alert`): `askConfirm()`, `askText()`,
@@ -145,6 +145,15 @@ global; das HTML ruft sie direkt über `onclick="..."` auf.
   folgt den Häkchen) `piRenderOverview`/`piOverviewRows`/`piPrevKW`, oben in `#pi-groups`
   «+ Neue Baustelle» aus Import/Sammelbox/Kundendienst: Personal wird beim Speichern übernommen
   (`piNewSitePending` → `window._newSitePersonal` → `piApplyNewSite` in `saveEntry`); `sbAssign` ebenfalls
+- Admin-Menü (`#more-m`) in Gruppen (Stammdaten, Einsatzlisten & Personal, Auswertung & Protokoll, System, Sicherung, Gefahrenzone).
+  Löschen/Ersetzen für alle (Alles zurücksetzen, Alle Personen, Ghost-Audits, Backup laden, Stand wiederherstellen) verlangt
+  das Anmelde-Passwort nochmals: `askAdminPw(was)` (prüft mit eigenem Supabase-Client, Sitzung bleibt)
+  Änderungsprotokoll: `mgDescribe` (js/merge.js) liefert pro Änderung Zeilen mit alt → neu und Eintragsnamen (`  + / ~ / −`);
+  Anzeige `openAuditLog` mit Filter (Person, Datum, Text)
+  Einsatzlisten-Kontrolle (`ekState`, `openEinsatzCheck`): pro Einheit (Quelle in `deptMeta._piWeeks`) Import ja/nein für KW-3…+1;
+  Badge am Admin-Knopf + Hinweis beim Start (`ekRemind`), wenn die aktuelle KW fehlt
+  Personen-Audit: `paInfoHTML(p,{edit,compact})` zeigt Name, Abteilung, Baustelle, Adresse, PSP, Notiz und Spezialität; fehlt die
+  Spezialität, direkt wählbar (`setPersonSpez`, `PERSON_SPEZ`) – Handy-Karten, KW-Planung, Popups, Liste
 - Nutzung & Arbeitsablauf (anonym, Admin → «Nutzung & Arbeitsablauf», `openUsage`): Klick-Zähler über `onclick`/`onchange`
   (`usageKeyOf`, Schlüssel = Funktionsname[:erstes Text-Argument]) + Arbeitsschritte `usageWF('plan:panel'|…, label, planDatum)`
   mit Wochentag/Stunde/Vorlauf; pro Gerät (`ap_usage_dev`) in `deptMeta._usage.dev`, gespeichert alle 5 min (`usageFlush`)
