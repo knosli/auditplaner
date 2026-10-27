@@ -202,10 +202,10 @@ function showToast(m,d=2500){const t=document.getElementById('toast');t.textCont
 // ═══ DIALOGE & RÜCKGÄNGIG ═══
 // Ersetzt die Browser-Fenster confirm()/prompt(). Rückgabe: true/false, beim Textfeld der Text
 // bzw. null, bei einem dritten Knopf (extra) den Wert 'extra'.
-function uiDialog({msg,input=false,def='',ok='OK',cancel='Abbrechen',extra=null,danger=false}){
+function uiDialog({msg,input=false,def='',ok='OK',cancel='Abbrechen',extra=null,danger=false,pw=false}){
   return new Promise(res=>{
     const bg=document.createElement('div');bg.className='ui-dlg-bg';
-    bg.innerHTML=`<div class="ui-dlg" role="dialog" aria-modal="true"><div class="ui-dlg-msg"></div>${input?'<input class="ui-dlg-inp" type="text">':''}<div class="ui-dlg-btns">${extra?'<button type="button" class="ui-btn" data-v="extra"></button>':''}<button type="button" class="ui-btn" data-v="cancel"></button><button type="button" class="ui-btn ui-btn-pri${danger?' ui-btn-danger':''}" data-v="ok"></button></div></div>`;
+    bg.innerHTML=`<div class="ui-dlg" role="dialog" aria-modal="true"><div class="ui-dlg-msg"></div>${input?`<input class="ui-dlg-inp" type="${pw?'password':'text'}"${pw?' autocomplete="current-password"':''}>`:''}<div class="ui-dlg-btns">${extra?'<button type="button" class="ui-btn" data-v="extra"></button>':''}<button type="button" class="ui-btn" data-v="cancel"></button><button type="button" class="ui-btn ui-btn-pri${danger?' ui-btn-danger':''}" data-v="ok"></button></div></div>`;
     bg.querySelector('.ui-dlg-msg').textContent=msg;
     bg.querySelector('[data-v=ok]').textContent=ok;
     bg.querySelector('[data-v=cancel]').textContent=cancel;
@@ -250,6 +250,26 @@ function uiForm({title,fields,ok='Speichern',validate,extra=null,danger=false}){
 }
 function askConfirm(msg,o={}){return uiDialog({msg,...o});}
 function askText(msg,def='',o={}){return uiDialog({msg,input:true,def,ok:'Speichern',...o});}
+// Passwort-Schutz für Aktionen, die Daten für ALLE löschen oder ersetzen: das eigene Anmelde-Passwort muss
+// nochmals eingegeben werden. Geprüft wird bei Supabase mit einem eigenen, nicht gespeicherten Client –
+// die laufende Sitzung bleibt unberührt. Rückgabe true = bestätigt. Max. 3 Versuche.
+async function askAdminPw(what){
+  const email=_authUser&&_authUser.email;
+  if(!email||!window.supabase){showToast('⚠ Passwort-Prüfung nicht möglich – bitte neu anmelden',4000);return false;}
+  const url=localStorage.getItem('sb_url')||SB_DEFAULT_URL,key=localStorage.getItem('sb_key')||SB_DEFAULT_KEY;
+  for(let i=0;i<3;i++){
+    const pw=await uiDialog({msg:`🔒 ${what}\n\nZur Sicherheit bitte dein Anmelde-Passwort eingeben (${email}):`+(i?`\n\n⚠ Passwort falsch (Versuch ${i+1} von 3)`:''),input:true,pw:true,ok:'Bestätigen',danger:true});
+    if(pw===null)return false;
+    if(!pw)continue;
+    try{
+      const c=window.supabase.createClient(url,key,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
+      const {error}=await c.auth.signInWithPassword({email,password:pw});
+      if(!error)return true;
+    }catch(e){showToast('⚠ Passwort-Prüfung fehlgeschlagen: '+e.message,4000);return false;}
+  }
+  showToast('✕ Passwort dreimal falsch – abgebrochen',3500);
+  return false;
+}
 // Rückgängig: vor einer Änderung aufrufen. Nach der Änderung erscheint unten ein Hinweis mit
 // «Rückgängig». Rückgängig nimmt nur die eigene Änderung zurück (Merge), Änderungen anderer
 // Benutzer, die inzwischen dazugekommen sind, bleiben erhalten.
@@ -278,7 +298,7 @@ function dlJSON(obj,fn){const b=new Blob([JSON.stringify(obj,null,2)],{type:'app
 function teamExport(){dlJSON({...sbCollect(),tlog,savedAt:new Date().toISOString(),type:'team',v:2},'anliker_backup_'+today()+'.json');showToast('📤 Sicherung heruntergeladen',3000);}
 
 
-function loadJSON(file,fromModal=false){if(!file)return;const r=new FileReader();r.onload=e=>{try{const p=JSON.parse(e.target.result);const vals={};for(const f in SB_FIELDS)if(p[f]!==undefined)vals[f]=p[f];if(!vals.data)throw new Error('Keine Baustellen in der Datei');if(p.tlog)tlog=p.tlog;sbApply(vals);const st=document.getElementById('json-st');if(st)st.textContent=`✓ ${data.length} Baustellen, ${plans.length} Planungen`;saveNow();sbRefreshUI();buildCalBS();if(fromModal)setTimeout(closeModal,1400);else showToast('✓ Sicherung geladen',2500);}catch(ex){showToast('⚠ Fehler: '+ex.message,4000);}};r.readAsText(file);}
+async function loadJSON(file,fromModal=false){if(!file)return;if(!await askAdminPw('Backup laden (ersetzt die Daten für alle Benutzer)'))return;const r=new FileReader();r.onload=e=>{try{const p=JSON.parse(e.target.result);const vals={};for(const f in SB_FIELDS)if(p[f]!==undefined)vals[f]=p[f];if(!vals.data)throw new Error('Keine Baustellen in der Datei');if(p.tlog)tlog=p.tlog;sbApply(vals);const st=document.getElementById('json-st');if(st)st.textContent=`✓ ${data.length} Baustellen, ${plans.length} Planungen`;saveNow();sbRefreshUI();buildCalBS();if(fromModal)setTimeout(closeModal,1400);else showToast('✓ Sicherung geladen',2500);}catch(ex){showToast('⚠ Fehler: '+ex.message,4000);}};r.readAsText(file);}
 
 
 
@@ -1635,15 +1655,49 @@ function renderSelectedPersons(){
   box.style.display='block';
   document.getElementById('pa-sel-chips').innerHTML=_selectedPersons.map((p,i)=>`<span style="display:inline-flex;align-items:center;gap:6px;padding:4px 6px 4px 10px;background:var(--sf);border:1px solid ${i===0?'var(--blue)':'var(--bd)'};border-radius:14px;font-size:12px"><b>${escH(p.nachname)} ${escH(p.vorname||'')}</b><span style="color:var(--tx3);font-size:10px">${escH(String(p.pnr))}</span><button onclick="unselectPerson(${p.id})" title="Entfernen" style="border:none;background:none;cursor:pointer;color:#EF4444;font-size:12px;line-height:1">✕</button></span>`).join('');
   const n=_selectedPersons.length,f=_selectedPersons[0];
-  document.getElementById('pa-sel-info').textContent=n>1
+  const spezBox=_selectedPersons.map(x=>x.spez
+    ?`<span style="display:inline-block;margin:0 6px 2px 0;padding:1px 7px;border-radius:9px;background:#EDE9FE;color:#6D28D9;font-weight:600">🎓 ${n>1?escH(x.nachname||'')+': ':''}${escH(x.spez)}</span>`
+    :`<select onchange="setPersonSpez(${x.id},this.value)" style="margin:0 6px 2px 0;padding:3px 6px;border:1px dashed var(--bd);border-radius:6px;background:var(--sf);color:var(--tx2);font-size:11px"><option value="">🎓 ${n>1?escH(x.nachname||'')+': ':''}Spezialität wählen…</option>${PERSON_SPEZ.map(z=>`<option>${z}</option>`).join('')}</select>`).join('');
+  document.getElementById('pa-sel-info').innerHTML=escH(n>1
     ?`${n} Personen in einem Audit – zählt als 1 Audit, in der Jahresmatrix erhalten alle den Eintrag. Die erstgenannte Person (${f.nachname}) bestimmt die Abteilung: ${f.abt||'–'}`
-    :[f.abt,f.firma,f.ort].filter(Boolean).join(' · ');
+    :[f.abt,f.firma,f.ort].filter(Boolean).join(' · '))+`<div style="margin-top:6px">${spezBox}</div>`;
 }
 // ═══ PERSONEN-REGISTER: Auswahllisten (Abteilung / Arbeitsort / Firma) ═══
 // Listen liegen in deptMeta._personLists (synchronisiert). Werte, die im Register vorkommen, werden
 // automatisch ergänzt (Gross-/Kleinschreibung wird als gleich behandelt) - so geht beim Umstellen nichts verloren.
 const PL_KINDS={abt:{l:'Abteilung'},ort:{l:'Arbeitsort'},firma:{l:'Firma'}};
 function paPnrs(a){return(a.pnrs&&a.pnrs.length?a.pnrs:[a.pnr]).filter(x=>x!==undefined&&x!==null&&x!=='').map(String);}
+// ═══ PERSONEN-AUDIT: alle Angaben anzeigen (Karten, Pins, Listen) ═══
+// Name, Abteilung, Baustelle + Adresse, PSP, Notiz und Spezialität der Person(en). Hat eine Person noch keine
+// Spezialität, lässt sie sich direkt hier wählen (edit:true) – gespeichert wird sie im Personen-Register.
+const PERSON_SPEZ=['Bodenbeläge','Brandschutz','Asbest'];
+function paPersonsOf(a){return paPnrs(a).map(n=>persons.find(x=>String(x.pnr)===n)).filter(Boolean);}
+function setPersonSpez(id,val){
+  const x=persons.find(p=>p.id===id);if(!x)return;
+  x.spez=val;saveNow();
+  showToast(val?`🎓 ${x.nachname||''}: ${val}`:'Spezialität entfernt',1800);
+  try{renderPA2();renderSelectedPersons();if(curView==='pa'){renderPersonRegister();renderPersonMatrix();}
+    if(document.getElementById('mobile-view')?.style.display!=='none')renderMobPlan();}catch(e){console.warn(e);}
+}
+function paSpezHTML(a,edit){
+  const ps=paPersonsOf(a),multi=ps.length>1;
+  return ps.map(x=>{
+    const nm=multi?escH(x.nachname||'')+': ':'';
+    if(x.spez)return`<span style="display:inline-block;margin:0 6px 2px 0;padding:1px 7px;border-radius:9px;background:#EDE9FE;color:#6D28D9;font-weight:600">🎓 ${nm}${escH(x.spez)}</span>`;
+    if(!edit)return'';
+    return`<select onclick="event.stopPropagation()" onchange="setPersonSpez(${x.id},this.value)" style="margin:0 6px 2px 0;max-width:100%;padding:3px 6px;border:1px dashed var(--bd);border-radius:6px;background:var(--sf2);color:var(--tx2);font-size:11px"><option value="">🎓 ${nm}Spezialität wählen…</option>${PERSON_SPEZ.map(z=>`<option>${z}</option>`).join('')}</select>`;
+  }).join('');
+}
+function paInfoHTML(p,o={}){
+  const fs=o.compact?10:12;
+  const L=(ic,t)=>t?`<div style="font-size:${fs}px;color:var(--tx2);margin-top:${o.compact?1:3}px;line-height:1.35">${ic} ${t}</div>`:'';
+  return L('🏢',escH(p.kat||p.firma||''))
+    +L('🏗️',p.bs?escH(p.bs):'')
+    +L('📍',escH(p.addr||''))
+    +L('🔖',p.psp?'PSP '+escH(p.psp):'')
+    +L('📝',p.note?`<span style="font-style:italic">${escH(p.note)}</span>`:'')
+    +(()=>{const h=paSpezHTML(p,o.edit);return h?`<div style="font-size:${fs}px;margin-top:${o.compact?2:5}px">${h}</div>`:'';})();
+}
 function personLists(){
   deptMeta._personLists=deptMeta._personLists||{};
   const pl=deptMeta._personLists;
@@ -1984,22 +2038,24 @@ function renderPA2(){
   }
   const el=document.getElementById('pa-list2');if(!el)return;
   if(!personAudits.length){el.innerHTML='<div style="font-size:11px;color:var(--tx3);padding:6px">Noch keine Personen-Audits erfasst.</div>';return;}
-  el.innerHTML=`<table class="dtbl" style="margin-top:6px">
-    <thead><tr><th>Datum</th><th>Person</th><th>Pers.Nr</th><th>Abteilung</th><th>Baustelle</th><th>PSP</th><th>Auditor</th><th>Notiz</th><th></th></tr></thead>
+  el.innerHTML=`<div style="overflow-x:auto"><table class="dtbl" style="margin-top:6px">
+    <thead><tr><th>Datum</th><th>Person</th><th>Pers.Nr</th><th>Abteilung</th><th>Spezialität</th><th>Baustelle</th><th>Adresse</th><th>PSP</th><th>Auditor</th><th>Notiz</th><th></th></tr></thead>
     <tbody>${personAudits.map(p=>{const col=aC(p.auditor),ini=p.auditor.split(' ').map(w=>w[0]).join('');
       return`<tr>
         <td style="white-space:nowrap">${fd(p.date)}</td>
         <td style="font-weight:600">${p.person||'—'}</td>
         <td style="font-family:monospace;font-size:11px;color:var(--tx2)">${paPnrs(p).join(', ')||'—'}</td>
         <td>${p.kat||p.firma||'—'}</td>
+        <td style="font-size:11px">${paSpezHTML(p,true)||'—'}</td>
         <td>${p.bs||'—'}</td>
+        <td style="font-size:11px;color:var(--tx2)">${escH(p.addr||'—')}</td>
         <td style="color:var(--tx2);font-size:10px">${p.psp||'—'}</td>
         <td><span style="display:inline-flex;align-items:center;gap:5px"><span style="width:18px;height:18px;border-radius:50%;background:${col};display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff">${ini}</span>${p.auditor}</span></td>
         <td style="color:var(--tx2);font-style:italic">${p.note||''}</td>
         <td><button onclick="rmPA(${p.id})" style="background:none;border:none;cursor:pointer;color:var(--red);font-size:13px"><i class="ti ti-trash"></i></button></td>
       </tr>`;}).join('')}
     </tbody>
-  </table>`;
+  </table></div>`;
 }
 function renderPA(){
   const el=document.getElementById('pa-list');if(!el)return;
@@ -2705,8 +2761,8 @@ function renderWeekView(kw){
       ${(()=>{const bp=beratPlan.filter(p=>p.date===ds&&(!audFilter||p.auditor===audFilter));return bp.map(p=>{const e=data.find(x=>x.id===p.bsId);const audCol=aC(p.auditor||'');return`<div class="kwe" style="border-left:3px solid #8B5CF6"><div class="kwe-top" onclick="openBeratPlanPop(${p.id})" style="cursor:pointer"><div class="kwen">💬 ${planTimeTag(p)}${e?pspPre(e.psp)+e.name:'⚠ Baustelle gelöscht'}</div>${kwMetaLine(e,kw,'0 0 1px',p.date)}<span class="kwea" style="background:${audCol}">${(p.auditor||'?').split(' ').pop()}</span></div>${p.note?`<div style="font-size:10px;color:#7C3AED;padding:2px 6px 3px">${p.note}</div>`:''}<div class="kwe-move" style="display:flex;gap:2px;padding:2px 6px 3px;border-top:1px solid var(--bd)"><button onclick="moveBeratPlan(${p.id},'${kwToDate(kw-1)}',4)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">←</button>${days.map((day,dj)=>`<button onclick="moveBeratPlan(${p.id},'${kwToDate(kw)}',${dj})" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:${dj===di?'var(--blue)':'var(--sf2)'};color:${dj===di?'#fff':'var(--tx2)'};font-size:9px;cursor:pointer;line-height:1.4">${day}</button>`).join('')}<button onclick="moveBeratPlan(${p.id},'${kwToDate(kw+1)}',0)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">→</button></div></div>`;}).join('');})()}
       ${(()=>{const done=data.flatMap(e=>(e.beratungen||[]).filter(b=>b.date===ds).map(b=>({...b,eName:e.name,ePsp:e.psp,eId:e.id})));return done.map(b=>{const bAudCol=aC(b.auditor||'');return`<div class="kwe" style="background:#F5F3FF;border-left:3px solid #8B5CF6;cursor:pointer" onclick="openBeratDoneUndo(${b.eId},${b.id})"><div class="kwe-top"><div class="kwen" style="color:#7C3AED">✓ 💬 ${pspPre(b.ePsp)}${b.eName}</div>${kwMetaLine(data.find(x=>x.id===b.eId),kw,'0 0 1px')}<span class="kwea" style="background:${bAudCol}">${(b.auditor||'?').split(' ').pop()}</span></div>${b.note?`<div style="font-size:10px;color:#7C3AED;padding:2px 6px 3px">${b.note}</div>`:''}</div>`;}).join('');})()}
       ${dayAudits.map(h=>{const e=data.find(x=>x.id===h.eId);return`<div class="kwe" style="background:#F0FDF4;border-left:3px solid #10B981;cursor:pointer" onclick="openAuditUndo(${h.eId},'${h.date}')"><div class="kwe-top"><div class="kwen" style="color:#065F46">✓ ${e&&e.type==='werkhof'?'🏠 ':''}${pspPre(h.ePsp)}${h.eName}</div>${kwMetaLine(e,kw,'0 0 1px')}<span class="kwea" style="background:${aC(h.auditor||'')}">${(h.auditor||'?').split(' ').pop()}</span></div></div>`;}).join('')}
-      ${(()=>{const paP=personAudits.filter(p=>p.planned&&p.date===ds&&(!audFilter||p.auditor===audFilter));return paP.map(p=>{const col=p.auditor?aC(p.auditor):'#9CA3AF';return`<div class="kwe"><div class="kwe-top" onclick="openPersonAuditPop(${p.id})" style="cursor:pointer"><div class="kwen">👤 ${p.person}${p.bs?' · '+p.bs:''}</div><span class="kwea" style="background:${col}">${p.auditor?p.auditor.split(' ').pop():'? Zuteilen'}</span></div><div class="kwe-move" style="display:flex;gap:2px;padding:2px 6px 3px;border-top:1px solid var(--bd)"><button onclick="movePersonAudit(${p.id},'${kwToDate(kw-1)}',4)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">←</button>${days.map((day,dj)=>`<button onclick="movePersonAudit(${p.id},'${kwToDate(kw)}',${dj})" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:${dj===di?'var(--blue)':'var(--sf2)'};color:${dj===di?'#fff':'var(--tx2)'};font-size:9px;cursor:pointer;line-height:1.4">${day}</button>`).join('')}<button onclick="movePersonAudit(${p.id},'${kwToDate(kw+1)}',0)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">→</button></div></div>`;}).join('');})()}
-      ${(()=>{const paDone=personAudits.filter(p=>!p.planned&&p.date===ds&&(!audFilter||p.auditor===audFilter));return paDone.map(p=>{const audCol=aC(p.auditor||'');return`<div class="kwe" style="background:#FFFBEB;border-left:3px solid #F59E0B;cursor:pointer" onclick="openPersonAuditDoneUndo(${p.id})"><div class="kwe-top"><div class="kwen" style="color:#B45309">✓ 👤 ${p.person}${p.bs?' · '+p.bs:''}</div><span class="kwea" style="background:${audCol}">${(p.auditor||'?').split(' ').pop()}</span></div></div>`;}).join('');})()}
+      ${(()=>{const paP=personAudits.filter(p=>p.planned&&p.date===ds&&(!audFilter||p.auditor===audFilter));return paP.map(p=>{const col=p.auditor?aC(p.auditor):'#9CA3AF';return`<div class="kwe"><div class="kwe-top" onclick="openPersonAuditPop(${p.id})" style="cursor:pointer"><div class="kwen">👤 ${p.person}${p.bs?' · '+p.bs:''}</div><span class="kwea" style="background:${col}">${p.auditor?p.auditor.split(' ').pop():'? Zuteilen'}</span></div><div style="padding:0 6px 3px">${paInfoHTML(p,{compact:true})}</div><div class="kwe-move" style="display:flex;gap:2px;padding:2px 6px 3px;border-top:1px solid var(--bd)"><button onclick="movePersonAudit(${p.id},'${kwToDate(kw-1)}',4)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">←</button>${days.map((day,dj)=>`<button onclick="movePersonAudit(${p.id},'${kwToDate(kw)}',${dj})" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:${dj===di?'var(--blue)':'var(--sf2)'};color:${dj===di?'#fff':'var(--tx2)'};font-size:9px;cursor:pointer;line-height:1.4">${day}</button>`).join('')}<button onclick="movePersonAudit(${p.id},'${kwToDate(kw+1)}',0)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4">→</button></div></div>`;}).join('');})()}
+      ${(()=>{const paDone=personAudits.filter(p=>!p.planned&&p.date===ds&&(!audFilter||p.auditor===audFilter));return paDone.map(p=>{const audCol=aC(p.auditor||'');return`<div class="kwe" style="background:#FFFBEB;border-left:3px solid #F59E0B;cursor:pointer" onclick="openPersonAuditDoneUndo(${p.id})"><div class="kwe-top"><div class="kwen" style="color:#B45309">✓ 👤 ${p.person}${p.bs?' · '+p.bs:''}</div><span class="kwea" style="background:${audCol}">${(p.auditor||'?').split(' ').pop()}</span></div><div style="padding:0 6px 3px">${paInfoHTML(p,{compact:true})}</div></div>`;}).join('');})()}
       ${dayP.length?dayP.map(p=>{const e=data.find(x=>x.id===p.bsId);const col=p.auditor&&p.auditor!=='Unbekannt'?aC(p.auditor):'#9CA3AF';const isSel=multiAuditMode&&planned.has(p.bsId);return`<div class="kwe" style="${isSel?'background:#EFF6FF;border-left:3px solid var(--blue)':''}"><div class="kwe-top" onclick="${multiAuditMode?`toggleKWAuditSel(${p.bsId})`:`openCalPop(${p._i})`}" style="cursor:pointer"><div class="kwen">${isSel?'☑ ':''}${planTimeTag(p)}${e?((e.type==='werkhof'?'🏠 ':'')+pspPre(e.psp)+e.name):'⚠ Baustelle gelöscht'}</div>${kwMetaLine(e,kw,'0 0 1px',p.date)}<span class="kwea" style="background:${col}">${p.auditor==='Unbekannt'||!p.auditor?'? Zuteilen':p.auditor.split(' ').pop()}</span></div>${!multiAuditMode?`<div class="kwe-move" style="display:flex;gap:2px;padding:2px 6px 3px;border-top:1px solid var(--bd)"><button onclick="movePlan(${p._i},'${kwToDate(kw-1)}',4)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4" title="Vorwoche Fr">←</button>${days.map((day,dj)=>`<button onclick="movePlan(${p._i},'${kwToDate(kw)}',${dj})" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:${dj===di?'var(--blue)':'var(--sf2)'};color:${dj===di?'#fff':'var(--tx2)'};font-size:9px;cursor:pointer;line-height:1.4">${day}</button>`).join('')}<button onclick="movePlan(${p._i},'${kwToDate(kw+1)}',0)" style="padding:1px 4px;border-radius:3px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:9px;cursor:pointer;line-height:1.4" title="Nächste Woche Mo">→</button></div>`:''}
 </div>`;}).join(''):`<div class="kwemp">Frei</div>`}
     </td>`;
@@ -2784,7 +2840,7 @@ function renderPAPins(list){
       </div>`,
       iconSize:[26,34],iconAnchor:[13,34],popupAnchor:[0,-30]
     });
-    L.marker([p.lat,p.lng],{icon}).bindPopup(`<b>👤 ${p.person}</b><br>${p.addr||p.bs||''}<br><span style="color:${col}">${p.auditor||''}</span>`).addTo(_paPinsLayer);
+    L.marker([p.lat,p.lng],{icon}).bindPopup(`<b>👤 ${escH(p.person)}</b>${paInfoHTML(p,{compact:true})}<div style="margin-top:3px;color:${col}">${escH(p.auditor||'')}</div>`).addTo(_paPinsLayer);
   });
   _paPinsLayer.addTo(map);
 }
@@ -2901,6 +2957,7 @@ function openPersonAuditPop(id){
     audSel.innerHTML='<option value="">— Auditor wählen —</option>'+auditors.map(a=>`<option value="${a}"${a===p.auditor?' selected':''}>${a}</option>`).join('');
   }
   document.getElementById('pop-ai').innerHTML=`
+    <div style="margin-bottom:8px;padding:6px 8px;background:var(--sf2);border-radius:6px">${paInfoHTML(p,{edit:true})}</div>
     <label style="font-size:11px;color:var(--tx2);display:block;margin-bottom:3px">Datum Audit:</label>
     <input type="date" id="pop-date" value="${p.date}" style="width:100%;padding:6px 8px;border:1px solid var(--bd);border-radius:6px;background:var(--sf2);color:var(--tx);font-size:12px;margin-bottom:8px">
     <div style="position:relative">
@@ -2987,7 +3044,7 @@ function toggleMore(ev){
   const m=document.getElementById('more-m');
   const badge=document.getElementById('sb-count-badge');
   if(badge){const n=(window._piCollectBox||[]).length;badge.textContent=n?`(${n})`:'';}
-  updateTempWorkersBadge();updateInactBadge();
+  updateTempWorkersBadge();updateInactBadge();ekRefreshBadge();
   if(getComputedStyle(m).display!=='none'){m.style.display='none';return;}   // CSS-Start = versteckt (style.display ist dann leer)
   // Move menu to body to escape any overflow/z-index stacking context
   if(m.parentElement!==document.body)document.body.appendChild(m);
@@ -3665,7 +3722,7 @@ function renderMobMapMarkers(){
     });
     L.marker([p.lat,p.lng],{icon}).addTo(_mobMap).bindPopup(`<div style="min-width:180px">
       <div style="font-weight:700;font-size:13px;margin-bottom:3px">👤 ${p.person}</div>
-      <div style="font-size:11px;color:#6B7280;margin-bottom:10px">${p.addr||p.bs||''}</div>
+      <div style="margin-bottom:10px;color:#374151">${paInfoHTML(p,{compact:true})}</div>
       <button onclick="_mobMap.closePopup();setMobTab('plan');mobConfirmPersonAudit(${p.id})" style="padding:7px;background:#10B981;color:#fff;border:none;border-radius:7px;cursor:pointer;font-size:12px;font-weight:600;width:100%">✓ Auditiert</button>
     </div>`);
   });
@@ -3766,8 +3823,7 @@ function renderMobPlan(){
         <span style="font-size:11px;color:var(--tx3)">${p.kat||''}</span>
       </div>
       <div style="font-size:16px;font-weight:700;color:var(--tx);margin-bottom:4px;line-height:1.3">${p.person}</div>
-      <div style="font-size:12px;color:var(--tx2);margin-bottom:${(p.bs||p.note)?'4px':'10px'}">${p.addr||p.bs||''}</div>
-      ${p.note?`<div style="font-size:12px;color:${col};margin-bottom:10px">📝 ${p.note}</div>`:''}
+      <div style="margin-bottom:10px">${paInfoHTML(p,{edit:true})}</div>
       <div style="display:flex;gap:8px">
         <button onclick="mobConfirmPersonAudit(${p.id})" style="flex:1;padding:9px;background:#10B981;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600">✓ Auditiert</button>
         ${p.addr?`<button onclick="mobOpenMaps('${p.addr.replace(/'/g,"\'")}','${p.person.replace(/'/g,"\'")}');" style="padding:9px 14px;background:var(--sf2);border:1px solid var(--bd);border-radius:8px;cursor:pointer;font-size:13px">🗺️</button>`:''}
@@ -3848,7 +3904,7 @@ function renderMobPlan(){
         <span style="font-size:10px;color:var(--tx3)">${p.auditor||''}</span>
       </div>
       <div style="font-size:15px;font-weight:700;color:var(--tx);margin-bottom:4px">${p.person}</div>
-      <div style="font-size:12px;color:var(--tx2)">${p.addr||p.bs||''}${p.note?' · '+p.note:''}</div>
+      ${paInfoHTML(p,{edit:true})}
     </div>`;
   });
     el.innerHTML=html;
@@ -4434,6 +4490,7 @@ async function onAuthSuccess(user){
     await sbInit();
     renderAll();
     renderMarkers();
+    ekRemind();
   },500);
   showToast('👤 Angemeldet als '+matched,2500);
 }
@@ -6397,6 +6454,51 @@ function renderPersonalWeeks(){
     <tr><td><b>Total</b></td><td style="text-align:right"><b>${piNum(sel.total)}</b></td><td style="text-align:right"><b>${piNum(sel.own)}</b></td><td style="text-align:right"><b>${sel.full&&sel.tempN?sel.tempN:'–'}</b></td><td style="text-align:right"><b>${sel.kd?piNum(sel.kd):'–'}</b></td><td style="text-align:right"><b>${sel.n||'–'}</b></td></tr></table></div>
     <p style="font-size:11px;color:var(--tx3)">«Einsatzlisten» = Summe der Personenzahlen aller Einträge (Baustellen, Kundendienst, Werkhöfe, unbekannte). «Temporäre» = Anzahl Personal-Nummern auf der separaten Liste der Temporären – sie sind in den Einsatzlisten nicht enthalten und werden fürs Total dazugezählt (einer Baustelle zuordnen lassen sie sich nicht; eine Person auf zwei Einheiten zählt im Total einmal). Bruchzahlen kommen von Teilzeit-/Teilwochen-Angaben auf den Listen. Wurde eine Einheit in einer KW nicht importiert, fehlt sie in dieser Woche.</p>`;
 }
+// ═══ EINSATZLISTEN-KONTROLLE ═══
+// Welche Einheit (Quelle der Einsatzliste) wurde für welche KW importiert? Erwartet wird jede Einheit, die in den
+// letzten EK_LOOKBACK Wochen mindestens einmal importiert wurde. Fehlt sie in der aktuellen KW → Erinnerung
+// (Badge am Admin-Knopf, Hinweis beim Start, Liste unter Admin → Einsatzlisten-Kontrolle).
+const EK_LOOKBACK=8;
+function ekWeek(offset){
+  const d=parseDate(today());d.setDate(d.getDate()-((d.getDay()||7)-1)+offset*7);
+  const ds=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  const year=isoYear(ds),kw=dateToKW(ds);
+  return{kw,year,wk:piKdWeek(kw,year)};
+}
+function ekState(){
+  const weeks=[-3,-2,-1,0,1].map(ekWeek),cur=weeks[3];
+  const byWk=new Map(piWeeksList().map(w=>[piKdWeek(w.kw,w.year),w]));
+  const exp=new Set();
+  byWk.forEach((w,wk)=>{if(wk>cur.wk-EK_LOOKBACK&&wk<=cur.wk+1)Object.keys(w.u||{}).forEach(q=>{if(q!=='?')exp.add(q);});});
+  const rows=[...exp].sort((a,b)=>a.localeCompare(b)).map(q=>({q,dept:piQuelleDept(q),cells:weeks.map(w=>{const r=byWk.get(w.wk);return!!(r&&r.u&&q in r.u);})}));
+  return{weeks,rows,missing:rows.filter(r=>!r.cells[3]),cur};
+}
+function ekRefreshBadge(){
+  const n=document.body.classList.contains('admin-mode')?ekState().missing.length:0;
+  const b=document.getElementById('ek-badge');if(b)b.textContent=n?`(${n} fehlen)`:'';
+  const h=document.getElementById('ek-hbadge');if(h){h.textContent=n?String(n):'';h.style.display=n?'inline-block':'none';h.title=n?n+' Einsatzliste(n) für diese KW fehlen':'';}
+}
+// Einmal pro Tag beim Start: Hinweis, wenn Einsatzlisten der aktuellen KW fehlen
+function ekRemind(){
+  ekRefreshBadge();
+  if(!document.body.classList.contains('admin-mode'))return;
+  const st=ekState();if(!st.missing.length)return;
+  try{if(localStorage.getItem('ap_ek_day')===today())return;localStorage.setItem('ap_ek_day',today());}catch(e){}
+  showToast(`📋 KW ${st.cur.kw}: Einsatzliste fehlt für ${st.missing.slice(0,4).map(r=>r.q).join(', ')}${st.missing.length>4?' +'+(st.missing.length-4):''} – Admin → Einsatzlisten-Kontrolle`,9000);
+}
+function openEinsatzCheck(){admModal('📋 Einsatzlisten-Kontrolle','<div id="ek-body"></div>',true);renderEinsatzCheck();}
+function renderEinsatzCheck(){
+  const el=document.getElementById('ek-body');if(!el)return;
+  const st=ekState();
+  if(!st.rows.length){el.innerHTML='<p>Noch keine Importe vorhanden – die Kontrolle füllt sich mit dem nächsten Personal-Import.</p><p><button type="button" class="ui-btn ui-btn-pri" onclick="document.getElementById(\'adm-bg\').remove();openPersonalImport()">Zum Personal-Import</button></p>';return;}
+  const th=st.weeks.map((w,i)=>`<th style="text-align:center;${i===3?'background:var(--sf2)':''}">KW ${w.kw}${w.year!==curIsoYear()?'<br><span style="font-weight:400;font-size:10px">'+w.year+'</span>':''}${i===3?'<br><span style="font-weight:400;font-size:10px">aktuell</span>':i===4?'<br><span style="font-weight:400;font-size:10px">nächste</span>':''}</th>`).join('');
+  const cell=(ok,i)=>ok?'<td style="text-align:center;color:#10B981;font-weight:700">✓</td>':`<td style="text-align:center;${i===3?'color:#DC2626;font-weight:700;background:#FEE2E2':'color:var(--tx3)'}">${i===4?'offen':'✕'}</td>`;
+  el.innerHTML=`<p>${st.missing.length?`<b style="color:#DC2626">⚠ ${st.missing.length} von ${st.rows.length} Einheiten ohne Einsatzliste für KW ${st.cur.kw}:</b> ${st.missing.map(r=>escH(r.q)).join(', ')}`:`<b style="color:#10B981">✓ Alle ${st.rows.length} Einheiten haben eine Einsatzliste für KW ${st.cur.kw}.</b>`}</p>
+    <div style="overflow-x:auto"><table class="adm-tbl"><tr><th>Einheit (Liste)</th><th>Abteilung</th>${th}</tr>
+    ${st.rows.map(r=>`<tr><td><b>${escH(r.q)}</b></td><td>${escH(r.dept||'–')}</td>${r.cells.map((c,i)=>cell(c,i)).join('')}</tr>`).join('')}</table></div>
+    <p style="font-size:11px;color:var(--tx3)">Erwartet wird jede Einheit, die in den letzten ${EK_LOOKBACK} Wochen importiert wurde. Pflicht ist die aktuelle KW; die nächste Woche ist nur zur Info. Importe: Admin → Personal-Import.</p>
+    <p><button type="button" class="ui-btn ui-btn-pri" onclick="document.getElementById('adm-bg').remove();openPersonalImport()">Zum Personal-Import</button></p>`;
+}
 // Bestehende Baustelle ist eigentlich Kundendienst: Regel anlegen, Personalverlauf in die erkannten
 // Kundendienst-Einträge übernehmen, Baustelle (inkl. offener Planungen) löschen – mit «Rückgängig».
 async function siteToKundendienst(id){
@@ -6738,6 +6840,7 @@ function confirmPersonalImport(){
 async function clearGhostAudits(){
   const count=(window._ghostAudits||[]).length;
   if(!await askConfirm(`${count} Ghost-Audits (IB/ASP Zählungen) löschen?`,{ok:'Löschen',danger:true}))return;
+  if(!await askAdminPw('Ghost-Audits löschen'))return;
   undoPoint(`${count} Ghost-Audits gelöscht`);
   window._ghostAudits=[];
   saveNow();
@@ -6745,6 +6848,7 @@ async function clearGhostAudits(){
 }
 async function clearAllPersons(){
   if(!await askConfirm('Alle '+persons.length+' Personen löschen? Personen-Audits bleiben erhalten.',{ok:'Alle löschen',danger:true}))return;
+  if(!await askAdminPw('Alle Personen löschen'))return;
   undoPoint('Alle Personen gelöscht',()=>renderPersonRegister());
   persons=[];
   localStorage.setItem('anliker_persons',JSON.stringify(persons));
@@ -6757,6 +6861,7 @@ function openReset(){
 }
 
 async function confirmReset(){
+  if(!await askAdminPw('Alles zurücksetzen (alle Baustellen, Planungen und Audits für alle Benutzer)'))return;
   document.getElementById('reset-bg').style.display='none';
   // Vor dem Löschen automatisch eine Sicherung herunterladen
   teamExport();
@@ -6933,7 +7038,7 @@ function sbHasPending(){
   return false;
 }
 function sbRefreshUI(){
-  renderAll();buildDF();buildAudSels();
+  renderAll();buildDF();buildAudSels();ekRefreshBadge();
   if(curView==='aud'){renderAuditors();renderAudTotals();}
   if(curView==='pa'){renderPersonRegister();renderPersonMatrix();}
   const fp=document.getElementById('aud-panel-ferien');
@@ -7070,7 +7175,7 @@ function sbNotifyRemote(changes,who,selBefore){
 // Änderungsprotokoll (für Admins sichtbar, Tabelle audit_log)
 async function sbWriteLog(lines){
   if(sbLogMissing||!lines||!lines.length)return;
-  const summary=lines.slice(0,15).join('\n')+(lines.length>15?`\n… und ${lines.length-15} weitere`:'');
+  const summary=lines.slice(0,40).join('\n')+(lines.length>40?`\n… und ${lines.length-40} weitere`:'');
   const r=await sbFetch('audit_log',{method:'POST',body:JSON.stringify({user_name:currentUser||'',summary}),headers:{'Prefer':'return=minimal'}});
   if(r===null)sbLogMissing=true;
 }
@@ -7207,15 +7312,30 @@ async function openAdminGuide(){
 
 async function openAuditLog(){
   const body=admModal('Änderungsprotokoll','<p>Lade…</p>',true);
-  const rows=await sbFetch('audit_log?select=ts,user_name,user_email,summary&order=ts.desc&limit=500');
+  const rows=await sbFetch('audit_log?select=ts,user_name,user_email,summary&order=ts.desc&limit=1000');
   if(!Array.isArray(rows)){body.innerHTML='<p class="adm-note">Das Protokoll ist noch nicht verfügbar. Bitte zuerst die einmalige Einrichtung ausführen (Admin → Anleitung & SQL).</p>';return;}
-  body.innerHTML=`<p>Wer hat wann was geändert (letzte 500 Einträge).</p><input id="adm-log-q" class="ui-dlg-inp" placeholder="Suchen (Name, Baustelle …)" oninput="admRenderLog()"><div id="adm-log-list"></div>`;
-  window._admLog=rows;admRenderLog();
+  window._admLog=rows;
+  const who=[...new Set(rows.map(r=>r.user_name||r.user_email||'?'))].sort((a,b)=>a.localeCompare(b));
+  body.innerHTML=`<p>Wer hat wann was geändert (letzte ${rows.length} Einträge). Jede Zeile unter einem Eintrag ist eine einzelne Änderung: <b>+</b> neu, <b>~</b> geändert (alt → neu), <b>−</b> entfernt.</p>
+    <div class="adm-fields" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">
+      <select id="adm-log-who" class="ui-dlg-inp" style="margin:0" onchange="admRenderLog()"><option value="">Alle Personen</option>${who.map(w=>`<option>${escH(w)}</option>`).join('')}</select>
+      <input id="adm-log-from" type="date" class="ui-dlg-inp" style="margin:0" title="Von" onchange="admRenderLog()">
+      <input id="adm-log-to" type="date" class="ui-dlg-inp" style="margin:0" title="Bis" onchange="admRenderLog()">
+      <input id="adm-log-q" class="ui-dlg-inp" style="margin:0" placeholder="Suchen (Baustelle, Person …)" oninput="admRenderLog()">
+    </div><div id="adm-log-list"></div>`;
+  admRenderLog();
 }
 function admRenderLog(){
   const q=(document.getElementById('adm-log-q')?.value||'').toLowerCase();
-  const rows=(window._admLog||[]).filter(r=>!q||(r.user_name+' '+r.user_email+' '+r.summary).toLowerCase().includes(q));
-  document.getElementById('adm-log-list').innerHTML=rows.length?`<table class="adm-tbl"><tr><th>Zeit</th><th>Wer</th><th>Was</th></tr>${rows.map(r=>`<tr><td style="white-space:nowrap">${escH(new Date(r.ts).toLocaleString('de-CH'))}</td><td>${escH(r.user_name||r.user_email||'?')}</td><td class="sum">${escH(r.summary)}</td></tr>`).join('')}</table>`:'<p>Keine Einträge.</p>';
+  const w=document.getElementById('adm-log-who')?.value||'';
+  const from=document.getElementById('adm-log-from')?.value||'',to=document.getElementById('adm-log-to')?.value||'';
+  const day=r=>{const d=new Date(r.ts);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
+  const rows=(window._admLog||[]).filter(r=>(!w||(r.user_name||r.user_email||'?')===w)&&(!from||day(r)>=from)&&(!to||day(r)<=to)&&(!q||((r.user_name||'')+' '+(r.user_email||'')+' '+r.summary).toLowerCase().includes(q)));
+  const cell=r=>{
+    const ls=String(r.summary||'').split('\n');
+    return ls.map(l=>{const sub=/^\s/.test(l);return`<div style="${sub?'padding-left:14px;color:var(--tx2);font-size:12px':'font-weight:600;margin-top:3px'}">${escH(l.trim())}</div>`;}).join('');
+  };
+  document.getElementById('adm-log-list').innerHTML=rows.length?`<div style="overflow-x:auto"><table class="adm-tbl"><tr><th>Zeit</th><th>Wer</th><th>Was</th></tr>${rows.map(r=>`<tr><td style="white-space:nowrap;vertical-align:top">${escH(new Date(r.ts).toLocaleString('de-CH'))}</td><td style="vertical-align:top"><b>${escH(r.user_name||'?')}</b>${r.user_email?`<br><span style="font-size:11px;color:var(--tx3)">${escH(r.user_email)}</span>`:''}</td><td class="sum">${cell(r)}</td></tr>`).join('')}</table></div>`:'<p>Keine Einträge.</p>';
 }
 
 async function openHistory(){
@@ -7244,6 +7364,7 @@ async function admShowSnapshot(hid){
 async function admRestoreSnapshot(){
   const s=window._admSnap;if(!s)return;
   if(!await askConfirm(`Stand vom ${new Date(s.at).toLocaleString('de-CH')} wiederherstellen?\n\nAlle Änderungen seither werden für alle Benutzer zurückgenommen. Vorher wird automatisch eine Sicherung des aktuellen Stands heruntergeladen.`,{ok:'Wiederherstellen',danger:true}))return;
+  if(!await askAdminPw('Alten Stand wiederherstellen'))return;
   teamExport();
   undoPoint('Stand vom '+new Date(s.at).toLocaleString('de-CH')+' wiederhergestellt');
   sbApply(s.vals);saveNow();sbRefreshUI();

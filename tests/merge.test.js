@@ -115,6 +115,19 @@ t('Beschreibung der Änderungen',()=>{
   assert.ok(d.includes('Planungen: 1 neu/geändert'));
 });
 
+t('Protokoll nennt Einzelheiten (wer/was/wann)',()=>{
+  const b={data:[bs(1,{note:'alt',addr:'A 1'})],plans:[],personAudits:[],auditorMeta:{Anna:{soll:10}},deptMeta:{customDepts:['X'],deptMeta:{_usage:{a:1}}}};
+  const a={data:[bs(1,{note:'neu',addr:'A 1'})],plans:[{id:5,bsId:1,date:'2026-11-02',auditor:'Anna'}],personAudits:[{id:7,person:'Muster Hans',bs:'Neubau',date:'2026-11-03',auditor:'Ben'}],
+    auditorMeta:{Anna:{soll:12}},deptMeta:{customDepts:['X','Y'],deptMeta:{_usage:{a:2}}}};
+  const d=mgDescribe(b,a);
+  assert.ok(d.includes('Baustelle «BS1» geändert: Notiz: «alt» → «neu»'));
+  assert.ok(d.includes('  + Audit-Planung «BS1» am 2026-11-02 (Anna)'));
+  assert.ok(d.includes('  + Personen-Audit «Muster Hans» / Neubau am 2026-11-03 (Ben)'));
+  assert.ok(d.includes('  ~ Anna: soll: «10» → «12»'));
+  assert.ok(d.includes('  ~ Abteilung «Y» neu'));
+  assert.ok(!d.some(l=>l.includes('Nutzung')));
+});
+
 t('Schutz vor eingeschleustem Code',()=>{
   const bad={data:[{id:1,name:'<img src=x onerror=alert(1)>',note:`" onmouseover="x`,addr:"');alert(1);('",psp:'&#39;x&lt;'}],
     auditorColors:{'<b>X</b>':'#fff'}};

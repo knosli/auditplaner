@@ -33,7 +33,7 @@ if('serviceWorker' in navigator){
 <link rel="stylesheet" href="vendor/markercluster/MarkerCluster.css?v=1.5.3">
 <link rel="stylesheet" href="vendor/markercluster/MarkerCluster.Default.css?v=1.5.3">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
-<link rel="stylesheet" href="css/style.css?v=3.38">
+<link rel="stylesheet" href="css/style.css?v=3.39">
 </head>
 <body>
 <div id="app" style="display:none">
@@ -61,37 +61,40 @@ if('serviceWorker' in navigator){
   <div id="presence-bar" style="display:flex;align-items:center;gap:4px;margin-left:4px"></div>
   <button onclick="toggleDark()" class="hb" title="Dark Mode" style="font-size:14px">🌙</button>
   <button onclick="openGuide()" class="hb" title="Anleitung" style="font-size:14px">❓</button>
-  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v3.38</span>
+  <span style="font-size:10px;color:rgba(255,255,255,.3);margin:0 4px;user-select:none" title="Version">v3.39</span>
   <button onclick="doLogout()" class="hb" title="Abmelden" style="font-size:14px" id="logout-btn">⏻</button>
   <button onclick="toggleMobileView()" id="mobile-btn" class="hb" title="Mobile Ansicht" style="font-size:14px">📱</button>
   <div id="more-w" class="admin-only">
-    <button class="hb" onclick="toggleMore(event)"><i class="ti ti-dots-vertical"></i> Admin</button>
+    <button class="hb" onclick="toggleMore(event)"><i class="ti ti-dots-vertical"></i> Admin <span id="ek-hbadge" class="ek-hb" style="display:none"></span></button>
     <div id="more-m">
-      <button onclick="doExport();toggleMore()"><i class="ti ti-file-spreadsheet"></i> Excel Export</button>
-      <div style="height:1px;background:var(--bd);margin:4px 0"></div>
+      <div class="mm-h">Stammdaten</div>
       <button onclick="openAudAdmin();toggleMore()"><i class="ti ti-users"></i> Auditoren verwalten</button>
       <button onclick="openDeptManager();toggleMore()"><i class="ti ti-building"></i> Abteilungen verwalten</button>
       <button onclick="openRapportTypes();toggleMore()"><i class="ti ti-clipboard-list"></i> Rapport-Arten verwalten</button>
       <button onclick="openPersonLists();toggleMore()"><i class="ti ti-address-book"></i> Personen-Listen verwalten</button>
-      <button onclick="openSettings();toggleMore()"><i class="ti ti-settings"></i> Einstellungen & Regeln</button>
+      <div class="mm-h">Einsatzlisten & Personal</div>
+      <button onclick="openEinsatzCheck();toggleMore()"><i class="ti ti-checklist"></i> Einsatzlisten-Kontrolle <span id="ek-badge"></span></button>
       <button onclick="openPersonalImport();toggleMore()"><i class="ti ti-user-pause"></i> Personal-Import (Pausieren)</button>
-      <button onclick="openPiIgnore();toggleMore()"><i class="ti ti-tool"></i> Kundendienst-Liste</button>
+      <button onclick="openPersonalBulk();toggleMore()"><i class="ti ti-user-edit"></i> Personal manuell erfassen</button>
       <button onclick="openPersonalWeeks();toggleMore()"><i class="ti ti-users"></i> Personal-Übersicht</button>
-      <button onclick="openInactList();toggleMore()"><i class="ti ti-square-off"></i> Inaktiv gesetzt (Audit-App) <span id="inact-badge"></span></button>
       <button onclick="openSammelbox();toggleMore()"><i class="ti ti-inbox"></i> Sammelbox <span id="sb-count-badge"></span></button>
       <button onclick="openTempWorkers();toggleMore()"><i class="ti ti-user-question"></i> Temporäre Mitarbeitende <span id="tw-count-badge"></span></button>
-      <button onclick="openPersonalBulk();toggleMore()"><i class="ti ti-user-edit"></i> Personal manuell erfassen</button>
-      <div style="height:1px;background:var(--bd);margin:4px 0"></div>
-      <button onclick="openUsage();toggleMore()"><i class="ti ti-chart-bar"></i> Nutzung & Arbeitsablauf</button>
-      <button onclick="openHistory();toggleMore()"><i class="ti ti-history"></i> Verlauf & Wiederherstellen</button>
+      <button onclick="openPiIgnore();toggleMore()"><i class="ti ti-tool"></i> Kundendienst-Liste</button>
+      <button onclick="openInactList();toggleMore()"><i class="ti ti-square-off"></i> Inaktiv gesetzt (Audit-App) <span id="inact-badge"></span></button>
+      <div class="mm-h">Auswertung & Protokoll</div>
       <button onclick="openAuditLog();toggleMore()"><i class="ti ti-list-details"></i> Änderungsprotokoll</button>
-      <button onclick="openAdminGuide();toggleMore()"><i class="ti ti-help"></i> Anleitung & SQL</button>
-      <div style="height:1px;background:var(--bd);margin:4px 0"></div>
-      <button onclick="teamExport();toggleMore()"><i class="ti ti-device-floppy"></i> Notfall-Backup</button>
-      <label style="display:flex;align-items:center;gap:6px;padding:7px 12px;cursor:pointer;font-size:12px;color:var(--tx);border-bottom:1px solid var(--bd)"><i class="ti ti-upload"></i> Backup laden<input type="file" accept=".json" onchange="loadJSON(this.files[0])" style="display:none"></label>
+      <button onclick="openHistory();toggleMore()"><i class="ti ti-history"></i> Verlauf & Wiederherstellen</button>
+      <button onclick="openUsage();toggleMore()"><i class="ti ti-chart-bar"></i> Nutzung & Arbeitsablauf</button>
+      <button onclick="doExport();toggleMore()"><i class="ti ti-file-spreadsheet"></i> Excel Export</button>
+      <div class="mm-h">System</div>
+      <button onclick="openSettings();toggleMore()"><i class="ti ti-settings"></i> Einstellungen & Regeln</button>
       <button onclick="setOrsKey();toggleMore()"><i class="ti ti-route"></i> Routen-Schlüssel (Fahrzeit)</button>
       <button onclick="openSupabaseConfig();toggleMore()" id="sb-btn"><i class="ti ti-cloud"></i> <span id="sb-status-lbl">Supabase einrichten</span></button>
-      <div style="height:1px;background:var(--bd);margin:4px 0"></div>
+      <button onclick="openAdminGuide();toggleMore()"><i class="ti ti-help"></i> Anleitung & SQL</button>
+      <div class="mm-h">Sicherung</div>
+      <button onclick="teamExport();toggleMore()"><i class="ti ti-device-floppy"></i> Notfall-Backup herunterladen</button>
+      <label class="mm-lbl" title="Ersetzt alle Daten – Passwort nötig"><i class="ti ti-upload"></i> Backup laden 🔒<input type="file" accept=".json" onchange="loadJSON(this.files[0]);this.value='';toggleMore()" style="display:none"></label>
+      <div class="mm-h" style="color:#EF4444">Gefahrenzone 🔒 (Passwort nötig)</div>
       <button onclick="clearGhostAudits();toggleMore()" style="color:#EF4444"><i class="ti ti-ghost"></i> Ghost-Audits löschen</button>
       <button onclick="clearAllPersons();toggleMore()" style="color:#EF4444"><i class="ti ti-users-minus"></i> Alle Personen löschen</button>
       <button onclick="openReset();toggleMore()" style="color:#EF4444"><i class="ti ti-trash"></i> Alles zurücksetzen</button>
@@ -985,8 +988,8 @@ if('serviceWorker' in navigator){
 <script src="vendor/leaflet/leaflet.js?v=1.9.4"></script>
 <script src="vendor/markercluster/leaflet.markercluster.js?v=1.5.3"></script>
 <script src="vendor/xlsx/xlsx.full.min.js?v=0.18.5"></script>
-<script src="js/merge.js?v=3.38"></script>
-<script src="js/app.js?v=3.38"></script>
+<script src="js/merge.js?v=3.39"></script>
+<script src="js/app.js?v=3.39"></script>
 <!-- ONBOARDING GUIDE MODAL -->
 <div id="guide-bg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:5000;align-items:center;justify-content:center">
   <div style="background:var(--sf);border-radius:16px;width:560px;max-width:95vw;max-height:90vh;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.4);display:flex;flex-direction:column">

@@ -92,6 +92,73 @@ const MG_LABELS={plans:'Planungen',auditors:'Auditoren',ferien:'Ferien',ghostAud
   auditorColors:'Auditor-Farben',piCollectBox:'Sammelbox',auditTarget:'Audit-Ziel',tempWorkers:'Temporäre Mitarbeitende',
   ferienWunsch:'Wunschferien',orsKey:'Routen-Schlüssel',deptMeta:'Abteilungen',rapporte:'Rapporte'};
 
+// Felder, die beim Vergleich einer Baustelle nicht einzeln aufgeführt werden (automatisch nachgeführt)
+const MG_SKIP={lat:1,lng:1,auditHistory:1,personalHistory:1,lastPersonalKW:1,lastPersonalCount:1,lastKW:1,createdAt:1,plannedKW:1,pausedAt:1,beratungen:1};
+const MG_FIELD_LABELS={name:'Name',addr:'Adresse',psp:'PSP',prv:'PRV',bc:'BC',sap:'SAP',dept:'Abteilung',rhythm:'Rhythmus',type:'Art',
+  lastAudit:'Letztes Audit',note:'Notiz',paused:'Pausiert',pauseReason:'Pausegrund',pauseUntil:'Pausiert bis',active:'Aktiv',auditor:'Auditor',
+  zeitbedarf:'Zeitbedarf',fixVisit:'Fester Besuchstermin',noAudit:'Kein Audit',linkGroup:'Verknüpfung',date:'Datum',time:'Uhrzeit',von:'von',bis:'bis',
+  person:'Person',bs:'Baustelle',kat:'Abteilung',firma:'Firma',planned:'Geplant',vorname:'Vorname',nachname:'Nachname',abt:'Abteilung',ort:'Ort',
+  spez:'Spezialität',pnr:'Personalnummer',type_:'Art',count:'Anzahl'};
+function mgVal(v){
+  if(v===undefined||v===null||v==='')return '–';
+  if(v===true)return 'ja';if(v===false)return 'nein';
+  if(typeof v==='object')return '(geändert)';
+  const s=String(v);return '«'+(s.length>40?s.slice(0,38)+'…':s)+'»';
+}
+// Geänderte Felder zweier Datensätze: «Feld: alt → neu», höchstens max Stück
+function mgFieldDiff(o,x,max){
+  const out=[];
+  for(const k of new Set([...Object.keys(o),...Object.keys(x)])){
+    if(MG_SKIP[k]||k==='id'||mgEq(o[k],x[k]))continue;
+    out.push((MG_FIELD_LABELS[k]||k)+': '+mgVal(o[k])+' → '+mgVal(x[k]));
+  }
+  return out.length>max?[...out.slice(0,max),'+'+(out.length-max)+' weitere']:out;
+}
+// Lesbarer Name eines Eintrags je Liste (Baustellenname bei Planungen usw.)
+function mgItemName(f,x,sites){
+  if(!mgIsObj(x))return '«'+String(x)+'»';
+  const site=id=>{const s=(sites||[]).find(e=>String(e.id)===String(id));return s?s.name:'(gelöschte Baustelle)';};
+  const dt=x.date?' am '+x.date:'';
+  const who=x.auditor?' ('+x.auditor+')':'';
+  switch(f){
+    case 'plans':return 'Audit-Planung «'+site(x.bsId)+'»'+dt+who;
+    case 'beratPlan':return 'Beratung «'+site(x.bsId)+'»'+dt+who;
+    case 'personAudits':return 'Personen-Audit «'+(x.person||'?')+'»'+(x.bs?' / '+x.bs:'')+dt+who;
+    case 'ferien':case 'ferienWunsch':return (f==='ferien'?'Ferien ':'Wunschferien ')+(x.auditor||'?')+(x.von?' '+x.von+' bis '+x.bis:'');
+    case 'rapporte':return 'Rapport «'+(x.type||'?')+'»'+dt;
+    case 'persons':return 'Person «'+((x.nachname||'')+' '+(x.vorname||'')).trim()+'»';
+    default:return '«'+(x.name||x.title||x.person||x.id)+'»';
+  }
+}
+
+// Schlüssel in deptMeta, die einen lesbaren Namen haben (der Rest sind Abteilungsnamen)
+const MG_DEPTMETA_LABELS={_usage:'',_piWeeks:'Personal-Übersicht',_piIgnore:'Kundendienst-Liste',_piKdSeen:'Erkannte Kundendienst-Einträge',
+  _personLists:'Personen-Listen',_quelleMap:'Zuordnung der Einsatzlisten'};
+// Änderungen in Objekt-Feldern (Auditor-Angaben, Farben, Abteilungen): ein Text pro geändertem Schlüssel.
+// Die Nutzungsstatistik wird absichtlich nicht protokolliert (ändert sich alle paar Minuten).
+function mgObjDiff(f,x,y){
+  const out=[];
+  if(f==='deptMeta'){
+    const cx=new Set(x.customDepts||[]),cy=new Set(y.customDepts||[]);
+    cy.forEach(d=>{if(!cx.has(d))out.push('Abteilung «'+d+'» neu');});
+    cx.forEach(d=>{if(!cy.has(d))out.push('Abteilung «'+d+'» entfernt');});
+    const mx=x.deptMeta||{},my=y.deptMeta||{};
+    for(const k of new Set([...Object.keys(mx),...Object.keys(my)])){
+      if(mgEq(mx[k],my[k]))continue;
+      const lbl=k in MG_DEPTMETA_LABELS?MG_DEPTMETA_LABELS[k]:'Abteilung «'+k+'»';
+      if(lbl==='')continue;
+      out.push(lbl+' geändert');
+    }
+    return out;
+  }
+  for(const k of new Set([...Object.keys(x),...Object.keys(y)])){
+    if(mgEq(x[k],y[k]))continue;
+    if(mgIsObj(x[k])&&mgIsObj(y[k])){const d=mgFieldDiff(x[k],y[k],4);out.push(k+(d.length?': '+d.join('; '):' geändert'));}
+    else out.push(k+(k in x?(k in y?': '+mgVal(x[k])+' → '+mgVal(y[k]):' entfernt'):' neu'));
+  }
+  return out;
+}
+
 function mgDescribe(before,after){
   const lines=[];
   if(!before||!after)return lines;
@@ -101,16 +168,22 @@ function mgDescribe(before,after){
     const nm=x=>'«'+(x.name||x.psp||'?')+'»';
     for(const [id,x] of A){
       const o=B.get(id);
-      if(!o){lines.push('Baustelle '+nm(x)+' erfasst');continue;}
+      if(!o){lines.push('Baustelle '+nm(x)+' erfasst'+(x.dept?' ('+x.dept+')':''));continue;}
       if(mgEq(o,x))continue;
-      if(o.lastAudit!==x.lastAudit&&x.lastAudit)lines.push('Audit erfasst: '+nm(x)+' ('+x.lastAudit+')');
-      else if(!o.paused&&x.paused)lines.push('Baustelle '+nm(x)+' pausiert');
+      const det=mgFieldDiff(o,x,5).filter(t=>!/^Letztes Audit:/.test(t));
+      const tail=det.length?': '+det.join('; '):'';
+      if(o.lastAudit!==x.lastAudit&&x.lastAudit){
+        const h=(x.auditHistory||[]).filter(v=>v.date===x.lastAudit).pop();
+        lines.push('Audit erfasst: '+nm(x)+' ('+x.lastAudit+')'+(h&&h.auditor?' von '+h.auditor:''));
+      }
+      else if(!o.paused&&x.paused)lines.push('Baustelle '+nm(x)+' pausiert'+(x.pauseReason?' ('+x.pauseReason+')':''));
       else if(o.paused&&!x.paused)lines.push('Baustelle '+nm(x)+' reaktiviert');
       else if(o.active!==false&&x.active===false)lines.push('Baustelle '+nm(x)+' deaktiviert');
-      else lines.push('Baustelle '+nm(x)+' geändert');
+      else lines.push('Baustelle '+nm(x)+' geändert'+tail);
     }
     for(const [id,x] of B)if(!A.has(id))lines.push('Baustelle '+nm(x)+' gelöscht');
   }
+  const sites=a.length?a:b;
   for(const f of Object.keys(MG_LABELS)){
     const x=before[f],y=after[f];
     if(x===undefined||y===undefined||mgEq(x,y))continue;
@@ -121,6 +194,23 @@ function mgDescribe(before,after){
       if(add&&del&&add===del)parts.push(add+' geändert');
       else{if(add)parts.push(add+' neu/geändert');if(del)parts.push(del+' entfernt');}
       lines.push(MG_LABELS[f]+': '+(parts.join(', ')||'geändert'));
+      // Einzelheiten: welcher Eintrag, was genau
+      if(mgHasIds(x)&&mgHasIds(y)){
+        const X=new Map(x.map(v=>[String(v.id),v])),Y=new Map(y.map(v=>[String(v.id),v]));
+        for(const [id,v] of Y){
+          const o=X.get(id);
+          if(!o)lines.push('  + '+mgItemName(f,v,sites));
+          else if(!mgEq(o,v)){const d=mgFieldDiff(o,v,4);lines.push('  ~ '+mgItemName(f,v,sites)+(d.length?': '+d.join('; '):''));}
+        }
+        for(const [id,v] of X)if(!Y.has(id))lines.push('  − '+mgItemName(f,v,sites));
+      }else{
+        cy.forEach(v=>{if(!cx.has(v))lines.push('  + '+mgItemName(f,JSON.parse(v),sites));});
+        cx.forEach(v=>{if(!cy.has(v))lines.push('  − '+mgItemName(f,JSON.parse(v),sites));});
+      }
+    }else if(mgIsObj(x)&&mgIsObj(y)){
+      const det=mgObjDiff(f,x,y);
+      if(det.length)lines.push(MG_LABELS[f]+' geändert');
+      det.forEach(t=>lines.push('  ~ '+t));
     }else lines.push(MG_LABELS[f]+' geändert');
   }
   return lines;
