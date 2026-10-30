@@ -5737,7 +5737,7 @@ function piMissingHTML(){
       <div style="font-size:12px;font-weight:700;color:#DC2626;margin-bottom:4px">🔍 Nicht auf der Einsatzliste – pausieren? (${b.missing.length})</div>
       <div style="font-size:11px;color:var(--tx3);margin-bottom:6px">Aktive Baustellen der geprüften Abteilungen, die auf keiner importierten Liste stehen. Angehakt = wird pausiert (taucht die Baustelle später wieder mit Personal auf einer Liste auf, schlägt der Import die Reaktivierung vor). Neu erfasste, noch nie auditierte Baustellen sind nicht vorausgewählt.</div>
       ${b.missing.map((it,i)=>{const e=it.match.entry;return`<label style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--sf2);border-radius:8px;margin-bottom:4px;font-size:12px;color:var(--tx)">
-        <input type="checkbox" data-key="missing" data-idx="${i}" ${it.isNew?'':'checked'}>
+        <input type="checkbox" data-key="missing" data-idx="${i}" ${(()=>{const t=(_piPending.ticks||{})['missing:'+e.id];return t!==undefined?t:!it.isNew;})()?'checked':''}>
         <span style="flex:1;min-width:0">${bsLabel(e)}${it.isNew?' <span style="font-size:10px;color:#0284C7">(neu, noch nie auditiert)</span>':''}</span>
       </label>`;}).join('')}
     </div>`;
@@ -5993,37 +5993,7 @@ async function runPersonalImport(file){
       return{...main,count:list.reduce((s,x)=>s+(+x.count||0),0),sources:list};
     });
     const impQ=new Set(raw.map(r=>r.quelle||'?')),tYr=+payload.year||new Date().getFullYear();
-    merged.forEach(item=>{
-      const r=item,m=item.match;
-      const e=m.entry;
-      // andere Listen derselben KW (früherer Import) dazuzählen; fehlt die andere Liste noch -> warten statt pausieren
-      item.ownCount=item.count;item.otherSrc=piOtherSrc(e,targetKW,tYr,impQ);
-      item.count+=Object.values(item.otherSrc).reduce((a,b)=>a+b,0);
-      item.waitOther=Object.keys(item.otherSrc).length?[]:piWaitOther(e,targetKW,tYr,impQ);
-      // Werkhöfe dürfen NIE durch den Personal-Import pausiert/reaktiviert werden - komplett
-      // überspringen, taucht in keinem Eimer auf (auch nicht als "ausgeschlossen"), hat schlicht
-      // nichts mit dieser Prüfung zu tun.
-      if(e.type==='werkhof')return;
-      // Dauerhaft von der Personal-Import-Prüfung ausgeschlossen (z.B. Baustellen in Gefängnissen
-      // o.ä., die nie auditiert werden) - wird nie mehr in einen Entscheidungs-Eimer gesteckt,
-      // egal wie viele Personen laut Liste dort eingeteilt sind.
-      if(e.excludeFromPersonalReview||e.noAudit){buckets.excluded.push(item);return;}
-      if(m.wasInactive){
-        // Inaktive Baustelle taucht auf einer Einsatzliste auf -> eigene Kategorie, nie
-        // automatisch reaktiviert. Nur bei mehr als 1 Person schlagen wir Reaktivierung vor.
-        if(r.count>=S('pi_react_inactive_min'))buckets.reactivateInactive.push(item);
-        else buckets.inactiveInfo.push(item);
-        return;
-      }
-      if(item.waitOther.length&&r.count<=S('pi_review_max')&&!e.paused){buckets.noop.push(item);return;}
-      if(r.count===0){
-        if(!e.paused)buckets.pause.push(item);else buckets.noop.push(item);
-      }else if(r.count<=S('pi_review_max')){
-        buckets.review.push(item);
-      }else{
-        if(e.paused)buckets.reactivate.push(item);else buckets.noop.push(item);
-      }
-    });
+    merged.forEach(item=>piClassify(item,buckets,targetKW,tYr,impQ));
     _piPending={buckets,targetKW,targetYear:+payload.year||new Date().getFullYear(),temporaere:Array.isArray(payload.temporaere)?payload.temporaere:[],rawEntries:payload.entries};
     piComputeMissing();
     piRenderPreview();
@@ -6035,12 +6005,48 @@ async function runPersonalImport(file){
   }
 }
 
+// Einen zusammengefassten Listen-Eintrag (eine Baustelle, ggf. mehrere Listenzeilen in item.sources) in den passenden Eimer legen
+function piClassify(item,buckets,targetKW,tYr,impQ){
+
+    const r=item,m=item.match;
+    const e=m.entry;
+    // andere Listen derselben KW (früherer Import) dazuzählen; fehlt die andere Liste noch -> warten statt pausieren
+    item.ownCount=item.count;item.otherSrc=piOtherSrc(e,targetKW,tYr,impQ);
+    item.count+=Object.values(item.otherSrc).reduce((a,b)=>a+b,0);
+    item.waitOther=Object.keys(item.otherSrc).length?[]:piWaitOther(e,targetKW,tYr,impQ);
+    // Werkhöfe dürfen NIE durch den Personal-Import pausiert/reaktiviert werden - komplett
+    // überspringen, taucht in keinem Eimer auf (auch nicht als "ausgeschlossen"), hat schlicht
+    // nichts mit dieser Prüfung zu tun.
+    if(e.type==='werkhof')return;
+    // Dauerhaft von der Personal-Import-Prüfung ausgeschlossen (z.B. Baustellen in Gefängnissen
+    // o.ä., die nie auditiert werden) - wird nie mehr in einen Entscheidungs-Eimer gesteckt,
+    // egal wie viele Personen laut Liste dort eingeteilt sind.
+    if(e.excludeFromPersonalReview||e.noAudit){buckets.excluded.push(item);return;}
+    if(m.wasInactive){
+      // Inaktive Baustelle taucht auf einer Einsatzliste auf -> eigene Kategorie, nie
+      // automatisch reaktiviert. Nur bei mehr als 1 Person schlagen wir Reaktivierung vor.
+      if(r.count>=S('pi_react_inactive_min'))buckets.reactivateInactive.push(item);
+      else buckets.inactiveInfo.push(item);
+      return;
+    }
+    if(item.waitOther.length&&r.count<=S('pi_review_max')&&!e.paused){buckets.noop.push(item);return;}
+    if(r.count===0){
+      if(!e.paused)buckets.pause.push(item);else buckets.noop.push(item);
+    }else if(r.count<=S('pi_review_max')){
+      buckets.review.push(item);
+    }else{
+      if(e.paused)buckets.reactivate.push(item);else buckets.noop.push(item);
+    }
+  
+}
 function piRenderPreview(){
   try{piComputeMissing();}catch(e){console.warn(e);}
   if(!_piPending)return;
   const{buckets,targetKW}=_piPending;
   document.getElementById('pi-summary').textContent=
     `KW ${targetKW}: ${buckets.pause.length} pausieren · ${buckets.review.length} prüfen · ${buckets.reactivate.length} reaktivieren · ${buckets.unknown.length} unbekannt${(buckets.kundendienst||[]).length?` · ${buckets.kundendienst.length} Kundendienst übersprungen`:''}`;
+  // Häkchen bleiben beim Neuzeichnen erhalten (z.B. nach «Zuordnen»), pro Eimer + Baustelle gemerkt
+  const tick=(key,it,def)=>{const t=_piPending.ticks||{};const k=key+':'+(it.match&&it.match.entry&&it.match.entry.id);return k in t?t[k]:def;};
   const grp=(title,color,arr,key,showCount,defaultChecked)=>{
     if(!arr.length)return'';
     const dc=defaultChecked!==false;
@@ -6048,7 +6054,7 @@ function piRenderPreview(){
       <div style="font-size:12px;font-weight:700;color:${color};margin-bottom:6px">${title} (${arr.length})</div>
       ${arr.map((it,i)=>`
         <label style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--sf2);border-radius:8px;margin-bottom:4px;font-size:12px;color:var(--tx)">
-          <input type="checkbox" ${dc?'checked':''} data-key="${key}" data-idx="${i}">
+          <input type="checkbox" ${tick(key,it,dc)?'checked':''} data-key="${key}" data-idx="${i}">
           <span style="flex:1;min-width:0">${it.match?bsLabel(it.match.entry):(listLabel(it)+' — kein Match')}${it.match&&it.match.how==='name'?' <span style="color:var(--tx3);font-size:10px">('+it.match.score+'% Name-Match)</span>':''}${it.match&&it.match.how&&it.match.how.startsWith('alias')?' <span style="color:#3B82F6;font-size:10px">(Alias zugeordnet)</span>':''}${piSourcesHTML(it)}</span>
           ${showCount?`<span style="color:var(--tx3)">${it.count} Pers.</span>`:''}
         </label>`).join('')}
@@ -6093,7 +6099,7 @@ function piRenderPreview(){
       <div style="font-size:12px;font-weight:700;color:#F59E0B;margin-bottom:6px">⚠️ Prüfen – anhaken um trotzdem zu pausieren (1–${S('pi_review_max')} Personen) (${buckets.review.length})</div>
       ${buckets.review.map((it,i)=>`
         <label style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--sf2);border-radius:8px;margin-bottom:4px;font-size:12px;color:var(--tx)">
-          <input type="checkbox" data-key="review" data-idx="${i}">
+          <input type="checkbox" data-key="review" data-idx="${i}" ${tick('review',it,false)?'checked':''}>
           <span style="flex:1;min-width:0">${it.match?bsLabel(it.match.entry):(listLabel(it)+' — kein Match')}${piSourcesHTML(it)}</span>
           <span style="color:var(--tx3)">${it.count} Pers.</span>
           <button type="button" onclick="event.preventDefault();piExcludePermanently(${i})" title="Diese Baustelle nie mehr fragen, immer pausiert lassen" style="padding:3px 8px;border-radius:6px;border:1px solid var(--bd);background:transparent;color:var(--tx2);font-size:10px;cursor:pointer;white-space:nowrap">🔇 Dauerhaft ausschliessen</button>
@@ -6126,7 +6132,7 @@ function piRenderPreview(){
   if(!html)html='<div style="font-size:12px;color:var(--tx2)">Keine Änderungen nötig – alles bereits konsistent.</div>';
   const pg=document.getElementById('pi-groups');
   pg.innerHTML=html;
-  if(!pg._ovListen){pg._ovListen=1;pg.addEventListener('change',e=>{if(e.target&&e.target.dataset&&e.target.dataset.key)piRenderOverview();});}
+  if(!pg._ovListen){pg._ovListen=1;pg.addEventListener('change',e=>{const d=e.target&&e.target.dataset;if(d&&d.key){const it=_piPending&&(_piPending.buckets[d.key]||[])[+d.idx];if(it&&it.match&&it.match.entry){_piPending.ticks=_piPending.ticks||{};_piPending.ticks[d.key+':'+it.match.entry.id]=e.target.checked;}piRenderOverview();}});}
   piRenderOverview();
   document.getElementById('pi-preview').style.display='block';
 }
@@ -6212,12 +6218,21 @@ function piResolveUnknown(idx){
   if(!item||!entry)return;
   item.match={entry,how:'alias',aliasPsp:item.psp,aliasName:item.name,wasInactive:!entry.active};
   _piPending.buckets.unknown.splice(idx,1);
-  if(!entry.active){
-    if(item.count>1)_piPending.buckets.reactivateInactive.push(item);
-    else _piPending.buckets.inactiveInfo.push(item);
-  }else if(item.count===0){if(!entry.paused)_piPending.buckets.pause.push(item);else _piPending.buckets.noop.push(item);}
-  else if(item.count<=S('pi_review_max')){_piPending.buckets.review.push(item);}
-  else{if(entry.paused)_piPending.buckets.reactivate.push(item);else _piPending.buckets.noop.push(item);}
+  // Steht die Baustelle schon im Import (andere Zeile der Liste, gleiche Baustelle) → zu EINEM Eintrag zusammenfassen
+  // (Personen addieren) und neu einordnen, sonst landet sie in zwei Eimern (z.B. pausieren UND reaktivieren) und die
+  // Personalzahl stimmt nicht.
+  let list=[item];
+  for(const k of ['pause','review','reactivate','noop','reactivateInactive','inactiveInfo','excluded']){
+    const arr=_piPending.buckets[k],i=arr.findIndex(x=>x.match&&x.match.entry&&x.match.entry.id===entry.id);
+    if(i<0)continue;
+    const old=arr.splice(i,1)[0];
+    list=[...(old.sources||[{...old,count:old.ownCount??old.count}]),item];
+    item.match=old.match;
+    break;
+  }
+  const main=list.find(x=>x!==item)||item;
+  const merged={...main,count:list.reduce((a,x)=>a+(+x.count||0),0),sources:list};
+  piClassify(merged,_piPending.buckets,_piPending.targetKW,_piPending.targetYear||new Date().getFullYear(),piImportQuellen());
   piRenderPreview();
 }
 
