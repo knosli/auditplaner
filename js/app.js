@@ -6613,7 +6613,7 @@ function openTempWorkers(){
         <td style="padding:6px 8px;color:var(--tx);font-weight:600">
           <span style="display:inline-flex;align-items:center;gap:6px">
             ${t.pnr}
-            <button onclick="copyTempPnr('${t.pnr}',this)" title="Personal-Nr kopieren" style="border:none;background:var(--sf2);border-radius:5px;padding:2px 5px;cursor:pointer;font-size:11px;color:var(--tx2);line-height:1">📋</button>
+            ${twBtnHTML(t.pnr)}
           </span>
         </td>
         <td style="padding:6px 8px;color:var(--tx3)">${t.quelle||''}</td>
@@ -6621,14 +6621,31 @@ function openTempWorkers(){
     }).join('')
       :`<tr><td colspan="2" style="padding:14px 8px;text-align:center;color:var(--tx3)">Keine temporären Mitarbeitenden importiert.</td></tr>`;
   }
+  twCopiedInfo();
   document.getElementById('tw-bg').style.display='flex';
+}
+// «Kopiert»-Haken pro Personal-Nr, gilt für den laufenden Monat (deptMeta._twCopied = {pnr:'JJJJ-MM'}):
+// bleibt über Neuzeichnen und weitere Importe erhalten, im nächsten Monat sind alle wieder offen
+function twMonth(){return today().slice(0,7);}
+function twCopied(pnr){return((deptMeta._twCopied||{})[pnr])===twMonth();}
+function twBtnHTML(pnr){
+  const c=twCopied(pnr);
+  return`<button onclick="copyTempPnr('${pnr}',this)" title="${c?'Diesen Monat kopiert – nochmals kopieren':'Personal-Nr kopieren'}" style="border:none;background:${c?'#D1FAE5':'var(--sf2)'};border-radius:5px;padding:2px 5px;cursor:pointer;font-size:11px;color:${c?'#047857':'var(--tx2)'};font-weight:${c?'700':'400'};line-height:1">${c?'✓':'📋'}</button>`;
 }
 function copyTempPnr(pnr,btn){
   navigator.clipboard.writeText(pnr).then(()=>{
-    const orig=btn.textContent;
-    btn.textContent='✓';
-    setTimeout(()=>btn.textContent=orig,1200);
-  });
+    deptMeta._twCopied=deptMeta._twCopied||{};
+    deptMeta._twCopied[pnr]=twMonth();
+    saveDepts();
+    btn.outerHTML=twBtnHTML(pnr);
+    twCopiedInfo();
+  }).catch(()=>showToast('⚠ Kopieren nicht möglich',2500));
+}
+function twResetCopied(){deptMeta._twCopied={};saveDepts();openTempWorkers();}
+function twCopiedInfo(){
+  const el=document.getElementById('tw-copied-info');if(!el)return;
+  const list=window._tempWorkers||[],n=new Set(list.filter(t=>twCopied(t.pnr)).map(t=>t.pnr)).size,all=new Set(list.map(t=>t.pnr)).size;
+  el.textContent=all?`✓ ${n} von ${all} diesen Monat kopiert`:'';
 }
 function updateTempWorkersBadge(){
   const badge=document.getElementById('tw-count-badge');

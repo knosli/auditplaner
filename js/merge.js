@@ -132,7 +132,7 @@ function mgItemName(f,x,sites){
 }
 
 // Schlüssel in deptMeta, die einen lesbaren Namen haben (der Rest sind Abteilungsnamen)
-const MG_DEPTMETA_LABELS={_usage:'',_piWeeks:'Personal-Übersicht',_piIgnore:'Kundendienst-Liste',_piKdSeen:'Erkannte Kundendienst-Einträge',
+const MG_DEPTMETA_LABELS={_usage:'',_twCopied:'',_piWeeks:'Personal-Übersicht',_piIgnore:'Kundendienst-Liste',_piKdSeen:'Erkannte Kundendienst-Einträge',
   _personLists:'Personen-Listen',_quelleMap:'Zuordnung der Einsatzlisten'};
 // Änderungen in Objekt-Feldern (Auditor-Angaben, Farben, Abteilungen): ein Text pro geändertem Schlüssel.
 // Die Nutzungsstatistik wird absichtlich nicht protokolliert (ändert sich alle paar Minuten).
