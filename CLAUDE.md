@@ -11,8 +11,8 @@ Beratungen, Rapporten und Ferien der Auditoren. Sprache der Oberfläche: Deutsch
 - Vor jedem PR: App im Browser laden (Desktop- und Mobile-Breite) und in der Konsole
   prüfen, dass keine JavaScript-Fehler auftreten.
 - Bei jeder Änderung an der App die Versionsnummer erhöhen, und zwar überall in
-  `index.html`: im Header (`<span ... title="Version">v3.40</span>`) und in den Links
-  `css/style.css?v=3.40`, `js/merge.js?v=3.40` und `js/app.js?v=3.40`. Der `?v=`-Zusatz
+  `index.html`: im Header (`<span ... title="Version">v3.41</span>`) und in den Links
+  `css/style.css?v=3.41`, `js/merge.js?v=3.41` und `js/app.js?v=3.41`. Der `?v=`-Zusatz
   sorgt dafür, dass Browser nach einem Update keine alte Datei aus dem Cache verwenden.
 - Tests für die Zusammenführung: `node tests/merge.test.js` (muss grün sein).
 - Keine Browser-Dialoge (`confirm`, `prompt`, `alert`): `askConfirm()`, `askText()`,
@@ -146,6 +146,8 @@ global; das HTML ruft sie direkt über `onclick="..."` auf.
   Einordnung in Eimer: `piClassify` (auch nach manuellem «Zuordnen» in `piResolveUnknown`: Zeile wird mit einer schon vorhandenen
   Zeile derselben Baustelle zusammengefasst, sonst landet sie in zwei Eimern); Häkchen der Vorschau bleiben beim Neuzeichnen
   erhalten (`_piPending.ticks`)
+  Temporäre Mitarbeitende: «kopiert»-Haken pro Personal-Nr für den laufenden Monat (`deptMeta._twCopied`, `twCopied`/`copyTempPnr`),
+  bleibt über Importe erhalten, im neuen Monat wieder offen
   «+ Neue Baustelle» aus Import/Sammelbox/Kundendienst: Personal wird beim Speichern übernommen
   (`piNewSitePending` → `window._newSitePersonal` → `piApplyNewSite` in `saveEntry`); `sbAssign` ebenfalls
 - Admin-Menü (`#more-m`) in Gruppen (Stammdaten, Einsatzlisten & Personal, Auswertung & Protokoll, System, Sicherung, Gefahrenzone).
