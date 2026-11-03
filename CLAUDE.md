@@ -11,8 +11,8 @@ Beratungen, Rapporten und Ferien der Auditoren. Sprache der Oberfläche: Deutsch
 - Vor jedem PR: App im Browser laden (Desktop- und Mobile-Breite) und in der Konsole
   prüfen, dass keine JavaScript-Fehler auftreten.
 - Bei jeder Änderung an der App die Versionsnummer erhöhen, und zwar überall in
-  `index.html`: im Header (`<span ... title="Version">v3.41</span>`) und in den Links
-  `css/style.css?v=3.41`, `js/merge.js?v=3.41` und `js/app.js?v=3.41`. Der `?v=`-Zusatz
+  `index.html`: im Header (`<span ... title="Version">v3.42</span>`) und in den Links
+  `css/style.css?v=3.42`, `js/merge.js?v=3.42` und `js/app.js?v=3.42`. Der `?v=`-Zusatz
   sorgt dafür, dass Browser nach einem Update keine alte Datei aus dem Cache verwenden.
 - Tests für die Zusammenführung: `node tests/merge.test.js` (muss grün sein).
 - Keine Browser-Dialoge (`confirm`, `prompt`, `alert`): `askConfirm()`, `askText()`,
@@ -142,7 +142,7 @@ global; das HTML ruft sie direkt über `onclick="..."` auf.
   Import ersetzt nur seine Listen, count = Summe (`recordPersonal`, `piOtherSrc`); stand sie in der KW/Vorwoche auf einer
   fehlenden Liste → nicht pausieren/nicht «fehlt» (`piWaitOther`, `item.waitOther`)
   Import-Vorschau: ausklappbare Übersicht aller erkannten Baustellen (Personal Vorwoche → Import-KW, ±, «Was passiert»;
-  folgt den Häkchen) `piRenderOverview`/`piOverviewRows`/`piPrevKW`, oben in `#pi-groups`
+  folgt den Häkchen; zeigt auch, aus welchen Listen eine Zahl kommt: `piSourcesHTML`) `piRenderOverview`/`piOverviewRows`/`piPrevKW`, oben in `#pi-groups`
   Einordnung in Eimer: `piClassify` (auch nach manuellem «Zuordnen» in `piResolveUnknown`: Zeile wird mit einer schon vorhandenen
   Zeile derselben Baustelle zusammengefasst, sonst landet sie in zwei Eimern); Häkchen der Vorschau bleiben beim Neuzeichnen
   erhalten (`_piPending.ticks`)
