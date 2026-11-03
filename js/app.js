@@ -5890,6 +5890,13 @@ function pspMatchLevel(e,P){
   if(P.suf&&((q&&!q.suf&&q.base===P.base)||al.includes(P.base)))return 2;
   return 0;
 }
+// Hat die Planer-Baustelle eine ANDERE PSP als die Listen-Zeile (weder Hauptnummer noch Alias)? Dann ist es nie dieselbe
+// Baustelle – auch nicht, wenn die Namen ähnlich klingen («WÜB … Luzern» passt sonst auf jede andere WÜB in Luzern).
+function pspConflict(e,P){
+  const q=pspParts(e.psp);if(!P||!q)return false;
+  if((e.pspAliases||[]).some(a=>{const x=pspParts(a);return x&&x.base===P.base;}))return false;
+  return q.base!==P.base;
+}
 function piNormPSP(s){
   if(!s)return'';
   const base=String(s).split('.')[0]; // Suffixe wie .1/.2/.3 (Etappen) vor der Ziffernbereinigung abschneiden
@@ -5917,7 +5924,7 @@ function piMatchBaustelle(psp,name,qDept){
     if(aliasHit)return{entry:aliasHit,how:'alias-name'};
     const words=nn.split(' ').filter(w=>w.length>2);
     let best=null,bestScore=0;
-    data.filter(e=>e.active&&inDept(e)).forEach(e=>{
+    data.filter(e=>e.active&&inDept(e)&&!pspConflict(e,P)).forEach(e=>{
       const en=piNormName(e.name+' '+(e.addr||''));
       const m=words.filter(w=>en.includes(w)).length;
       const score=words.length?m/words.length:0;
@@ -5936,7 +5943,7 @@ function piMatchBaustelle(psp,name,qDept){
     const nn=piNormName(name);
     const words=nn.split(' ').filter(w=>w.length>2);
     let best=null,bestScore=0;
-    data.filter(e=>!e.active&&inDept(e)).forEach(e=>{
+    data.filter(e=>!e.active&&inDept(e)&&!pspConflict(e,P)).forEach(e=>{
       const en=piNormName(e.name+' '+(e.addr||''));
       const m=words.filter(w=>en.includes(w)).length;
       const score=words.length?m/words.length:0;
