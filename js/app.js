@@ -5890,6 +5890,13 @@ function pspMatchLevel(e,P){
   if(P.suf&&((q&&!q.suf&&q.base===P.base)||al.includes(P.base)))return 2;
   return 0;
 }
+// Hat die Planer-Baustelle eine ANDERE PSP als die Listen-Zeile (weder Hauptnummer noch Alias)? Dann ist es nie dieselbe
+// Baustelle – auch nicht, wenn die Namen ähnlich klingen («WÜB … Luzern» passt sonst auf jede andere WÜB in Luzern).
+function pspConflict(e,P){
+  const q=pspParts(e.psp);if(!P||!q)return false;
+  if((e.pspAliases||[]).some(a=>{const x=pspParts(a);return x&&x.base===P.base;}))return false;
+  return q.base!==P.base;
+}
 function piNormPSP(s){
   if(!s)return'';
   const base=String(s).split('.')[0]; // Suffixe wie .1/.2/.3 (Etappen) vor der Ziffernbereinigung abschneiden
@@ -5917,7 +5924,7 @@ function piMatchBaustelle(psp,name,qDept){
     if(aliasHit)return{entry:aliasHit,how:'alias-name'};
     const words=nn.split(' ').filter(w=>w.length>2);
     let best=null,bestScore=0;
-    data.filter(e=>e.active&&inDept(e)).forEach(e=>{
+    data.filter(e=>e.active&&inDept(e)&&!pspConflict(e,P)).forEach(e=>{
       const en=piNormName(e.name+' '+(e.addr||''));
       const m=words.filter(w=>en.includes(w)).length;
       const score=words.length?m/words.length:0;
@@ -5936,7 +5943,7 @@ function piMatchBaustelle(psp,name,qDept){
     const nn=piNormName(name);
     const words=nn.split(' ').filter(w=>w.length>2);
     let best=null,bestScore=0;
-    data.filter(e=>!e.active&&inDept(e)).forEach(e=>{
+    data.filter(e=>!e.active&&inDept(e)&&!pspConflict(e,P)).forEach(e=>{
       const en=piNormName(e.name+' '+(e.addr||''));
       const m=words.filter(w=>en.includes(w)).length;
       const score=words.length?m/words.length:0;
@@ -6146,7 +6153,7 @@ function piOverviewRows(){
   const box=(key,i,def)=>{const el=document.querySelector(`#pi-groups input[data-key="${key}"][data-idx="${i}"]`);return el?el.checked:def;};
   const P='#64748B',G='#10B981',O='#F59E0B',V='#8B5CF6';
   const rows=[];
-  const add=(it,cnt,act,col,chg)=>{const e=it.match&&it.match.entry;if(!e)return;const live=data.find(x=>x.id===e.id)||e;const prev=persForKW(live,pv.kw,pv.year);rows.push({e:live,prev:prev?prev.count:null,cnt,act,col,chg});};
+  const add=(it,cnt,act,col,chg)=>{const e=it.match&&it.match.entry;if(!e)return;const live=data.find(x=>x.id===e.id)||e;const prev=persForKW(live,pv.kw,pv.year);rows.push({e:live,prev:prev?prev.count:null,cnt,act,col,chg,src:piSourcesHTML(it)});};
   buckets.pause.forEach((it,i)=>box('pause',i,true)?add(it,it.count,'⏸ wird pausiert (0 Personen)',P,1):add(it,it.count,'läuft weiter (Haken entfernt)',G,0));
   (buckets.missing||[]).forEach((it,i)=>box('missing',i,!it.isNew)?add(it,0,'⏸ wird pausiert (nicht auf der Liste)',P,1):add(it,0,'läuft weiter (nicht auf der Liste)',O,0));
   buckets.review.forEach((it,i)=>box('review',i,false)?add(it,it.count,'⏸ wird pausiert (wenig Personal)',P,1):add(it,it.count,'läuft weiter – wenig Personal',O,0));
@@ -6176,7 +6183,7 @@ function piRenderOverview(){
       <span style="color:var(--tx3)">folgt den Häkchen unten</span></div>
     <div style="overflow-x:auto;max-height:50vh;overflow-y:auto"><table style="width:100%;border-collapse:collapse;font-size:11px;color:var(--tx)">
       <thead><tr><th style="${th}">Baustelle · was passiert</th><th style="${th};text-align:right">KW ${pv.kw}</th><th style="${th};text-align:right">KW ${_piPending.targetKW}</th><th style="${th};text-align:right">±</th></tr></thead>
-      <tbody>${shown.map(r=>`<tr${r.chg?' style="background:var(--sf)"':''}><td style="${td}">${bsLabel(r.e)}<div style="margin-top:2px;color:${r.col};${r.chg?'font-weight:700':''}">${r.act}</div></td><td style="${td};text-align:right">${r.prev==null?'–':r.prev}</td><td style="${td};text-align:right;font-weight:600">${r.cnt}</td><td style="${td};text-align:right">${d(r)}</td></tr>`).join('')||`<tr><td colspan="4" style="${td};color:var(--tx3)">Keine Änderungen.</td></tr>`}</tbody>
+      <tbody>${shown.map(r=>`<tr${r.chg?' style="background:var(--sf)"':''}><td style="${td}">${bsLabel(r.e)}<div style="margin-top:2px;color:${r.col};${r.chg?'font-weight:700':''}">${r.act}</div>${r.src||''}</td><td style="${td};text-align:right">${r.prev==null?'–':r.prev}</td><td style="${td};text-align:right;font-weight:600">${r.cnt}</td><td style="${td};text-align:right">${d(r)}</td></tr>`).join('')||`<tr><td colspan="4" style="${td};color:var(--tx3)">Keine Änderungen.</td></tr>`}</tbody>
     </table></div>`;
 }
 
