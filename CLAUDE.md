@@ -11,8 +11,8 @@ Beratungen, Rapporten und Ferien der Auditoren. Sprache der Oberfläche: Deutsch
 - Vor jedem PR: App im Browser laden (Desktop- und Mobile-Breite) und in der Konsole
   prüfen, dass keine JavaScript-Fehler auftreten.
 - Bei jeder Änderung an der App die Versionsnummer erhöhen, und zwar überall in
-  `index.html`: im Header (`<span ... title="Version">v3.43</span>`) und in den Links
-  `css/style.css?v=3.43`, `js/merge.js?v=3.43` und `js/app.js?v=3.43`. Der `?v=`-Zusatz
+  `index.html`: im Header (`<span ... title="Version">v3.44</span>`) und in den Links
+  `css/style.css?v=3.44`, `js/merge.js?v=3.44` und `js/app.js?v=3.44`. Der `?v=`-Zusatz
   sorgt dafür, dass Browser nach einem Update keine alte Datei aus dem Cache verwenden.
 - Tests für die Zusammenführung: `node tests/merge.test.js` (muss grün sein).
 - Keine Browser-Dialoge (`confirm`, `prompt`, `alert`): `askConfirm()`, `askText()`,
@@ -143,6 +143,7 @@ global; das HTML ruft sie direkt über `onclick="..."` auf.
   fehlenden Liste → nicht pausieren/nicht «fehlt» (`piWaitOther`, `item.waitOther`)
   Import-Vorschau: ausklappbare Übersicht aller erkannten Baustellen (Personal Vorwoche → Import-KW, ±, «Was passiert»;
   folgt den Häkchen; zeigt auch, aus welchen Listen eine Zahl kommt: `piSourcesHTML`) `piRenderOverview`/`piOverviewRows`/`piPrevKW`, oben in `#pi-groups`
+  Doppelte Zeilen werden nur innerhalb EINER Liste zusammengefasst (gleiche Baustelle auf zwei Listen = addieren)
   Zuordnung Listenzeile → Baustelle `piMatchBaustelle`: PSP, dann Alias, dann ähnlicher Name – Namens-Treffer nie bei anderer PSP (`pspConflict`)
   Einordnung in Eimer: `piClassify` (auch nach manuellem «Zuordnen» in `piResolveUnknown`: Zeile wird mit einer schon vorhandenen
   Zeile derselben Baustelle zusammengefasst, sonst landet sie in zwei Eimern); Häkchen der Vorschau bleiben beim Neuzeichnen
@@ -156,7 +157,7 @@ global; das HTML ruft sie direkt über `onclick="..."` auf.
   das Anmelde-Passwort nochmals: `askAdminPw(was)` (prüft mit eigenem Supabase-Client, Sitzung bleibt)
   Änderungsprotokoll: `mgDescribe` (js/merge.js) liefert pro Änderung Zeilen mit alt → neu und Eintragsnamen (`  + / ~ / −`);
   Anzeige `openAuditLog` mit Filter (Person, Datum, Text)
-  Einsatzlisten-Kontrolle (`ekState`, `openEinsatzCheck`): pro Einheit (Quelle in `deptMeta._piWeeks`) Import ja/nein für KW-3…+1;
+  Einsatzlisten-Kontrolle (`ekState`, `openEinsatzCheck`): pro Einheit (Quelle in `deptMeta._piWeeks`) Import ja/nein für KW-3…+1 (von Hand erfasstes Personal der Abteilung zählt als «manuell» geliefert);
   Badge am Admin-Knopf + Hinweis beim Start (`ekRemind`), wenn die aktuelle KW fehlt
   Personen-Audit: `paInfoHTML(p,{edit,compact})` zeigt Name, Abteilung, Baustelle, Adresse, PSP, Notiz und Spezialität; fehlt die
   Spezialität, direkt wählbar (`setPersonSpez`, `PERSON_SPEZ`) – Handy-Karten, KW-Planung, Popups, Liste

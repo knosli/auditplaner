@@ -5970,7 +5970,9 @@ async function runPersonalImport(file){
     let raw=payload.entries;
 
     const dedup={};
-    raw.forEach(r=>{const k=(r.psp||'')+'|'+piNormName(r.name);if(!dedup[k]||dedup[k].count<r.count)dedup[k]=r;});
+    // Doppelte Zeilen nur INNERHALB einer Liste zusammenfassen (grösserer Wert). Dieselbe Baustelle auf zwei Listen (z.B. Olten TB + IFB) bleibt
+    // getrennt und wird danach addiert.
+    raw.forEach(r=>{const k=(r.quelle||'')+'|'+(r.psp||'')+'|'+piNormName(r.name);if(!dedup[k]||dedup[k].count<r.count)dedup[k]=r;});
     raw=Object.values(dedup);
 
     if(!raw.length){
@@ -6492,7 +6494,9 @@ function ekState(){
   const byWk=new Map(piWeeksList().map(w=>[piKdWeek(w.kw,w.year),w]));
   const exp=new Set();
   byWk.forEach((w,wk)=>{if(wk>cur.wk-EK_LOOKBACK&&wk<=cur.wk+1)Object.keys(w.u||{}).forEach(q=>{if(q!=='?')exp.add(q);});});
-  const rows=[...exp].sort((a,b)=>a.localeCompare(b)).map(q=>({q,dept:piQuelleDept(q),cells:weeks.map(w=>{const r=byWk.get(w.wk);return!!(r&&r.u&&q in r.u);})}));
+  // 1 = Liste importiert, 2 = Personal dieser KW für die Abteilung von Hand erfasst («Personal manuell erfassen»), 0 = fehlt
+  const manual=(q,w)=>{const d=piQuelleDept(q);return!!d&&data.some(e=>deptParts(e.dept).includes(d)&&(e.personalHistory||[]).some(h=>h.manual&&h.kw===w.kw&&h.year===w.year));};
+  const rows=[...exp].sort((a,b)=>a.localeCompare(b)).map(q=>({q,dept:piQuelleDept(q),cells:weeks.map(w=>{const r=byWk.get(w.wk);return(r&&r.u&&q in r.u)?1:manual(q,w)?2:0;})}));
   return{weeks,rows,missing:rows.filter(r=>!r.cells[3]),cur};
 }
 function ekRefreshBadge(){
@@ -6514,7 +6518,7 @@ function renderEinsatzCheck(){
   const st=ekState();
   if(!st.rows.length){el.innerHTML='<p>Noch keine Importe vorhanden – die Kontrolle füllt sich mit dem nächsten Personal-Import.</p><p><button type="button" class="ui-btn ui-btn-pri" onclick="document.getElementById(\'adm-bg\').remove();openPersonalImport()">Zum Personal-Import</button></p>';return;}
   const th=st.weeks.map((w,i)=>`<th style="text-align:center;${i===3?'background:var(--sf2)':''}">KW ${w.kw}${w.year!==curIsoYear()?'<br><span style="font-weight:400;font-size:10px">'+w.year+'</span>':''}${i===3?'<br><span style="font-weight:400;font-size:10px">aktuell</span>':i===4?'<br><span style="font-weight:400;font-size:10px">nächste</span>':''}</th>`).join('');
-  const cell=(ok,i)=>ok?'<td style="text-align:center;color:#10B981;font-weight:700">✓</td>':`<td style="text-align:center;${i===3?'color:#DC2626;font-weight:700;background:#FEE2E2':'color:var(--tx3)'}">${i===4?'offen':'✕'}</td>`;
+  const cell=(ok,i)=>ok===2?'<td style="text-align:center;color:#10B981;font-weight:700" title="Personal von Hand erfasst">✓<div style="font-size:9px;font-weight:400">manuell</div></td>':ok?'<td style="text-align:center;color:#10B981;font-weight:700">✓</td>':`<td style="text-align:center;${i===3?'color:#DC2626;font-weight:700;background:#FEE2E2':'color:var(--tx3)'}">${i===4?'offen':'✕'}</td>`;
   el.innerHTML=`<p>${st.missing.length?`<b style="color:#DC2626">⚠ ${st.missing.length} von ${st.rows.length} Einheiten ohne Einsatzliste für KW ${st.cur.kw}:</b> ${st.missing.map(r=>escH(r.q)).join(', ')}`:`<b style="color:#10B981">✓ Alle ${st.rows.length} Einheiten haben eine Einsatzliste für KW ${st.cur.kw}.</b>`}</p>
     <div style="overflow-x:auto"><table class="adm-tbl"><tr><th>Einheit (Liste)</th><th>Abteilung</th>${th}</tr>
     ${st.rows.map(r=>`<tr><td><b>${escH(r.q)}</b></td><td>${escH(r.dept||'–')}</td>${r.cells.map((c,i)=>cell(c,i)).join('')}</tr>`).join('')}</table></div>
