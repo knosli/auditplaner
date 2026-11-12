@@ -1,0 +1,73 @@
+import type { ModuleMeta, Topic } from './types';
+
+export const MODULES: ModuleMeta[] = [
+  {
+    id: 'm1', no: 1, title: 'Umweltgrundlagen und Schweizer Umweltrecht', short: 'Umweltrecht', pathOrder: 4, status: 'in_entwicklung',
+    topics: ['Grundbegriffe des Umweltschutzes', 'Schweizer Umweltgesetzgebung', 'Umweltschutzgesetz (USG)', 'GSchG und Verordnungen', 'Abfallverordnung (VVEA)', 'Luftreinhalte-Verordnung (LRV)', 'Lärmschutz-Verordnung (LSV)', 'Natur- und Heimatschutz', 'Bund, Kanton, Gemeinde', 'Verantwortung der Beteiligten', 'Umweltauflagen und Bewilligungen', 'Vollzug und behördliche Kontrollen'],
+  },
+  {
+    id: 'm2', no: 2, title: 'Gewässerschutz auf Baustellen', short: 'Gewässerschutz', pathOrder: 1, status: 'verfuegbar', deep: true,
+    topics: ['Grundlagen und Rechtsrahmen', 'Baustellenentwässerung und SIA 431', 'Betonwaschwasser und alkalisches Wasser', 'Trübstoffe, Sedimentation, Neutralisation', 'Wasserhaltung, Einleitung, Versickerung', 'Grundwasser und Gewässerschutzbereiche', 'Öl- und Treibstoffverluste, Havarien', 'Werkhof und Installationsplatz', 'Entwässerungskonzept', 'Typische Fehler Hoch- und Tiefbau'],
+  },
+  {
+    id: 'm3', no: 3, title: 'Bauabfälle, Rückbau und Kreislaufwirtschaft', short: 'Bauabfälle', pathOrder: 2, status: 'in_entwicklung',
+    topics: ['Abfallarten und Klassierung', 'VVEA und Vollzugshilfen', 'Entsorgungskonzepte', 'Materialtrennung', 'Mineralische Rückbaumaterialien', 'Recyclingbeton', 'Aushub- und Ausbruchmaterial', 'Belastete Materialien', 'Bauschadstoffe', 'Sonderabfälle', 'Nachweise und Dokumentation', 'Wiederverwendung', 'Kreislaufwirtschaft'],
+  },
+  {
+    id: 'm4', no: 4, title: 'Bodenschutz und Aushub', short: 'Bodenschutz', pathOrder: 3, status: 'in_entwicklung',
+    topics: ['Bodenfunktionen', 'Ober- und Unterboden', 'Bodenschutzrecht', 'Bodenverdichtung', 'Befahrbarkeit und Bodenfeuchte', 'Bodenabtrag', 'Bodendepots', 'Rekultivierung', 'Erosion', 'Belasteter Boden', 'Bodenschutz in der AVOR', 'Bodenkundliche Baubegleitung', 'Grenzen der eigenen Fachkompetenz'],
+  },
+  {
+    id: 'm5', no: 5, title: 'Luftreinhaltung', short: 'Luft', pathOrder: 9, status: 'in_entwicklung',
+    topics: ['Luftschadstoffe', 'Baustellenstaub', 'Staubintensive Arbeiten', 'Maschinenemissionen', 'Anforderungen an Baumaschinen', 'Partikelfilter', 'Staubreduktion', 'Transporte', 'Rückbau und Erdbau', 'Planung und Kontrolle'],
+  },
+  {
+    id: 'm6', no: 6, title: 'Baulärm und Erschütterungen', short: 'Baulärm', pathOrder: 10, status: 'in_entwicklung',
+    topics: ['Schall und Lärm', 'BAFU-Baulärm-Richtlinie', 'Massnahmenstufen', 'Lärmschutzkonzepte', 'Lärmarme Verfahren', 'Arbeitszeiten und Auflagen', 'Erschütterungen', 'Beschwerdemanagement', 'Information Anwohnende', 'Baustellenplanung'],
+  },
+  {
+    id: 'm7', no: 7, title: 'Wassergefährdende und umweltgefährliche Stoffe', short: 'Gefahrstoffe', pathOrder: 8, status: 'in_entwicklung',
+    topics: ['Treibstoffe und Öle', 'Lagerung und Umschlag', 'Auffangwannen', 'Kennzeichnung', 'Sicherheitsdatenblätter', 'Chemikalien auf Baustellen', 'Havariekonzepte', 'Umweltnotfälle', 'Erste Massnahmen bei Leckagen', 'Alarmierung und Meldestellen', 'Werkhofkontrollen'],
+  },
+  {
+    id: 'm8', no: 8, title: 'Umwelt in Bauplanung und AVOR', short: 'Planung & AVOR', pathOrder: 5, status: 'in_entwicklung', deep: true,
+    topics: ['Umweltprüfung vor Baustart', 'Bewilligungsauflagen prüfen', 'Ausschreibung und Werkvertrag', 'Umweltmassnahmen in der AVOR', 'Installationsplanung', 'Entwässerung und Lagerflächen', 'Materialbewirtschaftung', 'Transportplanung', 'Lärm- und Staubschutz', 'Umweltmassnahmenplan', 'Zuständigkeiten', 'Kontroll- und Nachweispflichten', 'Zusammenarbeit Bauherrschaft/Planer', 'Kosten- und Terminfolgen'],
+  },
+  {
+    id: 'm9', no: 9, title: 'Umweltbaubegleitung und Baustellenkontrollen', short: 'Baubegleitung', pathOrder: 6, status: 'in_entwicklung', deep: true,
+    topics: ['Aufgaben der UBB', 'Interne Beratung vs. formelle UBB', 'Kontrollkonzepte', 'Umweltbegehungen', 'Auditchecklisten', 'Feststellungen und Abweichungen', 'Risikobeurteilung', 'Sofortmassnahmen', 'Korrektur- und Vorbeugemassnahmen', 'Kommunikation mit Bauleitung', 'Fotodokumentation', 'Kontrollberichte', 'Nachverfolgung', 'Eskalation'],
+  },
+  {
+    id: 'm10', no: 10, title: 'ISO 14001 und Umweltmanagement', short: 'ISO 14001', pathOrder: 7, status: 'in_entwicklung',
+    topics: ['Systematik', 'Kontext der Organisation', 'Umweltaspekte', 'Compliance-Verpflichtungen', 'Umweltziele', 'Rollen', 'Risikobasierter Ansatz', 'Interne Audits', 'Korrekturmassnahmen', 'Managementbewertung', 'Kontinuierliche Verbesserung', 'Kennzahlen', 'Grossunternehmen und Niederlassungen', 'Integriertes Managementsystem 9001/14001/45001'],
+  },
+  {
+    id: 'm11', no: 11, title: 'Klima, Ressourcen und Nachhaltigkeit', short: 'Nachhaltigkeit', pathOrder: 11, status: 'in_entwicklung',
+    topics: ['Klimawirkung des Bauens', 'CO₂-Emissionen', 'Scope 1, 2, 3', 'THG-Bilanzierung', 'Graue Emissionen', 'Materialkreisläufe', 'Energieeffizienz', 'Nachhaltige Beschaffung', 'Kennzahlen', 'Ressourcenschonende Verfahren', 'Pflicht, Norm oder freiwillig'],
+  },
+  {
+    id: 'm12', no: 12, title: 'Führung und strategische Umweltverantwortung', short: 'Führung', pathOrder: 12, status: 'in_entwicklung',
+    topics: ['Umweltorganisation', 'Umweltjahresplan', 'Fachliche Führung', 'Ziele und Kennzahlen', 'Schulungskonzepte', 'Beratung von Führungskräften', 'Managementberichte', 'Entscheidungsvorlagen', 'Wirksamkeitskontrollen', 'Umgang mit Widerstand', 'Unternehmenskultur', 'Umweltrechtskataster', 'Umweltstrategie'],
+  },
+];
+
+/** Bewertete Kompetenzfelder (für Fortschritt und Wissenslücken) */
+export const TOPICS: Topic[] = [
+  { id: 'recht', moduleId: 'm2', title: 'Rechtsrahmen Gewässerschutz' },
+  { id: 'entwaesserung', moduleId: 'm2', title: 'Baustellenentwässerung' },
+  { id: 'alkalisch', moduleId: 'm2', title: 'Betonwaschwasser / alkalisches Wasser' },
+  { id: 'truebstoffe', moduleId: 'm2', title: 'Trübstoffe und Sedimentation' },
+  { id: 'wasserhaltung', moduleId: 'm2', title: 'Wasserhaltung und Grundwasser' },
+  { id: 'oel', moduleId: 'm2', title: 'Öl, Treibstoff und Installationsplatz' },
+  { id: 'havarie', moduleId: 'm2', title: 'Havarien und Sofortmassnahmen' },
+  { id: 'konzept', moduleId: 'm2', title: 'Entwässerungskonzept und Kontrolle' },
+];
+
+export const LEVEL_LABEL: Record<number, string> = {
+  1: 'Stufe 1 – Grundlagen',
+  2: 'Stufe 2 – Praktische Anwendung',
+  3: 'Stufe 3 – Fortgeschritten',
+  4: 'Stufe 4 – Experte',
+};
+
+export const LEVEL_SHORT: Record<number, string> = { 1: 'Grundlagen', 2: 'Anwendung', 3: 'Fortgeschritten', 4: 'Experte' };
