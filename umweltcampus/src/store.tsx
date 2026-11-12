@@ -75,6 +75,21 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     return () => window.clearTimeout(t);
   }, [s]);
 
+  // Beim Verlassen oder Verstecken der Seite sofort speichern (verzögertes Speichern könnte die letzte Eingabe verlieren)
+  useEffect(() => {
+    const flush = () => {
+      saveLocal(latest.current);
+      cloud.current?.save(latest.current).catch(() => undefined);
+    };
+    const onVis = () => document.visibilityState === 'hidden' && flush();
+    window.addEventListener('pagehide', flush);
+    document.addEventListener('visibilitychange', onVis);
+    return () => {
+      window.removeEventListener('pagehide', flush);
+      document.removeEventListener('visibilitychange', onVis);
+    };
+  }, []);
+
   // Plattform-Fähigkeiten verbinden
   useEffect(() => {
     let alive = true;

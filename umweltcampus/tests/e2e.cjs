@@ -2,7 +2,12 @@
 // Aufruf: npm run build && npm run e2e   (benötigt Playwright mit Chromium)
 const { chromium, devices } = require('playwright');
 const path = require('path');
-const url = 'file://' + path.resolve(process.argv[2]);
+const fs = require('fs');
+const http = require('http');
+const html = fs.readFileSync(path.resolve(process.argv[2]));
+// Auslieferung über HTTP (wie im Betrieb); file:// hat in Chromium eigene Speicherregeln.
+const server = http.createServer((_q, r) => { r.writeHead(200, { 'content-type': 'text/html; charset=utf-8' }); r.end(html); });
+let url = '';
 const out = process.argv[3] || require('os').tmpdir();
 const v1 = { version: 1, createdAt: 1, updatedAt: Date.now() - 86400000,
   lessons: { 'm2-l1': { step: 7, viewed: [0,1,2,3,4,5,6,7], startedAt: 5, completedAt: Date.now() - 90000000, answers: { 'm2-q01': ['b'] }, open: {} },
@@ -13,6 +18,8 @@ const v1 = { version: 1, createdAt: 1, updatedAt: Date.now() - 86400000,
   settings: { theme: 'system', coachMode: 'trainieren', askConfidence: true, aiEnabled: true } };
 const ok = (c, m) => { console.log((c ? 'OK   ' : 'FAIL ') + m); if (!c) process.exitCode = 1; };
 (async () => {
+  await new Promise((res) => server.listen(0, '127.0.0.1', res));
+  url = `http://127.0.0.1:${server.address().port}/index.html`;
   const browser = await chromium.launch();
   for (const [name, opts] of [['desktop', { viewport: { width: 1360, height: 900 } }], ['mobile', { ...devices['iPhone 13'] }]]) {
     const ctx = await browser.newContext({ ...opts, acceptDownloads: true });
@@ -20,9 +27,11 @@ const ok = (c, m) => { console.log((c ? 'OK   ' : 'FAIL ') + m); if (!c) process
     const errs = [];
     page.on('console', (m) => m.type() === 'error' && errs.push(m.text()));
     page.on('pageerror', (e) => errs.push('PAGEERROR ' + e.message));
-    await page.goto(url + '#dashboard');
-    await page.evaluate((st) => localStorage.setItem('umweltcampus.v1', JSON.stringify(st)), v1);
-    await page.reload(); await page.waitForTimeout(400);
+    // Stand aus Version 1 vor dem Start der App setzen (nur beim ersten Laden)
+    await page.addInitScript((st) => {
+      if (!localStorage.getItem('e2e-seeded')) { localStorage.setItem('umweltcampus.v1', JSON.stringify(st)); localStorage.setItem('e2e-seeded', '1'); }
+    }, v1);
+    await page.goto(url + '#dashboard'); await page.waitForTimeout(400);
     const go = async (h) => { await page.evaluate((x) => (location.hash = x), h); await page.waitForTimeout(200); };
     console.log('--- ' + name);
     // Migration
@@ -165,9 +174,10 @@ const ok = (c, m) => { console.log((c ? 'OK   ' : 'FAIL ') + m); if (!c) process
     // Reload persistence
     await page.reload(); await page.waitForTimeout(300);
     await go('fortschritt');
-    ok((await page.locator('.history li').count()) > 3, 'Historie nach Neuladen vorhanden');
+    const hn = await page.locator('.history li').count(); const raw = await page.evaluate(() => { const x = JSON.parse(localStorage.getItem('umweltcampus.v1') || '{}'); return { h: (x.history || []).length, v: x.version, l: Object.keys(x.lessons || {}).length }; }); ok(hn > 3, 'Historie nach Neuladen vorhanden (' + hn + ' Einträge, gespeichert ' + JSON.stringify(raw) + ')');
     ok(errs.length === 0, 'Konsolenfehler: ' + (errs.join(' | ') || 'keine'));
     await ctx.close();
   }
   await browser.close();
+  server.close();
 })();
