@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { LESSONS, MODULES, SCENARIOS, TOPICS } from '../content';
+import { LESSONS, MODULES, SCENARIOS, SITETASKS, T, TOPICS } from '../content';
 import { useStore } from '../store';
 import { Bar, ConfirmButton, Section, fmtDateTime, pct } from '../components/ui';
 import { STAGE_LABEL, knowledgeGaps, moduleProgress, studyMinutes, topicCompetence } from '../lib/learning';
@@ -105,7 +105,11 @@ export function ProgressView() {
       </div>
 
       <Section title="Praxisaufträge">
-        <ul className="plain">{Object.entries(s.practice).map(([id, r]) => <li key={id}>{id} – {PRACTICE_LABEL[r.status]}{r.site ? ` (${r.site})` : ''}</li>)}{!Object.keys(s.practice).length && <li className="hint">Noch kein Praxisauftrag begonnen.</li>}</ul>
+        <ul className="plain">{Object.entries(s.practice).map(([id, r]) => <li key={id}>{T.get(id)?.title ?? id} – {PRACTICE_LABEL[r.status]}{r.site ? ` (${r.site})` : ''}</li>)}{!Object.keys(s.practice).length && <li className="hint">Noch kein Praxisauftrag begonnen.</li>}</ul>
+      </Section>
+
+      <Section title="Baustellenaufgaben in den Lektionen">
+        <ul className="plain">{SITETASKS.map((t) => { const r = s.siteTasks[t.id]; return <li key={t.id}>{t.title} <span className="hint">{r ? `bearbeitet ${fmtDateTime(r.at)}, Selbstbewertung ${r.ticks.length}/${t.rubric.length}` : 'noch offen'}</span></li>; })}</ul>
       </Section>
 
       <Section title="Lernhistorie">

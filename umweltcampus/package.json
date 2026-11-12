@@ -1,13 +1,14 @@
 {
   "name": "umweltcampus-bau-ch",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build && node scripts/make-artifact.mjs",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "e2e": "node tests/e2e.cjs dist/index.html"
   },
   "dependencies": {
     "react": "^19.1.1",

@@ -6,14 +6,23 @@ import { RichText } from '../components/RichText';
 import { QuestionBlock } from '../components/Question';
 import { Diagram } from '../components/Diagrams';
 import { FeynmanBlock, PracticeCard } from '../components/Practice';
+import { SiteTaskBlock } from '../components/SiteTask';
 import { ReviewBadge, SourceList, Bar } from '../components/ui';
 import { newItem } from '../lib/srs';
 import type { LessonProgress } from '../lib/state';
 
 const STEP_LABEL: Record<Step['kind'], string> = {
-  situation: 'Einstieg', quiz: 'Wissensabfrage', explain: 'Erklärung', diagram: 'Schema', example: 'Beispiel', deep: 'Vertiefung',
-  decision: 'Entscheidung', review: 'Wiederholung', feynman: 'Erklären', practice: 'Praxisauftrag', summary: 'Zusammenfassung', sources: 'Quellen',
+  situation: 'Einstieg', quiz: 'Wissensabfrage', brief: 'Kurz erklärt', explain: 'Erklärung', diagram: 'Schema', example: 'Beispiel', deep: 'Vertiefung',
+  decision: 'Entscheidung', sitetask: 'Baustellenaufgabe', review: 'Wiederholung', feynman: 'Erklären', practice: 'Praxisauftrag', summary: 'Zusammenfassung', sources: 'Quellen',
 };
+
+function stepLabel(st: Step): string {
+  if (st.kind === 'decision' && st.id.endsWith('-abw')) return 'Abwägung';
+  if (st.kind === 'example') return st.context === 'Hoch- und Tiefbau' ? 'Beispiel' : 'Beispiel ' + st.context;
+  return STEP_LABEL[st.kind];
+}
+
+const fresh = (firstId: string): LessonProgress => ({ cur: firstId, seen: [firstId], startedAt: Date.now(), answers: {}, open: {} });
 
 export function LessonView({ id }: { id: string }) {
   const lesson = L.get(id);
@@ -23,86 +32,89 @@ export function LessonView({ id }: { id: string }) {
 
   useEffect(() => {
     if (!lesson) return;
-    if (!s.lessons[id]) {
-      update((x) => ({ ...x, lessons: { ...x.lessons, [id]: { step: 0, viewed: [0], startedAt: Date.now(), answers: {}, open: {} } } }));
-      log('lektion_start', id, lesson.title);
-    }
+    if (s.lessons[id]) return;
+    update((x) => (x.lessons[id] ? x : { ...x, lessons: { ...x.lessons, [id]: fresh(lesson.steps[0].id) } }));
+    log('lektion_start', id, lesson.title);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
-  const step = p?.step ?? 0;
+  // Aktueller Schritt über seine ID; unbekannte IDs (z. B. entfernte Schritte) → erster Schritt
+  const idx = lesson ? Math.max(0, lesson.steps.findIndex((st) => st.id === p?.cur)) : 0;
+
   useEffect(() => {
     if (!lesson) return;
-    const st = lesson.steps[step];
+    const st = lesson.steps[idx];
     setCoachCtx({ label: `Lektion «${lesson.title}», Schritt: ${st?.title ?? ''}`, text: `Lernziele: ${lesson.objectives.join('; ')}` });
     return () => setCoachCtx(null);
-  }, [lesson, step, setCoachCtx]);
+  }, [lesson, idx, setCoachCtx]);
 
   if (!lesson) return <div className="page"><p>Lektion nicht gefunden.</p><a href="#module">Zur Modulübersicht</a></div>;
   const mod = MODULES.find((m) => m.id === lesson.moduleId)!;
+  const seen = new Set(p?.seen ?? []);
 
   const go = (i: number) => {
+    const sid = lesson.steps[i].id;
     update((x) => {
-      const cur = x.lessons[id] ?? { step: 0, viewed: [], startedAt: Date.now(), answers: {}, open: {} };
-      return { ...x, lessons: { ...x.lessons, [id]: { ...cur, step: i, viewed: cur.viewed.includes(i) ? cur.viewed : [...cur.viewed, i] } } };
+      const cur = x.lessons[id] ?? fresh(lesson.steps[0].id);
+      return { ...x, lessons: { ...x.lessons, [id]: { ...cur, cur: sid, seen: cur.seen.includes(sid) ? cur.seen : [...cur.seen, sid] } } };
     });
     top.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   const complete = () => {
     const now = Date.now();
+    const wasDone = !!p?.completedAt;
     update((x) => {
       const sr = { ...x.sr };
       for (const c of CARDS.filter((c) => lesson.topics.includes(c.topic) && c.level <= lesson.level + 1)) if (!sr['c:' + c.id]) sr['c:' + c.id] = newItem(now + 86_400_000);
-      const cur = x.lessons[id];
+      const cur = x.lessons[id] ?? fresh(lesson.steps[0].id);
       return { ...x, sr, lessons: { ...x.lessons, [id]: { ...cur, completedAt: cur.completedAt ?? now } } };
     });
-    log('lektion_ende', id, lesson.title);
-    const idx = LESSONS.findIndex((l) => l.id === id);
-    const next = LESSONS[idx + 1];
+    if (!wasDone) log('lektion_ende', id, lesson.title);
+    const next = LESSONS[LESSONS.findIndex((l) => l.id === id) + 1];
     location.hash = next ? '#lektion-' + next.id : '#modul-' + lesson.moduleId;
   };
 
   const answered = (qid: string) => !!p?.answers[qid] || !!p?.open[qid];
   const qIds = lesson.steps.flatMap((st) => (st.kind === 'quiz' || st.kind === 'review' ? st.questionIds : st.kind === 'decision' ? [st.questionId] : []));
   const missing = qIds.filter((q) => !answered(q)).length;
-  const cur = lesson.steps[step];
-  const isLast = step === lesson.steps.length - 1;
+  const cur = lesson.steps[idx];
+  const isLast = idx === lesson.steps.length - 1;
 
   return (
     <div className="page lesson" ref={top}>
       <nav className="crumbs"><a href="#module">Fachmodule</a> / <a href={'#modul-' + mod.id}>Modul {mod.no}</a> / <span>Lektion {lesson.order}</span></nav>
       <header className="lesson-head">
         <div>
-          <span className="eyebrow">{LEVEL_LABEL[lesson.level]} · ca. {lesson.minutes} Min.</span>
+          <span className="eyebrow">{LEVEL_LABEL[lesson.level]} · ca. {lesson.minutes} Min. (mit Vertiefung und Aufgabe länger)</span>
           <h1>{lesson.title}</h1>
         </div>
         <ReviewBadge status={lesson.review} />
       </header>
-      <details className="objectives" open={step === 0}>
+      <details className="objectives" open={idx === 0}>
         <summary>Lernziele</summary>
         <ul>{lesson.objectives.map((o) => <li key={o}>{o}</li>)}</ul>
       </details>
       <ol className="stepper" aria-label="Schritte der Lektion">
         {lesson.steps.map((st, i) => (
-          <li key={i}>
-            <button type="button" className={(i === step ? 'cur ' : '') + (p?.viewed.includes(i) ? 'seen' : '')} onClick={() => go(i)} aria-current={i === step ? 'step' : undefined} title={st.title}>
-              <span className="mono">{i + 1}</span><span className="st-l">{STEP_LABEL[st.kind]}</span>
+          <li key={st.id}>
+            <button type="button" className={(i === idx ? 'cur ' : '') + (seen.has(st.id) ? 'seen' : '')} onClick={() => go(i)} aria-current={i === idx ? 'step' : undefined} title={st.title}>
+              <span className="mono">{i + 1}</span><span className="st-l">{stepLabel(st)}</span>
             </button>
           </li>
         ))}
       </ol>
-      <Bar value={(p?.viewed.length ?? 0) / lesson.steps.length} label="Fortschritt der Lektion" small />
+      <Bar value={lesson.steps.filter((st) => seen.has(st.id)).length / lesson.steps.length} label="Fortschritt der Lektion" small />
 
-      <section className={'step step-' + cur.kind} key={step}>
-        <span className="eyebrow">{STEP_LABEL[cur.kind]}</span>
+      <section className={'step step-' + cur.kind} key={cur.id}>
+        <span className="eyebrow">{stepLabel(cur)}</span>
         <h2>{cur.title}</h2>
         <StepBody step={cur} lesson={lesson} />
       </section>
 
       <div className="step-nav">
-        <button type="button" className="btn" disabled={step === 0} onClick={() => go(step - 1)}>Zurück</button>
-        {!isLast && <button type="button" className="btn primary" onClick={() => go(step + 1)}>Weiter: {STEP_LABEL[lesson.steps[step + 1].kind]}</button>}
+        <button type="button" className="btn" disabled={idx === 0} onClick={() => go(idx - 1)}>Zurück</button>
+        {!isLast && <button type="button" className="btn primary" onClick={() => go(idx + 1)}>Weiter: {stepLabel(lesson.steps[idx + 1])}</button>}
         {isLast && (
           <div className="finish">
             {missing > 0 && <span className="hint">{missing} Frage{missing === 1 ? '' : 'n'} noch nicht beantwortet – Sie können trotzdem abschliessen.</span>}
@@ -131,6 +143,8 @@ function StepBody({ step, lesson }: { step: Step; lesson: Lesson }) {
   switch (step.kind) {
     case 'situation':
       return <div className="situation"><RichText text={step.text} /><p className="hint">Überlegen Sie kurz, was Sie tun würden. Die Lektion greift die Situation wieder auf.</p></div>;
+    case 'brief':
+      return <div className="brief"><RichText text={step.text} /><p className="hint">Das Wesentliche in einer Minute – so können Sie es auf der Baustelle erklären. Die Erklärung und die Vertiefung folgen.</p></div>;
     case 'explain':
     case 'deep':
       return <RichText text={step.text} />;
@@ -144,6 +158,8 @@ function StepBody({ step, lesson }: { step: Step; lesson: Lesson }) {
       return <>{qs(step.questionIds)}</>;
     case 'decision':
       return <>{qs([step.questionId])}</>;
+    case 'sitetask':
+      return <SiteTaskBlock id={step.taskId} />;
     case 'feynman':
       return <FeynmanBlock id={step.feynmanId} />;
     case 'practice':
@@ -152,7 +168,7 @@ function StepBody({ step, lesson }: { step: Step; lesson: Lesson }) {
       return <ul className="summary">{step.points.map((x) => <li key={x}>{x}</li>)}</ul>;
     case 'sources':
       return <>
-        <div className="callout law"><span className="callout-label">Verlässlichkeit</span><span>Die Inhalte dieser Lektion sind als Entwurf erstellt und noch nicht durch eine Fachperson gegen die aktuellen Originalquellen geprüft. Kantone, Gemeinden, Bewilligungsauflagen und besondere Projektbedingungen können zusätzliche Anforderungen stellen. Bei kritischen Entscheiden aktuelle Vorgaben prüfen und Fachpersonen beiziehen.</span></div>
+        <div className="callout law"><span className="callout-label">Verlässlichkeit</span><span>Die Inhalte stehen auf Prüfstatus «Entwurf». Ausgewählte Rechtsaussagen sind über kantonale Vollzugshilfen bestätigt (gekennzeichnet), aber noch nicht durch eine Fachperson am Originaltext geprüft. Kantone, Gemeinden, Bewilligungsauflagen und besondere Projektbedingungen können zusätzliche Anforderungen stellen. Bei kritischen Entscheiden aktuelle Vorgaben prüfen und Fachpersonen beiziehen.</span></div>
         <SourceList ids={step.sourceIds} />
       </>;
   }

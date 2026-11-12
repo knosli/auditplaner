@@ -30,7 +30,7 @@ export function SimulatorView() {
                 {sc.status === 'verfuegbar' ? (
                   <div className="row">
                     <a className="btn primary" href={'#szenario-' + sc.id}>{runs.length ? 'Erneut spielen' : 'Fall starten'}</a>
-                    <span className="hint">{sc.stages.length > 6 ? '6–7' : sc.stages.length} Entscheidungsschritte · ca. {sc.minutes} Min.</span>
+                    <span className="hint">mehrstufig, mit Verzweigungen · ca. {sc.minutes} Min.</span>
                     {runs.length > 0 && <span className={'status-pill ' + (runs.some((r) => r.passed) ? 'st-bestaetigt' : 'st-in_arbeit')}>{runs.some((r) => r.passed) ? 'bestanden' : 'nicht bestanden'} · bestes {pct(best)}</span>}
                   </div>
                 ) : (
@@ -175,7 +175,7 @@ export function ScenarioPlayer({ id }: { id: string }) {
         <h1>{stage.title}</h1>
       </header>
       <div className="scene"><RichText text={stage.situation} /></div>
-      <StageInput sc={sc} stage={stage} a={a} setA={setA} revealed={revealed} />
+      <StageInput key={stage.id} sc={sc} stage={stage} a={a} setA={setA} revealed={revealed} />
       {!revealed ? (
         <div className="q-actions">
           <button type="button" className="btn primary" disabled={!canConfirm(stage, a)} onClick={confirm}>Entscheid bestätigen</button>

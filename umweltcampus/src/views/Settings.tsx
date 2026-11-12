@@ -42,7 +42,7 @@ export function SettingsView() {
       </Section>
       <DataPanel />
       <Section title="Über diese App">
-        <p>UmweltCampus Bau CH, Version 0.1 (erste Ausbaustufe). Inhalte Modul 2 «Gewässerschutz auf Baustellen»: Prüfstatus Entwurf. Die Kompetenzstufen der App sind interne Lernstände und keine staatlich oder offiziell anerkannten Qualifikationen.</p>
+        <p>UmweltCampus Bau CH, Version 0.2. Modul 2 «Gewässerschutz auf Baustellen» mit Kurzfassungen, Fachvertiefungen, Abwägungsübungen und Baustellenaufgaben. Prüfstatus Entwurf; ausgewählte Rechtsaussagen über kantonale Vollzugshilfen abgeglichen (12.11.2026). Die Kompetenzstufen der App sind interne Lernstände und keine staatlich oder offiziell anerkannten Qualifikationen.</p>
         <p className="hint">Vorbereitet für eine spätere Unternehmensversion (in Entwicklung): Benutzerrollen, Lernpfade für Poliere, Bauführer, Projektleiter und Umweltkontaktpersonen, Pflichtschulungen, Lernnachweise, firmeninterne Standards, Auswertungen pro Niederlassung, Inhaltsverwaltung durch Fachverantwortliche.</p>
       </Section>
     </div>

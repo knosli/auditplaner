@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { AbsetzRechner } from './Calculator';
 
 // Interaktive Schemata. Daten stehen bewusst hier beim Schema, weil sie an
 // die Darstellung gebunden sind; Texte sind kurz und verweisen auf Lektionen.
@@ -11,6 +12,7 @@ export function Diagram({ id }: { id: string }) {
     case 'sofortmassnahmen': return <Kette steps={SOFORT} variant="alarm" />;
     case 'verbindlichkeit': return <Verbindlichkeit />;
     case 'kontrollkreis': return <Kontrollkreis />;
+    case 'absetzrechner': return <AbsetzRechner />;
     default: return <p className="hint">Schema «{id}» nicht gefunden.</p>;
   }
 }

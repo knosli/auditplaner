@@ -36,7 +36,7 @@ function ClosedQuestion({ q, ctx, initial, onAnswered, silent, label }: Props) {
 
   const toggle = (id: string) => {
     if (done) return;
-    if (q.type === 'single') setSel([id]);
+    if (q.type === 'single' || q.type === 'best') setSel([id]);
     else setSel((x) => (x.includes(id) ? x.filter((y) => y !== id) : [...x, id]));
   };
   const check = () => {
@@ -52,19 +52,22 @@ function ClosedQuestion({ q, ctx, initial, onAnswered, silent, label }: Props) {
       <div className="q-meta">
         {label && <span>{label}</span>}
         <span>Stufe {q.level} · {LEVEL_SHORT[q.level]}</span>
-        <span>{q.type === 'multi' ? 'Mehrere Antworten möglich' : 'Eine Antwort'}</span>
+        <span>{q.type === 'multi' ? 'Mehrere Antworten möglich' : q.type === 'best' ? 'Abwägung – mehrere Antworten sind vertretbar, wählen Sie die beste' : 'Eine Antwort'}</span>
       </div>
       <p className="q-prompt"><InlineText text={q.prompt} /></p>
-      <div className="options" role={q.type === 'single' ? 'radiogroup' : 'group'}>
+      <div className="options" role={q.type === 'multi' ? 'group' : 'radiogroup'}>
         {q.options?.map((o) => {
           const chosen = sel.includes(o.id);
           const isCorrect = q.correct?.includes(o.id);
-          const cls = ['opt', chosen ? 'chosen' : '', done && !silent && isCorrect ? 'correct' : '', done && !silent && chosen && !isCorrect ? 'wrong' : ''].join(' ');
+          const best = q.type === 'best';
+          const w = o.weight ?? 0;
+          const good = best ? w >= 0.999 : isCorrect;
+          const cls = ['opt', chosen ? 'chosen' : '', done && !silent && good ? 'correct' : '', done && !silent && best && !good && w >= 0.5 ? 'partial' : '', done && !silent && chosen && !good && (!best || w < 0.5) ? 'wrong' : ''].join(' ');
           return (
             <label key={o.id} className={cls}>
-              <input type={q.type === 'single' ? 'radio' : 'checkbox'} name={name} checked={chosen} disabled={done} onChange={() => toggle(o.id)} />
+              <input type={q.type === 'multi' ? 'checkbox' : 'radio'} name={name} checked={chosen} disabled={done} onChange={() => toggle(o.id)} />
               <span><InlineText text={o.text} /></span>
-              {done && !silent && isCorrect && <span className="opt-mark">richtig</span>}
+              {done && !silent && (best ? <span className={'opt-mark ' + weightClass(w)}>{weightLabel(w)}</span> : isCorrect && <span className="opt-mark">richtig</span>)}
             </label>
           );
         })}
@@ -77,19 +80,43 @@ function ClosedQuestion({ q, ctx, initial, onAnswered, silent, label }: Props) {
         </div>
       )}
       {done && silent && <p className="hint">Antwort gespeichert. Die Auswertung folgt am Ende.</p>}
-      {done && !silent && <Feedback q={q} score={score} conf={conf} />}
+      {done && !silent && <Feedback q={q} score={score} conf={conf} sel={sel} />}
     </div>
   );
 }
 
-function Feedback({ q, score, conf }: { q: Question; score: number; conf?: Confidence }) {
+export function weightLabel(w: number) {
+  return w >= 0.999 ? 'am besten geeignet' : w >= 0.5 ? 'unter Voraussetzungen vertretbar' : w > 0 ? 'wenig geeignet' : 'ungeeignet';
+}
+function weightClass(w: number) {
+  return w >= 0.999 ? 'w-best' : w >= 0.5 ? 'w-ok' : 'w-bad';
+}
+
+function Feedback({ q, score, conf, sel }: { q: Question; score: number; conf?: Confidence; sel: string[] }) {
+  const best = q.type === 'best';
   return (
     <div className="feedback">
       <p className="fb-verdict">
-        {score === 1 ? 'Richtig.' : score > 0 ? `Teilweise richtig (${Math.round(score * 100)} %).` : 'Nicht richtig.'}
-        {score < 1 && conf === 3 && <span className="danger-note"> Sie waren sich sicher – das ist eine Fehlannahme, die wir gezielt wiederholen.</span>}
-        {score === 1 && conf === 1 && <span className="muted"> Richtig, aber unsicher – kommt bald wieder.</span>}
+        {best
+          ? score >= 0.999 ? 'Sie haben die am besten geeignete Massnahme gewählt.' : score >= 0.5 ? `Vertretbar, aber nicht die beste Wahl (${Math.round(score * 100)} %).` : `Wenig geeignet (${Math.round(score * 100)} %).`
+          : score === 1 ? 'Richtig.' : score > 0 ? `Teilweise richtig (${Math.round(score * 100)} %).` : 'Nicht richtig.'}
+        {score < (best ? 0.5 : 1) && conf === 3 && <span className="danger-note"> Sie waren sich sicher – das ist eine Fehlannahme, die wir gezielt wiederholen.</span>}
+        {score >= 0.999 && conf === 1 && <span className="muted"> Richtig, aber unsicher – kommt bald wieder.</span>}
       </p>
+      {best && (
+        <div className="analysis">
+          <h5>Beurteilung aller Optionen</h5>
+          {[...(q.options ?? [])].sort((a, b) => (b.weight ?? 0) - (a.weight ?? 0)).map((o) => (
+            <div key={o.id} className={'ana ' + weightClass(o.weight ?? 0) + (sel.includes(o.id) ? ' mine' : '')}>
+              <div className="ana-head"><span className={'opt-mark ' + weightClass(o.weight ?? 0)}>{weightLabel(o.weight ?? 0)}</span>{sel.includes(o.id) && <span className="badge">Ihre Wahl</span>}</div>
+              <p className="ana-text">{o.text}</p>
+              {o.why && <p><strong>Beurteilung:</strong> {o.why}</p>}
+              {o.prerequisites && <p><strong>Voraussetzungen:</strong> {o.prerequisites}</p>}
+              {o.risks && <p><strong>Risiken:</strong> {o.risks}</p>}
+            </div>
+          ))}
+        </div>
+      )}
       <RichText text={q.explanation} />
       {q.commonErrors.length > 0 && (
         <div className="errors">

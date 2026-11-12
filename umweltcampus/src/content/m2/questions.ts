@@ -298,7 +298,7 @@ export const M2_QUESTIONS: Question[] = [
       { id: 'd', text: 'Mit dichterem Beton bauen, dann ist es automatisch zulässig.' },
     ],
     correct: ['b'],
-    explanation: 'Die GSchV (Anhang 4) schränkt im Bereich Au Bauten ein, die unter den mittleren Grundwasserspiegel reichen; die Behörde kann unter Bedingungen Ausnahmen bewilligen. Das ist eine Frage der Projektbewilligung, nicht der Bauausführung – wer es erst auf der Baustelle merkt, hat ein Planungsproblem. (Prüfstatus: Regelung sinngemäss wiedergegeben, Detailbedingungen am Originaltext prüfen.)',
+    explanation: 'Die GSchV (Anhang 4) schränkt im Bereich Au Bauten ein, die unter den mittleren Grundwasserspiegel reichen; die Behörde kann unter Bedingungen Ausnahmen bewilligen. Ausnahmen setzen voraus, dass die Durchflusskapazität des Grundwassers um höchstens 10 % vermindert wird; ein Anspruch besteht nicht (bestätigt über kantonale Vollzugshilfen). Das ist eine Frage der Projektbewilligung, nicht der Bauausführung – wer es erst auf der Baustelle merkt, hat ein Planungsproblem.',
     commonErrors: ['Bereich Au als unverbindlichen Kartenhinweis sehen.', 'Bauliche Dichtheit mit der Zulässigkeit verwechseln.'],
     sources: ['gschv', 'gschg'],
   },

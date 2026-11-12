@@ -3,7 +3,9 @@
 // migriert werden kann. Keine personenbezogenen Daten ausser freiwilligen
 // Notizen der Lernenden.
 
-export const STATE_VERSION = 1;
+import { LEGACY_V1_STEPS } from './migrate';
+
+export const STATE_VERSION = 2;
 
 export type Confidence = 1 | 2 | 3; // 1 unsicher, 2 eher sicher, 3 sicher
 
@@ -26,8 +28,8 @@ export interface SRItem {
 }
 
 export interface LessonProgress {
-  step: number;
-  viewed: number[]; // gesehene Schritte
+  cur: string; // ID des aktuellen Schritts
+  seen: string[]; // IDs der gesehenen Schritte
   startedAt: number;
   completedAt?: number;
   answers: Record<string, string[]>; // Antworten in der Lektion (für Wiederaufnahme)
@@ -72,9 +74,15 @@ export interface FeynmanRecord {
   aiFeedback?: string;
 }
 
+export interface SiteTaskRecord {
+  text: string;
+  ticks: string[];
+  at: number;
+}
+
 export interface HistoryEvent {
   at: number;
-  type: 'lektion_start' | 'lektion_ende' | 'szenario' | 'pruefung' | 'wiederholung' | 'praxis' | 'feynman' | 'import';
+  type: 'lektion_start' | 'lektion_ende' | 'szenario' | 'pruefung' | 'wiederholung' | 'praxis' | 'feynman' | 'aufgabe' | 'import';
   ref: string;
   detail: string;
 }
@@ -98,6 +106,7 @@ export interface AppState {
   exams: ExamRun[];
   practice: Record<string, PracticeRecord>;
   feynman: Record<string, FeynmanRecord>;
+  siteTasks: Record<string, SiteTaskRecord>;
   history: HistoryEvent[];
   studySec: Record<string, number>; // 'YYYY-MM-DD' -> Sekunden
 }
@@ -115,6 +124,7 @@ export function emptyState(now = Date.now()): AppState {
     exams: [],
     practice: {},
     feynman: {},
+    siteTasks: {},
     history: [],
     studySec: {},
   };
@@ -144,15 +154,46 @@ export function normalizeState(raw: unknown): AppState {
     exams: Array.isArray(src.exams) ? (src.exams as ExamRun[]) : [],
     practice: isObj(src.practice) ? (src.practice as AppState['practice']) : {},
     feynman: isObj(src.feynman) ? (src.feynman as AppState['feynman']) : {},
+    siteTasks: isObj(src.siteTasks) ? (src.siteTasks as AppState['siteTasks']) : {},
     history: Array.isArray(src.history) ? (src.history as HistoryEvent[]) : [],
     studySec: isObj(src.studySec) ? (src.studySec as AppState['studySec']) : {},
   };
-  // Lektionsdatensätze ergänzen (ältere Stände)
+  // Lektionsfortschritt: Version 1 (Positionen) → Version 2 (Schritt-IDs)
   for (const k of Object.keys(s.lessons)) {
-    const l = s.lessons[k] as Partial<LessonProgress>;
-    s.lessons[k] = { step: l.step ?? 0, viewed: l.viewed ?? [], startedAt: l.startedAt ?? Date.now(), answers: l.answers ?? {}, open: l.open ?? {}, ...(l.completedAt ? { completedAt: l.completedAt } : {}) };
+    s.lessons[k] = migrateLesson(k, s.lessons[k] as unknown as Record<string, unknown>);
   }
+  s.version = STATE_VERSION;
   return s;
+}
+
+/** Einzelnen Lektionsdatensatz auf das aktuelle Format bringen (verlustfrei). */
+export function migrateLesson(lessonId: string, l: Record<string, unknown>): LessonProgress {
+  const legacy = LEGACY_V1_STEPS[lessonId] ?? [];
+  const fromIdx = (i: unknown) => (typeof i === 'number' ? legacy[i] : undefined);
+  let seen: string[] = Array.isArray(l.seen) ? (l.seen as unknown[]).filter((x): x is string => typeof x === 'string') : [];
+  if (Array.isArray(l.viewed)) for (const i of l.viewed) { const id = fromIdx(i); if (id && !seen.includes(id)) seen.push(id); }
+  const cur = typeof l.cur === 'string' ? l.cur : fromIdx(l.step) ?? seen[seen.length - 1] ?? '';
+  if (cur && !seen.includes(cur)) seen = [...seen, cur];
+  return {
+    cur,
+    seen,
+    startedAt: typeof l.startedAt === 'number' ? l.startedAt : Date.now(),
+    ...(typeof l.completedAt === 'number' ? { completedAt: l.completedAt } : {}),
+    answers: isObj(l.answers) ? (l.answers as LessonProgress['answers']) : {},
+    open: isObj(l.open) ? (l.open as LessonProgress['open']) : {},
+  };
+}
+
+/** Enthält der Stand Lernaktivität? (Ein frischer Stand darf nie einen gespeicherten überschreiben.) */
+export function hasProgress(s: AppState): boolean {
+  return Object.keys(s.lessons).length > 0 || s.answers.length > 0 || Object.keys(s.sr).length > 0 || s.exams.length > 0
+    || Object.keys(s.scenarios).length > 0 || Object.keys(s.practice).length > 0 || Object.keys(s.feynman).length > 0 || Object.keys(s.siteTasks).length > 0;
+}
+
+/** Soll der im Konto gespeicherte Stand den lokalen ersetzen? */
+export function preferRemote(local: AppState, remote: AppState | null): boolean {
+  if (!remote || !hasProgress(remote)) return false;
+  return !hasProgress(local) || remote.updatedAt > local.updatedAt;
 }
 
 export function exportPayload(s: AppState) {

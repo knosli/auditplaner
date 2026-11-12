@@ -6,6 +6,7 @@ import { RichText } from '../components/RichText';
 import { KindBadge, ReviewBadge, Section, SourceList } from '../components/ui';
 import { PracticeCard } from '../components/Practice';
 import { saveFile } from '../lib/platform';
+import { AbsetzRechner } from '../components/Calculator';
 
 const norm = (t: string) => t.toLowerCase().replace(/ß/g, 'ss');
 
@@ -155,6 +156,10 @@ export function ToolsView() {
             <LibBody key={cur.id} e={cur} interactive />
           </article>
         )}
+      </Section>
+      <Section title="Abschätzungen: Regenabfluss und Absetzfläche" id="rechner">
+        <p className="hint">Zum Plausibilisieren von Konzepten und Angeboten: Reicht das Absetzbecken für den erwarteten Zufluss? Wie viel Wasser bringt ein Starkregen?</p>
+        <AbsetzRechner />
       </Section>
       <Section title="Weitere Werkzeuge">
         <ul className="plain">

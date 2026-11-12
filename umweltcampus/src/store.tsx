@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { emptyState, dayKey, type AppState, type HistoryEvent } from './lib/state';
+import { emptyState, dayKey, hasProgress, preferRemote, type AppState, type HistoryEvent } from './lib/state';
 import { initAI, initCloud, loadLocal, saveLocal, type Cloud, type SampleFn } from './lib/platform';
 
 export type SyncStatus = 'lokal' | 'verbinde' | 'konto' | 'fehler' | 'kein_speicher';
@@ -42,6 +42,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const cloud = useRef<Cloud | null>(null);
   const cloudTimer = useRef<number | undefined>(undefined);
   const localOk = useRef(true);
+  const latest = useRef(s);
+  latest.current = s;
+  const hostTheme = useRef<string | null>(typeof document !== 'undefined' ? document.documentElement.getAttribute('data-theme') : null);
 
   const toast = useCallback((msg: string) => {
     setToastMsg(msg);
@@ -67,7 +70,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       window.clearTimeout(cloudTimer.current);
       cloudTimer.current = window.setTimeout(() => {
         cloud.current?.save(s).then(() => setSync('konto')).catch(() => setSync('fehler'));
-      }, 2500);
+      }, 4000);
     } else if (!localOk.current) setSync('kein_speicher');
     return () => window.clearTimeout(t);
   }, [s]);
@@ -88,15 +91,18 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           setSync(saveLocal(s) ? 'lokal' : 'kein_speicher');
           return;
         }
-        cloud.current = c;
         try {
           const remote = await c.load();
-          if (remote && remote.updatedAt > (loadLocal()?.updatedAt ?? 0)) {
+          const local = latest.current;
+          // Ein Stand ohne Lernaktivität (z. B. neues Gerät) überschreibt nie einen gespeicherten.
+          const takeRemote = preferRemote(local, remote);
+          if (takeRemote && remote) {
             setS(remote);
             toast('Lernstand aus Ihrem Konto geladen.');
-          } else {
-            await c.save(loadLocal() ?? s);
+          } else if (hasProgress(local) || !remote) {
+            await c.save(local);
           }
+          cloud.current = c;
           setSync('konto');
         } catch {
           setSync('fehler');
@@ -111,9 +117,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   // Theme
   useEffect(() => {
+    // «wie System» stellt den Zustand wieder her, den die Umgebung gesetzt hatte (z. B. claude.ai-Theme)
     const r = document.documentElement;
-    if (s.settings.theme === 'system') r.removeAttribute('data-theme');
-    else r.setAttribute('data-theme', s.settings.theme === 'dunkel' ? 'dark' : 'light');
+    if (s.settings.theme === 'system') {
+      if (hostTheme.current) r.setAttribute('data-theme', hostTheme.current);
+      else r.removeAttribute('data-theme');
+    } else r.setAttribute('data-theme', s.settings.theme === 'dunkel' ? 'dark' : 'light');
   }, [s.settings.theme]);
 
   const value = useMemo<Store>(() => ({ s, update, log, replaceState, sync, ai: s.settings.aiEnabled ? ai : null, aiChecked, term, openTerm, coachOpen, setCoachOpen, coachCtx, setCoachCtx, toast, toastMsg }), [s, update, log, replaceState, sync, ai, aiChecked, term, coachOpen, coachCtx, toast, toastMsg]);

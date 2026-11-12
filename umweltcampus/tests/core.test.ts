@@ -1,9 +1,11 @@
-import { CARDS, F, FEYNMAN, GLOSSARY, L, LESSONS, LIBRARY, Q, QUESTIONS, S, SCENARIOS, SOURCES, T, TASKS, TOPICS } from '../src/content';
+import { CARDS, F, FEYNMAN, GLOSSARY, L, LESSONS, LIBRARY, Q, QUESTIONS, S, SCENARIOS, SITETASKS, SOURCES, ST, T, TASKS, TOPICS } from '../src/content';
+import { LEGACY_V1_STEPS } from '../src/lib/migrate';
+import { requiredArea, runoff, stokes } from '../src/lib/calc';
 import { DAY, grade, review } from '../src/lib/srs';
 import { scoreQuestion, rubricHints, recordAnswer, topicCompetence, recommendedLevel, moduleRequirements, dueItems } from '../src/lib/learning';
 import { evaluateStage, nextStageId, summarize } from '../src/lib/scenario';
 import { buildExam, interleave } from '../src/lib/exam';
-import { emptyState, exportPayload, normalizeState } from '../src/lib/state';
+import { emptyState, exportPayload, normalizeState, preferRemote } from '../src/lib/state';
 
 const sourceIds = new Set(SOURCES.map((s) => s.id));
 const termIds = new Set(GLOSSARY.map((g) => g.id));
@@ -25,6 +27,14 @@ describe('Inhalte: Datenintegrität', () => {
       expect(topicIds.has(q.topic), q.id).toBe(true);
       expect(q.objective.length, q.id).toBeGreaterThan(5);
       if (q.type === 'open') expect(q.rubric?.length, q.id).toBeGreaterThanOrEqual(3);
+      else if (q.type === 'best') {
+        const ws = q.options!.map((o) => o.weight ?? -1);
+        expect(ws.filter((w) => w === 1).length, q.id).toBe(1);
+        expect(ws.filter((w) => w > 0 && w < 1).length, `${q.id}: mehrere plausible Optionen`).toBeGreaterThanOrEqual(1);
+        for (const o of q.options!) expect(o.why && o.why.length > 30, `${q.id}/${o.id} Begründung`).toBe(true);
+        expect(q.options!.some((o) => o.prerequisites) && q.options!.every((o) => o.risks || o.weight === 1), q.id).toBe(true);
+        expect(q.options!.find((o) => o.weight === 1)!.id).toBe(q.correct![0]);
+      }
       else {
         const opts = new Set(q.options!.map((o) => o.id));
         expect(q.correct!.length, q.id).toBeGreaterThan(0);
@@ -53,6 +63,7 @@ describe('Inhalte: Datenintegrität', () => {
       if (st.kind === 'practice') expect(T.has(st.taskId), st.taskId).toBe(true);
       if (st.kind === 'feynman') expect(F.has(st.feynmanId), st.feynmanId).toBe(true);
       if (st.kind === 'sources') st.sourceIds.forEach((id) => expect(sourceIds.has(id), id).toBe(true));
+      if (st.kind === 'sitetask') expect(ST.has(st.taskId), st.taskId).toBe(true);
       const text = 'text' in st ? st.text : '';
       for (const m of text.matchAll(/\[\[([a-z0-9-]+)/g)) expect(termIds.has(m[1]), `${l.id}: Begriff ${m[1]}`).toBe(true);
     }
@@ -89,7 +100,45 @@ describe('Inhalte: Datenintegrität', () => {
   });
 });
 
+describe('Version 2: Didaktische Pflichtelemente je Lektion', () => {
+  test('Schritt-IDs sind eindeutig und stabil', () => {
+    const all = LESSONS.flatMap((l) => l.steps.map((st) => st.id));
+    expect(new Set(all).size).toBe(all.length);
+    for (const l of LESSONS) for (const st of l.steps) expect(st.id.startsWith(l.id + '-'), st.id).toBe(true);
+  });
+  test('alle Schritt-IDs aus Version 1 existieren weiterhin (Fortschritt bleibt erhalten)', () => {
+    for (const [lid, ids] of Object.entries(LEGACY_V1_STEPS)) for (const sid of ids) expect(L.get(lid)!.steps.some((st) => st.id === sid), sid).toBe(true);
+  });
+  test('jede Lektion: Kurz erklärt, ausführliche Vertiefung, Abwägung, Baustellenaufgabe, Hoch- und Tiefbau', () => {
+    for (const l of LESSONS) {
+      const k = (kind: string) => l.steps.filter((st) => st.kind === kind);
+      expect(k('brief').length, l.id).toBe(1);
+      const deep = k('deep')[0] as { text: string };
+      expect(deep.text.length, `${l.id} Vertiefung`).toBeGreaterThan(2500);
+      expect(k('decision').some((st) => 'questionId' in st && Q.get(st.questionId)?.type === 'best'), `${l.id} Abwägung`).toBe(true);
+      expect(k('sitetask').length, l.id).toBeGreaterThanOrEqual(1);
+      const ctx = k('example').map((st) => ('context' in st ? st.context : ''));
+      expect(ctx.some((c) => c.includes('Hochbau')) && ctx.some((c) => c.includes('Tiefbau')), `${l.id} Hoch- und Tiefbau`).toBe(true);
+    }
+  });
+  test('Baustellenaufgaben haben Daten, Raster, Musterlösung und gültige Quellen', () => {
+    for (const t of SITETASKS) {
+      expect(t.data.length, t.id).toBeGreaterThan(1);
+      expect(t.rubric.length, t.id).toBeGreaterThanOrEqual(4);
+      expect(t.solution.length, t.id).toBeGreaterThan(400);
+      t.sources.forEach((s) => expect(sourceIds.has(s), t.id).toBe(true));
+    }
+  });
+});
+
 describe('Bewertung von Antworten', () => {
+  test('Abwägung: Punkte = Gewicht der gewählten Option', () => {
+    const q = Q.get('m2-d02')!;
+    expect(scoreQuestion(q, ['b'])).toBe(1);
+    expect(scoreQuestion(q, ['c'])).toBe(0.75);
+    expect(scoreQuestion(q, ['d'])).toBe(0);
+    expect(scoreQuestion(q, [])).toBe(0);
+  });
   const single = QUESTIONS.find((q) => q.type === 'single')!;
   const multi = QUESTIONS.find((q) => q.type === 'multi' && q.options!.length - q.correct!.length >= 1)!;
   test('single: richtig = 1, falsch = 0', () => {
@@ -159,7 +208,7 @@ describe('Kompetenz und Empfehlungen', () => {
   });
   test('sicher falsch wird als Fehlannahme erkannt', () => {
     let s = emptyState();
-    s = { ...s, lessons: { 'm2-l1': { step: 0, viewed: [0], startedAt: 0, answers: {}, open: {} } } };
+    s = { ...s, lessons: { 'm2-l1': { cur: 'm2-l1-situation', seen: ['m2-l1-situation'], startedAt: 0, answers: {}, open: {} } } };
     s = recordAnswer(s, 'm2-q01', 0, 3, 'lektion');
     const c = topicCompetence(s).find((x) => x.topic === 'recht')!;
     expect(c.dangerous).toContain('m2-q01');
@@ -169,7 +218,7 @@ describe('Kompetenz und Empfehlungen', () => {
   test('Stufe 2 wird erst empfohlen, wenn Stufe 1 gefestigt ist', () => {
     let s = emptyState();
     const l1 = LESSONS.filter((l) => l.level === 1);
-    for (const l of l1) s.lessons[l.id] = { step: 0, viewed: [0], startedAt: 0, completedAt: 1, answers: {}, open: {} };
+    for (const l of l1) s.lessons[l.id] = { cur: l.steps[0].id, seen: [l.steps[0].id], startedAt: 0, completedAt: 1, answers: {}, open: {} };
     for (const q of QUESTIONS.filter((q) => q.level === 1)) s = recordAnswer(s, q.id, 1, 3, 'lektion');
     expect(recommendedLevel(s, 'm2')).toBe(2);
     for (const q of QUESTIONS.filter((q) => q.level === 1)) s = recordAnswer(s, q.id, 0, 2, 'lektion');
@@ -244,6 +293,73 @@ describe('Prüfungen', () => {
   });
 });
 
+describe('Rechner', () => {
+  test('Stokes: Mittelsilt bei 10 °C ≈ 0.28 mm/s; halber Durchmesser = viermal langsamer', () => {
+    expect(stokes(0.02, 10) * 1000).toBeCloseTo(0.275, 2);
+    expect(stokes(0.01, 10) / stokes(0.02, 10)).toBeCloseTo(0.25, 5);
+    expect(stokes(0.02, 20)).toBeGreaterThan(stokes(0.02, 5));
+  });
+  test('Hazen: 8 l/s, Mittelsilt, Zuschlag 2 ≈ 58 m² (Musterlösung Aufgabe t4)', () => {
+    expect(requiredArea(8, stokes(0.02, 10), 2)).toBeGreaterThan(55);
+    expect(requiredArea(8, stokes(0.02, 10), 2)).toBeLessThan(60);
+    expect(requiredArea(0, 1)).toBe(0);
+  });
+  test('Abfluss: 0.9 × 200 l/(s·ha) × 2000 m² = 36 l/s', () => {
+    expect(runoff(0.9, 200, 2000)).toBeCloseTo(36, 6);
+  });
+});
+
+describe('Lernstand: Migration und Konto-Abgleich', () => {
+  const v1 = {
+    app: 'umweltcampus-bau-ch',
+    state: {
+      version: 1, createdAt: 1, updatedAt: 1000,
+      lessons: {
+        'm2-l1': { step: 7, viewed: [0, 1, 2, 3, 4, 5, 6, 7], startedAt: 5, completedAt: 900, answers: { 'm2-q01': ['b'] }, open: {} },
+        'm2-l3': { step: 9, viewed: [0, 1, 2, 9], startedAt: 6, answers: {}, open: {} },
+      },
+      answers: [{ q: 'm2-q01', at: 10, score: 1, correct: true, conf: 3, ctx: 'lektion' }],
+      sr: { 'q:m2-q01': { ease: 2.5, interval: 2, due: 2000, reps: 1, lapses: 0, last: 10 } },
+      scenarios: {}, exams: [], practice: {}, feynman: {}, history: [], studySec: { '2026-11-12': 600 },
+      settings: { theme: 'dunkel', coachMode: 'erklaeren', askConfidence: true, aiEnabled: true },
+    },
+  };
+  test('Stand aus App 0.1 wird verlustfrei übernommen', () => {
+    const s = normalizeState(JSON.parse(JSON.stringify(v1)));
+    expect(s.version).toBe(2);
+    const l1 = s.lessons['m2-l1'];
+    expect(l1.completedAt).toBe(900);
+    expect(l1.cur).toBe('m2-l1-decision');
+    expect(l1.seen).toContain('m2-l1-deep');
+    expect(l1.seen).toHaveLength(8);
+    expect(l1.answers['m2-q01']).toEqual(['b']);
+    const l3 = s.lessons['m2-l3'];
+    expect(l3.cur).toBe('m2-l3-feynman');
+    expect(l3.completedAt).toBeUndefined();
+    expect(s.answers).toHaveLength(1);
+    expect(s.sr['q:m2-q01'].interval).toBe(2);
+    expect(s.studySec['2026-11-12']).toBe(600);
+    expect(s.settings.theme).toBe('dunkel');
+    expect(s.siteTasks).toEqual({});
+    // jede migrierte ID existiert in der aktuellen Lektion
+    for (const [lid, p] of Object.entries(s.lessons)) for (const id of p.seen) expect(L.get(lid)!.steps.some((st) => st.id === id), id).toBe(true);
+  });
+  test('Migration ist idempotent', () => {
+    const once = normalizeState(JSON.parse(JSON.stringify(v1)));
+    const twice = normalizeState(JSON.parse(JSON.stringify(exportPayload(once))));
+    expect(twice.lessons).toEqual(once.lessons);
+  });
+  test('ein leerer lokaler Stand überschreibt nie den Konto-Stand', () => {
+    const remote = normalizeState(JSON.parse(JSON.stringify(v1)));
+    const fresh = emptyState(Date.now() + 10_000); // neuer, aber leer
+    expect(preferRemote(fresh, remote)).toBe(true);
+    expect(preferRemote(remote, emptyState())).toBe(false);
+    const localNewer = { ...remote, updatedAt: remote.updatedAt + 1 };
+    expect(preferRemote(localNewer, remote)).toBe(false);
+    expect(preferRemote(remote, { ...remote, updatedAt: remote.updatedAt + 1 })).toBe(true);
+  });
+});
+
 describe('Lernstand: Export und Import', () => {
   test('Export lässt sich wieder importieren', () => {
     let s = emptyState();
@@ -260,7 +376,8 @@ describe('Lernstand: Export und Import', () => {
   });
   test('fehlende Felder werden ergänzt', () => {
     const s = normalizeState({ version: 1, lessons: { x: { step: 2 } } });
-    expect(s.lessons.x.viewed).toEqual([]);
+    expect(s.lessons.x.seen).toEqual([]);
+    expect(s.version).toBe(2);
     expect(s.settings.theme).toBe('system');
   });
 });

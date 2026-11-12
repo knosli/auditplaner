@@ -7,7 +7,12 @@ import { grade, review } from './srs';
 
 /** Punkte 0..1 für geschlossene Fragen. Multi: richtige minus falsche Wahlen. */
 export function scoreQuestion(q: Question, selected: string[]): number {
-  if (!q.correct || q.type === 'open') return 0;
+  if (q.type === 'open') return 0;
+  if (q.type === 'best') {
+    const o = q.options?.find((x) => x.id === selected[0]);
+    return selected.length === 1 && o ? Math.max(0, Math.min(1, o.weight ?? 0)) : 0;
+  }
+  if (!q.correct) return 0;
   const corr = new Set(q.correct);
   if (q.type === 'single') return selected.length === 1 && corr.has(selected[0]) ? 1 : 0;
   const hits = selected.filter((s) => corr.has(s)).length;
@@ -74,7 +79,7 @@ export function topicCompetence(s: AppState): TopicCompetence[] {
   const last = lastAnswers(s);
   return TOPICS.map((t) => {
     const lessons = LESSONS.filter((l) => l.topics.includes(t.id));
-    const viewed = lessons.some((l) => (s.lessons[l.id]?.viewed.length ?? 0) > 0);
+    const viewed = lessons.some((l) => (s.lessons[l.id]?.seen.length ?? 0) > 0);
     const qs = QUESTIONS.filter((q) => q.topic === t.id);
     const answered = qs.map((q) => last.get(q.id)).filter((a): a is AnswerRecord => !!a);
     const ok = answered.filter((a) => a.correct).length;
@@ -177,7 +182,7 @@ export function moduleProgress(s: AppState, moduleId: string): number {
     const p = s.lessons[l.id];
     if (!p) return x;
     if (p.completedAt) return x + 1;
-    return x + Math.min(0.9, p.viewed.length / l.steps.length);
+    return x + Math.min(0.9, p.seen.filter((id) => l.steps.some((st) => st.id === id)).length / l.steps.length);
   }, 0) / lessons.length;
   const other = req.slice(1).filter((r) => r.done).length / 3;
   return lessonShare * 0.55 + other * 0.45;
@@ -199,7 +204,7 @@ export function recommendations(s: AppState, now = Date.now()): Recommendation[]
   const danger = topicCompetence(s).filter((t) => t.dangerous.length);
   if (danger.length) recs.push({ kind: 'luecke', title: `Fehlannahme klären: ${danger[0].title}`, why: 'Sie haben hier eine Frage falsch beantwortet, waren sich aber sicher. Solche Irrtümer sind auf der Baustelle am gefährlichsten.', href: '#wiederholung' });
   const started = LESSONS.find((l) => s.lessons[l.id] && !s.lessons[l.id].completedAt);
-  if (started) recs.push({ kind: 'lektion', title: `Weiter: ${started.title}`, why: `Begonnen, bei Schritt ${s.lessons[started.id].step + 1} von ${started.steps.length}.`, href: '#lektion-' + started.id });
+  if (started) recs.push({ kind: 'lektion', title: `Weiter: ${started.title}`, why: `Begonnen, bei Schritt ${Math.max(1, started.steps.findIndex((st) => st.id === s.lessons[started.id].cur) + 1)} von ${started.steps.length}.`, href: '#lektion-' + started.id });
   const next = LESSONS.find((l) => !s.lessons[l.id]);
   if (next && !started) {
     const rec = recommendedLevel(s, next.moduleId);

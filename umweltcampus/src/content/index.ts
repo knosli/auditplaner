@@ -3,7 +3,9 @@ import { M2_CARDS } from './m2/cards';
 import { M2_LESSONS } from './m2/lessons';
 import { M2_TASKS, M2_FEYNMAN } from './m2/tasks';
 import { SCENARIOS } from './m2/scenarios';
-import type { Card, FeynmanTask, Lesson, PracticeTask, Question, Scenario } from './types';
+import { M2_DECISIONS } from './m2/decisions';
+import { M2_SITETASKS } from './m2/sitetasks';
+import type { Card, FeynmanTask, Lesson, PracticeTask, Question, Scenario, SiteTask } from './types';
 
 export { MODULES, TOPICS, LEVEL_LABEL, LEVEL_SHORT } from './modules';
 export { SOURCES, SOURCE_KIND_LABEL, REVIEW_LABEL } from './sources';
@@ -12,11 +14,12 @@ export { LIBRARY, LIB_CATEGORY_LABEL } from './library';
 export { SCENARIOS, CRITERION_LABEL } from './m2/scenarios';
 
 // Neue Module: hier ihre Datensätze anhängen.
-export const QUESTIONS: Question[] = [...M2_QUESTIONS];
+export const QUESTIONS: Question[] = [...M2_QUESTIONS, ...M2_DECISIONS];
 export const CARDS: Card[] = [...M2_CARDS];
 export const LESSONS: Lesson[] = [...M2_LESSONS].sort((a, b) => a.order - b.order);
 export const TASKS: PracticeTask[] = [...M2_TASKS];
 export const FEYNMAN: FeynmanTask[] = [...M2_FEYNMAN];
+export const SITETASKS: SiteTask[] = [...M2_SITETASKS];
 
 const byId = <T extends { id: string }>(arr: T[]) => new Map(arr.map((x) => [x.id, x] as const));
 export const Q = byId(QUESTIONS);
@@ -25,3 +28,4 @@ export const L = byId(LESSONS);
 export const T = byId(TASKS);
 export const F = byId(FEYNMAN);
 export const S = byId<Scenario>(SCENARIOS);
+export const ST = byId(SITETASKS);

@@ -58,11 +58,23 @@ export interface ModuleMeta {
   topics: string[];
 }
 
-export type QuestionType = 'single' | 'multi' | 'open';
+/**
+ * single: eine richtige Antwort; multi: mehrere richtige;
+ * best: Abwägung – mehrere Antworten sind vertretbar, jede hat ein Gewicht
+ *       (1 = am besten geeignet, 0.5–0.75 = unter Voraussetzungen vertretbar,
+ *       0–0.25 = ungeeignet) und eine Begründung mit Voraussetzungen und Risiken;
+ * open: Freitext mit Bewertungsraster.
+ */
+export type QuestionType = 'single' | 'multi' | 'best' | 'open';
 
 export interface Option {
   id: string;
   text: string;
+  /** nur bei 'best' */
+  weight?: number;
+  why?: string;
+  prerequisites?: string;
+  risks?: string;
 }
 
 export interface RubricPoint {
@@ -101,8 +113,12 @@ export interface Card {
   sources: string[];
 }
 
-export type Step =
+export type Step = StepBody & { id: string };
+
+export type StepBody =
   | { kind: 'situation'; title: string; text: string }
+  | { kind: 'brief'; title: string; text: string }
+  | { kind: 'sitetask'; title: string; taskId: string }
   | { kind: 'quiz'; title: string; questionIds: string[] }
   | { kind: 'explain'; title: string; text: string }
   | { kind: 'diagram'; title: string; diagram: string; caption: string }
@@ -126,6 +142,22 @@ export interface Lesson {
   objectives: string[];
   steps: Step[];
   review: ReviewStatus;
+}
+
+/** Praktische Baustellenaufgabe innerhalb einer Lektion (fiktive Projektdaten). */
+export interface SiteTask {
+  id: string;
+  moduleId: string;
+  topic: string;
+  level: Level;
+  setting: 'Hochbau' | 'Tiefbau';
+  title: string;
+  situation: string;
+  data: string[];
+  assignment: string;
+  rubric: RubricPoint[];
+  solution: string;
+  sources: string[];
 }
 
 export interface FeynmanTask {

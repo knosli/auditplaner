@@ -169,7 +169,7 @@ export function ModuleDetail({ id }: { id: string }) {
         <ol className="lessonlist">
           {lessons.map((l) => {
             const p = s.lessons[l.id];
-            const state = p?.completedAt ? 'abgeschlossen' : p ? `Schritt ${p.step + 1}/${l.steps.length}` : 'offen';
+            const state = p?.completedAt ? 'abgeschlossen' : p ? `Schritt ${Math.max(1, l.steps.findIndex((st) => st.id === p.cur) + 1)}/${l.steps.length}` : 'offen';
             return (
               <li key={l.id} className={(p?.completedAt ? 'done ' : '') + (l.level > rec ? 'ahead' : '')}>
                 <span className="mono">{l.order}</span>

@@ -35,6 +35,15 @@ export function RichText({ text }: { text: string }) {
     <div className="rich">
       {blocks.map((b, bi) => {
         const lines = b.split('\n');
+        if (lines.length > 1 && lines.every((l) => l.trim().startsWith('|'))) {
+          const rows = lines.filter((l) => !/^\|\s*-{2,}/.test(l.trim())).map((l) => l.trim().replace(/^\||\|$/g, '').split('|').map((c) => c.trim()));
+          return (
+            <div className="tablewrap" key={bi}>
+              <table className="table"><thead><tr>{rows[0].map((c, i) => <th key={i}><Inline text={c} /></th>)}</tr></thead>
+                <tbody>{rows.slice(1).map((r, ri) => <tr key={ri}>{r.map((c, i) => <td key={i}><Inline text={c} /></td>)}</tr>)}</tbody></table>
+            </div>
+          );
+        }
         if (lines.every((l) => /^- /.test(l))) return <ul key={bi}>{lines.map((l, i) => <li key={i}><Inline text={l.slice(2)} /></li>)}</ul>;
         if (lines.every((l) => /^\d+\. /.test(l))) return <ol key={bi}>{lines.map((l, i) => <li key={i}><Inline text={l.replace(/^\d+\. /, '')} /></li>)}</ol>;
         return (

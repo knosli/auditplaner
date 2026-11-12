@@ -29,9 +29,17 @@ statischen Webserver. `dist/artifact.html` ist dieselbe App als claude.ai-Artifa
   zusätzlich private Speicherung im Konto, KI-Coach (Claude) und Datei-Export.
   Ohne diese Fähigkeiten arbeitet die App regelbasiert weiter.
 
+## Lernstand-Versionen
+
+Version 2 (App 0.2) speichert den Lektionsfortschritt über stabile Schritt-IDs statt
+Positionen. Ältere Stände werden beim Laden automatisch migriert (`src/lib/migrate.ts`,
+`migrateLesson` in `src/lib/state.ts`). Schritt-IDs nie umbenennen oder wiederverwenden;
+neue Schritte erhalten neue IDs.
+
 ## Fachlicher Prüfstatus
 
-Alle Inhalte stehen auf **Entwurf**: aus Fachwissen erstellt, Rechtsartikel sinngemäss,
-noch nicht gegen die aktuellen Originalquellen (Fedlex, SIA, kantonale Merkblätter)
-geprüft. Freigabe: Quelle prüfen, `lastChecked` und `review` in `src/content/sources.ts`
+Alle Inhalte stehen auf **Entwurf**: aus Fachwissen erstellt, Rechtsartikel sinngemäss.
+Ausgewählte Aussagen (pH 6.5–9.0, Art. 32 GSchV, 10-%-Regel Anhang 4 Ziff. 211,
+Art. 8 BGF, Art. 70 GSchG) wurden am 12.11.2026 über kantonale Vollzugshilfen abgeglichen,
+aber noch nicht am Fedlex-Volltext. Freigabe: Quelle prüfen, `lastChecked` und `review` in `src/content/sources.ts`
 bzw. am Inhalt setzen.
