@@ -23,6 +23,7 @@ export const LIBRARY: LibraryEntry[] = [
     items: [
       { group: '1 Was fällt an?', points: ['Abwasserarten je Bauphase erfasst (trüb, alkalisch, ölhaltig, häuslich, Grundwasser, Regen)', 'Mengen abgeschätzt, inkl. Starkregen'] },
       { group: '2 Wie wird getrennt?', points: ['Fremdwasser wird ferngehalten', 'Unverschmutztes Wasser getrennt geführt'] },
+      { group: '0 Risikostufe nach SIA 431:2022', points: ['Gewässerkritische Bauprozesse geprüft (z. B. Oberflächenabtrag, Sprengungen, Bauen auf belasteten Standorten, Bauchemikalien)', 'Betroffene Schutzgüter geprüft (Gewässer, Grundwasser, Schutzzonen)', 'Stufe 1, 2 oder 3 festgelegt; ab Stufe 3 Fachspezialist beigezogen'] },
       { group: '3 Wie wird behandelt?', points: ['Anlagen bemessen (durch Fachplaner oder Lieferant)', 'Neutralisation für alkalisches Wasser vorgesehen', 'Betrieb geregelt (Schlamm, CO₂, Wartung)'] },
       { group: '4 Wohin wird abgeleitet?', points: ['Einleitstellen gemäss Kataster', 'Bewilligungen bzw. Zustimmungen vorhanden, Bedingungen bekannt'] },
       { group: '5 Wer kontrolliert was?', points: ['Zuständigkeiten namentlich bzw. nach Funktion', 'Messungen, Häufigkeit, Protokolle festgelegt', 'Meldewege bei Überschreitung festgelegt'] },
@@ -111,7 +112,7 @@ Offene Massnahmen der letzten Begehung mit Status.
 
 **Folge**: Kolmation, Verstoss gegen Bewilligung, Meldepflicht.
 
-**Massnahmen**: Fremdwasser fernhalten, Container in Serie, Schlammentnahme mit Zuständigkeit, Notfallregel «bei Trübung abstellen», Grube als Puffer.`,
+**Massnahmen**: Fremdwasser fernhalten, mehr wirksame Fläche (Container parallel, Lamellenklärer; in Serie gegen Kurzschluss), Schlammentnahme mit Zuständigkeit, Notfallregel «bei Trübung abstellen», Grube als Puffer.`,
     sources: ['kanton-merkblatt', 'praxis'],
   },
   {
@@ -120,11 +121,10 @@ Offene Massnahmen der letzten Begehung mit Status.
     summary: 'Ablauf für die ersten Minuten.',
     tags: ['Havarie', 'Öl', 'Notfall', 'Sofortmassnahmen', 'Alarmierung', '118', '117'],
     text: `1. **Eigene Sicherheit**: Zündquellen, Dämpfe, Maschinen.
-2. **Stoppen**: Maschine abstellen, Leck abdichten, Gebinde aufrichten.
-3. **Eindämmen**: Schächte abdecken, Bindemittel, Erddamm.
-4. **Alarmieren**: bei Gefahr für Gewässer, Kanalisation oder Untergrund **118** oder **117**; intern nach Alarmplan.
-5. **Aufnehmen und entsorgen**: als Sonderabfall, mit Nachweis.
-6. **Dokumentieren**: Zeiten, Mengen, Fotos, Massnahmen, Meldungen.
+2. **Gleichzeitig**: Maschine abstellen, Leck abdichten, Schächte abdecken, Bindemittel – **und** bei konkreter Gefahr für Gewässer, Kanalisation oder Untergrund **sofort 118 oder 117** (zu zweit: eine Person alarmiert sofort); intern nach Alarmplan.
+3. **Weitere sichere Massnahmen**; Ölsperren im Gewässer nur durch Instruierte vom sicheren Ufer, sonst Feuerwehr/Ölwehr.
+4. **Aufnehmen und entsorgen**: nach Abfallklassierung, meist Sonderabfall mit Begleitschein.
+5. **Dokumentieren**: Zeiten, Mengen, Fotos, Massnahmen, Meldungen.
 
 !> Nie wegspülen. Nie abwarten.`,
     sources: ['notruf', 'praxis'],

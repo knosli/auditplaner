@@ -103,7 +103,7 @@ Der Schacht auf dem Vorplatz war ein **Meteorschacht**. Wie konnte das passieren
 - **Unverschmutztes Regenwasser** (saubere Dächer, Containerdächer, unbelastete Flächen): darf in der Regel nach Vorgaben der Gemeinde versickern oder abgeleitet werden. Es darf nicht über verschmutzte Flächen fliessen.
 - **Trübes Wasser** (Baugrube, Erdbau, Fahrspuren nach Regen): enthält Feinstoffe → Absetzen, siehe Lektion 4.
 - **Alkalisches Wasser** (Betonwaschwasser, Spritzbeton, Bohrpfähle, Schleif- und Bohrwasser): pH 11–13 → Absetzen und Neutralisieren, siehe Lektion 3.
-- **Öl- und treibstoffhaltiges Wasser** (Betankungs-, Wasch- und Abstellplätze): → Rückhalt, ggf. Ölabscheider oder Entsorgung als Sonderabfall.
+- **Öl- und treibstoffhaltiges Wasser** (Betankungs-, Wasch- und Abstellplätze): → Rückhalt, ggf. Ölabscheider oder Entsorgung nach Abfallklassierung, häufig als Sonderabfall.
 - **Häusliches Abwasser** (WC, Waschanlagen der Unterkünfte): → [[schmutzwasser|Schmutzwasserkanal]] bzw. Fäkalientank.
 - **Gepumptes Grundwasser** (Wasserhaltung): oft sauber, aber häufig trüb oder durch Frischbeton alkalisch → Bewilligung regelt Qualität und Ableitung.
 
@@ -179,10 +179,10 @@ In einem kleinen Bach können wenige hundert Liter Waschwasser ein Fischsterben 
 Feststoffe zuerst zurückhalten ([[absetzbecken|Absetzbecken bzw. -container]]). Sonst stören sie die Neutralisation und lagern sich in Leitungen ab. Den Schlamm regelmässig entfernen und als mineralischen Abfall entsorgen.
 
 ### 3. Neutralisieren
-Bevorzugt mit **CO₂** ([[neutralisation|Neutralisation]]): Es bildet Kohlensäure, eine schwache Säure. Auch bei Überdosierung sinkt der pH kaum unter ca. 6, und es müssen keine starken Säuren gelagert werden. Mineralsäuren (z. B. Salzsäure) nur mit Fachwissen und Arbeitssicherheitsmassnahmen.
+Bevorzugt mit **CO₂** ([[neutralisation|Neutralisation]]): Es bildet Kohlensäure, eine schwache Säure, lässt sich gut dosieren, und es müssen keine starken Mineralsäuren gelagert werden. Eine Garantie gegen Übersäuerung ist das nicht: Auch mit CO₂ wird der pH laufend gemessen, und die Ableitung stoppt bei Abweichung. Mineralsäuren (z. B. Salzsäure) nur mit Fachwissen und Arbeitssicherheitsmassnahmen.
 
 ### 4. Kontrollieren und dokumentieren
-pH vor der Ableitung messen (kalibriertes Gerät oder automatische Messung mit Abschaltung). Protokoll mit Datum, Zeit, Wert, Visum, Massnahme bei Abweichung.
+pH vor der Ableitung messen: im Chargenbetrieb mit einem vor Gebrauch kalibrierten Handgerät, im Dauerbetrieb mit einer Sonde mit Aufzeichnung, Alarm und automatischer Abschaltung. Protokoll mit Datum, Zeit, Wert, Visum, Massnahme bei Abweichung.
 
 ### 5. Ableiten gemäss Bewilligung
 In der Regel in den Schmutzwasserkanal, mit Zustimmung bzw. Bewilligung von Gemeinde oder Kanton und unter deren Bedingungen. Für die Ableitung gilt in der Regel ein pH zwischen **6.5 und 9.0** (GSchV Anhang 3.2 Ziff. 2, von kantonalen Merkblättern für Baustellenabwasser angewendet). Nach der Neutralisation braucht es eine **pH-Endkontrolle**.
@@ -240,7 +240,7 @@ Ein [[absetzbecken|Absetzbecken]] funktioniert, wenn das Wasser lange genug ruhi
 - genügend **Oberfläche** im Verhältnis zur Zuflussmenge,
 - beruhigter **Einlauf** und Abzug an der Oberfläche (keine Kurzschlussströmung),
 - regelmässige **Schlammentnahme**,
-- mehrere Kammern oder Container in Serie.
+- mehrere Kammern oder Container: **in Serie** beruhigen sie die Strömung und verhindern Kurzschluss, **parallel** geschaltet erhöhen sie die wirksame Fläche.
 
 Sand setzt sich schnell ab, Silt langsam, feiner Ton kaum. Bei tonigen Böden stossen einfache Becken an Grenzen. Dann helfen: Wasseranfall reduzieren, grössere Becken, Filtration, oder – nur nach Abklärung – [[flockungsmittel|Flockungsmittel]].
 
@@ -310,15 +310,16 @@ Was tun Sie in den nächsten zwei Minuten?` },
 - biologisch schnell abbaubare Hydrauliköle prüfen – sie reduzieren Folgen, sind aber **kein Freipass**.
 
 §> Art. 22 GSchG gesetzlich verbindlich (sinngemäss). Konkrete Lagervorgaben: kantonale Vollzugshilfe.` },
-      { id: 'm2-l5-diagram', kind: 'diagram', title: 'Notfallkarte: Sofortmassnahmen bei Austritt', diagram: 'sofortmassnahmen', caption: 'Reihenfolge für die ersten Minuten. Bei mehreren Personen laufen Alarmierung und Eindämmung parallel.' },
+      { id: 'm2-l5-diagram', kind: 'diagram', title: 'Notfallkarte: Sofortmassnahmen bei Austritt', diagram: 'sofortmassnahmen', caption: 'Die ersten Minuten. Nach der eigenen Sicherheit laufen Eindämmung und Alarmierung gleichzeitig – nicht nacheinander.' },
       { id: 'm2-l5-explain-2', kind: 'explain', title: 'Havarie: Was in den ersten Minuten zählt', text: `Eine [[havarie|Havarie]] ist ein unerwartetes Ereignis mit Austritt von Stoffen. Die ersten Minuten entscheiden über die Grösse des Schadens.
 
-1. **Eigene Sicherheit**: Zündquellen, Dämpfe, laufende Maschinen beachten.
-2. **Stoppen**: Maschine abstellen, Leck abdichten, Gebinde aufrichten.
-3. **Eindämmen**: Schächte abdecken (Schachtabdeckmatte), Bindemittel streuen, Erddamm schieben.
-4. **Alarmieren**: Bei Gefahr für Gewässer, Kanalisation oder Untergrund sofort **118** oder **117**. Intern nach Alarmplan (Polier, Bauführer, Umweltfachperson).
-5. **Aufnehmen und entsorgen**: verschmutztes Bindemittel und Erdreich als Sonderabfall.
-6. **Dokumentieren**: Zeiten, Mengen, Fotos, Massnahmen, Meldungen.
+1. **Eigene Sicherheit**: Zündquellen, Dämpfe, laufende Maschinen beachten. Keine gefährlichen Rettungsversuche, nicht in Schächte oder ins Gewässer steigen.
+2. **Gleichzeitig stoppen, eindämmen und alarmieren**: Maschine abstellen, Leck abdichten, Schächte abdecken, Bindemittel streuen – und sobald Gewässer, Kanalisation oder Untergrund konkret gefährdet sind, **sofort 118 oder 117** alarmieren. Sind Sie zu zweit, alarmiert die zweite Person sofort; allein alarmieren Sie, sobald die Gefährdung erkennbar ist, und dämmen dann weiter ein. Intern nach Alarmplan (Polier, Bauführer, Umweltfachperson).
+3. **Weitere sichere Massnahmen** bis zum Eintreffen der Einsatzkräfte; Ölsperren im Gewässer nur durch instruierte Personen vom sicheren Ufer aus – sonst Sache der Feuerwehr bzw. Ölwehr.
+4. **Aufnehmen und entsorgen**: verschmutztes Bindemittel, Erdreich und Schachtinhalt nach Abfallklassierung durch einen berechtigten Entsorger (meist Sonderabfall mit Begleitschein).
+5. **Dokumentieren**: Zeiten, Mengen, Fotos, Massnahmen, Meldungen – Zeiten am besten von Anfang an notieren.
+
+§> Meldepflicht: Das GSchG verpflichtet Inhaber von Anlagen mit wassergefährdenden Flüssigkeiten, Flüssigkeitsverluste unverzüglich zu melden und zumutbare Abwehrmassnahmen zu treffen (laut externem Prüfbericht Art. 22 Abs. 6 GSchG – Wortlaut nicht selbst verifiziert, auf Fedlex prüfen).
 
 !> Nie mit Wasser wegspülen und nie «abwarten, ob es reicht». Frühe Meldung ist professionell; Verschweigen verschlimmert Schaden und rechtliche Folgen.` },
       { id: 'm2-l5-example', kind: 'example', title: 'Beispiel aus dem Hochbau: Kleine Menge, grosse Wirkung', context: 'Hochbau', text: `Ein Mitarbeiter kippt beim Betanken eines Rüttlers etwa 3 Liter Benzin auf den Platz. Er streut Bindemittel, sammelt es ein – und meldet nichts. Ein Teil war bereits in einen Meteorschacht gelaufen. Zwei Tage später meldet ein Anwohner Ölschimmer und Geruch am Bach. Die Polizei ermittelt; die Kosten für Spülung des Leitungsabschnitts und Abklärungen trägt der Verursacher.
@@ -333,7 +334,7 @@ Die Lehre: Schon wenige Liter im Meteorschacht sind meldepflichtig relevant. Und
       { id: 'm2-l5-practice', kind: 'practice', title: 'Praxisauftrag', taskId: 'm2-p4' },
       { id: 'm2-l5-summary', kind: 'summary', title: 'Zusammenfassung', points: [
         'Betankung und Lagerung: dicht, überdacht, mit Rückhalt, fern von Gewässern und Schutzzonen.',
-        'Sofortmassnahmen: Sicherheit → Stoppen → Eindämmen → Alarmieren (118/117) → Aufnehmen → Dokumentieren.',
+        'Sofortmassnahmen: eigene Sicherheit → gleichzeitig stoppen/eindämmen UND sofort alarmieren (118/117) → aufnehmen, nach Klassierung entsorgen → dokumentieren.',
         'Nie wegspülen, nie abwarten. Frühe Meldung begrenzt den Schaden.',
         'Nachbereitung = Ursachenanalyse und wirksame Vorbeugemassnahmen.',
       ] },

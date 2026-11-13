@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { Question, RubricPoint } from '../content/types';
-import { recordAnswer, rubricHints, scoreQuestion } from '../lib/learning';
+import { criticalChoice, recordAnswer, rubricHints, scoreQuestion } from '../lib/learning';
 import type { AnswerRecord, Confidence } from '../lib/state';
 import { useStore } from '../store';
 import { InlineText, RichText } from './RichText';
@@ -41,8 +41,9 @@ function ClosedQuestion({ q, ctx, initial, onAnswered, silent, label }: Props) {
   };
   const check = () => {
     setDone(true);
-    update((st) => recordAnswer(st, q.id, score, conf, ctx));
-    onAnswered?.(sel, score);
+    const crit = criticalChoice(q, sel);
+    update((st) => recordAnswer(st, q.id, score, conf, ctx, Date.now(), { crit }));
+    onAnswered?.(sel, crit ? 0 : score);
   };
   const canCheck = sel.length > 0 && (!askConf || conf !== undefined);
   const name = `q-${q.id}-${ctx}`;
@@ -67,7 +68,7 @@ function ClosedQuestion({ q, ctx, initial, onAnswered, silent, label }: Props) {
             <label key={o.id} className={cls}>
               <input type={q.type === 'multi' ? 'checkbox' : 'radio'} name={name} checked={chosen} disabled={done} onChange={() => toggle(o.id)} />
               <span><InlineText text={o.text} /></span>
-              {done && !silent && (best ? <span className={'opt-mark ' + weightClass(w)}>{weightLabel(w)}</span> : isCorrect && <span className="opt-mark">richtig</span>)}
+              {done && !silent && (best ? <span className={'opt-mark ' + weightClass(w)}>{weightLabel(w, o.critical)}</span> : isCorrect && <span className="opt-mark">richtig</span>)}
             </label>
           );
         })}
@@ -85,7 +86,8 @@ function ClosedQuestion({ q, ctx, initial, onAnswered, silent, label }: Props) {
   );
 }
 
-export function weightLabel(w: number) {
+export function weightLabel(w: number, critical?: boolean) {
+  if (critical) return 'kritisch – unzulässig';
   return w >= 0.999 ? 'am besten geeignet' : w >= 0.5 ? 'unter Voraussetzungen vertretbar' : w > 0 ? 'wenig geeignet' : 'ungeeignet';
 }
 function weightClass(w: number) {
@@ -94,8 +96,14 @@ function weightClass(w: number) {
 
 function Feedback({ q, score, conf, sel }: { q: Question; score: number; conf?: Confidence; sel: string[] }) {
   const best = q.type === 'best';
+  const crit = (q.options ?? []).filter((o) => o.critical && sel.includes(o.id));
   return (
     <div className="feedback">
+      {crit.length > 0 && (
+        <div className="callout crit"><span className="callout-label">Kritischer Fehler</span>
+          <span>Diese Wahl würde ein Gewässer gefährden oder ist ohne Bewilligung unzulässig. Sie erhält 0 Punkte und wird wie eine Fehlannahme gezielt wiederholt – unabhängig davon, wie sicher Sie waren.</span>
+        </div>
+      )}
       <p className="fb-verdict">
         {best
           ? score >= 0.999 ? 'Sie haben die am besten geeignete Massnahme gewählt.' : score >= 0.5 ? `Vertretbar, aber nicht die beste Wahl (${Math.round(score * 100)} %).` : `Wenig geeignet (${Math.round(score * 100)} %).`
@@ -108,7 +116,7 @@ function Feedback({ q, score, conf, sel }: { q: Question; score: number; conf?: 
           <h5>Beurteilung aller Optionen</h5>
           {[...(q.options ?? [])].sort((a, b) => (b.weight ?? 0) - (a.weight ?? 0)).map((o) => (
             <div key={o.id} className={'ana ' + weightClass(o.weight ?? 0) + (sel.includes(o.id) ? ' mine' : '')}>
-              <div className="ana-head"><span className={'opt-mark ' + weightClass(o.weight ?? 0)}>{weightLabel(o.weight ?? 0)}</span>{sel.includes(o.id) && <span className="badge">Ihre Wahl</span>}</div>
+              <div className="ana-head"><span className={'opt-mark ' + weightClass(o.weight ?? 0)}>{weightLabel(o.weight ?? 0, o.critical)}</span>{sel.includes(o.id) && <span className="badge">Ihre Wahl</span>}</div>
               <p className="ana-text">{o.text}</p>
               {o.why && <p><strong>Beurteilung:</strong> {o.why}</p>}
               {o.prerequisites && <p><strong>Voraussetzungen:</strong> {o.prerequisites}</p>}
@@ -138,7 +146,8 @@ function OpenQuestion({ q, ctx, initialText, onAnswered, silent, label }: Props)
   const finish = () => {
     const score = rubric.length ? ticks.length / rubric.length : 0;
     setPhase('done');
-    update((st) => recordAnswer(st, q.id, score >= 0.8 ? 1 : score, undefined, ctx));
+    // Selbstbewertung: wird gespeichert, aber nie als «richtig» bzw. Fachnachweis verbucht
+    update((st) => recordAnswer(st, q.id, score, undefined, ctx, Date.now(), { self: true }));
     onAnswered?.(ticks, score, text);
   };
   return (
@@ -159,6 +168,7 @@ function OpenQuestion({ q, ctx, initialText, onAnswered, silent, label }: Props)
       {phase === 'rate' && <RubricRating rubric={rubric} text={text} ticks={ticks} setTicks={setTicks} onDone={finish} task={q.prompt} noAI={silent} />}
       {phase === 'done' && !silent && (
         <div className="feedback">
+          <p className="hint">Ihre Selbstbewertung: {ticks.length} von {rubric.length} Rasterpunkten. Das ist eine Selbsteinschätzung, kein unabhängiger Fachnachweis.</p>
           <h5>Musterüberlegung</h5>
           <RichText text={q.explanation} />
           <div className="errors"><h5>Häufige Fehler</h5><ul>{q.commonErrors.map((e, i) => <li key={i}>{e}</li>)}</ul></div>
@@ -197,7 +207,8 @@ export function RubricRating({ rubric, text, ticks, setTicks, onDone, task, audi
   };
   return (
     <div className="rubric">
-      <h5>Bewertungsraster – haken Sie ehrlich ab, was Ihre Antwort tatsächlich enthält</h5>
+      <h5>Selbstbewertung am Raster – haken Sie ehrlich ab, was Ihre Antwort tatsächlich enthält</h5>
+      <p className="hint">Die Selbstbewertung hilft beim Lernen und plant Wiederholungen. Sie zählt nicht als unabhängige Fachprüfung und nicht für «sicher beherrscht».</p>
       <ul>
         {rubric.map((r) => (
           <li key={r.id}>

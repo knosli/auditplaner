@@ -3,6 +3,8 @@ import { useStore } from '../store';
 import { Bar, DevBadge, Section, pct, fmtDateTime } from '../components/ui';
 import { dueItems, knowledgeGaps, levelStats, moduleProgress, moduleRequirements, overallProgress, recommendations, recommendedLevel, studyMinutes, topicCompetence } from '../lib/learning';
 import { PRACTICE_LABEL } from '../components/Practice';
+import { LegacyNotice } from './Progress';
+import { isLegacyRun } from '../lib/versioning';
 
 export function Dashboard() {
   const { s } = useStore();
@@ -23,6 +25,7 @@ export function Dashboard() {
         </div>
       </header>
 
+      <LegacyNotice />
       <div className="kpis">
         <div className="kpi"><span className="eyebrow">Gesamtfortschritt (12 Module)</span><span className="kpi-v mono">{pct(overallProgress(s))}</span><Bar value={overallProgress(s)} label="Gesamtfortschritt" small /></div>
         <div className="kpi"><span className="eyebrow">Lektionen abgeschlossen</span><span className="kpi-v mono">{doneLessons}/{LESSONS.length}</span><span className="hint">verfügbar in Modul 2</span></div>
@@ -62,7 +65,7 @@ export function Dashboard() {
             : <p className="hint">Noch keine Lücken erkannt. Sie entstehen aus Ihren Antworten und Ihrer Sicherheitseinschätzung.</p>}
         </Section>
         <Section title="Letzte Baustellenfälle">
-          {lastScen.length ? <ul className="plain">{lastScen.map((r) => { const sc = SCENARIOS.find((x) => x.id === r.id); return <li key={r.at}><a href={'#szenario-' + r.id}>Fall {sc?.code}: {sc?.title}</a> <span className="mono">{pct(r.total)}</span> {r.passed ? <span className="status-pill st-bestaetigt">bestanden</span> : <span className="status-pill st-in_arbeit">nicht bestanden</span>}<span className="hint"> {fmtDateTime(r.at)}</span></li>; })}</ul>
+          {lastScen.length ? <ul className="plain">{lastScen.map((r) => { const sc = SCENARIOS.find((x) => x.id === r.id); return <li key={r.at}><a href={'#szenario-' + r.id}>Fall {sc?.code}: {sc?.title}</a> <span className="mono">{pct(r.objective ?? r.total)}</span> {isLegacyRun(r.id, r) ? <span className="status-pill">frühere Bewertungsfassung</span> : r.passed ? <span className="status-pill st-bestaetigt">bestanden</span> : <span className="status-pill st-in_arbeit">nicht bestanden</span>}<span className="hint"> {fmtDateTime(r.at)}</span></li>; })}</ul>
             : <p className="hint">Noch kein Fall gespielt. <a href="#simulator">Zum Simulator</a></p>}
         </Section>
       </div>

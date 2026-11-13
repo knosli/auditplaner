@@ -13,6 +13,7 @@ export function Diagram({ id }: { id: string }) {
     case 'verbindlichkeit': return <Verbindlichkeit />;
     case 'kontrollkreis': return <Kontrollkreis />;
     case 'absetzrechner': return <AbsetzRechner />;
+    case 'sia-stufen': return <SiaStufen />;
     default: return <p className="hint">Schema «{id}» nicht gefunden.</p>;
   }
 }
@@ -22,12 +23,12 @@ const ROUTES: Record<Route, string> = {
   schmutz: 'Schmutzwasserkanal → ARA',
   meteor: 'Meteorschacht → Gewässer',
   versick: 'Versickerung → Grundwasser',
-  entsorg: 'Entsorgung (Saugwagen, Sonderabfall)',
+  entsorg: 'Entsorgung (Saugwagen, nach Abfallklassierung)',
   werk: 'Rückgabe ans Betonwerk',
 };
 const WASSER: { id: string; label: string; vor: string; ok: Route[]; bedingt: Route[]; nie: Route[]; note: string }[] = [
   { id: 'beton', label: 'Betonwaschwasser', vor: 'Absetzen, Neutralisieren (CO₂), pH messen', ok: ['werk'], bedingt: ['schmutz', 'entsorg'], nie: ['meteor', 'versick'], note: 'Schmutzwasserkanal nur behandelt und mit Zustimmung/Bewilligung. Am besten: Entstehung vermeiden, Trommel im Werk reinigen.' },
-  { id: 'trueb', label: 'Trübes Baugrubenwasser', vor: 'Absetzen (Becken/Container in Serie)', ok: [], bedingt: ['meteor', 'schmutz', 'versick'], nie: [], note: 'Jede Ableitung nur gemäss Bewilligung und erst nach Absetzen («klar»). Versickerung nur mit Bewilligung.' },
+  { id: 'trueb', label: 'Trübes Baugrubenwasser', vor: 'Absetzen (genug wirksame Fläche; Container parallel bzw. in Serie gegen Kurzschluss)', ok: [], bedingt: ['meteor', 'schmutz', 'versick'], nie: [], note: 'Jede Ableitung nur gemäss Bewilligung und erst nach Absetzen («klar»). Versickerung nur mit Bewilligung.' },
   { id: 'oel', label: 'Ölhaltiges Wasser', vor: 'Rückhalten, ggf. Ölabscheider', ok: ['entsorg'], bedingt: ['schmutz'], nie: ['meteor', 'versick'], note: 'Kleine Mengen mit Bindemittel aufnehmen und als Sonderabfall entsorgen. Über Abscheider nur, wenn bewilligt.' },
   { id: 'haeusl', label: 'WC- und Waschwasser', vor: 'keine', ok: ['schmutz'], bedingt: ['entsorg'], nie: ['meteor', 'versick'], note: 'Anschluss an Schmutzwasserkanal oder Fäkalientank mit Entsorgung.' },
   { id: 'regen', label: 'Sauberes Regenwasser', vor: 'Von verschmutzten Flächen fernhalten', ok: ['versick', 'meteor'], bedingt: [], nie: [], note: 'Nach Vorgaben der Gemeinde. Darf nicht über Waschplatz, Lager oder Baugrube fliessen – sonst wird es Baustellenabwasser.' },
@@ -104,10 +105,9 @@ const KETTE = [
 ];
 const SOFORT = [
   { t: 'Sicherheit', d: 'Zündquellen, Dämpfe, Maschinen', who: 'alle' },
-  { t: 'Stoppen', d: 'Maschine aus, Leck dicht, Gebinde auf', who: 'vor Ort' },
-  { t: 'Eindämmen', d: 'Schacht abdecken, Bindemittel, Damm', who: 'vor Ort' },
-  { t: 'Alarmieren', d: '118 / 117 · intern nach Alarmplan', who: 'Polier' },
-  { t: 'Aufnehmen', d: 'als Sonderabfall entsorgen', who: 'Polier / Entsorger' },
+  { t: 'Stoppen + eindämmen', d: 'Maschine aus, Leck dicht, Schacht abdecken, Bindemittel', who: 'vor Ort – gleichzeitig mit:' },
+  { t: 'Alarmieren', d: 'sofort 118 / 117 bei Gefahr für Gewässer oder Kanalisation · intern nach Alarmplan', who: 'zweite Person, sonst sofort selbst' },
+  { t: 'Aufnehmen', d: 'nach Abfallklassierung entsorgen (meist Sonderabfall)', who: 'Polier / Entsorger' },
   { t: 'Dokumentieren', d: 'Zeiten, Mengen, Fotos, Meldungen', who: 'Bauführung' },
 ];
 
@@ -168,6 +168,39 @@ function Kontrollkreis() {
           <span className="k-who">{x.r}</span>
         </div>
       ))}
+    </div>
+  );
+}
+
+function SiaStufen() {
+  const [proc, setProc] = useState(false);
+  const [gut, setGut] = useState(false);
+  const [calc, setCalc] = useState(false);
+  const stufe = !proc && !gut ? 1 : calc ? 3 : 2;
+  const box = [
+    { n: 1, t: 'Stufe 1 – Grundmassnahmen', d: 'Herkömmliche Baustelle. Interkantonales Merkblatt; vermeiden – trennen – behandeln – kontrolliert ableiten.', who: 'Planer / Bauführung' },
+    { n: 2, t: 'Stufe 2 – Risikobeurteilung', d: 'Gewässerkritischer Prozess oder empfindliches Schutzgut. Vertiefte Beurteilung, zusätzliche Massnahmen; Grundmassnahmen gelten weiter.', who: 'in der Regel Planer' },
+    { n: 3, t: 'Stufe 3 – Berechnung', d: 'Verträglichkeit muss rechnerisch nachgewiesen werden (u. a. Verdünnungsrechnung). Behandlung, Überwachung, Einleitbedingungen daraus.', who: 'Fachspezialist' },
+  ];
+  return (
+    <div className="diagram sia">
+      <fieldset className="checklist">
+        <legend>Triage – Lernhilfe, ersetzt die Normkriterien nicht</legend>
+        <label><input type="checkbox" checked={proc} onChange={() => setProc(!proc)} /> Gewässerkritischer Bauprozess (z. B. Oberflächenabtrag, Sprengungen, Bauen auf belastetem Standort)</label>
+        <label><input type="checkbox" checked={gut} onChange={() => setGut(!gut)} /> Empfindliches Schutzgut betroffen (z. B. kleines Fischgewässer als Vorfluter, Grundwasser, Schutzzone)</label>
+        <label><input type="checkbox" checked={calc} disabled={!proc && !gut} onChange={() => setCalc(!calc)} /> Einleitung, deren Verträglichkeit sich nicht ohne Berechnung beurteilen lässt</label>
+      </fieldset>
+      <div className="kreis">
+        {box.map((b) => (
+          <div key={b.n} className={'kreis-item' + (b.n === stufe ? ' sia-on' : '')}>
+            <span className="k-no mono">{b.n}</span>
+            <strong>{b.t}</strong>
+            <span>{b.d}</span>
+            <span className="k-who">{b.who}</span>
+          </div>
+        ))}
+      </div>
+      <p className="hint">Tendenz: Stufe {stufe}. Die verbindliche Einstufung erfolgt nach den Kriterien der SIA 431:2022 durch Planer bzw. Fachspezialist; im Zweifel höher einstufen lassen.</p>
     </div>
   );
 }

@@ -30,13 +30,16 @@ export function AbsetzRechner() {
         <label className="field"><span>Zuschlag (Turbulenz, Kurzschluss)</span><input id="calc-f" inputMode="decimal" value={factor} onChange={(e) => setFactor(e.target.value)} /></label>
         <label className="field"><span>Vorhandene Oberfläche [m²]</span><input id="calc-have" inputMode="decimal" value={have} onChange={(e) => setHave(e.target.value)} /></label>
       </div>
+      {(!(Number(q.replace(',', '.')) > 0) || !(Number(factor.replace(',', '.')) >= 1 && Number(factor.replace(',', '.')) <= 4)) && (
+        <p className="error">Bitte gültige Werte eingeben: Zufluss grösser als 0, Zuschlag zwischen 1 und 4.</p>
+      )}
       <dl className="calc-out">
         <div><dt>Sinkgeschwindigkeit</dt><dd className="mono">{fmt(vs * 1000, 3)} mm/s · {fmt(vs * 3600, 2)} m/h</dd></div>
         <div><dt>Zufluss</dt><dd className="mono">{fmt(qn * 3.6, 1)} m³/h</dd></div>
         <div><dt>Nötige Oberfläche</dt><dd className="mono strong">{need > 100000 ? '> 100 000' : fmt(need, need < 10 ? 1 : 0)} m²</dd></div>
         <div><dt>Vorhanden / nötig</dt><dd className={'mono ' + (ratio >= 1 ? 'ok' : 'crit')}>{need > 0 ? Math.round(ratio * 100) + ' %' : '–'}</dd></div>
       </dl>
-      <p className="hint">Formeln: v = g·(ρs−ρw)·d² / (18·μ) für Quarz; A = Q / v × Zuschlag. Idealisierte Abschätzung zur Plausibilisierung, keine Bemessung. Feinste Partikel und Flockung, Strömung und Schlammstand bestimmen die tatsächliche Wirkung.</p>
+      <p className="hint">Formeln: v = g·(ρs−ρw)·d² / (18·μ) für Quarz; A = Q / v × Zuschlag. Idealisierte Abschätzung zur Plausibilisierung, keine Bemessung: kugelförmige Einzelkörner, ruhige Strömung, keine Flockung. Der Zuschlag ist eine Annahme, kein Normwert. «Vorhandene Oberfläche» meint die wirksame Fläche: Container in Serie addieren sich nicht, parallel geschaltete schon.</p>
       <RunoffCalc />
     </div>
   );

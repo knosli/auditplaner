@@ -326,7 +326,7 @@ describe('Lernstand: Migration und Konto-Abgleich', () => {
   };
   test('Stand aus App 0.1 wird verlustfrei übernommen', () => {
     const s = normalizeState(JSON.parse(JSON.stringify(v1)));
-    expect(s.version).toBe(2);
+    expect(s.version).toBe(3);
     const l1 = s.lessons['m2-l1'];
     expect(l1.completedAt).toBe(900);
     expect(l1.cur).toBe('m2-l1-decision');
@@ -377,7 +377,7 @@ describe('Lernstand: Export und Import', () => {
   test('fehlende Felder werden ergänzt', () => {
     const s = normalizeState({ version: 1, lessons: { x: { step: 2 } } });
     expect(s.lessons.x.seen).toEqual([]);
-    expect(s.version).toBe(2);
+    expect(s.version).toBe(3);
     expect(s.settings.theme).toBe('system');
   });
 });

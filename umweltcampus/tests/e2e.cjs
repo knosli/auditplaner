@@ -12,7 +12,7 @@ const out = process.argv[3] || require('os').tmpdir();
 const v1 = { version: 1, createdAt: 1, updatedAt: Date.now() - 86400000,
   lessons: { 'm2-l1': { step: 7, viewed: [0,1,2,3,4,5,6,7], startedAt: 5, completedAt: Date.now() - 90000000, answers: { 'm2-q01': ['b'] }, open: {} },
              'm2-l3': { step: 9, viewed: [0,1,2,9], startedAt: 6, answers: {}, open: {} } },
-  answers: [{ q: 'm2-q01', at: 10, score: 1, correct: true, conf: 3, ctx: 'lektion' }],
+  answers: [{ q: 'm2-q01', at: 10, score: 1, correct: true, conf: 3, ctx: 'lektion' }, { q: 'm2-q12', at: 11, score: 1, correct: true, conf: 3, ctx: 'lektion' }],
   sr: { 'q:m2-q01': { ease: 2.5, interval: 2, due: 2000, reps: 1, lapses: 0, last: 10 } },
   scenarios: {}, exams: [], practice: {}, feynman: {}, history: [], studySec: {},
   settings: { theme: 'system', coachMode: 'trainieren', askConfidence: true, aiEnabled: true } };
@@ -39,7 +39,11 @@ const ok = (c, m) => { console.log((c ? 'OK   ' : 'FAIL ') + m); if (!c) process
     ok((await page.locator('.lessonlist li.done').count()) === 1, 'v1-Fortschritt: Lektion 1 abgeschlossen');
     ok((await page.locator('.lessonlist li').nth(2).textContent()).includes('Schritt'), 'v1-Fortschritt: Lektion 3 begonnen');
     const stored = await page.evaluate(() => JSON.parse(localStorage.getItem('umweltcampus.v1')));
-    ok(stored.version === 2 && stored.lessons['m2-l3'].cur === 'm2-l3-feynman', 'gespeicherter Stand auf Version 2 migriert');
+    ok(stored.version === 3 && stored.lessons['m2-l3'].cur === 'm2-l3-feynman', 'gespeicherter Stand auf Version 3 migriert');
+    await go('dashboard');
+    ok((await page.locator('.callout', { hasText: 'Frühere Fassung' }).count()) === 1, 'Hinweis «frühere Bewertungsfassung» sichtbar');
+    await go('lektion-m2-l7');
+    ok((await page.locator('h1').first().textContent()).includes('SIA 431:2022'), 'Lektion 7 (SIA 431:2022) erreichbar');
     await go('lektion-m2-l3');
     ok((await page.locator('.step h2').textContent()).includes('Erklären'), 'Lektion 3 öffnet beim gespeicherten Schritt');
     // Routes overflow
@@ -94,7 +98,7 @@ const ok = (c, m) => { console.log((c ? 'OK   ' : 'FAIL ') + m); if (!c) process
     await pickAndGo(['Wohin führt der Schacht', 'Ist bereits Wasser im Schacht', 'Was sieht das Entwässerungskonzept', 'Welche Mittel sind vor Ort']);
     await pickAndGo(['Schädigung oder Tod', 'Ablagerung von Feinstoffen', 'Strafverfahren wegen', 'Kosten für Abklärungen']);
     // rank: bring into right order by moving s1..s5 to top in reverse
-    for (const t of ['Dokumentieren', 'Bauführer informieren', 'Restliches Waschwasser', 'Bachauslauf kontrollieren', 'Schacht abdichten']) {
+    for (const t of ['Dokumentieren', 'Bauführer informieren', 'Restliches Waschwasser', '117 bzw. 118 alarmieren', 'Schacht abdichten']) {
       for (let k = 0; k < 5; k++) { const li = page.locator('.rank li', { hasText: t }); const up = li.getByRole('button', { name: 'nach oben' }); if (await up.isDisabled()) break; await up.click(); }
     }
     await page.getByRole('button', { name: 'Entscheid bestätigen' }).click();

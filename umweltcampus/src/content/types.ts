@@ -72,6 +72,8 @@ export interface Option {
   text: string;
   /** nur bei 'best' */
   weight?: number;
+  /** Sicherheitsveto: umweltgefährdende oder ohne Bewilligung unzulässige Handlung (immer 0 Punkte) */
+  critical?: boolean;
   why?: string;
   prerequisites?: string;
   risks?: string;
@@ -101,6 +103,8 @@ export interface Question {
   commonErrors: string[];
   sources: string[];
   review: ReviewStatus;
+  /** Inhaltsfassung; steigt, wenn Lösung oder Bewertung geändert wurde */
+  rev?: number;
 }
 
 export interface Card {
@@ -225,6 +229,13 @@ export interface ScenarioStage {
   rankOrder?: string[];
   rankItems?: Option[];
   rankExplanation?: string;
+  /**
+   * Zulässige Teilordnung: Gruppen in fachlicher Reihenfolge; innerhalb einer
+   * Gruppe ist jede Reihenfolge richtig (parallele Massnahmen).
+   */
+  rankGroups?: string[][];
+  /** Massnahmen, die spätestens an Position maxPos stehen müssen (sonst kritischer Fehler) */
+  rankEarly?: { id: string; maxPos: number; why: string }[];
   rubric?: RubricPoint[];
   /** Max. Anzahl Wahlen bei multi/ask */
   pick?: number;
@@ -246,6 +257,7 @@ export interface Scenario {
   debrief: string;
   sources: string[];
   status: 'verfuegbar' | 'in_entwicklung';
+  rev?: number;
 }
 
 // ---------- Bibliothek ----------

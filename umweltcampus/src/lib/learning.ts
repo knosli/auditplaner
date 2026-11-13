@@ -1,6 +1,7 @@
 import { CARDS, LESSONS, MODULES, QUESTIONS, SCENARIOS, TASKS, TOPICS } from '../content';
 import type { Question, RubricPoint } from '../content/types';
-import type { AnswerRecord, AppState, Confidence } from './state';
+import { SCORING_VERSION, type AnswerRecord, type AppState, type Confidence } from './state';
+import { isLegacyAnswer, isLegacyExam, isLegacyRun, isLegacySelf } from './versioning';
 import { grade, review } from './srs';
 
 // ---------- Bewertung von Antworten ----------
@@ -32,12 +33,22 @@ export function rubricHints(text: string, rubric: RubricPoint[]): string[] {
   return rubric.filter((r) => r.keywords.length > 0 && r.keywords.some((k) => t.includes(norm(k)))).map((r) => r.id);
 }
 
-/** Antwort verbuchen: Historie + Wiederholungsplan der Frage. */
-export function recordAnswer(s: AppState, qid: string, score: number, conf: Confidence | undefined, ctx: AnswerRecord['ctx'], now = Date.now()): AppState {
-  const correct = score >= 0.999;
-  const ans: AnswerRecord = { q: qid, at: now, score, correct, conf, ctx };
+/** Wurde eine Option mit Sicherheitsveto gewählt? */
+export function criticalChoice(q: Question, selected: string[]): boolean {
+  return (q.options ?? []).some((o) => o.critical && selected.includes(o.id));
+}
+
+/**
+ * Antwort verbuchen: Historie + Wiederholungsplan der Frage.
+ * opts.self: Selbstbewertung (offene Fragen) – wird nie als «richtig» verbucht.
+ * opts.crit: kritische Option gewählt – zählt wie eine Fehlannahme.
+ */
+export function recordAnswer(s: AppState, qid: string, score: number, conf: Confidence | undefined, ctx: AnswerRecord['ctx'], now = Date.now(), opts: { self?: boolean; crit?: boolean } = {}): AppState {
+  const correct = !opts.self && !opts.crit && score >= 0.999;
+  const ans: AnswerRecord = { q: qid, at: now, score: opts.crit ? 0 : score, correct, conf, ctx, v: SCORING_VERSION, ...(opts.self ? { self: true } : {}), ...(opts.crit ? { crit: true } : {}) };
   // Prüfungsantworten zählen für Kompetenz, aber verändern den Plan nur, wenn falsch
-  const g = grade(correct, conf);
+  // Selbstbewertete Antworten: Wiederholung nach Selbstbewertung planen; kritische Wahl wie «sicher falsch»
+  const g = opts.crit ? 0 : opts.self ? (score >= 0.8 ? 4 : score >= 0.5 ? 3 : 1) : grade(correct, conf);
   const key = 'q:' + qid;
   const sr = ctx === 'pruefung' && correct ? s.sr : { ...s.sr, [key]: review(s.sr[key], g, now) };
   return { ...s, answers: [...s.answers, ans], sr, updatedAt: now };
@@ -50,10 +61,19 @@ export function recordCard(s: AppState, cid: string, correct: boolean, conf: Con
 
 // ---------- Kompetenz ----------
 
-/** Letzte Antwort pro Frage (aktueller Wissensstand). */
+const OPEN = new Set(QUESTIONS.filter((q) => q.type === 'open').map((q) => q.id));
+
+/**
+ * Letzte gültige, objektiv bewertete Antwort pro Frage (aktueller Wissensstand).
+ * Ausgeschlossen: Antworten nach früherer Bewertungsfassung zu geänderten Fragen
+ * und Selbstbewertungen offener Fragen (kein unabhängiger Nachweis).
+ */
 export function lastAnswers(s: AppState): Map<string, AnswerRecord> {
   const m = new Map<string, AnswerRecord>();
-  for (const a of s.answers) m.set(a.q, a);
+  for (const a of s.answers) {
+    if (isLegacyAnswer(a) || a.self || isLegacySelf(a, OPEN.has(a.q))) continue;
+    m.set(a.q, a);
+  }
   return m;
 }
 
@@ -80,17 +100,25 @@ export function topicCompetence(s: AppState): TopicCompetence[] {
   return TOPICS.map((t) => {
     const lessons = LESSONS.filter((l) => l.topics.includes(t.id));
     const viewed = lessons.some((l) => (s.lessons[l.id]?.seen.length ?? 0) > 0);
-    const qs = QUESTIONS.filter((q) => q.topic === t.id);
+    // Objektiv bewertbare Fragen (offene Fragen werden nur selbst bewertet)
+    const qs = QUESTIONS.filter((q) => q.topic === t.id && q.type !== 'open');
     const answered = qs.map((q) => last.get(q.id)).filter((a): a is AnswerRecord => !!a);
     const ok = answered.filter((a) => a.correct).length;
     const accuracy = answered.length ? ok / answered.length : 0;
-    const dangerous = answered.filter((a) => !a.correct && a.conf === 3).map((a) => a.q);
+    const dangerous = answered.filter((a) => a.crit || (!a.correct && a.conf === 3)).map((a) => a.q);
     const unsureCorrect = answered.filter((a) => a.correct && a.conf === 1).length;
     const withConf = answered.filter((a) => a.conf);
     const avgConf = withConf.length ? withConf.reduce((x, a) => x + (a.conf ?? 0), 0) / withConf.length : 2;
-    const minN = Math.min(4, qs.length);
-    const mastered = answered.length >= minN && accuracy >= 0.8 && avgConf >= 2 && dangerous.length === 0;
-    const applied = SCENARIOS.some((sc) => sc.topics.includes(t.id) && (s.scenarios[sc.id] ?? []).some((r) => r.passed));
+    // Sicher beherrscht: Breite (mind. 6 bzw. alle Fragen des Themas), Genauigkeit, Sicherheit,
+    // keine Fehlannahme oder kritische Wahl UND zeitliche Stabilität (mind. 2 Elemente des Themas
+    // nach Abstand erneut richtig abgerufen = mindestens 2 erfolgreiche Wiederholungen).
+    const minN = Math.min(6, qs.length);
+    const stable = [
+      ...qs.map((q) => s.sr['q:' + q.id]),
+      ...CARDS.filter((c) => c.topic === t.id).map((c) => s.sr['c:' + c.id]),
+    ].filter((it) => it && it.reps >= 2).length;
+    const mastered = answered.length >= minN && accuracy >= 0.8 && avgConf >= 2 && dangerous.length === 0 && stable >= 2;
+    const applied = SCENARIOS.some((sc) => sc.topics.includes(t.id) && (s.scenarios[sc.id] ?? []).some((r) => r.passed && !isLegacyRun(sc.id, r)));
     const confirmed = TASKS.some((pt) => pt.topic === t.id && s.practice[pt.id]?.status === 'bestaetigt');
     let stage: TopicCompetence['stage'] = 0;
     if (viewed) stage = 1;
@@ -160,16 +188,16 @@ export interface ModuleRequirement { label: string; done: boolean; detail: strin
 export function moduleRequirements(s: AppState, moduleId: string): ModuleRequirement[] {
   const lessons = LESSONS.filter((l) => l.moduleId === moduleId);
   const ld = lessons.filter((l) => s.lessons[l.id]?.completedAt).length;
-  const exam = s.exams.filter((e) => e.moduleId === moduleId && e.kind === 'modul');
+  const exam = s.exams.filter((e) => e.moduleId === moduleId && e.kind === 'modul' && !isLegacyExam(e));
   const bestExam = exam.reduce((m, e) => Math.max(m, e.score), 0);
   const sims = SCENARIOS.filter((x) => x.moduleId === moduleId && x.status === 'verfuegbar');
-  const simsOk = sims.filter((x) => (s.scenarios[x.id] ?? []).some((r) => r.passed)).length;
+  const simsOk = sims.filter((x) => (s.scenarios[x.id] ?? []).some((r) => r.passed && !isLegacyRun(x.id, r))).length;
   const tasks = TASKS.filter((t) => t.moduleId === moduleId);
   const tasksSub = tasks.filter((t) => ['eingereicht', 'bestaetigt'].includes(s.practice[t.id]?.status ?? '')).length;
   return [
     { label: 'Alle Lektionen abgeschlossen', done: ld === lessons.length, detail: `${ld} von ${lessons.length}` },
-    { label: 'Modulprüfung bestanden (≥ 75 %, offene Fragen ≥ 50 %)', done: exam.some((e) => e.passed), detail: exam.length ? `bestes Ergebnis ${Math.round(bestExam * 100)} %` : 'noch nicht abgelegt' },
-    { label: 'Alle Baustellenfälle bestanden (≥ 70 %, kein kritischer Fehler)', done: simsOk === sims.length && sims.length > 0, detail: `${simsOk} von ${sims.length}` },
+    { label: 'Modulprüfung bestanden (geschlossene Fragen ≥ 75 %, selbst bewertete offene Fragen ≥ 50 %)', done: exam.some((e) => e.passed), detail: exam.length ? `bestes Ergebnis ${Math.round(bestExam * 100)} %` : 'noch nicht abgelegt' },
+    { label: 'Alle Baustellenfälle bestanden (≥ 70 % in den objektiv bewerteten Schritten, kein kritischer Fehler)', done: simsOk === sims.length && sims.length > 0, detail: `${simsOk} von ${sims.length}` },
     { label: 'Mindestens ein Praxisauftrag eingereicht', done: tasksSub >= 1, detail: `${tasksSub} von ${tasks.length} eingereicht` },
   ];
 }
@@ -213,13 +241,13 @@ export function recommendations(s: AppState, now = Date.now()): Recommendation[]
   }
   for (const sc of SCENARIOS.filter((x) => x.status === 'verfuegbar')) {
     const ready = sc.topics.some((t) => LESSONS.some((l) => l.topics.includes(t) && s.lessons[l.id]?.completedAt));
-    if (ready && !(s.scenarios[sc.id] ?? []).some((r) => r.passed)) {
+    if (ready && !(s.scenarios[sc.id] ?? []).some((r) => r.passed && !isLegacyRun(sc.id, r))) {
       recs.push({ kind: 'szenario', title: `Fall ${sc.code}: ${sc.title}`, why: 'Wenden Sie das Gelernte in einer Entscheidungssituation an.', href: '#szenario-' + sc.id });
       break;
     }
   }
   const allLessons = LESSONS.filter((l) => l.moduleId === 'm2').every((l) => s.lessons[l.id]?.completedAt);
-  if (allLessons && !s.exams.some((e) => e.kind === 'modul' && e.passed)) recs.push({ kind: 'pruefung', title: 'Modulprüfung Gewässerschutz', why: 'Alle Lektionen sind abgeschlossen. Prüfen Sie Ihr Wissen unter Prüfungsbedingungen.', href: '#pruefung' });
+  if (allLessons && !s.exams.some((e) => e.kind === 'modul' && e.passed && !isLegacyExam(e))) recs.push({ kind: 'pruefung', title: 'Modulprüfung Gewässerschutz', why: 'Alle Lektionen sind abgeschlossen. Prüfen Sie Ihr Wissen unter Prüfungsbedingungen.', href: '#pruefung' });
   const openTask = TASKS.find((t) => s.lessons[LESSONS.find((l) => l.steps.some((st) => st.kind === 'practice' && st.taskId === t.id))?.id ?? '']?.completedAt && (s.practice[t.id]?.status ?? 'offen') === 'offen');
   if (openTask) recs.push({ kind: 'praxis', title: `Praxisauftrag: ${openTask.title}`, why: 'Übertragen Sie das Gelernte auf eine reale Baustelle.', href: '#werkzeuge' });
   return recs.slice(0, 5);

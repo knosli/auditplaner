@@ -42,7 +42,7 @@ Im Bereich Au dürfen gemäss GSchV Anhang 4 Ziff. 211 grundsätzlich keine Anla
 > Beratungshinweis: Das ist eine Frage der Projektierung. Wenn auf der Baustelle Grundwasser höher ansteht als erwartet, ist nicht die Pumpe die Lösung, sondern die Rückfrage an Planer und Kanton.
 
 ### 4. Gewässerraum
-Entlang von Fliess- und Stillgewässern legen die Kantone einen Gewässerraum fest (Art. 36a GSchG). Darin dürfen nach **Art. 41c GSchV** nur standortgebundene Anlagen im öffentlichen Interesse erstellt werden, etwa Brücken oder Wege. Für **temporäre** Installationsplätze, Depots oder Zufahrten im Gewässerraum gibt es keine allgemeingültige Regel, die wir verifizieren konnten: Klären Sie solche Nutzungen vorgängig mit dem Kanton.
+Entlang von Fliess- und Stillgewässern legen die Kantone einen Gewässerraum fest (Art. 36a GSchG). Darin dürfen nach **Art. 41c GSchV** grundsätzlich nur standortgebundene Anlagen im öffentlichen Interesse erstellt werden, etwa Brücken oder Wege; die Verordnung kennt weitere Ausnahmen (z. B. in dicht überbauten Gebieten) mit Interessenabwägung. Für **temporäre** Installationsplätze, Depots oder Zufahrten im Gewässerraum gibt es keine allgemeingültige Regel, die wir verifizieren konnten: Klären Sie solche Nutzungen vorgängig mit dem Kanton.
 
 ### 5. Fischerei
 Eingriffe in Gewässer, ihren Wasserhaushalt oder Verlauf sowie in Ufer und Gewässergrund brauchen eine **fischereirechtliche Bewilligung** der kantonalen Fischereibehörde (Art. 8 BGF, SR 923.0; bestätigt). Typische Baustellenfälle: Bachquerung, Wasserhaltung im Bachbett, Ufersicherung, Einleitbauwerk. Viele Kantone untersagen technische Eingriffe während der **Schonzeiten** grundsätzlich (z. B. Merkblatt «Fischschutz auf Baustellen», Kanton Bern). Das hat direkten Einfluss auf das Bauprogramm.
@@ -51,7 +51,8 @@ Eingriffe in Gewässer, ihren Wasserhaushalt oder Verlauf sowie in Ufer und Gew�
 - **Art. 70 GSchG (Vergehen)**: Wer vorsätzlich Stoffe, die Wasser verunreinigen können, widerrechtlich in ein Gewässer einbringt, wird mit Freiheitsstrafe bis zu drei Jahren oder Geldstrafe bestraft; bei **Fahrlässigkeit** mit Geldstrafe (bestätigt).
 - **Art. 71 GSchG (Übertretungen)**: z. B. Verstösse gegen Vorschriften oder Verfügungen; fahrlässig mit Busse.
 - **Art. 54 GSchG**: Kosten behördlicher Massnahmen zur Abwehr, Feststellung und Behebung eines Schadens trägt der Verursacher.
-- **Unternehmen**: Kann eine Tat wegen mangelhafter Organisation keiner Person zugerechnet werden, kann das Unternehmen selbst bestraft werden (Art. 102 StGB; sinngemäss, Einzelfall durch Juristen zu beurteilen).
+- **Unternehmen**: Nur wenn eine Tat wegen mangelhafter Organisation keiner bestimmten Person zugerechnet werden kann, kommt eine Strafbarkeit des Unternehmens selbst in Frage (Art. 102 StGB) – nicht automatisch; Einzelfall durch Juristen zu beurteilen.
+- **Getrennte Verfahren**: Strafverfahren, Kostenverfügung (Art. 54) und zivilrechtliche Haftung laufen unabhängig voneinander.
 - **Zivilrechtlich** können Geschädigte (z. B. Fischereiberechtigte, Wasserversorgung) Schadenersatz verlangen.
 
 **Konsequenz für Ihre Rolle**: Instruktion, Organisation und Kontrolle müssen nachweisbar sein. Gute Dokumentation schützt Umwelt und Mitarbeitende zugleich.
@@ -100,6 +101,8 @@ Für befestigte Flächen gilt näherungsweise: **Abfluss Q = ψ × i × A**
 > Rechenwerkzeug: Praxiswerkzeuge → «Abschätzungen: Regenabfluss und Absetzfläche».
 
 ### 4. Einleitungen in die Kanalisation
+Im Bereich der öffentlichen Kanalisation muss verschmutztes Abwasser in die Kanalisation eingeleitet werden (Anschlusspflicht, Art. 11 GSchG); Abwasser, das den Anforderungen für die Einleitung nicht entspricht, ist vorzubehandeln (Art. 12 GSchG, sinngemäss – Wortlaut prüfen). Für Baustellen heisst das: Die Kanalisation ist ein möglicher Weg, aber nur mit Zustimmung und unter Bedingungen.
+
 Jede Einleitung von Baustellenabwasser in die Kanalisation braucht eine Bewilligung bzw. Zustimmung der Gemeinde (bestätigt über das Merkblatt Baustellenabwasser des Kantons Aargau); für Einleitungen in Gewässer ist der Kanton zuständig. Fragen Sie bei der Gemeinde: Welche Werte gelten (pH, absetzbare Stoffe)? Welche Mengen? Welcher Schacht? Welche Kontrollen und Meldungen?
 
 ### 5. Organisation
@@ -133,10 +136,10 @@ Lösung: Bohrwasser mit Wassersauger direkt an der Krone fassen, in einen Absetz
     deep: { id: 'm2-l3-deep', kind: 'deep', title: 'Fachvertiefung: Chemie, Neutralisation, Messung, Schlamm', text: `### 1. Warum Betonwasser so alkalisch ist – und so bleibt
 Beim Hydratisieren von Zement entsteht Calciumhydroxid. Es löst sich gut genug, um das Wasser auf pH 12–13 zu bringen, und wirkt als **Puffer**: Wird ein Teil neutralisiert, löst sich neues Hydroxid aus Feststoffen nach. Deshalb gilt: **zuerst Feststoffe absetzen**, sonst steigt der pH nach der Neutralisation wieder an.
 
-**Verdünnung**: Ein pH-Schritt entspricht dem Faktor 10. Für eine Senkung von pH 12 auf pH 9 durch reines Verdünnen wären rund 1000 Teile Wasser auf 1 Teil Waschwasser nötig – und die Fracht bliebe gleich. Verdünnen ist deshalb weder wirksam noch zulässig.
+**Verdünnung**: Ein pH-Schritt entspricht dem Faktor 10. Rein rechnerisch (idealisiert, ohne Puffer) müsste man Wasser von pH 12 rund tausendfach verdünnen, um pH 9 zu erreichen. Das ist keine Mengenberechnung für reales Betonwasser – dort löst sich laufend Hydroxid aus Feststoffen nach, es bräuchte noch mehr. Die Zahl zeigt nur, warum Verdünnen nichts bringt; zudem bliebe die Fracht gleich. Verdünnen ist weder wirksam noch zulässig.
 
 ### 2. Neutralisieren mit CO₂
-CO₂ bildet im Wasser Kohlensäure und fällt dabei Calcium als Calciumcarbonat aus. Vorteile: Die Reaktion puffert sich selbst ab; auch bei Überdosierung sinkt der pH kaum unter ca. 6; es müssen keine Mineralsäuren gelagert werden.
+CO₂ bildet im Wasser Kohlensäure und fällt dabei Calcium als Calciumcarbonat aus. Vorteile: gut dosierbar, und es müssen keine Mineralsäuren gelagert werden. Wie tief der pH bei einer Überdosierung sinkt, hängt aber von Wasserchemie, CO₂-Druck und Kontaktzeit ab – **eine feste Untergrenze ist nicht garantiert**. Deshalb gilt auch mit CO₂: laufend messen, Endkontrolle, Alarm und automatisches Stoppen der Ableitung.
 Praxis:
 - **Automatische Anlagen** messen den pH laufend, dosieren CO₂ und stoppen die Ableitung bei Abweichung. Das ist die robusteste Lösung für grosse Mengen (Spezialtiefbau, Tunnel, grosse Rohbauten).
 - **Batch-Behandlung** in einem Behälter (Begasungslanze, Messung, Ableitung nach Freigabe) genügt für kleinere Mengen.
@@ -144,15 +147,15 @@ Praxis:
 
 ### 3. Messen und nachweisen
 - **pH-Teststreifen** sind für die Grobkontrolle geeignet, aber ungenau im Bereich 8–10.
-- **pH-Elektroden** liefern belastbare Werte, wenn sie regelmässig mit Pufferlösungen (für den alkalischen Bereich z. B. pH 7 und pH 10) **kalibriert** und sauber gehalten werden.
+- **pH-Elektroden** liefern belastbare Werte, wenn sie mit Pufferlösungen (für den alkalischen Bereich z. B. pH 7 und pH 10) **kalibriert** und sauber gehalten werden. Das Intervall hängt von der Betriebsart ab: ein **Handgerät** vor dem Gebrauch, eine **Dauermess-Sonde** in festen Abständen gemäss Bewilligung bzw. Hersteller (laut externem Prüfbericht nennt das VSA-Merkblatt 2024.10 dafür zwei Wochen – nicht selbst geprüft). Interne Standards dürfen strenger sein.
 - Nach der Neutralisation ist eine **pH-Endkontrolle** vor der Ableitung nötig (bestätigt: Merkblatt Kanton Schwyz).
 - Protokoll: Datum, Zeit, Wert, Gerät, Kalibrierung, Visum, Massnahme bei Abweichung.
 
 ### 4. Einleitwerte
-GSchV Anhang 3.2 Ziff. 2 nennt für die Einleitung von Industrieabwasser einen **pH-Bereich von 6.5–9.0**. Kantonale Merkblätter wenden diesen Bereich auf Baustellenabwasser an, für Gewässer und Kanalisation (bestätigt: Merkblätter AG und SZ). Für die Kanalisation lässt die Verordnung Abweichungen zu, wenn sich das Abwasser in der Kanalisation genügend vermischt – das entscheidet die Behörde, nicht die Baustelle. Ältere Merkblätter nennen teilweise andere Werte (z. B. 9.5 für die Kanalisation); massgebend ist die aktuelle Bewilligung.
+Baustellenabwasser ist in der GSchV über Anhang 3.3 erfasst (laut externem Prüfbericht Ziff. 23; nicht selbst am Volltext geprüft). Kantonale Merkblätter verlangen, dass es die allgemeinen Anforderungen von Anhang 3.2 Ziff. 2 erfüllt, darunter einen **pH-Bereich von 6.5–9.0**, für Gewässer und Kanalisation (bestätigt: Merkblätter AG, SZ, FR). Für die Kanalisation lässt die Verordnung Abweichungen zu, wenn sich das Abwasser in der Kanalisation genügend vermischt – das entscheidet die Behörde, nicht die Baustelle. Ältere Merkblätter nennen teilweise andere Werte (z. B. 9.5 für die Kanalisation); massgebend ist die aktuelle Bewilligung.
 
 ### 5. Schlamm und Restbeton
-Absetzschlamm und Restbeton sind **Abfälle**. Sie werden gemäss Abfallrecht (VVEA) verwertet oder abgelagert; den Entsorgungsweg klären Sie mit dem Entsorger bzw. der kantonalen Fachstelle. Nicht zulässig: Schlamm im Aushub «verschwinden» lassen oder in die Bauschuttmulde kippen, wenn diese nicht dafür vorgesehen ist.
+Absetzschlamm und Restbeton sind **Abfälle**. Sie werden gemäss Abfallrecht (VVEA) verwertet oder abgelagert; welche Kategorie gilt, ergibt die Abfallklassierung (Abfallcode nach LVA, gefährliche Eigenschaften). Den Entsorgungsweg klären Sie mit dem Entsorger bzw. der kantonalen Fachstelle. Nicht zulässig: Schlamm im Aushub «verschwinden» lassen oder in die Bauschuttmulde kippen, wenn diese nicht dafür vorgesehen ist.
 
 ### 6. Kreislauf statt Ableitung
 Geklärtes Waschwasser kann – je nach Anlage – für weitere Reinigungen wiederverwendet werden. Betonwerke nehmen Rest- und Waschwasser teilweise zurück. Jeder Liter, der nicht abgeleitet wird, spart Behandlung und Bewilligungsaufwand.
@@ -225,9 +228,9 @@ Nasser, befahrener Boden wird verdichtet und erodiert – das trübe Wasser in d
   'm2-l5': {
     brief: { id: 'm2-l5-brief', kind: 'brief', title: 'Kurz erklärt', text: `**Öl und Treibstoff gehören auf dichte Flächen mit Rückhalt** – weg von Schächten, Gewässern und Schutzzonen, mit Notfallmaterial in Griffweite.
 
-**Wenn etwas ausläuft**: Sicherheit – stoppen – eindämmen (Schacht abdecken!) – 118 oder 117 alarmieren – aufnehmen – dokumentieren. Nie wegspülen, nie abwarten.
+**Wenn etwas ausläuft**: zuerst die eigene Sicherheit – dann **gleichzeitig** stoppen, Schacht abdecken und 118 oder 117 alarmieren (zu zweit: eine Person alarmiert sofort) – danach aufnehmen und dokumentieren. Nie wegspülen, nie abwarten.
 
-**Verschmutztes Bindemittel und Erdreich sind Sonderabfall** und werden mit Begleitschein entsorgt.
+**Verschmutztes Bindemittel und Erdreich werden nach Abfallklassierung entsorgt** – meist als Sonderabfall mit Begleitschein.
 
 **Nach dem Ereignis zählt die Ursache**: Warum ist es passiert, und wie verhindern wir es auf allen Baustellen?` },
 
@@ -256,7 +259,7 @@ Nicht nur Diesel: Hydraulik- und Motoröle, Schalöle, Bitumenemulsionen und Vor
 - Medien und Anwohnende: Auskunft nur durch die bezeichnete Stelle; sachlich, ohne Spekulation.
 
 ### 5. Entsorgung und Nachweise
-Ölverschmutztes Bindemittel, Erdreich und Schachtinhalt sind in der Regel **Sonderabfälle**. Sie werden einem berechtigten Entsorger übergeben; für Sonderabfälle ist ein **Begleitschein** nach der Verordnung über den Verkehr mit Abfällen (VeVA, SR 814.610) nötig (sinngemäss; Einzelheiten mit dem Entsorger klären). Die Nachweise gehören zur Ereignisdokumentation.
+Ölverschmutztes Bindemittel, Erdreich und Schachtinhalt werden zuerst **klassiert** (Abfallcode gemäss LVA, gefährliche Eigenschaften) – meist ergibt das **Sonderabfall**. Sie werden einem berechtigten Entsorger übergeben; für Sonderabfälle ist ein **Begleitschein** nach der Verordnung über den Verkehr mit Abfällen (VeVA, SR 814.610) nötig (sinngemäss; Einzelheiten mit dem Entsorger klären). Die Nachweise gehören zur Ereignisdokumentation.
 
 ### 6. Vom Ereignis zur Verbesserung
 Eine wirksame Nachbereitung beantwortet: Was ist passiert? Warum (technisch, organisatorisch, menschlich)? Warum wurde es nicht früher erkannt? Welche Massnahme verhindert die Wiederholung – auf allen Baustellen? Wer setzt sie bis wann um, und wie prüfen wir, ob sie wirkt? Das entspricht der Korrekturmassnahme nach ISO 14001 (Abschnitt 10.2), die Notfallvorsorge dem Abschnitt 8.2.` },

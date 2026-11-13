@@ -90,7 +90,7 @@ export const GUIDING: Record<string, string[]> = {
   truebstoffe: ['Welche Korngrösse dominiert – und setzt sie sich ab?', 'Was passiert bei Starkregen mit der Anlage?', 'Woran erkennt der Polier «zu trüb»?'],
   wasserhaltung: ['Braucht der Eingriff ins Grundwasser eine Bewilligung?', 'Welche Qualität verlangt die Bewilligung am Auslauf?', 'Liegt die Baustelle im Au oder in einer Schutzzone?'],
   oel: ['Ist der Platz dicht und frei von Meteorschächten?', 'Ist der Rückhalt (Wanne) leer und vor Regen geschützt?', 'Liegt Notfallmaterial griffbereit?'],
-  havarie: ['Ist der Austritt gestoppt?', 'Ist die Verbindung zu Schacht und Gewässer unterbrochen?', 'Wer wurde alarmiert – intern und über 118/117?'],
+  havarie: ['Ist die eigene Sicherheit gewährleistet?', 'Wurde gleichzeitig mit dem Eindämmen sofort alarmiert (118/117)?', 'Ist die Verbindung zu Schacht und Gewässer unterbrochen?'],
   konzept: ['Beantwortet das Konzept alle sechs Leitfragen?', 'Sind Zuständigkeiten und Kontrollen festgelegt?', 'Was ist Pflicht, was Empfehlung – und was kostet die Alternative?'],
 };
 

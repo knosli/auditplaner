@@ -26,7 +26,7 @@ export const M2_SITETASKS: SiteTask[] = [
       { id: 'k4', text: 'Klärungsbedarf erkannt: Wird eine Grundwasserabsenkung nötig? (Geologie prüfen, ggf. Gesuch rechtzeitig)', keywords: ['absenkung', 'geolog', 'gesuch', 'grundwasser'] },
       { id: 'k5', text: 'Meldeweg 4.5 in Notfallkarte und Instruktion übernommen, Nachweise je Zeile benannt', keywords: ['notfall', 'instru', 'nachweis', '117'] },
     ],
-    solution: `**Ziff. 4.1** – Behördliche Auflage. Massnahme: Konzept erstellen bzw. beim Planer einfordern, mit Gemeinde abstimmen. Verantwortlich: Bauführung (bzw. gemäss Werkvertrag Bauherrschaft/Planer). Termin: spätestens 3–4 Wochen vor Installationsbeginn einreichen. Nachweis: genehmigtes Konzept.
+    solution: `**Ziff. 4.1** – Behördliche Auflage. Massnahme: Konzept erstellen bzw. beim Planer einfordern, mit Gemeinde abstimmen. Verantwortlich: Bauführung (bzw. gemäss Werkvertrag Bauherrschaft/Planer). Termin: so früh, dass die Genehmigung vor Installationsbeginn vorliegt (die «3–4 Wochen» sind eine Annahme für das fiktive Projekt – Fristen bei der Gemeinde erfragen). Nachweis: genehmigtes Konzept.
 
 **Ziff. 4.2** – Behördliche Auflage. Massnahme: Waschplatz mit Absetzcontainer und CO₂-Neutralisation, automatische oder protokollierte pH-Messung; Zustimmung der Gemeinde mit Einleitstelle und Bedingungen einholen. Verantwortlich: Bauführung (Anlage), Polier (Betrieb, Protokoll). Termin: vor der ersten Betonage. Nachweis: Zustimmung, pH-Protokoll, Kalibrierprotokoll.
 
@@ -36,7 +36,7 @@ export const M2_SITETASKS: SiteTask[] = [
 
 **Ziff. 4.5** – Behördliche Auflage (deckt sich mit der allgemeinen Pflicht). Massnahme: Notfallkarte mit 117/118 und interner Kette, Instruktion beim Baustart. Verantwortlich: Polier. Nachweis: Instruktionsprotokoll.
 
-**Ziff. 4.6** – Empfehlung der Behörde; verbindlich erst, wenn im Werkvertrag vereinbart. Empfehlung: anwenden, weil sie die anerkannte Regel der Technik beschreibt und die anderen Auflagen erfüllen hilft.
+**Ziff. 4.6** – Empfehlung der Behörde in diesem Musterfall; ausdrücklich verbindlich wird die Norm durch den Werkvertrag. Unabhängig davon gelten das Gesetz und die anerkannten Regeln der Technik, als die SIA 431:2022 gilt – deshalb anwenden und die Risikostufe des Projekts bestimmen.
 
 **Wichtigste Erkenntnis**: Zwei Punkte haben lange Vorlaufzeiten (Konzeptgenehmigung, allfällige Absenkbewilligung). Sie gehören ins Bauprogramm, nicht in die erste Bauwoche.`,
     sources: ['gschg', 'gschv', 'sia431', 'gemeinde-entwaesserung'],
@@ -61,13 +61,13 @@ export const M2_SITETASKS: SiteTask[] = [
       { id: 'k4', text: 'S5 erkannt: Abfluss Richtung Nachbar verhindern (Gefälle, Abschrankung)', keywords: ['s5', 'nachbar', 'sicker'] },
       { id: 'k5', text: 'Waschplatz und Betankung auf befestigter Fläche ohne Meteorschacht, nahe S2, mit Absetzen/Neutralisation bzw. Tankwanne', keywords: ['waschplatz', 'betank', 'wanne', 'befestigt', 'neutralis'] },
     ],
-    solution: `- **S1 (Meteor, Kranstandort)**: kritischster Punkt. Dauerhafte Abdeckung bzw. Einlauf stilllegen und temporäre Entwässerung über Absetzbehälter führen; Kübelumschlag über einer Auffangwanne. Kein Waschen in diesem Bereich.
+    solution: `- **S1 (Meteor, Kranstandort)**: kritischster Punkt. Dicht abdecken bzw. Einlauf stilllegen und die Fläche getrennt fassen; Kübelumschlag über einer Auffangwanne. Kein Waschen in diesem Bereich.
 - **S2 (Schmutz)**: geeigneter Anschluss für behandeltes Waschwasser und Containerabwasser – mit Zustimmung der Gemeinde und Bedingungen (pH 6.5–9.0, absetzbare Stoffe).
-- **S3 (Strasseneinlauf, Meteor)**: Filtersack einsetzen, regelmässig leeren; Strassenreinigung trocken bzw. mit Saugkehrmaschine.
+- **S3 (Strasseneinlauf, Meteor)**: Filtersack einsetzen, regelmässig leeren; Strassenreinigung trocken bzw. mit Saugkehrmaschine. **Achtung**: Ein Filtersack hält nur Feststoffe zurück – nicht alkalisches Wasser, Öl oder gelöste Stoffe. Wo solche Stoffe hingelangen können, braucht es eine dichte Abdeckung oder Abtrennung.
 - **S4 (unklar)**: bei der Gemeinde nachfragen, ggf. Färbeversuch oder Kanal-TV. Bis zur Klärung wie Meteorschacht behandeln und abdecken. Containerdorf-Abwasser nicht anschliessen, bevor geklärt.
 - **S5 (Sickerschacht Nachbar)**: Gefälle und Abfluss Richtung Nachbar verhindern (Randabschluss, Sandsäcke), Nachbar informieren.
 - **Waschplatz**: befestigte Fläche nahe S2, mit Absetzcontainer und Neutralisation, gedeckter Bereich für Werkzeugreinigung der Fassadenarbeiten.
-- **Betankung**: auf mobiler Tankwanne, mit Abstand zu S1/S3/S4, Notfallmaterial (Schachtabdeckmatte, Bindemittel) daneben.
+- **Betankung**: auf mobiler Tankwanne auf einer Fläche ohne Schacht im Abflussbereich (Abstand allein genügt nicht – Gefälle prüfen), Notfallmaterial (Schachtabdeckmatte, Bindemittel) daneben.
 - **Vor Baustart**: Zustimmung Gemeinde für S2, Klärung S4, Installationsplan mit eingezeichneten Schächten, Instruktion des Poliers und der Subunternehmer (Fassade!).`,
     sources: ['gemeinde-entwaesserung', 'sia431', 'kanton-merkblatt'],
   },
@@ -89,15 +89,17 @@ export const M2_SITETASKS: SiteTask[] = [
       { id: 'k4', text: 'Schlammentsorgung als Abfall mit Nachweis, Kontrolle des Schlammstands', keywords: ['schlamm', 'entsorg', 'nachweis', 'abfall'] },
       { id: 'k5', text: 'Arbeitssicherheit: CO₂-Flaschen sichern, Erstickungsgefahr in Gruben/Schächten, Schutzausrüstung', keywords: ['erstick', 'flasche', 'sicher', 'schacht', 'psa'] },
     ],
-    solution: `**Trennung zuerst**: Hangwasser an der Nagelwand mit Drainagen fassen und – wenn es sauber ist und der Kanton zustimmt – getrennt versickern oder einleiten. So muss nur das Spritzbeton- und Grubenwasser behandelt werden.
+    solution: `**Risikostufe zuerst**: Spritzbeton mit Zusatzmitteln (z. B. Beschleuniger) kann eine höhere Stufe nach SIA 431:2022 begründen – Stufe mit dem Planer bestimmen; ab Stufe 3 Fachspezialist.
+
+**Trennung**: Hangwasser an der Nagelwand mit Drainagen fassen und – wenn es sauber ist und der Kanton zustimmt – getrennt versickern oder einleiten. So muss nur das Spritzbeton- und Grubenwasser behandelt werden.
 
 **Kette**: Pumpensumpf mit Kiesfilter → Absetzcontainer (zwei Kammern) → CO₂-Neutralisation mit automatischer pH-Regelung → pH-Endkontrolle mit Messwertaufzeichnung → Ableitung in die Schmutzwasserkanalisation gemäss Zustimmung.
 
-**Betrieb und Kontrolle**: Anlage gemietet mit Servicevertrag; Polier verantwortlich für täglichen Rundgang (Schlammstand, CO₂-Vorrat, Messwerte), Messwerte wöchentlich an Bauführung. **Wochenende**: automatische Abschaltung bei pH ausserhalb 6.5–9.0, SMS-Alarm an Pikett, Rückhaltevolumen in der Grube.
+**Betrieb und Kontrolle**: Anlage gemietet mit Servicevertrag; Polier verantwortlich für täglichen Rundgang (Schlammstand, CO₂-Vorrat, Messwerte), Messwerte wöchentlich an Bauführung. **Wochenende**: automatische Abschaltung bei pH ausserhalb 6.5–9.0 und bei Störung, SMS-Alarm an einen geregelten Pikettdienst (24/7, mit Stellvertretung), Rückhaltevolumen für Hangwasser und Starkregen ausserhalb der Arbeitszeit nachgewiesen (Pumpenausfall!).
 
 **Störung**: Notfallregel am Container (Pumpen stoppen, Pikett, Gemeinde/Kanton gemäss Zustimmung informieren).
 
-**Schlamm**: regelmässig absaugen, als Abfall gemäss VVEA über einen berechtigten Entsorger, Nachweis ablegen.
+**Schlamm**: regelmässig absaugen, nach Abfallklassierung (VVEA, LVA) über einen berechtigten Entsorger, Nachweis ablegen.
 
 **Arbeitssicherheit**: CO₂-Flaschen gesichert und belüftet aufstellen, keine Arbeiten in Schächten/Containern ohne Freimessen (CO₂ sammelt sich am Boden), Schutzbrille und Handschuhe beim Umgang mit alkalischem Wasser und Schlamm.
 
@@ -129,11 +131,11 @@ Container: 2.4 × 6.0 = **14.4 m²** → rund **ein Viertel** der nötigen Fläc
 
 **Massnahmen**:
 1. Zufluss senken: Grabenabschnitte kurz halten, Fremdwasser oberhalb abfangen, Pumpe im Pumpensumpf mit Kiesfilter.
-2. Fläche erhöhen: zweiter und dritter Container parallel oder Lamellenklärer (viel Fläche auf wenig Platz).
+2. Fläche erhöhen: zweiter und dritter Container **parallel** (in Serie verbessern sie vor allem die Strömung, nicht die Fläche) oder Lamellenklärer (viel Fläche auf wenig Platz). Die Leistung muss der Lieferant nachweisen.
 3. Für Feinsilt/Ton: Flockung oder Filtration nach Abklärung mit der kantonalen Fachstelle.
 4. Kontrolle: Sichtprobe und Foto am Auslauf zweimal täglich, Regel «bei Trübung Pumpe aus, zurückhalten, melden».
 
-**Grenze der Rechnung**: idealisiertes Modell. Die Bemessung gehört zum Anlagenlieferanten bzw. Fachplaner – die Abschätzung zeigt Ihnen aber, ob ein Angebot plausibel ist.`,
+**Grenze der Rechnung**: idealisiertes Modell (kugelförmige Einzelkörner, ruhige Strömung, keine Flockung); der Zuschlag Faktor 2 ist eine Annahme, kein Normwert. Die Bemessung gehört zum Anlagenlieferanten bzw. Fachplaner – die Abschätzung zeigt Ihnen aber, ob ein Angebot plausibel ist.`,
     sources: ['sia431', 'kanton-merkblatt', 'praxis'],
   },
   {
@@ -158,15 +160,15 @@ Container: 2.4 × 6.0 = **14.4 m²** → rund **ein Viertel** der nötigen Fläc
 **Material** (Richtgrössen festlegen mit Lieferant und Feuerwehr):
 - am Tank und Lager: Schachtabdeckmatte, Bindemittel (mehrere Säcke), Auffangbehälter;
 - auf jeder Maschine im Bachbett: Bindevlies und kleines Notfallset;
-- am Bachufer unterhalb: Ölsperre griffbereit (Feuerwehr-Anfahrt 12 Minuten!).
+- am Bachufer unterhalb: Ölsperre bereitgelegt – setzen nur durch instruierte Personen vom sicheren Ufer aus, nie im strömenden Wasser; sonst ist das Aufgabe der Feuerwehr bzw. Ölwehr.
 
 **Alarmierung**: 118/117; intern Polier → Bauführer → Umweltfachperson; gemäss Bewilligung Fachstelle und Fischereiaufsicht. Nummern auf Notfallkarte an Tank, Container und in jeder Kabine.
 
-**Sofortmassnahmen**: Sicherheit → Maschine abstellen/Leck stoppen → Schacht abdecken bzw. Schieber schliessen → Ölsperre setzen, wenn Bach betroffen → alarmieren → aufnehmen, als Sonderabfall mit Begleitschein entsorgen → dokumentieren.
+**Sofortmassnahmen**: eigene Sicherheit → **gleichzeitig**: Maschine abstellen/Leck stoppen, Schacht abdecken bzw. Schieber schliessen **und sofort 118/117 alarmieren** (zweite Person; bei 12 Minuten Anfahrt zählt jede Minute) → Ölsperre nur, wenn gefahrlos und instruiert → aufnehmen, nach Abfallklassierung (meist Sonderabfall mit Begleitschein) entsorgen → dokumentieren.
 
 **Subunternehmer**: Notfallregeln im Vertrag und in der Startinstruktion; eigenes Notfallset auf ihren Maschinen.
 
-**Instruktion und Übung**: 15 Minuten beim Start mit Notfallkarte; eine kurze praktische Übung (Ölsperre setzen, Schacht abdecken) in der ersten Woche. Wiederholung bei Personalwechsel.`,
+**Instruktion und Übung**: 15 Minuten beim Start mit Notfallkarte; eine kurze praktische Übung (Alarmierung, Schacht abdecken, Ölsperre vom Ufer aus auslegen – mit der Feuerwehr abgesprochen) in der ersten Woche. Wiederholung bei Personalwechsel.`,
     sources: ['gschg', 'bgf', 'notruf', 'kvu-lagerung', 'praxis'],
   },
   {
@@ -188,13 +190,15 @@ Container: 2.4 × 6.0 = **14.4 m²** → rund **ein Viertel** der nötigen Fläc
     solution: `| Was | Wie oft | Wer | Womit | Dokumentation | Bei Abweichung |
 |---|---|---|---|---|---|
 | pH-Endkontrolle Neutralisation | bei jeder Ableitung bzw. Aufzeichnung täglich prüfen | Vorarbeiter | pH-Elektrode | pH-Protokoll | Ableitung stoppen, Polier informieren |
-| Kalibrierung pH-Gerät | wöchentlich | Polier | Puffer pH 7/10 | Kalibrierprotokoll | Gerät ersetzen |
+| Kalibrierung pH-Messung | Handgerät: vor Gebrauch; Dauersonde: gemäss Bewilligung bzw. Hersteller (hier interner Standard: wöchentlich) | Polier | Puffer pH 7/10 | Kalibrierprotokoll | Gerät ersetzen, Ableitung stoppen |
 | Schlammstand und CO₂-Vorrat | täglich | Vorarbeiter | Sicht, Messlatte | Tagesrapport | Absaugen bestellen |
 | Meteorschacht abgedeckt | täglich | Polier | Sicht | Tagesrapport | sofort abdecken |
 | Tankwanne leer, Notfallset vollständig | wöchentlich | Polier | Checkliste | Checkliste | ergänzen, entleeren |
 | Wochenkontrolle Gewässerschutz | wöchentlich | Bauführer | Checkliste Begehung | Checkliste | Massnahme mit Termin |
 | Begehung | alle 4–6 Wochen | Umweltfachperson | Begehungsbericht | Bericht | Nachverfolgung |
 | Ordner für Behörde | laufend | Bauführer | – | Ordner/Ablage | – |
+
+**Hinweis**: Die Intervalle sind ein Vorschlag bzw. interner Standard; verbindliche Intervalle stehen in der Bewilligung. Bei Dauerbetrieb gehören Alarm, automatische Abschaltung und eine Messwerthistorie dazu.
 
 **Prinzip**: wenige Punkte, klare Personen, einfache Mittel. Bei Abweichungen gilt immer: Sofortmassnahme vor Ort, Information an die nächsthöhere Stufe, Massnahme mit Termin und Kontrolle der Erledigung.`,
     sources: ['sia431', 'praxis'],

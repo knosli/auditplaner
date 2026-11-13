@@ -5,7 +5,15 @@
 
 import { LEGACY_V1_STEPS } from './migrate';
 
-export const STATE_VERSION = 2;
+export const STATE_VERSION = 3;
+
+/**
+ * Bewertungsfassung. Ergebnisse ohne Fassungsangabe stammen aus früheren
+ * Fassungen. Sie werden nie neu benotet, sondern bei geänderten Inhalten als
+ * «nach früherer Bewertungsfassung» gekennzeichnet und nicht mehr als
+ * Kompetenznachweis gezählt.
+ */
+export const SCORING_VERSION = 3;
 
 export type Confidence = 1 | 2 | 3; // 1 unsicher, 2 eher sicher, 3 sicher
 
@@ -16,6 +24,12 @@ export interface AnswerRecord {
   correct: boolean;
   conf?: Confidence;
   ctx: 'lektion' | 'wiederholung' | 'pruefung' | 'check' | 'coach';
+  /** Bewertungsfassung (fehlt = frühere Fassung) */
+  v?: number;
+  /** Selbstbewertung am Raster (offene Fragen) – kein unabhängiger Fachnachweis */
+  self?: boolean;
+  /** kritische Option gewählt (Sicherheitsveto) */
+  crit?: boolean;
 }
 
 export interface SRItem {
@@ -43,6 +57,9 @@ export interface ScenarioRun {
   critical: number;
   path: string[];
   passed: boolean;
+  v?: number;
+  /** Ergebnis ohne Selbstbewertungs-Schritte */
+  objective?: number;
 }
 
 export interface ExamRun {
@@ -54,6 +71,9 @@ export interface ExamRun {
   total: number;
   byTopic: Record<string, { ok: number; n: number }>;
   passed: boolean;
+  v?: number;
+  /** Anteil der Punkte aus Selbstbewertung (offene Fragen) */
+  selfShare?: number;
 }
 
 export type PracticeStatus = 'offen' | 'in_arbeit' | 'eingereicht' | 'bestaetigt';

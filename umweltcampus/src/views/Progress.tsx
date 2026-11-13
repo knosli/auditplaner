@@ -5,7 +5,8 @@ import { Bar, ConfirmButton, Section, fmtDateTime, pct } from '../components/ui'
 import { STAGE_LABEL, knowledgeGaps, moduleProgress, studyMinutes, topicCompetence } from '../lib/learning';
 import { exportPayload, normalizeState, emptyState, type AppState } from '../lib/state';
 import { clearLocal, copyText, inArtifact, saveFile } from '../lib/platform';
-import { CRITERION_LABEL } from '../content';
+import { CRITERION_LABEL, QUESTIONS } from '../content';
+import { isLegacyRun, legacyCounts } from '../lib/versioning';
 import { PRACTICE_LABEL } from '../components/Practice';
 
 export function ProgressView() {
@@ -18,8 +19,10 @@ export function ProgressView() {
     <div className="page">
       <header className="page-head">
         <h1>Mein Fortschritt</h1>
-        <p className="lead">Fünf Kompetenzstufen je Fachgebiet. Jede Stufe setzt die vorherige voraus: Inhalte angesehen → Wissen abgefragt → sicher beherrscht (≥ 80 % richtig, mit Sicherheit, ohne Fehlannahme) → in einem Baustellenfall angewendet → in der Praxis bestätigt.</p>
+        <p className="lead">Fünf Kompetenzstufen je Fachgebiet. Jede Stufe setzt die vorherige voraus: Inhalte angesehen → Wissen abgefragt → sicher beherrscht (mindestens 6 Fragen bzw. alle des Themas, ≥ 80 % richtig, mit Sicherheit, ohne Fehlannahme oder kritische Wahl, und mindestens zwei Inhalte nach zeitlichem Abstand erneut richtig abgerufen; offene Fragen zählen als Selbstbewertung nicht) → in einem Baustellenfall angewendet → in der Praxis bestätigt.</p>
       </header>
+
+      <LegacyNotice />
 
       <Section title="Kompetenz je Fachgebiet">
         <div className="tablewrap">
@@ -94,7 +97,7 @@ export function ProgressView() {
                 <strong>Fall {sc.code}: {sc.title}</strong>
                 {last ? (
                   <>
-                    <span className="hint"> {runs.length} Versuch(e), letzter {fmtDateTime(last.at)}: {pct(last.total)} {last.passed ? '– bestanden' : '– nicht bestanden'}</span>
+                    <span className="hint"> {runs.length} Versuch(e), letzter {fmtDateTime(last.at)}: {pct(last.objective ?? last.total)} {last.passed ? '– bestanden' : '– nicht bestanden'}{isLegacyRun(sc.id, last) ? ' (nach früherer Bewertungsfassung – bitte neu spielen)' : ''}</span>
                     <ul className="crit-bars small">{Object.entries(last.byCriterion).map(([k, v]) => <li key={k}><span>{CRITERION_LABEL[k]}</span><Bar value={v} small tone={v >= 0.7 ? 'ok' : v >= 0.4 ? 'warn' : 'crit'} label={CRITERION_LABEL[k]} /><span className="mono">{pct(v)}</span></li>)}</ul>
                   </>
                 ) : <span className="hint"> noch nicht gespielt</span>}
@@ -119,6 +122,18 @@ export function ProgressView() {
       </Section>
 
       <DataPanel />
+    </div>
+  );
+}
+
+export function LegacyNotice() {
+  const { s } = useStore();
+  const openIds = new Set(QUESTIONS.filter((q) => q.type === 'open').map((q) => q.id));
+  const c = legacyCounts(s, (id) => openIds.has(id));
+  if (!c.answers && !c.runs && !c.exams) return null;
+  return (
+    <div className="callout law"><span className="callout-label">Frühere Fassung</span>
+      <span>Nach einer externen Fachprüfung wurden Lösungen und Bewertungen einzelner Inhalte korrigiert (Bewertungsfassung 3). Ihre früheren Ergebnisse bleiben gespeichert und werden nicht nachträglich neu benotet, zählen aber nicht mehr als Kompetenznachweis: {c.answers} Antwort(en), {c.runs} Fallversuch(e), {c.exams} Prüfung(en) nach früherer Bewertungsfassung. Beantworten bzw. spielen Sie diese Inhalte erneut.</span>
     </div>
   );
 }

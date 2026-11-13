@@ -6,6 +6,7 @@ import { InlineText, RichText } from '../components/RichText';
 import { Bar, DevBadge, SourceList, fmtDateTime, pct } from '../components/ui';
 import { RubricRating } from '../components/Question';
 import { evaluateStage, nextStageId, summarize, type StageAnswer, type StageResult } from '../lib/scenario';
+import { isLegacyRun } from '../lib/versioning';
 
 export function SimulatorView() {
   const { s } = useStore();
@@ -31,7 +32,13 @@ export function SimulatorView() {
                   <div className="row">
                     <a className="btn primary" href={'#szenario-' + sc.id}>{runs.length ? 'Erneut spielen' : 'Fall starten'}</a>
                     <span className="hint">mehrstufig, mit Verzweigungen · ca. {sc.minutes} Min.</span>
-                    {runs.length > 0 && <span className={'status-pill ' + (runs.some((r) => r.passed) ? 'st-bestaetigt' : 'st-in_arbeit')}>{runs.some((r) => r.passed) ? 'bestanden' : 'nicht bestanden'} · bestes {pct(best)}</span>}
+                    {runs.length > 0 && (() => {
+                      const cur = runs.filter((r) => !isLegacyRun(sc.id, r));
+                      const ok = cur.some((r) => r.passed);
+                      return cur.length > 0
+                        ? <span className={'status-pill ' + (ok ? 'st-bestaetigt' : 'st-in_arbeit')}>{ok ? 'bestanden' : 'nicht bestanden'} · bestes {pct(Math.max(...cur.map((r) => r.objective ?? r.total)))}</span>
+                        : <span className="status-pill" title="Die Bewertung dieses Falls wurde geändert. Frühere Ergebnisse zählen nicht mehr als Nachweis.">früher gespielt (frühere Bewertungsfassung, bestes {pct(best)}) – bitte neu spielen</span>;
+                    })()}
                   </div>
                 ) : (
                   <div className="row"><DevBadge /><span className="hint">Folgt mit Modul {mod?.no}.</span></div>
@@ -105,18 +112,22 @@ export function ScenarioPlayer({ id }: { id: string }) {
   }
 
   if (done && run) {
-    const crit = sc.stages.flatMap((st) => (st.options ?? []).filter((o) => o.critical && answers[st.id]?.selected.includes(o.id)).map((o) => ({ st, o })));
+    const crit = [
+      ...sc.stages.flatMap((st) => (st.options ?? []).filter((o) => o.critical && answers[st.id]?.selected.includes(o.id)).map((o) => ({ key: st.id + o.id, title: st.title, text: `${o.text} – ${o.feedback}` }))),
+      ...results.flatMap((r) => (r.criticalWhy ?? []).map((w, i) => ({ key: r.stageId + i, title: sc.stages.find((x) => x.id === r.stageId)?.title ?? '', text: w }))),
+    ];
     return (
       <div className="page scenario">
         <nav className="crumbs"><a href="#simulator">Baustellensimulator</a> / <span>Fall {sc.code} – Auswertung</span></nav>
         <header className="page-head">
           <h1>Auswertung Fall {sc.code}</h1>
-          <p className={'verdict ' + (run.passed ? 'ok' : 'crit')}>{run.passed ? 'Bestanden' : 'Nicht bestanden'} · Gesamt {pct(run.total)}{run.critical ? ` · ${run.critical} kritische${run.critical === 1 ? 'r' : ''} Fehler` : ''}</p>
+          <p className={'verdict ' + (run.passed ? 'ok' : 'crit')}>{run.passed ? 'Bestanden' : 'Nicht bestanden'} · objektiv bewertete Schritte {pct(run.objective ?? run.total)}{run.critical ? ` · ${run.critical} kritische${run.critical === 1 ? 'r' : ''} Fehler` : ''}</p>
+          <p className="hint">Die schriftliche Begründung haben Sie selbst am Raster bewertet. Sie ist im Kompetenzprofil enthalten, entscheidet aber nicht über «bestanden» – sie ist kein unabhängiger Fachnachweis. Die Fallbewertung ist eine Lernübung, keine fachliche oder behördliche Freigabe.</p>
         </header>
         {crit.length > 0 && (
           <div className="callout crit"><span className="callout-label">Kritische Fehler</span>
             <span>
-              {crit.map(({ st, o }) => <span key={o.id} className="block"><strong>{st.title}:</strong> {o.text} – {o.feedback}</span>)}
+              {crit.map((c) => <span key={c.key} className="block"><strong>{c.title}:</strong> {c.text}</span>)}
               <span className="block">Bei einem kritischen Fehler gilt der Fall unabhängig von der Punktzahl als nicht bestanden. In der Realität könnte ein solcher Entscheid einen Gewässerschaden, ein Strafverfahren und hohe Kosten auslösen.</span>
             </span>
           </div>
@@ -134,7 +145,7 @@ export function ScenarioPlayer({ id }: { id: string }) {
           <ol className="path">
             {results.map((r) => {
               const st = sc.stages.find((x) => x.id === r.stageId)!;
-              return <li key={r.stageId}><strong>{st.title}</strong> <span className="mono">{pct(r.score)}</span>{r.critical && <span className="badge crit">kritisch</span>}</li>;
+              return <li key={r.stageId}><strong>{st.title}</strong> <span className="mono">{pct(r.score)}</span>{r.critical && <span className="badge crit">kritisch</span>}{r.self && <span className="badge">Selbstbewertung</span>}</li>;
             })}
           </ol>
         </section>
@@ -273,7 +284,8 @@ function StageFeedback({ stage, a, result }: { stage: ScenarioStage; a: StageAns
   const chosen = (stage.options ?? []).filter((o) => a.selected.includes(o.id));
   return (
     <div className={'feedback stage-fb' + (result.critical ? ' crit' : '')}>
-      <p className="fb-verdict">Bewertung dieses Schritts: <span className="mono">{pct(result.score)}</span></p>
+      <p className="fb-verdict">{result.self ? 'Ihre Selbstbewertung' : 'Bewertung dieses Schritts'}: <span className="mono">{pct(result.score)}</span>{result.critical && <span className="badge crit"> kritischer Fehler</span>}</p>
+      {(result.criticalWhy ?? []).map((w) => <p key={w} className="consequence"><strong>Kritisch:</strong> {w}</p>)}
       {stage.type === 'ask' && (
         <ul className="reveals">
           {chosen.map((o) => <li key={o.id}><strong>{o.text}</strong><span className="reveal">{o.reveal}</span><span className="muted">{o.feedback}</span></li>)}
@@ -292,12 +304,12 @@ function StageFeedback({ stage, a, result }: { stage: ScenarioStage; a: StageAns
         </ul>
       )}
       {stage.type === 'single' && chosen[0]?.points !== 2 && (
-        <p className="better"><strong>Besser:</strong> {(stage.options ?? []).find((o) => o.points === 2)?.text}</p>
+        <p className="better"><strong>Besser:</strong> {(stage.options ?? []).filter((o) => o.points === 2).map((o) => o.text).join(' – oder gleichwertig: ')}</p>
       )}
       {stage.type === 'rank' && (
         <>
-          <p><strong>Fachlich begründete Reihenfolge:</strong></p>
-          <ol>{(stage.rankOrder ?? []).map((id) => <li key={id}>{stage.rankItems?.find((x) => x.id === id)?.text}</li>)}</ol>
+          <p><strong>Fachlich begründete Reihenfolge</strong>{stage.rankGroups ? ' (Massnahmen auf derselben Stufe laufen parallel – ihre Reihenfolge untereinander ist frei):' : ':'}</p>
+          <ol>{(stage.rankGroups ?? (stage.rankOrder ?? []).map((id) => [id])).map((g, i) => <li key={i}>{g.map((id) => stage.rankItems?.find((x) => x.id === id)?.text).join('  ∥  ')}</li>)}</ol>
           <p>{stage.rankExplanation}</p>
         </>
       )}

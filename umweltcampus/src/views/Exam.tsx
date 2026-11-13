@@ -9,7 +9,8 @@ import { buildExam, PASS, type ExamKind } from '../lib/exam';
 import { scoreQuestion, moduleRequirements } from '../lib/learning';
 import { FeynmanBlock } from '../components/Practice';
 import { topicTitle } from '../lib/coach';
-import type { ExamRun } from '../lib/state';
+import { SCORING_VERSION, type ExamRun } from '../lib/state';
+import { isLegacyExam } from '../lib/versioning';
 
 const KIND_LABEL: Record<ExamKind, string> = { check: 'Kurzer Wissenscheck', modul: 'Modulabschlusstest Gewässerschutz', offen: 'Offene Fachfragen' };
 
@@ -84,7 +85,7 @@ export function ExamView() {
         <Section title="Bisherige Prüfungen">
           <table className="table">
             <thead><tr><th>Datum</th><th>Art</th><th>Ergebnis</th><th>Status</th></tr></thead>
-            <tbody>{[...s.exams].reverse().slice(0, 12).map((e) => <tr key={e.id}><td>{fmtDateTime(e.at)}</td><td>{KIND_LABEL[e.kind]}</td><td className="mono">{pct(e.score)}</td><td>{e.passed ? 'bestanden' : 'nicht bestanden'}</td></tr>)}</tbody>
+            <tbody>{[...s.exams].reverse().slice(0, 12).map((e) => <tr key={e.id}><td>{fmtDateTime(e.at)}</td><td>{KIND_LABEL[e.kind]}</td><td className="mono">{pct(e.score)}</td><td>{e.passed ? 'bestanden' : 'nicht bestanden'}{isLegacyExam(e) ? ' (frühere Bewertungsfassung – zählt nicht mehr als Nachweis)' : ''}</td></tr>)}</tbody>
           </table>
         </Section>
       )}
@@ -120,7 +121,8 @@ function ExamRunner({ kind, qs, onExit }: { kind: ExamKind; qs: Question[]; onEx
       byTopic[x.topic].ok += res[x.id]?.score ?? 0;
     }
     const passed = kind === 'modul' ? closedScore >= PASS.modul && openScore >= PASS.open : kind === 'offen' ? openScore >= PASS.open : total >= PASS.check;
-    const run: ExamRun = { id: examId, kind, moduleId: 'm2', at: Date.now(), score: total, total: qs.length, byTopic, passed };
+    const selfShare = open.length / qs.length;
+    const run: ExamRun = { id: examId, kind, moduleId: 'm2', at: Date.now(), score: total, total: qs.length, byTopic, passed, v: SCORING_VERSION, selfShare };
     update((x) => ({ ...x, exams: [...x.exams, run] }));
     log('pruefung', examId, `${KIND_LABEL[kind]}: ${pct(total)}${passed ? ' bestanden' : ''}`);
     setFinished(true);
@@ -139,6 +141,7 @@ function ExamRunner({ kind, qs, onExit }: { kind: ExamKind; qs: Question[]; onEx
       <div className="page">
         <h1>Auswertung: {KIND_LABEL[kind]}</h1>
         <p className="verdict">{pct(total)} der Punkte</p>
+        {qs.some((x) => x.type === 'open') && <p className="hint">Die offenen Fragen haben Sie selbst am Raster bewertet. Diese Punkte sind eine Selbsteinschätzung, kein unabhängiger Fachnachweis. Das Ergebnis ist ein interner Lernstand und keine fachliche, behördliche oder offizielle Qualifikation.</p>}
         <Section title="Ergebnis nach Thema">
           <ul className="crit-bars">{topics.map(([t, v]) => <li key={t}><span>{topicTitle(t)}</span><Bar value={v.ok / v.n} tone={v.ok / v.n >= 0.75 ? 'ok' : v.ok / v.n >= 0.5 ? 'warn' : 'crit'} label={topicTitle(t)} /><span className="mono">{pct(v.ok / v.n)}</span></li>)}</ul>
           {weak.length > 0 ? <p>Empfehlung: Wiederholen Sie {weak.map(([t]) => topicTitle(t)).join(', ')} – die falsch beantworteten Fragen sind bereits im Wiederholungsplan.</p> : <p>Keine Schwachstelle unter 75 %. Festigen Sie das Wissen mit einem Baustellenfall.</p>}
