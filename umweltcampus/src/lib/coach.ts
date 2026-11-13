@@ -117,6 +117,11 @@ export const GUIDING: Record<string, string[]> = {
   'm9-feststellung': ['Was genau haben Sie beobachtet – und was ist Vermutung?', 'Droht ein Schaden unmittelbar oder fehlt eine zwingende Freigabe?', 'Was muss jetzt sofort geschehen, und wen holen Sie?'],
   'm9-bericht': ['Könnten Sie jeden Satz in zwei Jahren vor Dritten vertreten?', 'Steht bei jeder Feststellung, wer was bis wann tut?', 'Sind Personen auf den Fotos nötig?'],
   'm9-nachverfolgung': ['Ist das die Ursache oder nur das Symptom?', 'Woran erkennen Sie, dass die Massnahme wirkt?', 'Wer kann das entscheiden – und haben Sie die Eskalation angekündigt?'],
+  'm10-system': ['Geht es um das System oder um den Zustand einer einzelnen Baustelle?', 'Wer trägt hier die Verantwortung – Leitung, Linie oder Fachstelle?', 'Kommt das, was im System steht, auf der Baustelle an?'],
+  'm10-planung': ['Ist das ein Aspekt oder eine Auswirkung?', 'Welche Verpflichtung gilt – und auf welcher Ebene (Unternehmen, Standort, Projekt)?', 'Wer muss wegen dieses Ziels was anders machen?'],
+  'm10-betrieb': ['In welchen bestehenden Arbeitsschritt gehört diese Vorgabe?', 'Können es die Leute – und tun sie es?', 'Wurde der Notfall schon einmal geübt?'],
+  'm10-audit': ['Was ist die Anforderung, was der Nachweis?', 'Welche Schwäche im System steckt hinter dieser Feststellung?', 'Ist dieser Nachweis echt und zum richtigen Zeitpunkt entstanden?'],
+  'm10-verbesserung': ['Welche Entscheidung stützt diese Kennzahl?', 'Was beantragen Sie – mit welchen Kosten und welcher Wirkung?', 'Was können Sie weglassen?'],
   konzept: ['Beantwortet das Konzept alle sechs Leitfragen?', 'Sind Zuständigkeiten und Kontrollen festgelegt?', 'Was ist Pflicht, was Empfehlung – und was kostet die Alternative?'],
 };
 

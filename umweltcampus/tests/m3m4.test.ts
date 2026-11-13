@@ -7,7 +7,7 @@ import { emptyState, normalizeState } from '../src/lib/state';
 import { isLegacyAnswer, isLegacyExam, isLegacyRun } from '../src/lib/versioning';
 import { moduleRequirements } from '../src/lib/learning';
 
-for (const mod of ['m3', 'm4', 'm8', 'm9']) {
+for (const mod of ['m3', 'm4', 'm8', 'm9', 'm10']) {
   describe(`Modul ${mod}: Umfang und Struktur`, () => {
     test('verfügbar, 5 Lektionen in Reihenfolge', () => {
       expect(MODULES.find((m) => m.id === mod)!.status).toBe('verfuegbar');
@@ -30,7 +30,7 @@ for (const mod of ['m3', 'm4', 'm8', 'm9']) {
       }
     });
     test('alle Fragen tragen eine gültige Bewertungsfassung', () => {
-      for (const q of QUESTIONS.filter((x) => x.moduleId === mod)) expect(mod === 'm9' ? [5] : mod === 'm8' ? [4, 5] : [3, 4]).toContain(q.rev);
+      for (const q of QUESTIONS.filter((x) => x.moduleId === mod)) expect(mod === 'm9' || mod === 'm10' ? [5] : mod === 'm8' ? [4, 5] : [3, 4]).toContain(q.rev);
     });
     test('kritische Optionen geben 0 Punkte', () => {
       for (const q of QUESTIONS.filter((x) => x.moduleId === mod && x.type === 'best')) {
@@ -252,5 +252,32 @@ describe('Modul 9: Umweltbaubegleitung und Baustellenkontrollen', () => {
     expect(JSON.stringify(LESSONS.find((l) => l.id === 'm9-l1'))).toContain('keine formelle UBB');
     for (const l of LESSONS.filter((x) => x.moduleId === 'm9')) expect(l.review).toBe('entwurf');
     for (const q of QUESTIONS.filter((x) => x.moduleId === 'm9')) expect(q.review).toBe('entwurf');
+  });
+});
+
+describe('Modul 10: ISO 14001 und Umweltmanagement', () => {
+  const st = (id: string) => S.get('sim-e')!.stages.find((x) => x.id === id)!;
+  test('Fall E ersetzt den Platzhalter (stabile ID sim-e, nur einmal vorhanden)', () => {
+    expect(SCENARIOS.filter((x) => x.id === 'sim-e').length).toBe(1);
+    expect(S.get('sim-e')!.moduleId).toBe('m10');
+  });
+  test('Nachweise nachträglich herstellen ist kritisch (Fall und Abwägung)', () => {
+    expect(evaluateStage(st('e1'), { stageId: 'e1', selected: ['o2'] })).toMatchObject({ score: 0, critical: true });
+    expect(scoreQuestion(QUESTIONS.find((q) => q.id === 'm10-d04')!, ['a'])).toBe(0);
+    expect(QUESTIONS.find((q) => q.id === 'm10-q18')!.correct).toEqual(['b']);
+  });
+  test('Vorgehen nach Abweichung: zuerst Umfang feststellen', () => {
+    expect(evaluateRank(st('e4'), ['n1', 'n3', 'n2', 'n4', 'n5', 'n6'])).toMatchObject({ score: 1, critical: false });
+    expect(evaluateRank(st('e4'), ['n4', 'n5', 'n1', 'n2', 'n3', 'n6']).critical).toBe(true);
+  });
+  test('Keine Normtexte behauptet: Abschnittsnummern als Ausgabe 2015 gekennzeichnet; Prüfstatus Entwurf', () => {
+    const all = JSON.stringify(LESSONS.filter((l) => l.moduleId === 'm10'));
+    expect(all).toContain('Ausgabe 2026 nicht verglichen');
+    expect(all).toContain('kein Normtext');
+    for (const l of LESSONS.filter((x) => x.moduleId === 'm10')) expect(l.review).toBe('entwurf');
+    for (const q of QUESTIONS.filter((x) => x.moduleId === 'm10')) expect(q.review).toBe('entwurf');
+  });
+  test('Zertifikat ist kein Freibrief', () => {
+    expect(QUESTIONS.find((q) => q.id === 'm10-q02')!.correct).toEqual(['b']);
   });
 });

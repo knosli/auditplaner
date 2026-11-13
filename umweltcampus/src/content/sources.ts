@@ -499,6 +499,21 @@ export const SOURCES: Source[] = [
     note: 'In der App nur die Grundsätze (Verhältnismässigkeit, Zweckbindung) sinngemäss, ohne Artikel; nicht am Fedlex-Text geprüft. Massgebend sind die Datenschutzregeln der Firma.',
   },
   {
+    id: 'iso19011', title: 'ISO 19011 «Leitfaden zur Auditierung von Managementsystemen»', short: 'ISO 19011', kind: 'norm',
+    issuer: 'ISO / SNV', version: 'Ausgabe 2018 – aktuelle Ausgabe prüfen', lastChecked: null, scope: 'Leitfaden (Empfehlung) für interne und externe Audits', review: 'entwurf',
+    note: 'Kostenpflichtige Norm; in der App nur Grundsätze sinngemäss (Auditprogramm, Unparteilichkeit, Nachweise, Feststellungen). Kein Normtext, Ausgabe nicht geprüft.',
+  },
+  {
+    id: 'iso9001', title: 'ISO 9001 «Qualitätsmanagementsysteme – Anforderungen»', short: 'ISO 9001', kind: 'norm',
+    issuer: 'ISO / SNV', version: 'Ausgabe 2015; Revision angekündigt – aktuelle Ausgabe prüfen', lastChecked: null, scope: 'Zertifizierte Unternehmen', review: 'entwurf',
+    note: 'In der App nur als Teil des integrierten Managementsystems erwähnt (gemeinsame Grundstruktur). Kein Normtext.',
+  },
+  {
+    id: 'iso45001', title: 'ISO 45001 «Managementsysteme für Sicherheit und Gesundheit bei der Arbeit»', short: 'ISO 45001', kind: 'norm',
+    issuer: 'ISO / SNV', version: 'Ausgabe 2018 – aktuelle Ausgabe prüfen', lastChecked: null, scope: 'Zertifizierte Unternehmen', review: 'entwurf',
+    note: 'In der App nur als Teil des integrierten Managementsystems erwähnt. Kein Normtext.',
+  },
+  {
     id: 'praxis',
     title: 'Bewährte Praxis Baustellen-Umweltschutz (Zusammenfassung der App)',
     short: 'Bewährte Praxis',

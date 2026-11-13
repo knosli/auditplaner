@@ -220,6 +220,32 @@ export function IlluInspect(_: Props) {
   );
 }
 
+/** Modul 10: Regelkreis des Umweltmanagements */
+export function IlluCycle(_: Props) {
+  const seg: [number, number, string, string][] = [[240, 78, 'Planen', '#daeee8'], [352, 150, 'Umsetzen', '#fff2de'], [240, 222, 'Prüfen', '#e4ebe6'], [128, 150, 'Verbessern', '#eaf1f6']];
+  return (
+    <Paper label="Schema: Regelkreis des Umweltmanagements. Planen, Umsetzen, Prüfen und Verbessern folgen im Kreis aufeinander; in der Mitte stehen die Baustelle und die oberste Leitung, die die Rechenschaft trägt.">
+      <circle cx="240" cy="150" r="88" fill="none" stroke="#9db7b0" strokeWidth="2" strokeDasharray="5 6" />
+      <defs><marker id="ar10" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 10 5 0 10z" fill="#167b70" /></marker></defs>
+      <path d="M292 82q36 16 52 46" fill="none" stroke="#167b70" strokeWidth="3" markerEnd="url(#ar10)" />
+      <path d="M344 172q-16 34-52 46" fill="none" stroke="#167b70" strokeWidth="3" markerEnd="url(#ar10)" />
+      <path d="M188 218q-36-14-52-46" fill="none" stroke="#167b70" strokeWidth="3" markerEnd="url(#ar10)" />
+      <path d="M136 128q16-34 52-46" fill="none" stroke="#167b70" strokeWidth="3" markerEnd="url(#ar10)" />
+      {seg.map(([x, y, t, c]) => (
+        <g key={t}>
+          <rect x={x - 46} y={y - 18} width={92} height={36} rx="12" fill={c} stroke="#9db7b0" strokeWidth="1.5" />
+          <T x={x} y={y + 4} anchor="middle">{t}</T>
+        </g>
+      ))}
+      <rect x="196" y="128" width="88" height="44" rx="10" fill="#102d2d" />
+      <T x={240} y={147} anchor="middle" s={10} c="#ffffff">Baustelle</T>
+      <T x={240} y={162} anchor="middle" s={9} w={500} c="#b6d6cf">Leitung · Linie</T>
+      <T x={240} y={40} anchor="middle" s={10} w={500} c="#56645e">Aspekte · Verpflichtungen · Ziele</T>
+      <T x={240} y={270} anchor="middle" s={10} w={500} c="#56645e">Audit · Kennzahlen · Managementbewertung</T>
+    </Paper>
+  );
+}
+
 export function ModuleIllustration({ moduleId }: { moduleId: string }) {
   switch (moduleId) {
     case 'm2': return <IlluWater />;
@@ -227,6 +253,7 @@ export function ModuleIllustration({ moduleId }: { moduleId: string }) {
     case 'm4': return <IlluSoil />;
     case 'm8': return <IlluPlan />;
     case 'm9': return <IlluInspect />;
+    case 'm10': return <IlluCycle />;
     default: return <IlluLaw />;
   }
 }

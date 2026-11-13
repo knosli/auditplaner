@@ -21,6 +21,7 @@ export function Diagram({ id }: { id: string }) {
     case 'bodenschichten': return <Kette steps={BODEN} />;
     case 'auflagenkette': return <Kette steps={AUFLAGEN} />;
     case 'ubb-rollen': return <Kette steps={UBB_ROLLEN} />;
+    case 'iso-regelkreis': return <Kette steps={ISO_REGELKREIS} />;
     case 'feststellungsweg': return <Kette steps={FESTSTELLUNG} />;
     default: return <p className="hint">Schema «{id}» nicht gefunden.</p>;
   }
@@ -235,6 +236,13 @@ const AUFLAGEN = [
   { t: 'Nachweis', d: 'Protokoll, Foto, Liefer-, Wäge-, Begleitschein', who: 'so viel wie nötig, so wenig wie möglich' },
 ];
 
+const ISO_REGELKREIS = [
+  { t: 'Kontext und Führung', d: 'Umfeld, interessierte Parteien, Anwendungsbereich; Politik, Rollen', who: 'oberste Leitung trägt die Rechenschaft' },
+  { t: 'Planen', d: 'Umweltaspekte, bindende Verpflichtungen, Risiken und Chancen, Ziele', who: 'Worauf konzentrieren wir uns?' },
+  { t: 'Umsetzen', d: 'Mittel, Kompetenz, Kommunikation; betriebliche Steuerung, Notfallvorsorge', who: 'Linie – in den normalen Arbeitsschritten' },
+  { t: 'Prüfen', d: 'Überwachen und messen, Einhaltung bewerten, internes Audit, Managementbewertung', who: 'Wirkt es?' },
+  { t: 'Verbessern', d: 'Korrekturmassnahmen, fortlaufende Verbesserung', who: 'zurück zur Planung' },
+];
 const UBB_ROLLEN = [
   { t: 'Behörde', d: 'Bewilligt, ordnet an, kontrolliert (Vollzug)', who: 'Kanton, Gemeinde' },
   { t: 'Bauherrschaft', d: 'Trägt die Auflagen; beauftragt Planer, Bauleitung, UBB', who: 'in der Regel Adressatin der Bewilligung' },

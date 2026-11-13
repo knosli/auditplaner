@@ -38,7 +38,7 @@ export const MODULES: ModuleMeta[] = [
     topics: ['Aufgaben der UBB', 'Interne Beratung vs. formelle UBB', 'Kontrollkonzepte', 'Umweltbegehungen', 'Auditchecklisten', 'Feststellungen und Abweichungen', 'Risikobeurteilung', 'Sofortmassnahmen', 'Korrektur- und Vorbeugemassnahmen', 'Kommunikation mit Bauleitung', 'Fotodokumentation', 'Kontrollberichte', 'Nachverfolgung', 'Eskalation'],
   },
   {
-    id: 'm10', no: 10, title: 'ISO 14001 und Umweltmanagement', short: 'ISO 14001', pathOrder: 7, status: 'in_entwicklung',
+    id: 'm10', no: 10, title: 'ISO 14001 und Umweltmanagement', short: 'ISO 14001', pathOrder: 7, status: 'verfuegbar',
     topics: ['Systematik', 'Kontext der Organisation', 'Umweltaspekte', 'Compliance-Verpflichtungen', 'Umweltziele', 'Rollen', 'Risikobasierter Ansatz', 'Interne Audits', 'Korrekturmassnahmen', 'Managementbewertung', 'Kontinuierliche Verbesserung', 'Kennzahlen', 'Grossunternehmen und Niederlassungen', 'Integriertes Managementsystem 9001/14001/45001'],
   },
   {
@@ -79,6 +79,11 @@ export const TOPICS: Topic[] = [
   { id: 'm9-feststellung', moduleId: 'm9', title: 'Feststellungen, Risiko, Sofortmassnahmen' },
   { id: 'm9-bericht', moduleId: 'm9', title: 'Dokumentation und Kontrollbericht' },
   { id: 'm9-nachverfolgung', moduleId: 'm9', title: 'Korrektur, Nachverfolgung, Eskalation' },
+  { id: 'm10-system', moduleId: 'm10', title: 'System, Kontext, Führung' },
+  { id: 'm10-planung', moduleId: 'm10', title: 'Umweltaspekte, Verpflichtungen, Ziele' },
+  { id: 'm10-betrieb', moduleId: 'm10', title: 'Kompetenz, Betrieb, Notfallvorsorge' },
+  { id: 'm10-audit', moduleId: 'm10', title: 'Interne Audits und Zertifizierung' },
+  { id: 'm10-verbesserung', moduleId: 'm10', title: 'Kennzahlen, Managementbewertung, integriertes System' },
   { id: 'recht', moduleId: 'm2', title: 'Rechtsrahmen Gewässerschutz' },
   { id: 'entwaesserung', moduleId: 'm2', title: 'Baustellenentwässerung' },
   { id: 'alkalisch', moduleId: 'm2', title: 'Betonwaschwasser / alkalisches Wasser' },

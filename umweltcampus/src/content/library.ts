@@ -272,6 +272,36 @@ Offene Massnahmen der letzten Begehung mit Status.
     text: 'Status: offen – umgesetzt – wirksam abgeschlossen. Eine Massnahme wird erst geschlossen, wenn die Nachkontrolle zeigt, dass sie wirkt. Funktionen statt Namen; die Liste ist Traktandum jeder Baustellensitzung.',
     sources: ['praxis'],
   },
+  {
+    id: 'vl-umweltaspekte', category: 'vorlage', moduleId: 'm10',
+    title: 'Vorlage Umweltaspekte-Bewertung (Bauunternehmung)',
+    summary: 'Tabelle, um Tätigkeiten, Aspekte und Auswirkungen zu erfassen und die bedeutenden Aspekte zu bestimmen.',
+    tags: ['Umweltaspekte', 'ISO 14001', 'Vorlage', 'Bewertung', 'Planung'],
+    table: {
+      head: ['Tätigkeit', 'Aspekt', 'Auswirkung', 'Zustand (normal / besonders / Notfall)', 'Schwere', 'Wahrscheinlichkeit', 'Rechtlich relevant', 'Bedeutend?', 'Steuerung (Standard, Checkliste)'],
+      rows: [
+        ['Betonarbeiten', 'Alkalisches Waschwasser', 'Gewässerschädigung', 'normal / besonders (Starkregen)', 'hoch', 'mittel', 'ja', 'ja', 'Standard Baustellenabwasser; AVOR-Checkliste'],
+        ['Betankung', 'Treibstoffverlust', 'Boden- und Grundwasserverschmutzung', 'normal / Notfall', 'hoch', 'mittel', 'ja', 'ja', 'Standard Betankung; Notfallblatt'],
+        ['Büro', 'Papierverbrauch', 'Ressourcenverbrauch', 'normal', 'tief', 'hoch', 'nein', 'nein', '–'],
+      ],
+    },
+    text: 'Die Kriterien und Stufen legt die Firma fest; sie müssen nachvollziehbar sein. Beispielwerte ohne Anspruch auf Allgemeingültigkeit. Mit Leuten aus der Praxis erarbeiten und bei Änderungen, nach Ereignissen und in festem Rhythmus überprüfen.',
+    sources: ['iso14001', 'praxis'],
+  },
+  {
+    id: 'cl-internes-audit', category: 'checkliste', moduleId: 'm10',
+    title: 'Internes Audit auf der Baustelle',
+    summary: 'Ablauf und Leitfragen für ein internes Umweltaudit – mit Blick auf das System, nicht auf die Person.',
+    tags: ['Audit', 'ISO 14001', 'Checkliste', 'Baustelle', 'Nachweise'],
+    items: [
+      { group: 'Vorbereitung', points: ['Ziel, Umfang und Kriterien festgelegt (Norm, eigene Vorgaben, Auflagen)', 'Auditor/in prüft nicht den eigenen Bereich', 'Ergebnisse früherer Audits und offene Korrekturmassnahmen gesichtet', 'Auditplan mit Zeiten und Gesprächspartnern verschickt'] },
+      { group: 'Eröffnung', points: ['Zweck erklärt: System, nicht Person', 'Ablauf und Sicherheit geklärt'] },
+      { group: 'Erheben', points: ['Einem Faden gefolgt: Anforderung → Umsetzung → Kontrolle → Nachweis', 'Auf der Baustelle beobachtet (vorhanden – angewendet – wirksam)', 'Offene Fragen gestellt, auch an Arbeiter und Subunternehmer', 'Nachweise mit Datum und Fundort notiert', 'Nichts nachträglich erstellen lassen'] },
+      { group: 'Abschluss', points: ['Feststellungen als Anforderung – Nachweis – Bewertung vorgestellt', 'Fakten abgeglichen', 'Stärken genannt'] },
+      { group: 'Nachbereitung', points: ['Kurzer Bericht', 'Korrektur und Korrekturmassnahmen durch die auditierte Stelle', 'Wirksamkeit geprüft', 'Ergebnisse in die Managementbewertung'] },
+    ],
+    sources: ['iso14001', 'iso19011', 'praxis'],
+  },
 ];
 
 export const LIB_CATEGORY_LABEL: Record<LibraryEntry['category'], string> = {
