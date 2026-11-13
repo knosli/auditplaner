@@ -8,7 +8,8 @@
     "build": "tsc --noEmit && vite build && node scripts/make-artifact.mjs",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "e2e": "node tests/e2e.cjs dist/index.html"
+    "e2e": "node tests/e2e.cjs dist/index.html",
+    "build:pages": "npm run build && node scripts/make-pages.mjs"
   },
   "dependencies": {
     "react": "^19.1.1",
