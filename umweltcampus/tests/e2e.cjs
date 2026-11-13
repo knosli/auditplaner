@@ -220,6 +220,35 @@ const ok = (c, m) => { console.log((c ? 'OK   ' : 'FAIL ') + m); if (!c) process
     await page.reload(); await page.waitForTimeout(300);
     await go('fortschritt');
     const hn = await page.locator('.history li').count(); const raw = await page.evaluate(() => { const x = JSON.parse(localStorage.getItem('umweltcampus.v1') || '{}'); return { h: (x.history || []).length, v: x.version, l: Object.keys(x.lessons || {}).length }; }); ok(hn > 3, 'Historie nach Neuladen vorhanden (' + hn + ' Einträge, gespeichert ' + JSON.stringify(raw) + ')');
+    // ---- Academy-Design: Navigation, Dashboard, Module, Quellen, Breite, Datenerhalt ----
+    const before = await page.evaluate(() => JSON.parse(localStorage.getItem('umweltcampus.v1')));
+    await go('dashboard');
+    ok((await page.locator('.nav-glabel').allTextContents()).join('|').includes('Praxis & Training'), 'Navigation in Gruppen');
+    const heroHref = await page.locator('.hero-cta').getAttribute('href');
+    ok(/^#(lektion-|pruefung)/.test(heroHref || ''), 'Hero: genau eine Weiterlernen-Aktion (' + heroHref + ')');
+    ok((await page.locator('.hero-cta').count()) === 1, 'Hero hat genau eine primäre Aktion');
+    ok((await page.locator('.lb').count()) === 4 * 4, 'Fortschrittsebenen getrennt (4 Ebenen × 4 Module)');
+    ok((await page.locator('.shelf .mod-card').count()) === 3, 'Drei Module als Einstieg');
+    await page.locator('.hero-cta').click(); await page.waitForTimeout(200);
+    ok((await page.evaluate(() => location.hash)) === heroHref, 'Weiterlernen öffnet die Lektion');
+    await go('module');
+    await page.getByRole('button', { name: 'Management & Führung' }).click();
+    ok((await page.locator('.mod-card').count()) === 3, 'Modulfilter Management: 3 Module');
+    await page.getByRole('button', { name: 'Alle Themen' }).click();
+    await page.getByRole('searchbox', { name: /durchsuchen/ }).fill('Recycling');
+    ok((await page.locator('.mod-card').count()) >= 1 && (await page.locator('.mod-card').count()) < 12, 'Modulsuche filtert nach Themen');
+    await go('quellen');
+    ok((await page.locator('.srclist li').count()) > 20, 'Quellen über eigene Navigation erreichbar');
+    let wide = [];
+    for (const h of ['dashboard', 'module', 'modul-m2', 'lektion-m2-l2', 'simulator', 'szenario-sim-g', 'lernpfad', 'pruefung', 'wiederholung', 'bibliothek', 'werkzeuge', 'fortschritt', 'einstellungen']) {
+      await go(h); if (h.startsWith('szenario')) { await page.getByRole('button', { name: 'Fall beginnen' }).click(); await page.waitForTimeout(150); }
+      const w = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth); if (w > 1) wide.push(h + ':' + w);
+    }
+    ok(wide.length === 0, 'Kein horizontales Scrollen (' + (wide.join(', ') || 'alle Seiten') + ')');
+    const after = await page.evaluate(() => JSON.parse(localStorage.getItem('umweltcampus.v1')));
+    const same = (k) => JSON.stringify(before[k]) === JSON.stringify(after[k]);
+    const lessonsKept = Object.keys(before.lessons).every((k) => ['startedAt', 'completedAt'].every((f) => before.lessons[k][f] === after.lessons[k][f]));
+    ok(same('answers') && same('scenarios') && same('exams') && same('practice') && lessonsKept && after.version === before.version, 'Lernstand beim Navigieren unverändert (Antworten, Fälle, Prüfungen, Praxis, Zeitstempel)');
     ok(errs.length === 0, 'Konsolenfehler: ' + (errs.join(' | ') || 'keine'));
     await ctx.close();
   }

@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
-import { CRITERION_LABEL, MODULES, S, SCENARIOS } from '../content';
+import { CRITERION_LABEL, MODULES, S, SCENARIOS, TOPICS } from '../content';
+import { Icon } from '../components/Icons';
+import { ModuleIllustration } from '../components/Illustrations';
+import { metaOf } from '../components/moduleMeta';
 import type { Scenario, ScenarioStage } from '../content/types';
 import { useStore } from '../store';
 import { InlineText, RichText } from '../components/RichText';
@@ -10,45 +13,66 @@ import { isLegacyRun } from '../lib/versioning';
 
 export function SimulatorView() {
   const { s } = useStore();
+  const avail = SCENARIOS.filter((x) => x.status === 'verfuegbar');
+  const dev = SCENARIOS.filter((x) => x.status !== 'verfuegbar');
   return (
     <div className="page">
       <header className="page-head">
-        <h1>Baustellensimulator</h1>
-        <p className="lead">Realistische Situationen mit unvollständigen Informationen. Sie erfragen, was fehlt, setzen Prioritäten, entscheiden und begründen. Falsche Entscheide haben Folgen – schwere Umweltschäden werden nicht verharmlost.</p>
+        <span className="eyebrow">Praxis & Training</span>
+        <h1>Baustellensimulator.</h1>
+        <p className="lead">Realistische Situationen mit unvollständigen Informationen. Sie erfragen, was fehlt, setzen Prioritäten, entscheiden und begründen. Falsche Entscheide haben Folgen – kritische Fehler werden nicht mit Trostpunkten verharmlost.</p>
       </header>
-      <div className="cards two">
-        {SCENARIOS.map((sc) => {
+      <div className="sim-grid">
+        {avail.map((sc) => {
           const runs = s.scenarios[sc.id] ?? [];
           const best = runs.reduce((m, r) => Math.max(m, r.total), 0);
           const mod = MODULES.find((m) => m.id === sc.moduleId);
+          const cur = runs.filter((r) => !isLegacyRun(sc.id, r));
+          const ok = cur.some((r) => r.passed);
           return (
-            <article key={sc.id} className={'card scen' + (sc.status !== 'verfuegbar' ? ' muted-card' : '')}>
-              <div className="scen-code mono">{sc.code}</div>
-              <div className="scen-body">
-                <span className="eyebrow">{sc.setting} · Stufe {sc.level} · Modul {mod?.no} {mod?.short}</span>
-                <h3>{sc.title}</h3>
+            <article key={sc.id} className={'sim-card tone-' + metaOf(sc.moduleId).tone}>
+              <div className="sim-banner"><ModuleIllustration moduleId={sc.moduleId} /><span className="code-chip big">{sc.code}</span></div>
+              <div className="sim-body">
+                <span className="eyebrow">Modul {mod?.no} · {mod?.short}</span>
+                <h3><a href={'#szenario-' + sc.id} className="stretched">{sc.title}</a></h3>
+                <div className="fact-pills"><span>{sc.setting}</span><span>Stufe {sc.level}</span><span><Icon name="clock" size={13} /> ca. {sc.minutes} Min.</span><span>{sc.stages.length} Entscheidungen</span></div>
                 <p>{sc.intro}</p>
-                {sc.status === 'verfuegbar' ? (
-                  <div className="row">
-                    <a className="btn primary" href={'#szenario-' + sc.id}>{runs.length ? 'Erneut spielen' : 'Fall starten'}</a>
-                    <span className="hint">mehrstufig, mit Verzweigungen · ca. {sc.minutes} Min.</span>
-                    {runs.length > 0 && (() => {
-                      const cur = runs.filter((r) => !isLegacyRun(sc.id, r));
-                      const ok = cur.some((r) => r.passed);
-                      return cur.length > 0
-                        ? <span className={'status-pill ' + (ok ? 'st-bestaetigt' : 'st-in_arbeit')}>{ok ? 'bestanden' : 'nicht bestanden'} · bestes {pct(Math.max(...cur.map((r) => r.objective ?? r.total)))}</span>
-                        : <span className="status-pill" title="Die Bewertung dieses Falls wurde geändert. Frühere Ergebnisse zählen nicht mehr als Nachweis.">früher gespielt (frühere Bewertungsfassung, bestes {pct(best)}) – bitte neu spielen</span>;
-                    })()}
-                  </div>
-                ) : (
-                  <div className="row"><DevBadge /><span className="hint">Folgt mit Modul {mod?.no}.</span></div>
-                )}
+                <div className="sim-foot">
+                  {runs.length > 0 && (cur.length > 0
+                    ? <span className={'status-pill ' + (ok ? 'st-bestaetigt' : 'st-in_arbeit')}>{ok ? 'bestanden' : 'nicht bestanden'} · bestes {pct(Math.max(...cur.map((r) => r.objective ?? r.total)))}</span>
+                    : <span className="status-pill" title="Die Bewertung dieses Falls wurde geändert. Frühere Ergebnisse zählen nicht mehr als Nachweis.">früher gespielt (frühere Bewertungsfassung, bestes {pct(best)}) – bitte neu spielen</span>)}
+                  <span className="mod-open">{runs.length ? 'Erneut spielen' : 'Fall starten'} <Icon name="arrow" size={15} /></span>
+                </div>
               </div>
             </article>
           );
         })}
       </div>
+      {dev.length > 0 && (
+        <section className="section">
+          <h2>In Entwicklung</h2>
+          <ul className="dev-list">{dev.map((sc) => { const mod = MODULES.find((m) => m.id === sc.moduleId); return <li key={sc.id}><span className="code-chip muted">{sc.code}</span><span><strong>{sc.title}</strong><span className="hint">{sc.setting} · folgt mit Modul {mod?.no} {mod?.short}</span></span><DevBadge /></li>; })}</ul>
+        </section>
+      )}
     </div>
+  );
+}
+
+const PHASE: Record<ScenarioStage['type'], string> = { ask: 'Informationen sammeln', single: 'Entscheidung', multi: 'Entscheidung', rank: 'Prioritäten setzen', justify: 'Begründen und übertragen' };
+
+function Timeline({ sc, results, current, revealed, done }: { sc: Scenario; results: StageResult[]; current?: ScenarioStage | null; revealed?: boolean; done?: boolean }) {
+  return (
+    <aside className="sim-side" aria-label="Ablauf des Falls">
+      <span className="side-title">Ihr Einsatzablauf</span>
+      <ol className="timeline">
+        <li className="tl done"><span className="tl-num"><Icon name="check" size={14} /></span><span><strong>Ausgangslage</strong><span>erfasst</span></span></li>
+        {results.map((r) => { const st = sc.stages.find((x) => x.id === r.stageId); if (current && revealed && st?.id === current.id) return null; return <li key={r.stageId} className={'tl done' + (r.critical ? ' crit' : '')}><span className="tl-num">{r.critical ? '!' : <Icon name="check" size={14} />}</span><span><strong>{st?.title}</strong><span>{r.critical ? 'kritischer Fehler' : PHASE[st?.type ?? 'single']}</span></span></li>; })}
+        {current && <li className="tl on"><span className="tl-num">{results.length + (revealed ? 0 : 1)}</span><span><strong>{current.title}</strong><span>{revealed ? 'Konsequenz ansehen' : PHASE[current.type]}</span></span></li>}
+        {!done && <li className="tl"><span className="tl-num">…</span><span><strong>Weitere Entscheidungen</strong><span>je nach Ihrem Weg</span></span></li>}
+        <li className={'tl' + (done ? ' on' : '')}><span className="tl-num"><Icon name="chart" size={14} /></span><span><strong>Auswertung und Transfer</strong><span>nach Kriterien</span></span></li>
+      </ol>
+      <p className="hint">Bestanden ab 70 % der objektiv bewerteten Schritte und ohne kritischen Fehler.</p>
+    </aside>
   );
 }
 
@@ -92,21 +116,40 @@ export function ScenarioPlayer({ id }: { id: string }) {
 
   if (!started) {
     const last = (s.scenarios[sc.id] ?? []).slice(-1)[0];
+    const mod = MODULES.find((m) => m.id === sc.moduleId);
     return (
       <div className="page scenario">
-        <nav className="crumbs"><a href="#simulator">Baustellensimulator</a> / <span>Fall {sc.code}</span></nav>
+        <a className="back-link" href="#simulator"><Icon name="back" size={16} /> Alle Baustellenfälle</a>
         <header className="page-head">
-          <span className="eyebrow">{sc.setting} · Stufe {sc.level} · ca. {sc.minutes} Min.</span>
-          <h1>Fall {sc.code}: {sc.title}</h1>
+          <span className="eyebrow">Baustellenfall {sc.code} · Modul {mod?.no} {mod?.short}</span>
+          <h1>{sc.title}</h1>
+          <p className="lead">Sie übernehmen die Verantwortung vor Ort. Jede Entscheidung verändert den weiteren Verlauf.</p>
         </header>
-        <div className="scene">
-          <p>{sc.intro}</p>
-          <h4>Was Sie vor Ort sehen</h4>
-          <ul>{sc.facts.map((f) => <li key={f}>{f}</li>)}</ul>
+        <div className="sim-start">
+          <div className={'sim-stage-card tone-' + metaOf(sc.moduleId).tone}>
+            <div className="sim-banner"><ModuleIllustration moduleId={sc.moduleId} /></div>
+            <div className="sim-body">
+              <span className="step-kind"><Icon name="site" size={16} /> Ausgangslage</span>
+              <p className="sim-intro">{sc.intro}</p>
+              <h3>Was Sie vor Ort sehen</h3>
+              <ul className="facts-list">{sc.facts.map((f) => <li key={f}>{f}</li>)}</ul>
+            </div>
+          </div>
+          <aside className="panel brief-panel">
+            <span className="side-title">Ihr Einsatz</span>
+            <dl className="brief-dl">
+              <dt>Rolle</dt><dd>Umweltfachperson des Unternehmens</dd>
+              <dt>Ziel</dt><dd>Schaden begrenzen, rechtskonform entscheiden, nachvollziehbar begründen</dd>
+              <dt>Bauart</dt><dd>{sc.setting}</dd>
+              <dt>Risikofaktoren</dt><dd>{sc.topics.map((t) => TOPICS.find((x) => x.id === t)?.title ?? t).join(' · ')}</dd>
+              <dt>Dauer</dt><dd>ca. {sc.minutes} Min. · Stufe {sc.level}</dd>
+            </dl>
+            <span className="side-title">Bewertet werden</span>
+            <ul className="crit-tags">{Object.values(CRITERION_LABEL).map((c) => <li key={c}>{c}</li>)}</ul>
+            {last && <p className="hint">Letzter Versuch: {fmtDateTime(last.at)} – {pct(last.total)}{last.passed ? ' (bestanden)' : ''}{isLegacyRun(sc.id, last) ? ' · frühere Bewertungsfassung' : ''}</p>}
+            <button type="button" className="btn primary big-cta" onClick={restart}>Fall beginnen <Icon name="arrow" size={16} /></button>
+          </aside>
         </div>
-        <p className="hint">Bewertet werden: {Object.values(CRITERION_LABEL).join(', ')}. Bestanden ab 70 % ohne kritischen Fehler.</p>
-        {last && <p className="hint">Letzter Versuch: {fmtDateTime(last.at)} – {pct(last.total)}{last.passed ? ' (bestanden)' : ''}</p>}
-        <button type="button" className="btn primary" onClick={restart}>Fall beginnen</button>
       </div>
     );
   }
@@ -118,8 +161,9 @@ export function ScenarioPlayer({ id }: { id: string }) {
     ];
     return (
       <div className="page scenario">
-        <nav className="crumbs"><a href="#simulator">Baustellensimulator</a> / <span>Fall {sc.code} – Auswertung</span></nav>
-        <header className="page-head">
+        <a className="back-link" href="#simulator"><Icon name="back" size={16} /> Alle Baustellenfälle</a>
+        <header className={'page-head result-head ' + (run.passed ? 'ok' : 'crit')}>
+          <span className="eyebrow">Auswertung · Fall {sc.code}</span>
           <h1>Auswertung Fall {sc.code}</h1>
           <p className={'verdict ' + (run.passed ? 'ok' : 'crit')}>{run.passed ? 'Bestanden' : 'Nicht bestanden'} · objektiv bewertete Schritte {pct(run.objective ?? run.total)}{run.critical ? ` · ${run.critical} kritische${run.critical === 1 ? 'r' : ''} Fehler` : ''}</p>
           <p className="hint">Die schriftliche Begründung haben Sie selbst am Raster bewertet. Sie ist im Kompetenzprofil enthalten, entscheidet aber nicht über «bestanden» – sie ist kein unabhängiger Fachnachweis. Die Fallbewertung ist eine Lernübung, keine fachliche oder behördliche Freigabe.</p>
@@ -180,24 +224,29 @@ export function ScenarioPlayer({ id }: { id: string }) {
 
   return (
     <div className="page scenario">
-      <nav className="crumbs"><a href="#simulator">Baustellensimulator</a> / <span>Fall {sc.code}</span></nav>
-      <header className="page-head compact">
-        <span className="eyebrow">Fall {sc.code} · Entscheidung {stepNo}</span>
-        <h1>{stage.title}</h1>
-      </header>
-      <div className="scene"><RichText text={stage.situation} /></div>
-      <StageInput key={stage.id} sc={sc} stage={stage} a={a} setA={setA} revealed={revealed} />
-      {!revealed ? (
-        <div className="q-actions">
-          <button type="button" className="btn primary" disabled={!canConfirm(stage, a)} onClick={confirm}>Entscheid bestätigen</button>
-          {stage.type === 'ask' && <span className="hint">{a.selected.length} von {stage.pick} Fragen gewählt</span>}
+      <a className="back-link" href="#simulator"><Icon name="back" size={16} /> Fall {sc.code}: {sc.title}</a>
+      <div className="sim-run">
+        <div className="sim-run-main">
+          <header className="page-head compact">
+            <span className="eyebrow">Fall {sc.code} · Schritt {stepNo} · {revealed ? "Konsequenz" : PHASE[stage.type]}</span>
+            <h1>{stage.title}</h1>
+          </header>
+          <div className="scene"><RichText text={stage.situation} /></div>
+          <StageInput key={stage.id} sc={sc} stage={stage} a={a} setA={setA} revealed={revealed} />
+          {!revealed ? (
+            <div className="q-actions">
+              <button type="button" className="btn primary" disabled={!canConfirm(stage, a)} onClick={confirm}>Entscheid bestätigen</button>
+              {stage.type === 'ask' && <span className="hint">{a.selected.length} von {stage.pick} Fragen gewählt</span>}
+            </div>
+          ) : (
+            <>
+              <StageFeedback stage={stage} a={a} result={results[results.length - 1]} />
+              <div className="q-actions"><button type="button" className="btn primary" onClick={next}>Weiter</button></div>
+            </>
+          )}
         </div>
-      ) : (
-        <>
-          <StageFeedback stage={stage} a={a} result={results[results.length - 1]} />
-          <div className="q-actions"><button type="button" className="btn primary" onClick={next}>Weiter</button></div>
-        </>
-      )}
+        <Timeline sc={sc} results={results} current={stage} revealed={revealed} />
+      </div>
     </div>
   );
 }

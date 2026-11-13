@@ -265,3 +265,32 @@ export function studyMinutes(s: AppState, days?: number): number {
   const cutoff = Date.now() - days * 86_400_000;
   return Math.round(entries.filter(([k]) => new Date(k).getTime() >= cutoff - 86_400_000).reduce((x, [, v]) => x + v, 0) / 60);
 }
+
+// ---------- Dashboard (Academy): Weiterlernen und getrennte Fortschrittsebenen ----------
+
+/** Lektion zum Weiterlernen: begonnene zuerst (Lernpfad-Reihenfolge), sonst die nächste offene. */
+export function continueLesson(s: AppState) {
+  const started = LESSONS.find((l) => s.lessons[l.id] && !s.lessons[l.id].completedAt);
+  if (started) return { lesson: started, started: true as const };
+  const next = LESSONS.find((l) => !s.lessons[l.id]?.completedAt);
+  return next ? { lesson: next, started: false as const } : null;
+}
+
+/**
+ * Vier getrennte Ebenen je Modul – bewusst ohne Gesamtnote:
+ * angesehen (Lektionen geöffnet), abgefragt (Fragen beantwortet, aktuelle Fassung),
+ * im Fall angewendet (Fälle bestanden), in der Praxis bestätigt (Praxisaufträge bestätigt).
+ */
+export function progressLayers(s: AppState, moduleId: string) {
+  const ls = LESSONS.filter((l) => l.moduleId === moduleId);
+  const qs = QUESTIONS.filter((q) => q.moduleId === moduleId && q.type !== 'open');
+  const answered = new Set(s.answers.filter((a) => !isLegacyAnswer(a)).map((a) => a.q));
+  const sims = SCENARIOS.filter((x) => x.moduleId === moduleId && x.status === 'verfuegbar');
+  const tasks = TASKS.filter((t) => t.moduleId === moduleId);
+  return [
+    { key: 'angesehen', label: 'Angesehen', done: ls.filter((l) => s.lessons[l.id]).length, total: ls.length, unit: 'Lektionen' },
+    { key: 'abgefragt', label: 'Abgefragt', done: qs.filter((q) => answered.has(q.id)).length, total: qs.length, unit: 'Fragen' },
+    { key: 'angewendet', label: 'Im Fall angewendet', done: sims.filter((x) => (s.scenarios[x.id] ?? []).some((r) => r.passed && !isLegacyRun(x.id, r))).length, total: sims.length, unit: 'Fälle bestanden' },
+    { key: 'bestaetigt', label: 'In der Praxis bestätigt', done: tasks.filter((t) => s.practice[t.id]?.status === 'bestaetigt').length, total: tasks.length, unit: 'Praxisaufträge' },
+  ];
+}

@@ -10,19 +10,32 @@ import { ProgressView } from './views/Progress';
 import { SettingsView } from './views/Settings';
 import { CoachPanel, GlossaryDrawer } from './components/Drawers';
 import { dueItems } from './lib/learning';
+import { Icon } from './components/Icons';
+import { L, MODULES, S } from './content';
 
-const NAV = [
-  { id: 'dashboard', label: 'Dashboard' },
-  { id: 'lernpfad', label: 'Lernpfad' },
-  { id: 'module', label: 'Fachmodule' },
-  { id: 'simulator', label: 'Baustellensimulator' },
-  { id: 'pruefung', label: 'Prüfungstraining' },
-  { id: 'wiederholung', label: 'Wiederholungen' },
-  { id: 'bibliothek', label: 'Wissensbibliothek' },
-  { id: 'werkzeuge', label: 'Praxiswerkzeuge' },
-  { id: 'fortschritt', label: 'Mein Fortschritt' },
-  { id: 'einstellungen', label: 'Einstellungen' },
-] as const;
+type NavItem = { id: string; label: string; icon: string };
+const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
+  { label: 'Mein Lernen', items: [
+    { id: 'dashboard', label: 'Dashboard', icon: 'home' },
+    { id: 'module', label: 'Fachmodule', icon: 'book' },
+    { id: 'lernpfad', label: 'Lernpfad', icon: 'path' },
+  ] },
+  { label: 'Praxis & Training', items: [
+    { id: 'simulator', label: 'Baustellensimulator', icon: 'sim' },
+    { id: 'pruefung', label: 'Prüfungstraining', icon: 'exam' },
+    { id: 'wiederholung', label: 'Wiederholungen', icon: 'review' },
+    { id: 'werkzeuge', label: 'Praxisaufträge & Werkzeuge', icon: 'practice' },
+  ] },
+  { label: 'Nachschlagen', items: [
+    { id: 'bibliothek', label: 'Fachbibliothek', icon: 'library' },
+    { id: 'quellen', label: 'Quellen', icon: 'sources' },
+  ] },
+  { label: 'Persönlich', items: [
+    { id: 'fortschritt', label: 'Lernfortschritt', icon: 'chart' },
+    { id: 'einstellungen', label: 'Einstellungen', icon: 'settings' },
+  ] },
+];
+const NAV_LABEL: Record<string, string> = Object.fromEntries(NAV_GROUPS.flatMap((g) => g.items.map((i) => [i.id, i.label])));
 
 function useHash() {
   const get = () => decodeURIComponent(location.hash.replace(/^#/, '')) || 'dashboard';
@@ -65,6 +78,7 @@ function Shell() {
     case 'pruefung': view = <ExamView />; break;
     case 'wiederholung': view = <ReviewView />; break;
     case 'bibliothek': view = <LibraryView />; break;
+    case 'quellen': view = <LibraryView key="quellen" initialTab="quellen" />; break;
     case 'werkzeuge': view = <ToolsView />; break;
     case 'fortschritt': view = <ProgressView />; break;
     case 'einstellungen': view = <SettingsView />; break;
@@ -73,35 +87,61 @@ function Shell() {
 
   const syncLabel = { lokal: 'Gespeichert im Browser', verbinde: 'Verbinde …', konto: 'Gespeichert im Konto', fehler: 'Konto nicht erreichbar – lokal gespeichert', kein_speicher: 'Nicht gespeichert – bitte exportieren' }[sync];
 
+  // Brotkrumen: Bereich / Detail
+  const crumb = (() => {
+    if (route.startsWith('lektion-')) { const l = L.get(route.slice(8)); const m = MODULES.find((x) => x.id === l?.moduleId); return [{ href: '#module', label: 'Fachmodule' }, ...(m ? [{ href: '#modul-' + m.id, label: 'Modul ' + m.no }] : []), { label: l ? 'Lektion ' + l.order : 'Lektion' }]; }
+    if (route.startsWith('modul-')) { const m = MODULES.find((x) => x.id === route.slice(6)); return [{ href: '#module', label: 'Fachmodule' }, { label: m ? 'Modul ' + m.no : 'Modul' }]; }
+    if (route.startsWith('szenario-')) { const sc = S.get(route.slice(9)); return [{ href: '#simulator', label: 'Baustellensimulator' }, { label: sc ? 'Fall ' + sc.code : 'Fall' }]; }
+    return [{ label: NAV_LABEL[route] ?? 'Dashboard' }];
+  })();
+
   return (
-    <div className="app">
-      <header className="topbar">
-        <button type="button" className="menu-btn" aria-label="Menü" aria-expanded={menu} onClick={() => setMenu(!menu)}>☰</button>
+    <div className={'app' + (menu ? ' menu-open' : '')}>
+      <a className="skip" href="#main">Zum Inhalt springen</a>
+      <nav className={'sidenav' + (menu ? ' open' : '')} aria-label="Hauptnavigation" id="sidenav">
         <a href="#dashboard" className="brand">
-          <span className="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M3 15c3-3 6 3 9 0s6 3 9 0" fill="none" stroke="currentColor" strokeWidth="2" /><path d="M3 9h18M8 9V4m8 5V4" fill="none" stroke="currentColor" strokeWidth="2" /></svg></span>
-          <span>UmweltCampus <strong className="brand-sub">Bau CH</strong></span>
+          <span className="brand-mark" aria-hidden="true"><Icon name="ground" size={24} /></span>
+          <span className="brand-text"><strong>UmweltCampus</strong><span>Bau CH · Academy</span></span>
         </a>
-        <div className="top-actions">
-          <span className={'sync st-' + sync} title={syncLabel}>{syncLabel}</span>
-          <button type="button" className="btn small" onClick={() => openTerm('')}>Begriffe</button>
-          <button type="button" className="btn small primary" onClick={() => setCoachOpen(true)}>Coach{ai ? '' : <span className="nokI"> (ohne KI)</span>}</button>
+        <button type="button" className="nav-close" aria-label="Menü schliessen" onClick={() => setMenu(false)}><Icon name="close" /></button>
+        {NAV_GROUPS.map((g) => (
+          <div className="nav-group" key={g.label}>
+            <span className="nav-glabel">{g.label}</span>
+            <ul>
+              {g.items.map((n) => (
+                <li key={n.id}>
+                  <a href={'#' + n.id} className={cur === n.id ? 'cur' : ''} aria-current={cur === n.id ? 'page' : undefined}>
+                    <Icon name={n.icon} size={18} />
+                    <span>{n.label}</span>
+                    {n.id === 'wiederholung' && due > 0 && <span className="count" aria-label={`${due} fällig`}>{due}</span>}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+        <div className="nav-goal">
+          <span className="nav-glabel">Ihr Lernziel</span>
+          <strong>Leitender Umweltbeauftragter</strong>
+          <span>Vom Baustellenwissen zur fachlichen Verantwortung. Inhalte im Prüfstatus Entwurf – kein offizieller Abschluss.</span>
         </div>
-      </header>
-      <nav className={'sidenav' + (menu ? ' open' : '')} aria-label="Hauptnavigation">
-        <ol>
-          {NAV.map((n, i) => (
-            <li key={n.id}>
-              <a href={'#' + n.id} className={cur === n.id ? 'cur' : ''} aria-current={cur === n.id ? 'page' : undefined}>
-                <span className="mono nav-no">{String(i + 1).padStart(2, '0')}</span>
-                {n.label}
-                {n.id === 'wiederholung' && due > 0 && <span className="count">{due}</span>}
-              </a>
-            </li>
-          ))}
-        </ol>
-        <p className="nav-foot">Inhalte: Prüfstatus Entwurf. Kein offizieller Abschluss.</p>
       </nav>
-      <main className="main" id="main">{view}</main>
+      {menu && <button type="button" className="scrim" aria-label="Menü schliessen" onClick={() => setMenu(false)} />}
+      <div className="workspace">
+        <header className="topbar">
+          <button type="button" className="menu-btn" aria-label="Menü öffnen" aria-expanded={menu} aria-controls="sidenav" onClick={() => setMenu(!menu)}><Icon name="menu" size={22} /></button>
+          <nav className="crumbbar" aria-label="Pfad">
+            <span className="crumb-root">UmweltCampus</span>
+            {crumb.map((c, i) => <span key={i} className="crumb-part"><span aria-hidden="true">/</span>{c.href ? <a href={c.href}>{c.label}</a> : <span aria-current="page">{c.label}</span>}</span>)}
+          </nav>
+          <div className="top-actions">
+            <span className={'sync st-' + sync} title={syncLabel}>{syncLabel}</span>
+            <button type="button" className="btn small quiet" onClick={() => openTerm('')}><Icon name="terms" size={16} /><span className="tb-l">Begriffe</span></button>
+            <button type="button" className="btn small primary" onClick={() => setCoachOpen(true)}><Icon name="chat" size={16} /><span>Coach{ai ? '' : <span className="nokI"> (ohne KI)</span>}</span></button>
+          </div>
+        </header>
+        <main className="main" id="main" tabIndex={-1}>{view}</main>
+      </div>
       <GlossaryDrawer />
       <CoachPanel />
       {toastMsg && <div className="toast" role="status">{toastMsg}</div>}

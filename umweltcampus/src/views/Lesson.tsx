@@ -8,6 +8,7 @@ import { Diagram } from '../components/Diagrams';
 import { FeynmanBlock, PracticeCard } from '../components/Practice';
 import { SiteTaskBlock } from '../components/SiteTask';
 import { ReviewBadge, SourceList, Bar } from '../components/ui';
+import { Icon } from '../components/Icons';
 import { newItem } from '../lib/srs';
 import type { LessonProgress } from '../lib/state';
 
@@ -40,6 +41,13 @@ export function LessonView({ id }: { id: string }) {
 
   // Aktueller Schritt über seine ID; unbekannte IDs (z. B. entfernte Schritte) → erster Schritt
   const idx = lesson ? Math.max(0, lesson.steps.findIndex((st) => st.id === p?.cur)) : 0;
+
+  // Schrittliste (Handy, quer scrollbar): aktuellen Schritt sichtbar halten, ohne die Seite zu verschieben
+  useEffect(() => {
+    const list = document.querySelector<HTMLElement>('.steps-box .stepper');
+    const curBtn = list?.querySelector<HTMLElement>('button.cur');
+    if (list && curBtn && list.scrollWidth > list.clientWidth) list.scrollLeft = curBtn.offsetLeft - list.clientWidth / 2 + curBtn.clientWidth / 2;
+  }, [idx]);
 
   useEffect(() => {
     if (!lesson) return;
@@ -82,49 +90,106 @@ export function LessonView({ id }: { id: string }) {
   const cur = lesson.steps[idx];
   const isLast = idx === lesson.steps.length - 1;
 
+  const curQs = cur.kind === 'quiz' || cur.kind === 'review' ? cur.questionIds : cur.kind === 'decision' ? [cur.questionId] : [];
+  const curOpen = curQs.filter((q) => !answered(q)).length;
+  const inMod = LESSONS.filter((l) => l.moduleId === mod.id);
+  const srcStep = lesson.steps.find((st) => st.kind === 'sources');
+  const kind = stepKind(cur);
+
   return (
     <div className="page lesson" ref={top}>
-      <nav className="crumbs"><a href="#module">Fachmodule</a> / <a href={'#modul-' + mod.id}>Modul {mod.no}</a> / <span>Lektion {lesson.order}</span></nav>
+      <a className="back-link" href={'#modul-' + mod.id}><Icon name="back" size={16} /> Modul {mod.no}: {mod.short}</a>
       <header className="lesson-head">
-        <div>
-          <span className="eyebrow">{LEVEL_LABEL[lesson.level]} · ca. {lesson.minutes} Min. (mit Vertiefung und Aufgabe länger)</span>
-          <h1>{lesson.title}</h1>
+        <span className="eyebrow">Modul {String(mod.no).padStart(2, '0')} · {mod.short} · Lektion {lesson.order} von {inMod.length}</span>
+        <h1>{lesson.title}</h1>
+        <div className="meta-pills">
+          <span>{LEVEL_LABEL[lesson.level]}</span>
+          <span><Icon name="clock" size={14} /> ca. {lesson.minutes} Min.</span>
+          <ReviewBadge status={lesson.review} />
         </div>
-        <ReviewBadge status={lesson.review} />
       </header>
-      <details className="objectives" open={idx === 0}>
-        <summary>Lernziele</summary>
-        <ul>{lesson.objectives.map((o) => <li key={o}>{o}</li>)}</ul>
-      </details>
-      <ol className="stepper" aria-label="Schritte der Lektion">
-        {lesson.steps.map((st, i) => (
-          <li key={st.id}>
-            <button type="button" className={(i === idx ? 'cur ' : '') + (seen.has(st.id) ? 'seen' : '')} onClick={() => go(i)} aria-current={i === idx ? 'step' : undefined} title={st.title}>
-              <span className="mono">{i + 1}</span><span className="st-l">{stepLabel(st)}</span>
-            </button>
-          </li>
-        ))}
-      </ol>
-      <Bar value={lesson.steps.filter((st) => seen.has(st.id)).length / lesson.steps.length} label="Fortschritt der Lektion" small />
 
-      <section className={'step step-' + cur.kind} key={cur.id}>
-        <span className="eyebrow">{stepLabel(cur)}</span>
-        <h2>{cur.title}</h2>
-        <StepBody step={cur} lesson={lesson} />
-      </section>
+      <div className="lesson-progress">
+        <div className="seg-bar" aria-hidden="true">
+          {lesson.steps.map((st, i) => <span key={st.id} className={(i === idx ? 'cur' : seen.has(st.id) ? 'seen' : '')} />)}
+        </div>
+        <span className="lp-label"><strong>Schritt {idx + 1} von {lesson.steps.length}</strong> · {stepLabel(cur)}</span>
+        <Bar value={lesson.steps.filter((st) => seen.has(st.id)).length / lesson.steps.length} label="Fortschritt der Lektion" small />
+      </div>
 
-      <div className="step-nav">
-        <button type="button" className="btn" disabled={idx === 0} onClick={() => go(idx - 1)}>Zurück</button>
-        {!isLast && <button type="button" className="btn primary" onClick={() => go(idx + 1)}>Weiter: {stepLabel(lesson.steps[idx + 1])}</button>}
-        {isLast && (
-          <div className="finish">
-            {missing > 0 && <span className="hint">{missing} Frage{missing === 1 ? '' : 'n'} noch nicht beantwortet – Sie können trotzdem abschliessen.</span>}
-            <button type="button" className="btn primary" onClick={complete}>{p?.completedAt ? 'Weiter zur nächsten Lektion' : 'Lektion abschliessen'}</button>
+      <div className="lesson-layout">
+        <div className="lesson-main">
+          <section className={'step step-' + cur.kind + ' block-' + kind.tone} key={cur.id} aria-labelledby={'st-' + cur.id}>
+            <span className="step-kind"><Icon name={kind.icon} size={16} /> {kind.label}</span>
+            <h2 id={'st-' + cur.id}>{cur.title}</h2>
+            <StepBody step={cur} lesson={lesson} />
+          </section>
+
+          <div className="step-nav">
+            <button type="button" className="btn" disabled={idx === 0} onClick={() => go(idx - 1)}><Icon name="back" size={16} /> <span className="nav-l">Zurück</span></button>
+            {!isLast && (curOpen > 0
+              ? <button type="button" className="btn quiet" onClick={() => go(idx + 1)} title="Die Frage ist noch nicht ausgewertet">Weiter ohne Antwort: {stepLabel(lesson.steps[idx + 1])}</button>
+              : <button type="button" className="btn primary" onClick={() => go(idx + 1)}>Weiter: {stepLabel(lesson.steps[idx + 1])} <Icon name="arrow" size={16} /></button>)}
+            {isLast && (
+              <div className="finish">
+                {missing > 0 && <span className="hint">{missing} Frage{missing === 1 ? '' : 'n'} noch nicht beantwortet – Sie können trotzdem abschliessen.</span>}
+                <button type="button" className="btn primary" onClick={complete}>{p?.completedAt ? 'Weiter zur nächsten Lektion' : 'Lektion abschliessen'}</button>
+              </div>
+            )}
           </div>
-        )}
+        </div>
+
+        <aside className="lesson-side" aria-label="Lektionsübersicht">
+          <details className="objectives side-box" open={idx === 0}>
+            <summary>Lernziele</summary>
+            <ul>{lesson.objectives.map((o) => <li key={o}>{o}</li>)}</ul>
+          </details>
+          <div className="side-box steps-box">
+            <span className="side-title">Schritte</span>
+            <ol className="stepper" aria-label="Schritte der Lektion">
+              {lesson.steps.map((st, i) => (
+                <li key={st.id}>
+                  <button type="button" className={(i === idx ? 'cur ' : '') + (seen.has(st.id) ? 'seen' : '')} onClick={() => go(i)} aria-current={i === idx ? 'step' : undefined} title={st.title}>
+                    <span className="mono">{i + 1}</span><span className="st-l">{stepLabel(st)}</span>
+                  </button>
+                </li>
+              ))}
+            </ol>
+          </div>
+          {srcStep && srcStep.kind === 'sources' && (
+            <div className="side-box">
+              <span className="side-title">Quellen & Prüfstatus</span>
+              <SourceList ids={srcStep.sourceIds} compact />
+              <span className="hint">Prüfstatus Entwurf. Rechtsnatur, Fassung und Hinweise im Schritt «Quellen».</span>
+            </div>
+          )}
+        </aside>
       </div>
     </div>
   );
+}
+
+const KIND: Record<string, { label: string; icon: string; tone: string }> = {
+  situation: { label: 'Situation', icon: 'site', tone: 'sand' },
+  quiz: { label: 'Was wissen Sie schon?', icon: 'quiz', tone: 'teal' },
+  brief: { label: 'Kurz erklärt', icon: 'book', tone: 'mint' },
+  explain: { label: 'Fachliche Erklärung', icon: 'book', tone: 'plain' },
+  diagram: { label: 'Schema', icon: 'layers', tone: 'plain' },
+  example: { label: 'Beispiel', icon: 'site', tone: 'plain' },
+  deep: { label: 'Fachvertiefung', icon: 'library', tone: 'plain' },
+  decision: { label: 'Entscheidung', icon: 'alert', tone: 'teal' },
+  sitetask: { label: 'Baustellenaufgabe', icon: 'practice', tone: 'sand' },
+  review: { label: 'Wiederholung', icon: 'review', tone: 'teal' },
+  feynman: { label: 'Erklären Sie es', icon: 'chat', tone: 'mint' },
+  practice: { label: 'Praxisauftrag', icon: 'practice', tone: 'sand' },
+  summary: { label: 'Zusammenfassung', icon: 'check', tone: 'mint' },
+  sources: { label: 'Originalquelle & Prüfstatus', icon: 'sources', tone: 'plain' },
+};
+function stepKind(st: Step) {
+  const k = KIND[st.kind];
+  if (st.kind === 'decision' && st.id.endsWith('-abw')) return { ...k, label: 'Abwägung: mehrere vertretbare Wege' };
+  if (st.kind === 'example') return { ...k, label: stepLabel(st) };
+  return k;
 }
 
 function StepBody({ step, lesson }: { step: Step; lesson: Lesson }) {

@@ -10,10 +10,10 @@ import { AbsetzRechner } from '../components/Calculator';
 
 const norm = (t: string) => t.toLowerCase().replace(/ß/g, 'ss');
 
-export function LibraryView() {
+export function LibraryView({ initialTab = 'alle' }: { initialTab?: 'alle' | 'begriffe' | 'recht' | 'quellen' } = {}) {
   const { openTerm } = useStore();
   const [q, setQ] = useState('');
-  const [tab, setTab] = useState<'alle' | 'begriffe' | 'recht' | 'quellen'>('alle');
+  const [tab, setTab] = useState<'alle' | 'begriffe' | 'recht' | 'quellen'>(initialTab);
   const n = norm(q.trim());
   const terms = useMemo(() => GLOSSARY.filter((g) => !n || norm([g.term, ...(g.aliases ?? []), g.definition, g.detail ?? ''].join(' ')).includes(n)), [n]);
   const entries = useMemo(() => LIBRARY.filter((e) => !n || norm([e.title, e.summary, e.text ?? '', ...e.tags, ...(e.items ?? []).flatMap((i) => i.points), ...(e.table?.rows.flat() ?? [])].join(' ')).includes(n)), [n]);
@@ -97,7 +97,7 @@ function LibBody({ e, interactive }: { e: LibraryEntry; interactive?: boolean })
           {g.points.map((p) => {
             const k = g.group + '|' + p;
             return interactive ? (
-              <label key={p}><input type="checkbox" checked={!!ticks[k]} onChange={() => setTicks({ ...ticks, [k]: !ticks[k] })} /> {p}</label>
+              <label key={p}><input type="checkbox" checked={!!ticks[k]} onChange={() => setTicks({ ...ticks, [k]: !ticks[k] })} /> <span>{p}</span></label>
             ) : <p key={p} className="cl-point">☐ {p}</p>;
           })}
         </fieldset>
