@@ -17,6 +17,8 @@ export function Diagram({ id }: { id: string }) {
     case 'emission': return <Kette steps={EMISSION} />;
     case 'bewilligungsweg': return <Kette steps={BEWILLIGUNG} />;
     case 'verordnungen': return <Verordnungen />;
+    case 'deponietypen': return <Kette steps={DEPONIEN} />;
+    case 'bodenschichten': return <Kette steps={BODEN} />;
     default: return <p className="hint">Schema «{id}» nicht gefunden.</p>;
   }
 }
@@ -207,6 +209,19 @@ function SiaStufen() {
     </div>
   );
 }
+
+const DEPONIEN = [
+  { t: 'Typ A', d: 'Unverschmutztes Aushub- und Ausbruchmaterial', who: 'nur wenn Verwertung nicht möglich' },
+  { t: 'Typ B', d: 'Inertstoffe, z. B. mineralische Bauabfälle mit eingehaltenen Grenz- und Eluatwerten', who: 'früher «Inertstoffdeponie»' },
+  { t: 'Typ C', d: 'Bestimmte anorganische, schwer lösliche Abfälle', who: 'Zuordnung nach Anhang 5 VVEA' },
+  { t: 'Typ D', d: 'Verbrennungsrückstände (z. B. KVA-Schlacke)', who: 'Zuordnung nach Anhang 5 VVEA' },
+  { t: 'Typ E', d: 'Stärker belastete Abfälle, z. B. verschmutzter Aushub über den Typ-B-Werten', who: 'teuerster Weg – vorher Behandlung prüfen' },
+];
+const BODEN = [
+  { t: 'Oberboden (A-Horizont)', d: 'Humusreich, dunkel, stark belebt, meist 20–30 cm', who: 'separat abtragen und lagern' },
+  { t: 'Unterboden (B-Horizont)', d: 'Heller, durchwurzelt, Struktur für Wasser und Luft', who: 'separat abtragen, nie mit Oberboden mischen' },
+  { t: 'Untergrund (C-Horizont)', d: 'Verwittertes Ausgangsgestein unter dem Boden', who: 'in der Regel als Aushub behandelt (Modul 3)' },
+];
 
 const EMISSION = [
   { t: 'Quelle', d: 'Emission: Bagger, Abbauhammer, Abbruch, Waschplatz', who: 'hier zuerst begrenzen (vorsorglich, immer)' },

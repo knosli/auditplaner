@@ -183,6 +183,51 @@ Offene Massnahmen der letzten Begehung mit Status.
 !> Beweise verändern oder Mängel vertuschen verschlimmert die Lage rechtlich und zerstört Vertrauen.`,
     sources: ['praxis'],
   },
+  {
+    id: 'cl-rueckbau', category: 'checkliste', moduleId: 'm3',
+    title: 'Checkliste Rückbau und Bauschadstoffe',
+    summary: 'Kontrolle vor und während Umbau- und Rückbauarbeiten an älteren Gebäuden.',
+    tags: ['Rückbau', 'Asbest', 'PCB', 'Schadstoffe', 'Checkliste'],
+    items: [
+      { group: 'Vor Arbeitsbeginn', points: ['Schadstoffbericht vorhanden und gelesen (inkl. nicht untersuchte Bereiche)', 'Nicht untersuchte Bereiche ergänzend abgeklärt oder als Stopp-Punkt markiert', 'Sanierung vergeben (Asbest: Suva-anerkannte Firma) und gemeldet', 'Entsorgungskonzept mit Schadstoffmengen ergänzt', 'Alle Unternehmer instruiert (Unterschrift)'] },
+      { group: 'Während der Arbeiten', points: ['Reihenfolge eingehalten: Sanierung → Freigabe → Entkernung → Tragstruktur', 'Belastete Bauteile gekennzeichnet', 'Sonderabfälle getrennt, beschriftet, unter Verschluss', 'Mulden ohne Fehlwürfe'] },
+      { group: 'Bei Verdacht', points: ['Stoppen, Bereich sperren', 'Bauleitung und Bauherrschaft informieren', 'Probe durch Fachperson', 'Betroffene Mitarbeitende erfassen'] },
+      { group: 'Nachweise', points: ['Begleitscheine vollständig', 'Freigaben nach Sanierung abgelegt', 'Entsorgungsbilanz nachgeführt'] },
+    ],
+    sources: ['suva-asbest', 'ekas6503', 'vvea', 'veva'],
+  },
+  {
+    id: 'vl-entsorgungsbilanz', category: 'vorlage', moduleId: 'm3',
+    title: 'Vorlage Entsorgungsbilanz',
+    summary: 'Gegenüberstellung von Entsorgungskonzept und tatsächlichen Mengen je Fraktion.',
+    tags: ['Entsorgungsbilanz', 'Nachweise', 'Kennzahlen', 'Vorlage'],
+    table: {
+      head: ['Fraktion', 'Konzept (t)', 'Ist (t)', 'Empfänger / Anlage', 'Weg (Verwertung, Verbrennung, Deponie Typ)', 'Nachweis', 'Abweichung / Begründung'],
+      rows: [
+        ['Betonabbruch', '', '', '', 'Verwertung', 'Waagscheine', ''],
+        ['Mischabbruch', '', '', '', 'Verwertung', 'Waagscheine', ''],
+        ['Ausbauasphalt ≤ 250 mg PAK/kg', '', '', '', 'Verwertung', 'Analyse, Waagscheine', ''],
+        ['Ausbauasphalt > 250 mg PAK/kg', '', '', '', 'keine Verwertung', 'Analyse, Nachweis', ''],
+        ['Unverschmutzter Aushub', '', '', '', 'Verwertung / Typ A', 'Lieferscheine', ''],
+        ['Brennbare Abfälle / Holz', '', '', '', 'Verbrennung / Verwertung', 'Waagscheine', ''],
+        ['Sonderabfälle (je Code)', '', '', '', 'berechtigter Entsorger', 'Begleitscheine', ''],
+      ],
+    },
+    sources: ['vvea', 'veva'],
+  },
+  {
+    id: 'cl-bodenschutz', category: 'checkliste', moduleId: 'm4',
+    title: 'Bodenschutz-Startcheck',
+    summary: 'Kurzcheck vor Baubeginn für Baustellen mit Eingriffen in unversiegelten Boden.',
+    tags: ['Bodenschutz', 'Verdichtung', 'Depot', 'BBB', 'AVOR', 'Checkliste'],
+    items: [
+      { group: 'Grundlagen', points: ['Auflagen zum Boden aus der Bewilligung bekannt', 'Bodenschutzkonzept vorhanden (falls verlangt)', 'BBB beauftragt und Ansprechperson bekannt (falls verlangt)', 'Prüfperimeter/Kataster geprüft; Analysen vorhanden, wo nötig', 'Invasive Neophyten erfasst'] },
+      { group: 'Installation', points: ['Pisten geplant (Kies auf Vlies), Lastwagen nur auf Pisten', 'Schutzflächen abgezäunt und beschriftet', 'Depotflächen festgelegt (getrennt Ober-/Unterboden)', 'Installationsplätze, Waschplatz, Tankstelle nicht auf Boden'] },
+      { group: 'Ablauf', points: ['Befahrbarkeit: Messung und Freigabe geregelt', 'Ausweicharbeiten für Regentage bekannt', 'Regentage im Vertrag geregelt', 'Maschinenliste mit Gewicht/Fahrwerk'] },
+      { group: 'Menschen und Nachweise', points: ['Startinstruktion inkl. Subunternehmer', 'Zustandsaufnahme mit Fotos (v. a. bei Kulturland)', 'Landwirte/Grundeigentümer informiert', 'Rekultivierung und Folgebewirtschaftung vorbereitet'] },
+    ],
+    sources: ['bafu-boden-bauen', 'kanton-boden', 'vvea'],
+  },
 ];
 
 export const LIB_CATEGORY_LABEL: Record<LibraryEntry['category'], string> = {

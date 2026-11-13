@@ -132,7 +132,7 @@ export const SOURCES: Source[] = [
     lastChecked: null,
     scope: 'Übergabe von Sonderabfällen an Entsorgungsunternehmen',
     review: 'entwurf',
-    note: 'Vertiefung in Modul 3 (in Entwicklung).',
+    note: 'Vertiefung in Modul 3.',
   },
   {
     id: 'ikm-vsa',
@@ -248,7 +248,7 @@ export const SOURCES: Source[] = [
     short: 'VVEA',
     kind: 'gesetz',
     sr: 'SR 814.600',
-    articles: 'Art. 16, 17',
+    articles: 'Art. 16, 17, 18, 19, 20, 52, Anhang 3, Anhang 5',
     issuer: 'Bundesrat',
     version: 'Geltende Fassung gemäss Fedlex – prüfen',
     lastChecked: null,
@@ -267,7 +267,8 @@ export const SOURCES: Source[] = [
     lastChecked: null,
     scope: 'Ganze Schweiz',
     review: 'entwurf',
-    note: 'Inhalte zu Verdichtung/Erosion sinngemäss, Artikel nicht selbst geprüft. Vertiefung in Modul 4.',
+    articles: '3. Abschnitt (Art. 6, 7) – sinngemäss; Richt-, Prüf- und Sanierungswerte (Anhänge)',
+    note: 'Gliederung (3. Abschnitt: Vermeidung langfristiger Bodenverdichtung und -erosion; Umgang mit abgetragenem Boden) über Sekundärquellen bestätigt; Wortlaut der Artikel und Zahlenwerte der Anhänge nicht selbst geprüft.',
   },
   {
     id: 'nhg',
@@ -408,6 +409,61 @@ export const SOURCES: Source[] = [
     lastChecked: null,
     scope: 'Ganze Schweiz; Gewässerverschmutzungen werden über Polizei oder Feuerwehr gemeldet, diese bieten das kantonale Pikett auf',
     review: 'entwurf',
+  },
+  {
+    id: 'ekas6503', title: 'EKAS-Richtlinie 6503 «Asbest»', short: 'EKAS 6503', kind: 'vollzugshilfe',
+    issuer: 'Eidgenössische Koordinationskommission für Arbeitssicherheit (EKAS)', url: 'https://www.ekas.admin.ch',
+    version: 'Fassung gültig seit 27.06.2025 (laut EKAS)', lastChecked: null, scope: 'Ganze Schweiz (Arbeitssicherheit)', review: 'entwurf',
+    note: 'Gültigkeitsdatum über die EKAS-Website bestätigt; Einzelinhalte nicht in der App wiedergegeben – Original verwenden.',
+  },
+  {
+    id: 'suva-asbest', title: 'Suva: Asbest – Informationen, anerkannte Asbestsanierungsunternehmen, Meldung von Sanierungen', short: 'Suva Asbest', kind: 'vollzugshilfe',
+    issuer: 'Suva', url: 'https://www.suva.ch/asbest', version: 'Webinformation, abgerufen 2026-11', lastChecked: null, scope: 'Ganze Schweiz (Arbeitssicherheit)', review: 'entwurf',
+    note: 'Bestätigt (Suva-Website): Asbestverbot 1990; Arbeiten mit erheblicher Faserfreisetzung nur durch Suva-anerkannte Unternehmen; Meldung mind. 14 Tage vor Beginn. Rechtsgrundlage Bauarbeitenverordnung (BauAV) – Artikel nicht selbst geprüft.',
+  },
+  {
+    id: 'bafu-bauabfaelle', title: 'BAFU: Vollzugshilfe «Bauabfälle» / Informationen zu Bauabfällen und Bauschadstoffen', short: 'BAFU Bauabfälle', kind: 'vollzugshilfe',
+    issuer: 'Bundesamt für Umwelt (BAFU)', url: 'https://www.bafu.admin.ch/bafu/de/home/themen/abfall.html', version: 'Modulare Vollzugshilfe zur VVEA – Stand prüfen', lastChecked: null, scope: 'Ganze Schweiz', review: 'entwurf',
+    note: 'Titel und Module der Vollzugshilfe zur VVEA auf der BAFU-Website prüfen; Inhalte in der App sinngemäss.',
+  },
+  {
+    id: 'bafu-mineral', title: 'BAFU: Vollzugshilfe «Verwertung mineralischer Rückbaumaterialien» (Modul der Vollzugshilfe zur VVEA)', short: 'BAFU Rückbaumaterialien', kind: 'vollzugshilfe',
+    issuer: 'Bundesamt für Umwelt (BAFU)', url: 'https://www.bafu.admin.ch', version: 'Stand prüfen', lastChecked: null, scope: 'Ganze Schweiz', review: 'entwurf',
+    note: 'Einsatzbereiche und Qualitätsklassen nicht in der App wiedergegeben – Original verwenden.',
+  },
+  {
+    id: 'bafu-aushub', title: 'BAFU: Vollzugshilfe «Aushub-, Abraum- und Ausbruchmaterial» (Modul der Vollzugshilfe zur VVEA)', short: 'BAFU Aushub', kind: 'vollzugshilfe',
+    issuer: 'Bundesamt für Umwelt (BAFU)', url: 'https://www.bafu.admin.ch', version: 'Stand prüfen', lastChecked: null, scope: 'Ganze Schweiz', review: 'entwurf',
+  },
+  {
+    id: 'altlv', title: 'Verordnung über die Sanierung von belasteten Standorten (Altlasten-Verordnung, AltlV)', short: 'AltlV', kind: 'gesetz', sr: 'SR 814.680',
+    issuer: 'Bundesrat', version: 'Geltende Fassung gemäss Fedlex – prüfen', lastChecked: null, scope: 'Ganze Schweiz; Kataster durch die Kantone', review: 'entwurf',
+    note: 'In der App nur sinngemäss (Kataster, Untersuchung, Sanierung). Keine Artikel zitiert.',
+  },
+  {
+    id: 'usg-kreislauf', title: 'Parlamentarische Initiative 20.433 «Schweizer Kreislaufwirtschaft stärken» (Änderung USG u. a.)', short: 'Pa.Iv. 20.433', kind: 'gesetz',
+    issuer: 'Bundesversammlung', url: 'https://www.parlament.ch', version: 'Schlussabstimmung März 2024; Inkrafttreten prüfen', lastChecked: null, scope: 'Ganze Schweiz', review: 'entwurf',
+    note: 'Verabschiedung 2024 über Sekundärquellen bestätigt. Inkrafttreten und Ausführungsbestimmungen nicht bestätigt.',
+  },
+  {
+    id: 'bafu-boden-bauen', title: 'BAFU: Vollzugshilfe «Bodenschutz beim Bauen», Modul «Sachgerechter Umgang mit Boden beim Bauen»', short: 'BAFU Boden beim Bauen', kind: 'vollzugshilfe',
+    issuer: 'Bundesamt für Umwelt (BAFU)', url: 'https://www.bafu.admin.ch/bafu/de/home/themen/boden.html', version: '2022 (ersetzt den BUWAL-Leitfaden Nr. 10) – laut Sekundärquellen', lastChecked: null, scope: 'Ganze Schweiz', review: 'entwurf',
+    note: 'Erscheinungsjahr und Ablösung über Sekundärquellen bestätigt. Konkrete Zahlenwerte (z. B. Saugspannungsgrenzen) nicht in der App – Original verwenden.',
+  },
+  {
+    id: 'bafu-boden-verwertung', title: 'BAFU: Vollzugshilfe «Beurteilung von Boden im Hinblick auf seine Verwertung»', short: 'BAFU Bodenverwertung', kind: 'vollzugshilfe',
+    issuer: 'Bundesamt für Umwelt (BAFU)', url: 'https://www.bafu.admin.ch', version: '2021 – laut Sekundärquellen', lastChecked: null, scope: 'Ganze Schweiz', review: 'entwurf',
+    note: 'Unterscheidet verwertbaren, eingeschränkt verwertbaren und nicht verwertbaren Boden (sinngemäss). Grenzwerte im Original.',
+  },
+  {
+    id: 'kanton-boden', title: 'Kantonale Bodenschutzfachstellen: Merkblätter, Prüfperimeter für Bodenaushub (Bezeichnung kantonal verschieden), Anforderungen an die bodenkundliche Baubegleitung', short: 'Kanton Boden', kind: 'vollzugshilfe',
+    issuer: 'Kantone', version: 'kantonal verschieden', lastChecked: null, scope: 'Kantonal', cantonal: 'Massgebend ist die Fachstelle des Standortkantons.', review: 'entwurf',
+    note: 'Bezeichnungen und Schwellen (z. B. ab welcher Fläche eine Bodenkundliche Baubegleitung verlangt wird) unterscheiden sich je Kanton.',
+  },
+  {
+    id: 'frsv', title: 'Verordnung über den Umgang mit Organismen in der Umwelt (Freisetzungsverordnung, FrSV)', short: 'FrSV', kind: 'gesetz', sr: 'SR 814.911',
+    issuer: 'Bundesrat', version: 'Geltende Fassung gemäss Fedlex – prüfen', lastChecked: null, scope: 'Ganze Schweiz', review: 'entwurf',
+    note: 'In der App nur sinngemäss (Weiterverbreitung invasiver gebietsfremder Organismen verhindern, auch über Bodenmaterial). Artikel nicht zitiert; kantonale Neophyten-Merkblätter beachten.',
   },
   {
     id: 'praxis',

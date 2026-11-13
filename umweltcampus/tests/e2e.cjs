@@ -161,6 +161,20 @@ const ok = (c, m) => { console.log((c ? 'OK   ' : 'FAIL ') + m); if (!c) process
     await page.getByText('Zuerst schnell die Mulde umschichten').click();
     await page.getByRole('button', { name: 'Entscheid bestätigen' }).click();
     ok((await page.locator('.stage-fb.crit').count()) === 1, 'Fall F: kritischer Entscheid markiert');
+    // Module 3 und 4
+    for (const [mod, n, sim, txt, label] of [['m3', 5, 'sim-g', 'Fertig ausbauen, aber vorsichtig', 'Fall G'], ['m4', 5, 'sim-h', 'Freigabe ist Freigabe', 'Fall H']]) {
+      await go('modul-' + mod);
+      ok((await page.locator('.lessonlist li').count()) === n, `Modul ${mod.slice(1)}: ${n} Lektionen`);
+      await go('lektion-' + mod + '-l1');
+      const st = await page.locator('.stepper button').allTextContents();
+      await page.locator('.stepper button').nth(st.findIndex((l) => l.includes('Schema'))).click(); await page.waitForTimeout(100);
+      ok((await page.locator('.diagram.kette li').count()) >= 3, `Modul ${mod.slice(1)}: Schema sichtbar`);
+      await go('szenario-' + sim);
+      await page.getByRole('button', { name: 'Fall beginnen' }).click();
+      await page.getByText(txt).click();
+      await page.getByRole('button', { name: 'Entscheid bestätigen' }).click();
+      ok((await page.locator('.stage-fb.crit').count()) === 1, `${label}: kritischer Entscheid markiert`);
+    }
     await go('pruefung');
     await page.getByText('Modul 1: Umweltrecht').click();
     await page.getByRole('button', { name: 'Starten' }).first().click();

@@ -97,6 +97,16 @@ export const GUIDING: Record<string, string[]> = {
   'm1-natur': ['Ist die Vegetation am Ufer, im Wald, in einer Hecke oder einem Inventarobjekt?', 'Gibt es eine Alternative ohne Eingriff?', 'Welches Zeitfenster gilt (Brutzeit, Schonzeit)?'],
   'm1-verantwortung': ['Geht es um Kosten, Strafe oder Schadenersatz?', 'Wer hat ausgewählt, instruiert, ausgerüstet, kontrolliert?', 'Ist es dokumentiert?'],
   'm1-vollzug': ['Wer ist Adressat der Auflage?', 'Ist die Bewilligung rechtskräftig – und widersprechen sich Auflagen?', 'Wie belegen Sie die Umsetzung bei einer Kontrolle?'],
+  'm3-klassierung': ['Ist es Sonderabfall, kontrollpflichtig oder übriger Abfall?', 'Kann auf der Baustelle getrennt werden – wenn nicht, warum genau nicht?', 'Welcher Nachweis gehört zur Übergabe?'],
+  'm3-rueckbau': ['Was sagt der Schadstoffbericht – und welche Bereiche wurden nicht untersucht?', 'Wer darf die Sanierung ausführen, und ist sie gemeldet?', 'Was passiert bei einem unerwarteten Fund?'],
+  'm3-mineralisch': ['Liegt eine Analyse vor (z. B. PAK im Belag)?', 'Ist das Material sortenrein und schadstofffrei?', 'Wo darf das Recyclingmaterial eingesetzt werden?'],
+  'm3-aushub': ['Gibt es Hinweise auf Belastung (Kataster, Nutzung, Geruch, Fremdstoffe)?', 'Wo lagern Sie verdächtiges Material bis zur Klärung?', 'Wer beurteilt und stuft ein?'],
+  'm3-kreislauf': ['Liegen alle Nachweise vor?', 'Was zeigt die Bilanz gegenüber dem Konzept?', 'Welche Kennzahl würde wirklich eine Entscheidung verändern?'],
+  'm4-grundlagen': ['Welche Bodenschichten sind betroffen – und wie mächtig sind sie?', 'Welche Auflagen zum Boden stehen in der Bewilligung?', 'Wird der Boden wiederverwendet oder verwertet?'],
+  'm4-verdichtung': ['Wie nass ist der Boden – wer hat das wie gemessen?', 'Wo fahren Lastwagen und schwere Maschinen?', 'Welche Arbeiten sind ohne Bodeneingriff möglich?'],
+  'm4-abtrag': ['Sind Ober- und Unterboden getrennt?', 'Ist das Depot locker, niedrig, begrünt und geschützt?', 'Wann und wie wird rekultiviert – und wer bewirtschaftet danach?'],
+  'm4-belastung': ['Liegt die Fläche in einem Prüfperimeter oder auf einem Kataster-Standort?', 'Was zeigt die Analyse – und welche Nutzung ist geplant?', 'Wer stuft den Boden ein?'],
+  'm4-planung': ['Sind Pisten, Depots und Schutzflächen im Installationsplan?', 'Regelt der Vertrag Regentage?', 'Wer gibt frei – und was ist Ihre Rolle, was die der Fachperson?'],
   konzept: ['Beantwortet das Konzept alle sechs Leitfragen?', 'Sind Zuständigkeiten und Kontrollen festgelegt?', 'Was ist Pflicht, was Empfehlung – und was kostet die Alternative?'],
 };
 
