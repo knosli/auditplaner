@@ -71,7 +71,8 @@ export function LessonView({ id }: { id: string }) {
       return { ...x, sr, lessons: { ...x.lessons, [id]: { ...cur, completedAt: cur.completedAt ?? now } } };
     });
     if (!wasDone) log('lektion_ende', id, lesson.title);
-    const next = LESSONS[LESSONS.findIndex((l) => l.id === id) + 1];
+    const cand = LESSONS[LESSONS.findIndex((l) => l.id === id) + 1];
+    const next = cand && cand.moduleId === lesson.moduleId ? cand : null;
     location.hash = next ? '#lektion-' + next.id : '#modul-' + lesson.moduleId;
   };
 

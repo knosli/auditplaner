@@ -1,8 +1,12 @@
 // Exportiert alle Lerninhalte von Modul 2 als ein Markdown-Dokument für eine
 // externe fachliche Prüfung (Fachperson oder anderes KI-System).
-// Aufruf: npx vite-node scripts/export-review.ts
+// Aufruf: npx vite-node scripts/export-review.ts [m2|m1 …]   (Standard: m2)
 import { writeFileSync, mkdirSync } from 'node:fs';
-import { CARDS, FEYNMAN, GLOSSARY, LESSONS, LIBRARY, Q, QUESTIONS, SCENARIOS, SITETASKS, SOURCES, ST, T, TASKS } from '../src/content';
+import { CARDS as ALL_CARDS, FEYNMAN as ALL_F, GLOSSARY, LESSONS as ALL_L, LIBRARY as ALL_LIB, MODULES, Q, QUESTIONS as ALL_Q, SCENARIOS as ALL_S, SITETASKS as ALL_ST, SOURCES, ST, T, TASKS as ALL_T } from '../src/content';
+const MOD = process.argv[2] ?? 'm2';
+const inMod = <X extends { moduleId?: string }>(a: X[]) => a.filter((x) => x.moduleId === MOD);
+const CARDS = inMod(ALL_CARDS), FEYNMAN = inMod(ALL_F), LESSONS = inMod(ALL_L), LIBRARY = inMod(ALL_LIB), QUESTIONS = inMod(ALL_Q), SCENARIOS = inMod(ALL_S), SITETASKS = inMod(ALL_ST), TASKS = inMod(ALL_T);
+const MODINFO = MODULES.find((m) => m.id === MOD)!;
 import { SOURCE_KIND_LABEL } from '../src/content/sources';
 import type { Question } from '../src/content/types';
 
@@ -24,7 +28,7 @@ function question(q: Question, n?: string) {
   w('', `**Erklärung:** ${clean(q.explanation)}`, '', `**Häufige Fehler:** ${q.commonErrors.join(' · ')}`, '', `**Quellen:** ${src(q.sources)}`, '');
 }
 
-w('# UmweltCampus Bau CH – Modul 2 «Gewässerschutz auf Baustellen»', '', `Export für die fachliche Prüfung, ${new Date().toLocaleDateString('de-CH')}. Prüfstatus aller Inhalte: Entwurf.`, '',
+w(`# UmweltCampus Bau CH – Modul ${MODINFO.no} «${MODINFO.title}»`, '', `Export für die fachliche Prüfung, ${new Date().toLocaleDateString('de-CH')}. Prüfstatus aller Inhalte: Entwurf.`, '',
   'Zielgruppe der App: angehender leitender Umweltbeauftragter einer Deutschschweizer Baufirma (Hoch- und Tiefbau, ISO 14001), Hintergrund Bau-Polier und Spezialist Arbeitssicherheit.', '');
 
 w('## 1. Quellenverzeichnis', '');
@@ -90,5 +94,5 @@ for (const e of LIBRARY) {
 }
 
 mkdirSync('review', { recursive: true });
-writeFileSync('review/modul2-inhalte.md', out.join('\n'));
-console.log('review/modul2-inhalte.md', Math.round(out.join('\n').length / 1024), 'KB,', QUESTIONS.length, 'Fragen, Q-Lookup', Q.size);
+writeFileSync(`review/modul${MODINFO.no}-inhalte.md`, out.join('\n'));
+console.log(`review/modul${MODINFO.no}-inhalte.md`, Math.round(out.join('\n').length / 1024), 'KB,', QUESTIONS.length, 'Fragen, Q-Lookup', Q.size);

@@ -148,6 +148,41 @@ Offene Massnahmen der letzten Begehung mit Status.
     text: '> Kantone, Gemeinden, Bewilligungsauflagen und besondere Projektbedingungen können zusätzliche Anforderungen stellen.',
     sources: ['gschg', 'gschv', 'sia431', 'kanton-merkblatt'],
   },
+  {
+    id: 'vl-rechtskataster', category: 'vorlage', moduleId: 'm1',
+    title: 'Vorlage Umweltrechtskataster (Unternehmensebene)',
+    summary: 'Struktur für die bindenden Umweltverpflichtungen eines Bauunternehmens mit Zuständigkeiten und Prüfung.',
+    tags: ['Rechtskataster', 'Rechtsregister', 'ISO 14001', 'Compliance', 'Vorlage'],
+    table: {
+      head: ['Erlass / Verpflichtung', 'Art', 'Relevante Anforderung', 'Betrifft', 'Verantwortlich', 'Einhaltung geprüft durch / wann'],
+      rows: [
+        ['USG (SR 814.01)', 'Gesetz', 'Vorsorge, Emissionsbegrenzung, Abfälle, Haftung', 'alle Baustellen', 'GL / Umweltbeauftragte/r', 'Begehungen, jährlich'],
+        ['GSchG/GSchV (SR 814.20/.201)', 'Gesetz/Verordnung', 'Baustellenentwässerung, Lagerung', 'alle Baustellen, Werkhof', 'Bauführung', 'Begehungen'],
+        ['LRV (SR 814.318.142.1)', 'Verordnung', 'Baumaschinen über 18 kW', 'Maschinenpark, Subunternehmer', 'Werkhof / Bauführung', 'Maschinenliste, Startcheck'],
+        ['Baulärm-Richtlinie / Richtlinie Luft', 'Vollzugshilfe', 'Massnahmenstufen gemäss Bewilligung', 'Projekte', 'Bauführung', 'AVOR-Checkliste'],
+        ['VVEA (SR 814.600)', 'Verordnung', 'Entsorgungskonzept, Trennung', 'Projekte, Werkhof', 'Bauführung', 'Entsorgungsnachweise'],
+        ['Kantonale Merkblätter (je Kanton)', 'Vollzugshilfe', 'Kantonale Besonderheiten', 'Projekte im Kanton', 'Umweltbeauftragte/r', 'jährliche Aktualisierung'],
+        ['Interner Standard «Waschplatz»', 'Interner Standard', 'Waschplatz bei jeder Betonbaustelle', 'Hochbau', 'Bauführung', 'Begehungen'],
+      ],
+    },
+    text: 'Projektspezifische Auflagen gehören in den Umweltmassnahmenplan bzw. die Auflagenmatrix des Projekts. Fassung und Prüfdatum je Zeile nachführen.',
+    sources: ['iso14001', 'usg'],
+  },
+  {
+    id: 'ms-kontrolle', category: 'massnahme', moduleId: 'm1',
+    title: 'Leitfaden: Verhalten bei Behördenkontrollen',
+    summary: 'Sechs Schritte für Vorarbeiter, Poliere und Bauführer.',
+    tags: ['Kontrolle', 'Behörde', 'Vollzug', 'Inspektion'],
+    text: `1. **Zutritt gewähren**, Person begleiten, Sicherheitsregeln erklären (PSA).
+2. **Verantwortliche informieren** (Polier, Bauführer, Umweltfachperson).
+3. **Sachlich Auskunft geben**, Unterlagen zeigen – nichts beschönigen, nichts verstecken, nichts «schnell aufräumen».
+4. **Feststellungen notieren**, eigene Fotos, Fristen festhalten.
+5. **Mängel beheben** und mit Fotos/Dokumenten belegen; fristgerecht melden.
+6. **Ursachen analysieren** und Standard anpassen.
+
+!> Beweise verändern oder Mängel vertuschen verschlimmert die Lage rechtlich und zerstört Vertrauen.`,
+    sources: ['praxis'],
+  },
 ];
 
 export const LIB_CATEGORY_LABEL: Record<LibraryEntry['category'], string> = {

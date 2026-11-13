@@ -14,6 +14,9 @@ export function Diagram({ id }: { id: string }) {
     case 'kontrollkreis': return <Kontrollkreis />;
     case 'absetzrechner': return <AbsetzRechner />;
     case 'sia-stufen': return <SiaStufen />;
+    case 'emission': return <Kette steps={EMISSION} />;
+    case 'bewilligungsweg': return <Kette steps={BEWILLIGUNG} />;
+    case 'verordnungen': return <Verordnungen />;
     default: return <p className="hint">Schema «{id}» nicht gefunden.</p>;
   }
 }
@@ -201,6 +204,46 @@ function SiaStufen() {
         ))}
       </div>
       <p className="hint">Tendenz: Stufe {stufe}. Die verbindliche Einstufung erfolgt nach den Kriterien der SIA 431:2022 durch Planer bzw. Fachspezialist; im Zweifel höher einstufen lassen.</p>
+    </div>
+  );
+}
+
+const EMISSION = [
+  { t: 'Quelle', d: 'Emission: Bagger, Abbauhammer, Abbruch, Waschplatz', who: 'hier zuerst begrenzen (vorsorglich, immer)' },
+  { t: 'Ausbreitung', d: 'Luft, Schall, Boden, Wasser – Abschirmung, Distanz, Wind', who: 'Abschirmung, Lage der Installation' },
+  { t: 'Betroffene', d: 'Immission: Wohnung, Schule, Bach, Grundwasser', who: 'Schutz hier nur ergänzend' },
+  { t: 'Beurteilung', d: 'Grenzwert oder Massnahmenstufe gemäss Richtlinie und Bewilligung', who: 'Behörde ordnet an' },
+];
+const BEWILLIGUNG = [
+  { t: 'Projektierung', d: 'Umweltabklärungen, ggf. UVP, Konzepte (Entwässerung, Entsorgung, Boden)', who: 'Bauherrschaft, Planer' },
+  { t: 'Gesuch und Bewilligung', d: 'Baubewilligung plus Nebenbewilligungen, koordiniert (Art. 25a RPG); Auflagen', who: 'Behörden' },
+  { t: 'Ausschreibung und Vertrag', d: 'Auflagen ins Leistungsverzeichnis und den Werkvertrag', who: 'Bauherrschaft, Planer – Unternehmer offeriert' },
+  { t: 'AVOR', d: 'Auflagenmatrix, Installationsplan, Termine, Zuständigkeiten', who: 'Unternehmer – hier wirken Sie am stärksten' },
+  { t: 'Ausführung', d: 'Umsetzung, Eigenkontrolle, Behördenkontrollen, Meldungen', who: 'Unternehmer, Bauleitung, UBB' },
+  { t: 'Abschluss', d: 'Nachweise, Wiederherstellung, Erfahrungen auswerten', who: 'alle' },
+];
+
+const BEREICHE = [
+  { id: 'luft', label: 'Luft', erlass: 'USG, LRV (SR 814.318.142.1)', hilfe: 'BAFU-Richtlinie «Luftreinhaltung auf Baustellen» (Stufen A/B)', auflage: 'Massnahmenstufe B; Maschinen über 18 kW mit Nachweis', wer: 'Bauführung, Polier; Subunternehmer für eigene Maschinen' },
+  { id: 'laerm', label: 'Lärm', erlass: 'USG, LSV Art. 6 (SR 814.41)', hilfe: 'Baulärm-Richtlinie BAFU (Stufen A/B/C, keine Grenzwerte)', auflage: 'Stufe B; lärmintensive Arbeiten nur in Zeitfenstern', wer: 'Bauführung, Polier' },
+  { id: 'abfall', label: 'Abfall', erlass: 'USG, VVEA Art. 16/17 (SR 814.600)', hilfe: 'BAFU-Vollzugshilfe, kantonale Merkblätter zu Bauabfällen', auflage: 'Entsorgungskonzept; Trennung; Sonderabfälle separat', wer: 'Bauherrschaft (Konzept), Unternehmer (Umsetzung, Nachweise)' },
+  { id: 'boden', label: 'Boden', erlass: 'USG, VBBo (SR 814.12)', hilfe: 'BAFU-/kantonale Vollzugshilfen Bodenschutz beim Bauen', auflage: 'Befahren nur bei geeigneter Bodenfeuchte; bodenkundliche Baubegleitung', wer: 'Bauherrschaft (BBB), Unternehmer' },
+  { id: 'wasser', label: 'Wasser', erlass: 'GSchG (SR 814.20), GSchV', hilfe: 'SIA 431:2022, interkantonales Merkblatt (Stufe 1)', auflage: 'Entwässerungskonzept; pH 6.5–9.0; Meldung bei Ereignissen', wer: 'Bauherrschaft/Planer (Konzept), Unternehmer (Betrieb)' },
+  { id: 'natur', label: 'Natur und Wald', erlass: 'NHG (SR 451), WaG (SR 921.0), BGF', hilfe: 'Kantonale Merkblätter (Ufer, Hecken, Brutzeit)', auflage: 'Schutzzaun; kein Eingriff in Ufervegetation; Rodung nur im bewilligten Perimeter', wer: 'Bauherrschaft (Bewilligungen), Unternehmer (Schutz vor Ort)' },
+];
+
+function Verordnungen() {
+  const [sel, setSel] = useState('luft');
+  const b = BEREICHE.find((x) => x.id === sel)!;
+  return (
+    <div className="diagram">
+      <div className="chips" role="tablist">{BEREICHE.map((x) => <button key={x.id} type="button" role="tab" aria-selected={sel === x.id} className={'chip' + (sel === x.id ? ' on' : '')} onClick={() => setSel(x.id)}>{x.label}</button>)}</div>
+      <dl className="src-meta vo">
+        <dt>Gesetz / Verordnung</dt><dd>{b.erlass}</dd>
+        <dt>Vollzugshilfe / Norm</dt><dd>{b.hilfe}</dd>
+        <dt>Typische Auflage</dt><dd>{b.auflage}</dd>
+        <dt>Wer setzt um</dt><dd>{b.wer}</dd>
+      </dl>
     </div>
   );
 }

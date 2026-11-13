@@ -130,7 +130,7 @@ export function ReviewView() {
             </div>
           ))}
         </div>
-        <p className="hint">{Object.keys(s.sr).length} Elemente im Wiederholungsplan · {CARDS.length} Karten im Modul Gewässerschutz.</p>
+        <p className="hint">{Object.keys(s.sr).length} Elemente im Wiederholungsplan · {CARDS.length} Karten in den verfügbaren Modulen.</p>
       </Section>
     </div>
   );

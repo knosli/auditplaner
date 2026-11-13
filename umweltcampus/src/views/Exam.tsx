@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { FEYNMAN, SCENARIOS } from '../content';
+import { FEYNMAN, MODULES, SCENARIOS } from '../content';
 import type { Question } from '../content/types';
 import { useStore } from '../store';
 import { QuestionBlock } from '../components/Question';
@@ -12,15 +12,18 @@ import { topicTitle } from '../lib/coach';
 import { SCORING_VERSION, type ExamRun } from '../lib/state';
 import { isLegacyExam } from '../lib/versioning';
 
-const KIND_LABEL: Record<ExamKind, string> = { check: 'Kurzer Wissenscheck', modul: 'Modulabschlusstest Gewässerschutz', offen: 'Offene Fachfragen' };
+const KIND_LABEL: Record<ExamKind, string> = { check: 'Kurzer Wissenscheck', modul: 'Modulabschlusstest', offen: 'Offene Fachfragen', mix: 'Gemischte Prüfung über alle verfügbaren Module' };
+const modTitle = (id: string) => (id === 'mix' ? 'alle Module' : `Modul ${MODULES.find((m) => m.id === id)?.no}: ${MODULES.find((m) => m.id === id)?.short}`);
 
 export function ExamView() {
   const { s, ai, setCoachOpen, update } = useStore();
-  const [run, setRun] = useState<{ kind: ExamKind; qs: Question[] } | null>(null);
+  const avail = MODULES.filter((m) => m.status === 'verfuegbar').sort((a, b) => a.pathOrder - b.pathOrder);
+  const [mod, setMod] = useState(avail[0]?.id ?? 'm2');
+  const [run, setRun] = useState<{ kind: ExamKind; qs: Question[]; moduleId: string } | null>(null);
   const [feyn, setFeyn] = useState<string | null>(null);
-  if (run) return <ExamRunner kind={run.kind} qs={run.qs} onExit={() => setRun(null)} />;
-  const req = moduleRequirements(s, 'm2');
-  const start = (k: ExamKind) => setRun({ kind: k, qs: buildExam(k, 'm2') });
+  if (run) return <ExamRunner kind={run.kind} qs={run.qs} moduleId={run.moduleId} onExit={() => setRun(null)} />;
+  const req = moduleRequirements(s, mod);
+  const start = (k: ExamKind) => setRun({ kind: k, qs: buildExam(k, mod), moduleId: k === 'mix' ? 'mix' : mod });
   const oral = () => {
     update((x) => ({ ...x, settings: { ...x.settings, coachMode: 'pruefen' } }));
     setCoachOpen(true);
@@ -31,6 +34,11 @@ export function ExamView() {
         <h1>Prüfungstraining</h1>
         <p className="lead">Prüfen unter realistischen Bedingungen: keine Rückmeldung und kein Coach bis zum Abschluss. Danach eine fachliche Auswertung mit Wiederholungsempfehlungen. Die Kompetenzstufen der App sind interne Lernstände und keine staatlich oder offiziell anerkannte Qualifikation.</p>
       </header>
+      <div className="seg" role="radiogroup" aria-label="Modul für die Prüfung">
+        {avail.map((m) => (
+          <label key={m.id} className={mod === m.id ? 'on' : ''}><input type="radio" name="exam-mod" checked={mod === m.id} onChange={() => setMod(m.id)} />Modul {m.no}: {m.short}</label>
+        ))}
+      </div>
       <div className="cards three">
         <article className="card">
           <span className="eyebrow">ca. 5 Min.</span>
@@ -62,10 +70,16 @@ export function ExamView() {
           {ai ? <><p>Der KI-Coach stellt Fragen wie in einer mündlichen Prüfung und wertet erst am Schluss aus.</p><button type="button" className="btn" onClick={oral}>Gespräch beginnen</button></>
             : <p className="hint">Nur mit KI-Schnittstelle verfügbar (im claude.ai-Artifact). Ohne KI nutzen Sie die offenen Fachfragen und die Feynman-Übungen.</p>}
         </article>
+        <article className="card">
+          <span className="eyebrow">Mehrere Module · ca. 20 Min.</span>
+          <h3>Gemischte Prüfung</h3>
+          <p>Je 6 Fragen aus allen {avail.length} verfügbaren Modulen, Themen abwechselnd gemischt (Interleaving). Bestanden ab 70 %.</p>
+          <button type="button" className="btn" disabled={avail.length < 2} onClick={() => start('mix')}>Starten</button>
+        </article>
         <article className="card muted-card">
-          <span className="eyebrow">Mehrere Module</span>
-          <h3>Gemischte Prüfung und Abschlussprüfung</h3>
-          <p>Prüft Themen aus mehreren Modulen gemischt. Folgt, sobald weitere Module verfügbar sind.</p>
+          <span className="eyebrow">Alle 12 Module</span>
+          <h3>Umfassende Abschlussprüfung</h3>
+          <p>Folgt, sobald alle Module verfügbar sind.</p>
           <DevBadge />
         </article>
       </div>
@@ -85,7 +99,7 @@ export function ExamView() {
         <Section title="Bisherige Prüfungen">
           <table className="table">
             <thead><tr><th>Datum</th><th>Art</th><th>Ergebnis</th><th>Status</th></tr></thead>
-            <tbody>{[...s.exams].reverse().slice(0, 12).map((e) => <tr key={e.id}><td>{fmtDateTime(e.at)}</td><td>{KIND_LABEL[e.kind]}</td><td className="mono">{pct(e.score)}</td><td>{e.passed ? 'bestanden' : 'nicht bestanden'}{isLegacyExam(e) ? ' (frühere Bewertungsfassung – zählt nicht mehr als Nachweis)' : ''}</td></tr>)}</tbody>
+            <tbody>{[...s.exams].reverse().slice(0, 12).map((e) => <tr key={e.id}><td>{fmtDateTime(e.at)}</td><td>{KIND_LABEL[e.kind]} – {modTitle(e.moduleId)}</td><td className="mono">{pct(e.score)}</td><td>{e.passed ? 'bestanden' : 'nicht bestanden'}{isLegacyExam(e) ? ' (frühere Bewertungsfassung – zählt nicht mehr als Nachweis)' : ''}</td></tr>)}</tbody>
           </table>
         </Section>
       )}
@@ -93,7 +107,7 @@ export function ExamView() {
   );
 }
 
-function ExamRunner({ kind, qs, onExit }: { kind: ExamKind; qs: Question[]; onExit: () => void }) {
+function ExamRunner({ kind, qs, moduleId, onExit }: { kind: ExamKind; qs: Question[]; moduleId: string; onExit: () => void }) {
   const { update, log, setCoachCtx } = useStore();
   const [i, setI] = useState(0);
   const [res, setRes] = useState<Record<string, { sel: string[]; score: number }>>({});
@@ -122,7 +136,7 @@ function ExamRunner({ kind, qs, onExit }: { kind: ExamKind; qs: Question[]; onEx
     }
     const passed = kind === 'modul' ? closedScore >= PASS.modul && openScore >= PASS.open : kind === 'offen' ? openScore >= PASS.open : total >= PASS.check;
     const selfShare = open.length / qs.length;
-    const run: ExamRun = { id: examId, kind, moduleId: 'm2', at: Date.now(), score: total, total: qs.length, byTopic, passed, v: SCORING_VERSION, selfShare };
+    const run: ExamRun = { id: examId, kind, moduleId, at: Date.now(), score: total, total: qs.length, byTopic, passed, v: SCORING_VERSION, selfShare };
     update((x) => ({ ...x, exams: [...x.exams, run] }));
     log('pruefung', examId, `${KIND_LABEL[kind]}: ${pct(total)}${passed ? ' bestanden' : ''}`);
     setFinished(true);
@@ -139,7 +153,7 @@ function ExamRunner({ kind, qs, onExit }: { kind: ExamKind; qs: Question[]; onEx
     const weak = topics.filter(([, v]) => v.ok / v.n < 0.75);
     return (
       <div className="page">
-        <h1>Auswertung: {KIND_LABEL[kind]}</h1>
+        <h1>Auswertung: {KIND_LABEL[kind]} ({modTitle(moduleId)})</h1>
         <p className="verdict">{pct(total)} der Punkte</p>
         {qs.some((x) => x.type === 'open') && <p className="hint">Die offenen Fragen haben Sie selbst am Raster bewertet. Diese Punkte sind eine Selbsteinschätzung, kein unabhängiger Fachnachweis. Das Ergebnis ist ein interner Lernstand und keine fachliche, behördliche oder offizielle Qualifikation.</p>}
         <Section title="Ergebnis nach Thema">
@@ -168,7 +182,7 @@ function ExamRunner({ kind, qs, onExit }: { kind: ExamKind; qs: Question[]; onEx
   return (
     <div className="page exam">
       <div className="row spread">
-        <h1>{KIND_LABEL[kind]}</h1>
+        <h1>{KIND_LABEL[kind]} <span className="muted">– {modTitle(moduleId)}</span></h1>
         <span className="mono">Frage {i + 1} / {qs.length}</span>
       </div>
       <Bar value={Object.keys(res).length / qs.length} label="Beantwortet" small />

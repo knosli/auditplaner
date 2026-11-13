@@ -246,8 +246,14 @@ export function recommendations(s: AppState, now = Date.now()): Recommendation[]
       break;
     }
   }
-  const allLessons = LESSONS.filter((l) => l.moduleId === 'm2').every((l) => s.lessons[l.id]?.completedAt);
-  if (allLessons && !s.exams.some((e) => e.kind === 'modul' && e.passed && !isLegacyExam(e))) recs.push({ kind: 'pruefung', title: 'Modulprüfung Gewässerschutz', why: 'Alle Lektionen sind abgeschlossen. Prüfen Sie Ihr Wissen unter Prüfungsbedingungen.', href: '#pruefung' });
+  for (const m of MODULES.filter((x) => x.status === 'verfuegbar')) {
+    const ls = LESSONS.filter((l) => l.moduleId === m.id);
+    const allLessons = ls.length > 0 && ls.every((l) => s.lessons[l.id]?.completedAt);
+    if (allLessons && !s.exams.some((e) => e.kind === 'modul' && e.moduleId === m.id && e.passed && !isLegacyExam(e))) {
+      recs.push({ kind: 'pruefung', title: `Modulprüfung: ${m.title}`, why: 'Alle Lektionen sind abgeschlossen. Prüfen Sie Ihr Wissen unter Prüfungsbedingungen.', href: '#pruefung' });
+      break;
+    }
+  }
   const openTask = TASKS.find((t) => s.lessons[LESSONS.find((l) => l.steps.some((st) => st.kind === 'practice' && st.taskId === t.id))?.id ?? '']?.completedAt && (s.practice[t.id]?.status ?? 'offen') === 'offen');
   if (openTask) recs.push({ kind: 'praxis', title: `Praxisauftrag: ${openTask.title}`, why: 'Übertragen Sie das Gelernte auf eine reale Baustelle.', href: '#werkzeuge' });
   return recs.slice(0, 5);

@@ -42,7 +42,7 @@ export function SettingsView() {
       </Section>
       <DataPanel />
       <Section title="Über diese App">
-        <p>UmweltCampus Bau CH, Version 0.3 (Bewertungsfassung 3). Modul 2 nach externer Fachprüfung vom 13.11.2026 korrigiert; neue Lektion zu SIA 431:2022. Prüfstatus Entwurf – keine fachliche oder betriebliche Freigabe. Die Kompetenzstufen der App sind interne Lernstände und keine staatlich oder offiziell anerkannten Qualifikationen.</p>
+        <p>UmweltCampus Bau CH, Version 0.4 (Bewertungsfassung 3). Verfügbar: Modul 2 «Gewässerschutz auf Baustellen» (nach externer Fachprüfung korrigiert) und Modul 1 «Umweltgrundlagen und Schweizer Umweltrecht». Prüfstatus Entwurf – keine fachliche oder betriebliche Freigabe. Die Kompetenzstufen der App sind interne Lernstände und keine staatlich oder offiziell anerkannten Qualifikationen.</p>
         <p className="hint">Vorbereitet für eine spätere Unternehmensversion (in Entwicklung): Benutzerrollen, Lernpfade für Poliere, Bauführer, Projektleiter und Umweltkontaktpersonen, Pflichtschulungen, Lernnachweise, firmeninterne Standards, Auswertungen pro Niederlassung, Inhaltsverwaltung durch Fachverantwortliche.</p>
       </Section>
     </div>

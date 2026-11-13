@@ -57,7 +57,7 @@ Gib zurück:
 export function generateQuestionPrompt(topicTitle: string, level: number): string {
   return `${coachInstructions('erklaeren', [])}
 
-Erstelle EINE neue Übungsfrage (Single Choice, 4 Antworten, genau eine richtig) zum Thema «${topicTitle}» im Bereich Gewässerschutz auf Schweizer Baustellen, Schwierigkeitsstufe ${level} von 4 (1 Grundlagen, 2 Anwendung, 3 Fortgeschritten, 4 Experte). Bevorzuge eine konkrete Baustellensituation. Keine erfundenen Artikelnummern oder Grenzwerte.
+Erstelle EINE neue Übungsfrage (Single Choice, 4 Antworten, genau eine richtig) zum Thema «${topicTitle}» im betrieblichen Umweltschutz auf Schweizer Baustellen, Schwierigkeitsstufe ${level} von 4 (1 Grundlagen, 2 Anwendung, 3 Fortgeschritten, 4 Experte). Bevorzuge eine konkrete Baustellensituation. Keine erfundenen Artikelnummern oder Grenzwerte.
 Antworte nur mit JSON in dieser Form:
 {"prompt":"…","options":["…","…","…","…"],"correct":0,"explanation":"…","source":"Art der Quelle, z. B. GSchG sinngemäss / bewährte Praxis"}`;
 }
@@ -91,6 +91,12 @@ export const GUIDING: Record<string, string[]> = {
   wasserhaltung: ['Braucht der Eingriff ins Grundwasser eine Bewilligung?', 'Welche Qualität verlangt die Bewilligung am Auslauf?', 'Liegt die Baustelle im Au oder in einer Schutzzone?'],
   oel: ['Ist der Platz dicht und frei von Meteorschächten?', 'Ist der Rückhalt (Wanne) leer und vor Regen geschützt?', 'Liegt Notfallmaterial griffbereit?'],
   havarie: ['Ist die eigene Sicherheit gewährleistet?', 'Wurde gleichzeitig mit dem Eindämmen sofort alarmiert (118/117)?', 'Ist die Verbindung zu Schacht und Gewässer unterbrochen?'],
+  'm1-grundlagen': ['Ist das eine Emission (Quelle) oder eine Immission (Betroffene)?', 'Welche Massnahme an der Quelle ist technisch möglich und wirtschaftlich tragbar?', 'Gibt es einen Grenzwert – oder eine Richtlinie mit Massnahmenstufe?'],
+  'm1-rechtsordnung': ['Ist das Gesetz, Verordnung, Auflage, Vollzugshilfe, Norm oder interner Standard?', 'Wer ist zuständig: Bund, Kanton oder Gemeinde?', 'Welche Fassung gilt, und wo steht sie?'],
+  'm1-verordnungen': ['Welche Massnahmenstufe für Luft und Lärm ist angeordnet?', 'Haben alle Maschinen über 18 kW einen Nachweis – auch beim Subunternehmer?', 'Braucht es ein Entsorgungskonzept (über 200 m³ oder Bauschadstoffe)?'],
+  'm1-natur': ['Ist die Vegetation am Ufer, im Wald, in einer Hecke oder einem Inventarobjekt?', 'Gibt es eine Alternative ohne Eingriff?', 'Welches Zeitfenster gilt (Brutzeit, Schonzeit)?'],
+  'm1-verantwortung': ['Geht es um Kosten, Strafe oder Schadenersatz?', 'Wer hat ausgewählt, instruiert, ausgerüstet, kontrolliert?', 'Ist es dokumentiert?'],
+  'm1-vollzug': ['Wer ist Adressat der Auflage?', 'Ist die Bewilligung rechtskräftig – und widersprechen sich Auflagen?', 'Wie belegen Sie die Umsetzung bei einer Kontrolle?'],
   konzept: ['Beantwortet das Konzept alle sechs Leitfragen?', 'Sind Zuständigkeiten und Kontrollen festgelegt?', 'Was ist Pflicht, was Empfehlung – und was kostet die Alternative?'],
 };
 

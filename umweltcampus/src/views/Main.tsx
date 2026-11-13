@@ -21,14 +21,14 @@ export function Dashboard() {
         <div>
           <span className="eyebrow">Persönliche Weiterbildung · Deutschschweiz</span>
           <h1>{isNew ? 'Willkommen im UmweltCampus Bau CH' : 'Ihr Lernstand'}</h1>
-          <p className="lead">{isNew ? 'Vom Bau-Polier und Sicherheitsspezialisten zum leitenden Umweltbeauftragten: Sie beginnen mit dem ausführlich ausgearbeiteten Modul Gewässerschutz auf Baustellen.' : 'Kompetenz wird hier an Anwendung und Begründung gemessen, nicht an Klicks.'}</p>
+          <p className="lead">{isNew ? 'Vom Bau-Polier und Sicherheitsspezialisten zum leitenden Umweltbeauftragten: Verfügbar sind Modul 2 «Gewässerschutz auf Baustellen» und Modul 1 «Umweltgrundlagen und Schweizer Umweltrecht».' : 'Kompetenz wird hier an Anwendung und Begründung gemessen, nicht an Klicks.'}</p>
         </div>
       </header>
 
       <LegacyNotice />
       <div className="kpis">
         <div className="kpi"><span className="eyebrow">Gesamtfortschritt (12 Module)</span><span className="kpi-v mono">{pct(overallProgress(s))}</span><Bar value={overallProgress(s)} label="Gesamtfortschritt" small /></div>
-        <div className="kpi"><span className="eyebrow">Lektionen abgeschlossen</span><span className="kpi-v mono">{doneLessons}/{LESSONS.length}</span><span className="hint">verfügbar in Modul 2</span></div>
+        <div className="kpi"><span className="eyebrow">Lektionen abgeschlossen</span><span className="kpi-v mono">{doneLessons}/{LESSONS.length}</span><span className="hint">in {MODULES.filter((m) => m.status === 'verfuegbar').length} verfügbaren Modulen</span></div>
         <div className="kpi"><span className="eyebrow">Wiederholungen fällig</span><span className="kpi-v mono">{due}</span><a href="#wiederholung" className="hint">öffnen →</a></div>
         <div className="kpi"><span className="eyebrow">Lernzeit 7 Tage</span><span className="kpi-v mono">{studyMinutes(s, 7)} min</span><span className="hint">gesamt {studyMinutes(s)} min</span></div>
       </div>
@@ -46,7 +46,7 @@ export function Dashboard() {
             </ol>
           ) : <p>Alles erledigt, was derzeit verfügbar ist. Neue Module sind in Entwicklung.</p>}
         </Section>
-        <Section title="Kompetenz Gewässerschutz" aside={<a href="#fortschritt" className="hint">Details →</a>}>
+        <Section title="Kompetenz je Fachgebiet" aside={<a href="#fortschritt" className="hint">Details →</a>}>
           <ul className="mini-comp">
             {comp.map((c) => (
               <li key={c.topic}>

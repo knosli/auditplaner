@@ -1,7 +1,7 @@
-import { QUESTIONS } from '../content';
+import { MODULES, QUESTIONS } from '../content';
 import type { Question } from '../content/types';
 
-export type ExamKind = 'check' | 'modul' | 'offen';
+export type ExamKind = 'check' | 'modul' | 'offen' | 'mix';
 
 /** Deterministischer Zufall (für Tests reproduzierbar). */
 export function rng(seed: number) {
@@ -31,6 +31,12 @@ export function shuffle<T>(arr: T[], r: () => number): T[] {
  */
 export function buildExam(kind: ExamKind, moduleId: string, seed = Date.now()): Question[] {
   const r = rng(seed);
+  if (kind === 'mix') {
+    // Gemischte Prüfung: 6 geschlossene Fragen je verfügbares Modul, Themen abwechselnd
+    const mods = MODULES.filter((m) => m.status === 'verfuegbar').map((m) => m.id);
+    const picked = mods.flatMap((m) => shuffle(QUESTIONS.filter((q) => q.moduleId === m && q.type !== 'open'), r).slice(0, 6));
+    return interleave(shuffle(picked, r));
+  }
   const pool = QUESTIONS.filter((q) => q.moduleId === moduleId);
   const closed = pool.filter((q) => q.type !== 'open');
   const open = pool.filter((q) => q.type === 'open');

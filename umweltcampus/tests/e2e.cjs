@@ -143,6 +143,33 @@ const ok = (c, m) => { console.log((c ? 'OK   ' : 'FAIL ') + m); if (!c) process
     await card.getByRole('button', { name: 'Bestätigung erfassen' }).click();
     ok((await card.locator('.status-pill').textContent()).includes('bestätigt'), 'Praxisauftrag bis «bestätigt» durchlaufen');
     ok((await page.locator('#rechner').count()) === 1, 'Rechner unter Praxiswerkzeuge');
+    // Modul 1
+    await go('modul-m1');
+    ok((await page.locator('.lessonlist li').count()) === 6, 'Modul 1: 6 Lektionen');
+    await go('lektion-m1-l3');
+    const m1steps = await page.locator('.stepper button').allTextContents();
+    await page.locator('.stepper button').nth(m1steps.findIndex((l) => l.includes('Schema'))).click(); await page.waitForTimeout(100);
+    await page.getByRole('tab', { name: 'Abfall' }).click();
+    ok((await page.locator('.vo').textContent()).includes('VVEA'), 'Modul 1: interaktive Verordnungsübersicht');
+    await page.locator('.stepper button').nth(m1steps.findIndex((l) => l.includes('Abwägung'))).click(); await page.waitForTimeout(100);
+    await page.getByText('Einsetzen lassen und auf das Papier warten').click();
+    await page.getByText('Eher sicher').first().click();
+    await page.getByRole('button', { name: 'Antwort prüfen' }).click();
+    ok((await page.locator('.callout', { hasText: 'Kritischer Fehler' }).count()) === 1, 'Modul 1: Sicherheitsveto bei kritischer Wahl sichtbar');
+    await go('szenario-sim-f');
+    await page.getByRole('button', { name: 'Fall beginnen' }).click();
+    await page.getByText('Zuerst schnell die Mulde umschichten').click();
+    await page.getByRole('button', { name: 'Entscheid bestätigen' }).click();
+    ok((await page.locator('.stage-fb.crit').count()) === 1, 'Fall F: kritischer Entscheid markiert');
+    await go('pruefung');
+    await page.getByText('Modul 1: Umweltrecht').click();
+    await page.getByRole('button', { name: 'Starten' }).first().click();
+    ok((await page.locator('h1').first().textContent()).includes('Modul 1'), 'Prüfung für Modul 1 gestartet');
+    await page.getByRole('button', { name: 'Abbrechen' }).click();
+    const mixBtn = page.locator('article', { hasText: 'Gemischte Prüfung' }).getByRole('button', { name: 'Starten' });
+    await mixBtn.click();
+    ok((await page.locator('h1').first().textContent()).includes('Gemischte Prüfung'), 'Gemischte Prüfung gestartet');
+    await page.getByRole('button', { name: 'Abbrechen' }).click();
     // Bibliothek
     await go('bibliothek');
     for (const term of ['Betonwaschwasser', 'Bodenschutz', 'SIA 431', 'Entsorgungskonzept', 'Gewässerraum']) {

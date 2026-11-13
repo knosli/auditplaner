@@ -2,7 +2,7 @@ import type { ModuleMeta, Topic } from './types';
 
 export const MODULES: ModuleMeta[] = [
   {
-    id: 'm1', no: 1, title: 'Umweltgrundlagen und Schweizer Umweltrecht', short: 'Umweltrecht', pathOrder: 4, status: 'in_entwicklung',
+    id: 'm1', no: 1, title: 'Umweltgrundlagen und Schweizer Umweltrecht', short: 'Umweltrecht', pathOrder: 4, status: 'verfuegbar',
     topics: ['Grundbegriffe des Umweltschutzes', 'Schweizer Umweltgesetzgebung', 'Umweltschutzgesetz (USG)', 'GSchG und Verordnungen', 'Abfallverordnung (VVEA)', 'Luftreinhalte-Verordnung (LRV)', 'Lärmschutz-Verordnung (LSV)', 'Natur- und Heimatschutz', 'Bund, Kanton, Gemeinde', 'Verantwortung der Beteiligten', 'Umweltauflagen und Bewilligungen', 'Vollzug und behördliche Kontrollen'],
   },
   {
@@ -53,6 +53,12 @@ export const MODULES: ModuleMeta[] = [
 
 /** Bewertete Kompetenzfelder (für Fortschritt und Wissenslücken) */
 export const TOPICS: Topic[] = [
+  { id: 'm1-grundlagen', moduleId: 'm1', title: 'Grundbegriffe und Prinzipien' },
+  { id: 'm1-rechtsordnung', moduleId: 'm1', title: 'Rechtsordnung Bund – Kanton – Gemeinde' },
+  { id: 'm1-verordnungen', moduleId: 'm1', title: 'Verordnungen für Baustellen' },
+  { id: 'm1-natur', moduleId: 'm1', title: 'Natur, Landschaft, Wald' },
+  { id: 'm1-verantwortung', moduleId: 'm1', title: 'Verantwortung und Haftung' },
+  { id: 'm1-vollzug', moduleId: 'm1', title: 'Bewilligungen und Vollzug' },
   { id: 'recht', moduleId: 'm2', title: 'Rechtsrahmen Gewässerschutz' },
   { id: 'entwaesserung', moduleId: 'm2', title: 'Baustellenentwässerung' },
   { id: 'alkalisch', moduleId: 'm2', title: 'Betonwaschwasser / alkalisches Wasser' },

@@ -64,7 +64,7 @@ export interface ScenarioRun {
 
 export interface ExamRun {
   id: string;
-  kind: 'check' | 'modul' | 'offen';
+  kind: 'check' | 'modul' | 'offen' | 'mix';
   moduleId: string;
   at: number;
   score: number; // 0..1
