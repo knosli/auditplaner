@@ -239,6 +239,16 @@ const ok = (c, m) => { console.log((c ? 'OK   ' : 'FAIL ') + m); if (!c) process
     ok((await page.locator('.mod-card').count()) >= 1 && (await page.locator('.mod-card').count()) < 12, 'Modulsuche filtert nach Themen');
     await go('quellen');
     ok((await page.locator('.srclist li').count()) > 20, 'Quellen über eigene Navigation erreichbar');
+    ok((await page.locator('.src-group h3').count()) >= 3, 'Quellen nach Rechtsnatur gruppiert');
+    await go('fortschritt');
+    ok((await page.locator('.prog-mod').count()) === 4 && (await page.locator('.stage-legend li').count()) === 5, 'Fortschritt je Modul mit fünf Kompetenzstufen');
+    await go('werkzeuge');
+    const allTasks = await page.locator('.practice').count();
+    await page.getByRole('button', { name: 'Modul 3: Bauabfälle' }).click();
+    ok((await page.locator('.practice').count()) === 5 && allTasks > 5, 'Praxisaufträge nach Modul filterbar');
+    await go('pruefung');
+    await page.locator('.mod-radio', { hasText: 'Modul 4' }).click();
+    ok((await page.locator('h2', { hasText: 'Abschluss von Modul 4' }).count()) === 1, 'Prüfungstraining: Modulwahl wirkt');
     let wide = [];
     for (const h of ['dashboard', 'module', 'modul-m2', 'lektion-m2-l2', 'simulator', 'szenario-sim-g', 'lernpfad', 'pruefung', 'wiederholung', 'bibliothek', 'werkzeuge', 'fortschritt', 'einstellungen']) {
       await go(h); if (h.startsWith('szenario')) { await page.getByRole('button', { name: 'Fall beginnen' }).click(); await page.waitForTimeout(150); }

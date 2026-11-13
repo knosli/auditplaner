@@ -7,6 +7,9 @@ import { KindBadge, ReviewBadge, Section, SourceList } from '../components/ui';
 import { PracticeCard } from '../components/Practice';
 import { saveFile } from '../lib/platform';
 import { AbsetzRechner } from '../components/Calculator';
+import { Icon } from '../components/Icons';
+import { SOURCE_KIND_LABEL } from '../content';
+import { MODULES } from '../content';
 
 const norm = (t: string) => t.toLowerCase().replace(/ß/g, 'ss');
 
@@ -21,20 +24,21 @@ export function LibraryView({ initialTab = 'alle' }: { initialTab?: 'alle' | 'be
 
   return (
     <div className="page">
-      <header className="page-head">
-        <h1>Wissensbibliothek</h1>
-        <p className="lead">Nachschlagen unabhängig von den Lektionen: Fachbegriffe, Rechtsgrundlagen, häufige Probleme, Schutzmassnahmen, Checklisten, Vorlagen und Quellen.</p>
-      </header>
-      <input id="lib-search" type="search" className="search big-search" placeholder="Suchen: Betonwaschwasser, Bodenschutz, SIA 431, Entsorgungskonzept …" value={q} onChange={(e) => setQ(e.target.value)} />
-      <div className="seg tabs" role="tablist">
+      <section className="lib-hero">
+        <span className="eyebrow">Nachschlagen</span>
+        <h1>{initialTab === 'quellen' ? 'Quellen.' : 'Fachbibliothek.'}</h1>
+        <p>Unabhängig von den Lektionen: Fachbegriffe, Rechtsgrundlagen, häufige Probleme, Schutzmassnahmen, Checklisten, Vorlagen und Quellen mit Rechtsnatur und Prüfstatus.</p>
+        <label className="search-field big"><Icon name="search" size={20} /><input id="lib-search" type="search" aria-label="Bibliothek durchsuchen" placeholder="Suchen: Betonwaschwasser, Bodenschutz, SIA 431, Entsorgungskonzept …" value={q} onChange={(e) => setQ(e.target.value)} /></label>
+      </section>
+      <div className="chips tabs" role="tablist">
         {(['alle', 'begriffe', 'recht', 'quellen'] as const).map((t) => (
-          <button key={t} type="button" role="tab" aria-selected={tab === t} className={tab === t ? 'on' : ''} onClick={() => setTab(t)}>
+          <button key={t} type="button" role="tab" aria-selected={tab === t} className={'chip' + (tab === t ? ' on' : '')} onClick={() => setTab(t)}>
             {{ alle: 'Alles', begriffe: `Fachbegriffe (${terms.length})`, recht: `Praxis & Recht (${entries.length})`, quellen: `Quellen (${srcs.length})` }[t]}
           </button>
         ))}
       </div>
       {n && !terms.length && !entries.length && !srcs.length && (
-        <p className="hint">Keine Treffer für «{q}». Viele Themen (z. B. Bodenschutz, Entsorgungskonzept) gehören zu Modulen in Entwicklung; prüfen Sie Schreibweise oder Synonyme.</p>
+        <p className="hint">Keine Treffer für «{q}». Prüfen Sie Schreibweise oder Synonyme; manche Themen gehören zu Modulen in Entwicklung.</p>
       )}
       {(tab === 'alle' || tab === 'begriffe') && terms.length > 0 && (
         <Section title="Fachbegriffe">
@@ -60,7 +64,13 @@ export function LibraryView({ initialTab = 'alle' }: { initialTab?: 'alle' | 'be
       {(tab === 'alle' || tab === 'quellen') && srcs.length > 0 && (
         <Section title="Quellenverzeichnis">
           <div className="callout law"><span className="callout-label">Prüfstatus</span><span>Alle Quellen stehen auf «Entwurf». Artikel und Fassungen wurden noch nicht gegen die aktuelle Originalquelle geprüft; Links wurden nicht automatisch getestet. Kostenpflichtige Normen werden nicht zitiert.</span></div>
-          <SourceList ids={srcs.map((s) => s.id)} />
+          <div className="src-kinds" aria-label="Quellen nach Rechtsnatur">{(Object.keys(SOURCE_KIND_LABEL) as (keyof typeof SOURCE_KIND_LABEL)[]).filter((k) => srcs.some((s) => s.kind === k)).map((k) => <a key={k} href={'#'} onClick={(ev) => { ev.preventDefault(); document.getElementById('src-' + k)?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }} className="chip">{SOURCE_KIND_LABEL[k]} ({srcs.filter((s) => s.kind === k).length})</a>)}</div>
+          {(Object.keys(SOURCE_KIND_LABEL) as (keyof typeof SOURCE_KIND_LABEL)[]).filter((k) => srcs.some((s) => s.kind === k)).map((k) => (
+            <div key={k} className="src-group" id={'src-' + k}>
+              <h3>{SOURCE_KIND_LABEL[k]}</h3>
+              <SourceList ids={srcs.filter((s) => s.kind === k).map((s) => s.id)} />
+            </div>
+          ))}
         </Section>
       )}
     </div>
@@ -136,16 +146,23 @@ function toMarkdown(e: LibraryEntry, ticks: Record<string, boolean>) {
 export function ToolsView() {
   const tools = LIBRARY.filter((e) => ['checkliste', 'vorlage', 'matrix', 'massnahme'].includes(e.category));
   const [sel, setSel] = useState(tools[0]?.id);
+  const taskMods = MODULES.filter((m) => TASKS.some((t) => t.moduleId === m.id)).sort((a, b) => a.pathOrder - b.pathOrder);
+  const [tm, setTm] = useState('alle');
   const cur = tools.find((t) => t.id === sel);
   return (
     <div className="page">
       <header className="page-head">
-        <h1>Praxiswerkzeuge</h1>
+        <span className="eyebrow">Praxis & Training</span>
+        <h1>Praxisaufträge & Werkzeuge.</h1>
         <p className="lead">Werkzeuge für die Baustelle und Ihre Praxisaufträge. Checklisten lassen sich abhaken und als Markdown-Datei speichern. Reale Projektdaten bleiben in Ihren Firmensystemen.</p>
       </header>
-      <Section title="Praxisaufträge Modul 2">
+      <Section title="Praxisaufträge">
         <p className="hint">Status «In der Praxis bestätigt» erfordert eine Reflexion zu jedem Kriterium und eine Bestätigung mit Funktion, Datum und Nachweis. Ein Klick allein genügt nicht.</p>
-        <div className="practice-list">{TASKS.map((t) => <PracticeCard key={t.id} taskId={t.id} compact />)}</div>
+        <div className="chips" role="group" aria-label="Praxisaufträge nach Modul">
+          <button type="button" className={'chip' + (tm === 'alle' ? ' on' : '')} aria-pressed={tm === 'alle'} onClick={() => setTm('alle')}>Alle Module</button>
+          {taskMods.map((m) => <button key={m.id} type="button" className={'chip' + (tm === m.id ? ' on' : '')} aria-pressed={tm === m.id} onClick={() => setTm(m.id)}>Modul {m.no}: {m.short}</button>)}
+        </div>
+        <div className="practice-list">{TASKS.filter((t) => tm === 'alle' || t.moduleId === tm).map((t) => <PracticeCard key={t.id} taskId={t.id} compact />)}</div>
       </Section>
       <Section title="Checklisten, Vorlagen und Matrizen">
         <div className="row">{tools.map((t) => <button key={t.id} type="button" className={'chip' + (sel === t.id ? ' on' : '')} onClick={() => setSel(t.id)}>{t.title}</button>)}</div>

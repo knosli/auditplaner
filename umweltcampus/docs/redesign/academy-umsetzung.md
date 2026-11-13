@@ -42,6 +42,19 @@ Grundlage: Lead-Design-Direktive «Academy Edition» und HTML-Zielbild (nur visu
 
 ## Offen
 
-- Prüfungstraining, Wiederholungen, Lernpfad, Bibliothek, Fortschritt und Einstellungen übernehmen das neue Designsystem (Farben, Karten, Schaltflächen, Navigation), wurden aber nicht einzeln neu gestaltet.
 - Interaktive Abbildungen für Absetzbecken, pH-Neutralisation, Ober-/Unterboden und Abfalltrennung: die bestehenden Schemas bleiben in Funktion; neue interaktive Varianten stehen noch aus.
 - Illustrationen für künftige Module (5–12) folgen mit den Modulen.
+
+## Nachtrag Version 0.8: übrige Seiten
+
+| Seite | Änderung | Datei |
+|---|---|---|
+| Lernpfad | Seitenkopf, Module mit Fachfarbton und Icon, Lernstufen als Karten | `src/views/Main.tsx` |
+| Prüfungstraining | Modulwahl als Auswahlleiste mit Modul-Icons, Prüfungsarten als Karten mit Icons (Hauptprüfungen hervorgehoben), Voraussetzungen je gewähltem Modul, Verlauf mit Status; im Prüfungsmodus Schrittanzeige; Auswertung hervorgehoben | `src/views/Exam.tsx` |
+| Wiederholungen | Aktionskarten mit Icons, im Durchlauf Schrittanzeige und Zurück-Link, grössere Lernkarte | `src/views/Review.tsx` |
+| Fachbibliothek / Quellen | Dunkler Kopfbereich mit prominenter Suche, Reiter als Pillen, Quellen nach Rechtsnatur gruppiert mit Sprungmarken | `src/views/Library.tsx` |
+| Praxisaufträge & Werkzeuge | Praxisaufträge nach Modul filterbar (vorher fälschlich «Modul 2» überschrieben, obwohl alle Module gelistet waren), Werkzeuge in hervorgehobener Fläche | `src/views/Library.tsx` |
+| Lernfortschritt | Fünf Kompetenzstufen als Legende, je Modul eigener Block mit den vier Fortschrittsebenen und Tabelle der Fachgebiete | `src/views/Progress.tsx` |
+| Einstellungen | Seitenkopf, Segmentschalter mit 44-px-Zielen | `src/views/Settings.tsx` |
+
+Tests: Unit 123/123, Browser 124/124 (Desktop und iPhone 13, neue Prüfungen für Quellen-Gruppierung, Fortschritt je Modul, Praxisfilter, Modulwahl im Prüfungstraining), kein horizontales Scrollen, Lernstand unverändert. Vorher/Nachher: `vorher-nachher-weitere-desktop.png`, `vorher-nachher-weitere-mobile.png`.

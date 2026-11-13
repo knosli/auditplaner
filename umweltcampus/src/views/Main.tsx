@@ -136,7 +136,7 @@ function ContinueHero({ lesson, started }: { lesson: (typeof LESSONS)[number]; s
   );
 }
 
-function LayerBars({ s, moduleId }: { s: ReturnType<typeof useStore>['s']; moduleId: string }) {
+export function LayerBars({ s, moduleId }: { s: ReturnType<typeof useStore>['s']; moduleId: string }) {
   return (
     <ul className="layer-bars">
       {progressLayers(s, moduleId).map((x) => (
@@ -179,7 +179,8 @@ export function LearningPath() {
   return (
     <div className="page">
       <header className="page-head">
-        <h1>Lernpfad</h1>
+        <span className="eyebrow">Mein Lernen</span>
+        <h1>Ihr Lernpfad.</h1>
         <p className="lead">Reihenfolge abgestimmt auf Ihr Ziel: zuerst die Themen mit dem grössten Risiko auf Baustellen, dann Planung, Begleitung und Managementsystem, zuletzt Strategie und Führung. Jede Stufe wird empfohlen, sobald die vorherige gefestigt ist – wiederholen können Sie jederzeit.</p>
       </header>
       <ol className="path-list">
@@ -187,11 +188,11 @@ export function LearningPath() {
           const avail = m.status === 'verfuegbar';
           const rec = avail ? recommendedLevel(s, m.id) : 0;
           return (
-            <li key={m.id} className={'path-item' + (avail ? '' : ' dev')}>
-              <span className="path-no mono">{i + 1}</span>
+            <li key={m.id} className={'path-item tone-' + metaOf(m.id).tone + (avail ? '' : ' dev')}>
+              <span className="path-no">{i + 1}</span>
               <div className="path-body">
                 <div className="row spread">
-                  <h3>{avail ? <a href={'#modul-' + m.id}>Modul {m.no}: {m.title}</a> : <>Modul {m.no}: {m.title}</>}</h3>
+                  <h3 className="path-title"><span className="mini-ico"><Icon name={metaOf(m.id).icon} size={15} /></span>{avail ? <a href={'#modul-' + m.id}>Modul {m.no}: {m.title}</a> : <>Modul {m.no}: {m.title}</>}</h3>
                   {avail ? <span className="mono">{pct(moduleProgress(s, m.id))}</span> : <DevBadge />}
                 </div>
                 {avail ? (

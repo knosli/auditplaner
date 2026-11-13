@@ -9,6 +9,7 @@ import { overdueRatio } from '../lib/srs';
 import { interleave, rng, shuffle } from '../lib/exam';
 import type { Confidence } from '../lib/state';
 import { topicTitle } from '../lib/coach';
+import { Icon } from '../components/Icons';
 
 type Item = { kind: 'karte' | 'frage'; id: string };
 
@@ -53,8 +54,8 @@ export function ReviewView() {
   if (queue) {
     if (pos >= queue.length) {
       return (
-        <div className="page">
-          <h1>{title}: abgeschlossen</h1>
+        <div className="page narrow">
+          <header className="page-head result-head ok"><span className="eyebrow">Wiederholung</span><h1>{title}: abgeschlossen</h1></header>
           <p>{queue.length} Elemente wiederholt. Die nächsten Termine wurden anhand Ihrer Antworten und Ihrer Sicherheit neu geplant.</p>
           <div className="row"><button type="button" className="btn primary" onClick={() => setQueue(null)}>Zur Übersicht</button><a className="btn" href="#dashboard">Zum Dashboard</a></div>
         </div>
@@ -66,9 +67,10 @@ export function ReviewView() {
       setPos(pos + 1);
     };
     return (
-      <div className="page review">
-        <nav className="crumbs"><button type="button" className="linkbtn" onClick={() => setQueue(null)}>Wiederholungen</button> / <span>{title}</span></nav>
-        <div className="row spread"><h1>{title}</h1><span className="mono">{pos + 1} / {queue.length}</span></div>
+      <div className="page review narrow">
+        <button type="button" className="back-link linkish" onClick={() => setQueue(null)}><Icon name="back" size={16} /> Alle Wiederholungen</button>
+        <div className="row spread"><h1>{title}</h1><span className="mono count-pill">{pos + 1} / {queue.length}</span></div>
+        <div className="seg-bar" aria-hidden="true">{queue.map((_, k) => <span key={k} className={k === pos ? 'cur' : k < pos ? 'seen' : ''} />)}</div>
         {it.kind === 'karte' ? <Flashcard key={it.id + pos} id={it.id} onDone={next} /> : (
           <div key={it.id + pos}>
             <QuestionBlock q={Q.get(it.id)!} ctx="wiederholung" onAnswered={() => undefined} />
@@ -85,23 +87,27 @@ export function ReviewView() {
   return (
     <div className="page">
       <header className="page-head">
-        <h1>Wiederholungen</h1>
+        <span className="eyebrow">Praxis & Training</span>
+        <h1>Wiederholungen.</h1>
         <p className="lead">Verteiltes Wiederholen: Karten und Fragen kommen wieder, kurz bevor Sie sie vergessen würden. Der Abstand richtet sich danach, ob Sie richtig lagen, wie sicher Sie waren und wie lange die letzte Wiederholung her ist.</p>
       </header>
       <div className="cards three">
-        <article className="card">
+        <article className="card action-card primary-card">
+          <span className="ec-ico"><Icon name="review" size={22} /></span>
           <span className="eyebrow">Heute fällig</span>
           <p className="big mono">{due.length}</p>
           <button type="button" className="btn primary" disabled={!due.length} onClick={startDue}>Wiederholung starten</button>
           {!due.length && <p className="hint">Nichts fällig. Neue Karten entstehen, wenn Sie Lektionen abschliessen.</p>}
         </article>
-        <article className="card">
+        <article className="card action-card">
+          <span className="ec-ico"><Icon name="terms" size={22} /></span>
           <span className="eyebrow">Neue Karten</span>
           <p className="big mono">{fresh.length}</p>
           <button type="button" className="btn" disabled={!fresh.length} onClick={() => start(fresh.slice(0, 10).map((c) => ({ kind: 'karte', id: c.id })), 'Neue Karten')}>Neue Karten lernen</button>
           {!fresh.length && <p className="hint">Beginnen Sie eine Lektion, um Karten freizuschalten.</p>}
         </article>
-        <article className="card">
+        <article className="card action-card">
+          <span className="ec-ico"><Icon name="layers" size={22} /></span>
           <span className="eyebrow">Gemischte Übung</span>
           <p className="big mono">{Math.min(8, mixPool.length)}</p>
           <button type="button" className="btn" disabled={mixPool.length < 4} onClick={() => start(interleave(shuffle(mixPool, rng(Date.now())).slice(0, 8)).map((q) => ({ kind: 'frage', id: q.id })), 'Gemischte Übung')}>Themen mischen</button>

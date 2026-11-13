@@ -9,7 +9,7 @@ export function SettingsView() {
   const set = <K extends keyof Settings>(k: K, v: Settings[K]) => update((x) => ({ ...x, settings: { ...x.settings, [k]: v } }));
   return (
     <div className="page">
-      <header className="page-head"><h1>Einstellungen</h1></header>
+      <header className="page-head"><span className="eyebrow">Persönlich</span><h1>Einstellungen.</h1><p className="lead">Darstellung, Lernhilfen, KI-Coach, Speicherung und Datensicherung.</p></header>
       <Section title="Darstellung">
         <div className="seg" role="radiogroup" aria-label="Farbschema">
           {(['system', 'hell', 'dunkel'] as const).map((t) => (
@@ -42,7 +42,7 @@ export function SettingsView() {
       </Section>
       <DataPanel />
       <Section title="Über diese App">
-        <p>UmweltCampus Bau CH · Academy, Version 0.7 (Bewertungsfassung 4). Verfügbar: Modul 1 «Umweltgrundlagen und Schweizer Umweltrecht», Modul 2 «Gewässerschutz auf Baustellen», Modul 3 «Bauabfälle, Rückbau und Kreislaufwirtschaft» und Modul 4 «Bodenschutz und Aushub» – alle nach einer externen KI-Fachprüfung (13.11.2026) korrigiert, aber nicht durch eine menschliche Fachperson freigegeben. Prüfstatus Entwurf – keine fachliche oder betriebliche Freigabe. Die Kompetenzstufen der App sind interne Lernstände und keine staatlich oder offiziell anerkannten Qualifikationen.</p>
+        <p>UmweltCampus Bau CH · Academy, Version 0.8 (Bewertungsfassung 4). Verfügbar: Modul 1 «Umweltgrundlagen und Schweizer Umweltrecht», Modul 2 «Gewässerschutz auf Baustellen», Modul 3 «Bauabfälle, Rückbau und Kreislaufwirtschaft» und Modul 4 «Bodenschutz und Aushub» – alle nach einer externen KI-Fachprüfung (13.11.2026) korrigiert, aber nicht durch eine menschliche Fachperson freigegeben. Prüfstatus Entwurf – keine fachliche oder betriebliche Freigabe. Die Kompetenzstufen der App sind interne Lernstände und keine staatlich oder offiziell anerkannten Qualifikationen.</p>
         <p className="hint">Vorbereitet für eine spätere Unternehmensversion (in Entwicklung): Benutzerrollen, Lernpfade für Poliere, Bauführer, Projektleiter und Umweltkontaktpersonen, Pflichtschulungen, Lernnachweise, firmeninterne Standards, Auswertungen pro Niederlassung, Inhaltsverwaltung durch Fachverantwortliche.</p>
       </Section>
     </div>

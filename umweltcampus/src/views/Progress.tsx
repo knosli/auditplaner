@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { LESSONS, MODULES, SCENARIOS, SITETASKS, T, TOPICS } from '../content';
+import { MODULES, SCENARIOS, SITETASKS, T, TOPICS } from '../content';
 import { useStore } from '../store';
 import { Bar, ConfirmButton, Section, fmtDateTime, pct } from '../components/ui';
 import { STAGE_LABEL, knowledgeGaps, moduleProgress, studyMinutes, topicCompetence } from '../lib/learning';
@@ -8,6 +8,11 @@ import { clearLocal, copyText, inArtifact, saveFile } from '../lib/platform';
 import { CRITERION_LABEL, QUESTIONS } from '../content';
 import { isLegacyRun, legacyCounts } from '../lib/versioning';
 import { PRACTICE_LABEL } from '../components/Practice';
+import { Icon } from '../components/Icons';
+import { metaOf } from '../components/moduleMeta';
+import { LayerBars } from './Main';
+
+const Dot = ({ on }: { on?: boolean }) => <span className={'cdot' + (on ? ' on' : '')} role="img" aria-label={on ? 'erreicht' : 'offen'} />;
 
 export function ProgressView() {
   const { s } = useStore();
@@ -18,35 +23,49 @@ export function ProgressView() {
   return (
     <div className="page">
       <header className="page-head">
-        <h1>Mein Fortschritt</h1>
-        <p className="lead">Fünf Kompetenzstufen je Fachgebiet. Jede Stufe setzt die vorherige voraus: Inhalte angesehen → Wissen abgefragt → sicher beherrscht (mindestens 6 Fragen bzw. alle des Themas, ≥ 80 % richtig, mit Sicherheit, ohne Fehlannahme oder kritische Wahl, und mindestens zwei Inhalte nach zeitlichem Abstand erneut richtig abgerufen; offene Fragen zählen als Selbstbewertung nicht) → in einem Baustellenfall angewendet → in der Praxis bestätigt.</p>
+        <span className="eyebrow">Persönlich</span>
+        <h1>Lernfortschritt.</h1>
+        <p className="lead">Kompetenz wird an Anwendung und Begründung gemessen, nicht an Klicks. «Gelesen» gilt nie als «beherrscht».</p>
       </header>
+      <ol className="stage-legend" aria-label="Kompetenzstufen">
+        {STAGE_LABEL.slice(1).map((l, i) => <li key={l}><span className="sl-no">{i + 1}</span>{l}</li>)}
+      </ol>
+      <p className="hint">Jede Stufe setzt die vorherige voraus. «Sicher beherrscht» heisst: mindestens 6 Fragen bzw. alle des Themas, ≥ 80 % richtig, mit Sicherheit, ohne Fehlannahme oder kritische Wahl, und mindestens zwei Inhalte nach zeitlichem Abstand erneut richtig abgerufen; offene Fragen zählen als Selbstbewertung nicht.</p>
 
       <LegacyNotice />
 
-      <Section title="Kompetenz je Fachgebiet">
-        <div className="tablewrap">
-          <table className="table comp">
-            <thead><tr><th>Fachgebiet</th>{STAGE_LABEL.slice(1).map((l) => <th key={l}>{l}</th>)}<th>Richtig</th></tr></thead>
-            <tbody>
-              {comp.map((c) => (
-                <tr key={c.topic}>
-                  <td>{c.title}</td>
-                  <td>{c.viewed ? '●' : '○'}</td>
-                  <td>{c.asked ? `${c.asked}/${c.total}` : '○'}</td>
-                  <td>{c.mastered ? '●' : '○'}</td>
-                  <td>{c.applied ? '●' : '○'}</td>
-                  <td>{c.confirmed ? '●' : '○'}</td>
-                  <td className="mono">{c.asked ? pct(c.accuracy) : '–'}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <ul className="crit-bars">
-          {comp.map((c) => <li key={c.topic}><span>{c.title}</span><Bar value={c.stage / 5} tone={c.stage >= 4 ? 'ok' : c.stage >= 2 ? 'accent' : 'muted'} label={c.title} /><span className="hint">{STAGE_LABEL[c.stage]}</span></li>)}
-        </ul>
-      </Section>
+      {MODULES.filter((m) => m.status === 'verfuegbar').sort((a, b) => a.pathOrder - b.pathOrder).map((m) => {
+        const meta = metaOf(m.id);
+        const rows = comp.filter((c) => TOPICS.find((t) => t.id === c.topic)?.moduleId === m.id);
+        return (
+          <section key={m.id} className={'section prog-mod tone-' + meta.tone}>
+            <div className="prog-head">
+              <span className="mod-ico"><Icon name={meta.icon} size={22} /></span>
+              <div><span className="eyebrow">Modul {String(m.no).padStart(2, '0')}</span><h2>{m.title}</h2></div>
+              <span className="mono prog-pct" title="Anteil der Anforderungen für den Modulabschluss">{pct(moduleProgress(s, m.id))} Abschluss</span>
+            </div>
+            <LayerBars s={s} moduleId={m.id} />
+            <div className="tablewrap">
+              <table className="table comp">
+                <thead><tr><th>Fachgebiet</th>{STAGE_LABEL.slice(1).map((l) => <th key={l}>{l}</th>)}<th>Richtig</th></tr></thead>
+                <tbody>
+                  {rows.map((c) => (
+                    <tr key={c.topic}>
+                      <td>{c.title}</td>
+                      <td>{c.viewed ? <Dot on /> : <Dot />}</td>
+                      <td>{c.asked ? `${c.asked}/${c.total}` : <Dot />}</td>
+                      <td>{c.mastered ? <Dot on /> : <Dot />}</td>
+                      <td>{c.applied ? <Dot on /> : <Dot />}</td>
+                      <td>{c.confirmed ? <Dot on /> : <Dot />}</td>
+                      <td className="mono">{c.asked ? pct(c.accuracy) : '–'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        );
+      })}
 
       <Section title="Wissenslandkarte">
         <p className="hint">Alle zwölf Module. Farbige Felder: bewertete Fachgebiete (dunkler = höhere Stufe). Graue Module sind in Entwicklung.</p>
@@ -83,11 +102,7 @@ export function ProgressView() {
         </Section>
       </div>
 
-      <div className="grid-2">
-        <Section title="Module">
-          <ul className="crit-bars">{MODULES.filter((m) => m.status === 'verfuegbar').map((m) => <li key={m.id}><span>Modul {m.no}</span><Bar value={moduleProgress(s, m.id)} label={m.title} /><span className="mono">{pct(moduleProgress(s, m.id))}</span></li>)}</ul>
-          <p className="hint">{LESSONS.filter((l) => s.lessons[l.id]?.completedAt).length} von {LESSONS.length} Lektionen abgeschlossen.</p>
-        </Section>
+      <div>
         <Section title="Ergebnisse der Baustellenfälle">
           {SCENARIOS.filter((x) => x.status === 'verfuegbar').map((sc) => {
             const runs = s.scenarios[sc.id] ?? [];
