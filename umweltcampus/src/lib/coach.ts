@@ -112,6 +112,11 @@ export const GUIDING: Record<string, string[]> = {
   'm8-installation': ['Was kann wo austreten – und wohin gelangt es?', 'Wohin führt der nächste Schacht?', 'Stimmt der Plan auch für die nächste Bauphase?'],
   'm8-massnahmenplan': ['Hat jede Anforderung eine Massnahme, eine Funktion, einen Termin, eine Kontrolle und einen Nachweis?', 'Welche Vorlaufzeiten fehlen im Terminplan?', 'Welche Nachweise sind Pflicht, welche nur nützlich?'],
   'm8-steuerung': ['Ist das Pflicht, Vereinbarung oder Empfehlung?', 'Was kostet die Alternative ohne Massnahme?', 'Welche Projektänderung hat Umweltfolgen, die noch niemand geprüft hat?'],
+  'm9-rolle': ['Für wen arbeitet diese Person – Bauherrschaft, Unternehmung oder Behörde?', 'Woraus ergibt sich ihre Befugnis (Bewilligung, Pflichtenheft, Vertrag)?', 'Was ist Ihre eigene Rolle – und was nicht?'],
+  'm9-kontrolle': ['Wo würde ein Fehler heute am schnellsten und schwersten schaden?', 'Ist die Massnahme vorhanden, angewendet und wirksam?', 'Was haben Sie nicht angeschaut?'],
+  'm9-feststellung': ['Was genau haben Sie beobachtet – und was ist Vermutung?', 'Droht ein Schaden unmittelbar oder fehlt eine zwingende Freigabe?', 'Was muss jetzt sofort geschehen, und wen holen Sie?'],
+  'm9-bericht': ['Könnten Sie jeden Satz in zwei Jahren vor Dritten vertreten?', 'Steht bei jeder Feststellung, wer was bis wann tut?', 'Sind Personen auf den Fotos nötig?'],
+  'm9-nachverfolgung': ['Ist das die Ursache oder nur das Symptom?', 'Woran erkennen Sie, dass die Massnahme wirkt?', 'Wer kann das entscheiden – und haben Sie die Eskalation angekündigt?'],
   konzept: ['Beantwortet das Konzept alle sechs Leitfragen?', 'Sind Zuständigkeiten und Kontrollen festgelegt?', 'Was ist Pflicht, was Empfehlung – und was kostet die Alternative?'],
 };
 

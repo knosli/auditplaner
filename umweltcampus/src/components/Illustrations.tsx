@@ -191,12 +191,42 @@ export function IlluPlan(_: Props) {
   );
 }
 
+/** Modul 9: Umweltbegehung – dem Wasser nachgehen, feststellen, nachverfolgen */
+export function IlluInspect(_: Props) {
+  return (
+    <Paper label="Schema: Umweltbegehung. Der Rundgang folgt dem Wasser von der Baustelle bis zum Schacht; Feststellungen werden eingestuft, Massnahmen nachverfolgt, bis sie wirken.">
+      <path d="M24 206h432v64H24z" fill="#d9c3a4" />
+      <path d="M24 206h432" stroke="#b49572" strokeWidth="2" />
+      <path d="M44 206V112h92v94" fill="#e4ebe6" stroke="#9db7b0" strokeWidth="2" />
+      <path d="M58 130h64M58 158h64M58 186h64" stroke="#c4d5cf" strokeWidth="2" />
+      <path d="M140 200c40 8 60-6 96 2s52 0 84 0" stroke="#167b70" strokeWidth="3" fill="none" strokeDasharray="7 6" />
+      <T x={268} y={190} anchor="middle" s={10} c="#0f5a52">dem Wasser nach</T>
+      <rect x="318" y="204" width="34" height="36" fill="#c9d5d1" stroke="#7d918b" strokeWidth="2" />
+      <rect x="312" y="198" width="46" height="7" rx="2" fill="#c14c40" />
+      <T x={335} y={258} anchor="middle" s={9}>Schacht</T>
+      <circle cx="186" cy="130" r="9" fill="#184542" />
+      <path d="M186 140v34M186 150l-14 10M186 150l16 6M186 174l-10 22M186 174l10 22" stroke="#184542" strokeWidth="4" strokeLinecap="round" fill="none" />
+      <rect x="200" y="146" width="18" height="24" rx="3" fill="#fff" stroke="#184542" strokeWidth="2" />
+      <path d="M204 154h10M204 160h10" stroke="#167b70" strokeWidth="2" />
+      <rect x="368" y="60" width="92" height="112" rx="10" fill="#ffffff" stroke="#9db7b0" strokeWidth="1.5" />
+      <T x={414} y={80} anchor="middle" s={10}>Feststellungen</T>
+      <circle cx="384" cy="100" r="6" fill="#c14c40" /><T x={396} y={104} s={9}>kritisch</T>
+      <circle cx="384" cy="122" r="6" fill="#e5aa63" /><T x={396} y={126} s={9}>Abweichung</T>
+      <circle cx="384" cy="144" r="6" fill="#9db7b0" /><T x={396} y={148} s={9}>Hinweis</T>
+      <T x={414} y={164} anchor="middle" s={8} w={500} c="#56645e">bis wirksam erledigt</T>
+      <T x={170} y={56} anchor="middle">Vorhanden – angewendet – wirksam?</T>
+      <T x={170} y={72} anchor="middle" s={10} w={500} c="#56645e">Beobachten, einstufen, handeln, nachverfolgen</T>
+    </Paper>
+  );
+}
+
 export function ModuleIllustration({ moduleId }: { moduleId: string }) {
   switch (moduleId) {
     case 'm2': return <IlluWater />;
     case 'm3': return <IlluWaste />;
     case 'm4': return <IlluSoil />;
     case 'm8': return <IlluPlan />;
+    case 'm9': return <IlluInspect />;
     default: return <IlluLaw />;
   }
 }

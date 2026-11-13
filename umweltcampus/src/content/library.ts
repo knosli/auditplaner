@@ -243,6 +243,35 @@ Offene Massnahmen der letzten Begehung mit Status.
     ],
     sources: ['praxis', 'vvea', 'kanton-merkblatt', 'suva-asbest'],
   },
+  {
+    id: 'cl-umweltbegehung', category: 'checkliste', moduleId: 'm9',
+    title: 'Ablauf einer Umweltbegehung',
+    summary: 'Vorbereitung, Rundgang und Abschluss – für alle Umweltbereiche, auf die Bauphase zuzuschneiden.',
+    tags: ['Begehung', 'Kontrolle', 'Checkliste', 'Eigenkontrolle', 'UBB'],
+    items: [
+      { group: 'Vorbereitung', points: ['Massnahmenplan und Auflagen der aktuellen Bauphase gelesen', 'Offene Massnahmen der letzten Begehung bekannt', 'Wetter der letzten Tage und heutige Arbeiten bekannt', 'Drei Schwerpunkte nach Risiko festgelegt', 'PSA dabei; beim Eintreffen beim Polier angemeldet'] },
+      { group: 'Rundgang', points: ['Dem Wasser nach: vom höchsten Punkt bis zu Schacht bzw. Gewässer', 'Den Stoffen nach: Tankstelle, Lager, Waschplatz', 'Abfälle und Material: Mulden, Depots, Zwischenlager', 'Grenze: Nachbarn, Staub, Lärm, Strasse', 'Je Massnahme: vorhanden – angewendet – wirksam?', 'Leute an der Arbeit gefragt («Zeig mir, wie ihr das macht»)', 'Fotos: Übersicht und Detail, ohne erkennbare Personen'] },
+      { group: 'Bei kritischem Befund', points: ['Eigenschutz', 'Quelle stoppen lassen', 'Ausbreitung verhindern', 'Polier bzw. Bauführung sofort holen; bei möglicher Gewässer- oder Bodenverschmutzung alarmieren', 'Erst danach dokumentieren'] },
+      { group: 'Abschluss vor Ort', points: ['Feststellungen mit dem Polier besprochen', 'Massnahmen mit Funktion und Termin vereinbart', 'Positives genannt', 'Notiert, was nicht angeschaut wurde'] },
+      { group: 'Nachbereitung', points: ['Bericht kurz und priorisiert, möglichst gleichentags', 'Massnahmenliste nachgeführt', 'Nachkontrolle terminiert', 'Wiederholungen erkannt und Ursache angesprochen'] },
+    ],
+    sources: ['praxis', 'bafu-ubb'],
+  },
+  {
+    id: 'vl-massnahmenliste', category: 'vorlage', moduleId: 'm9',
+    title: 'Vorlage Massnahmenliste (Nachverfolgung)',
+    summary: 'Eine Liste je Baustelle: von der Feststellung bis zum wirksamen Abschluss.',
+    tags: ['Massnahmenliste', 'Nachverfolgung', 'Vorlage', 'Korrekturmassnahme', 'Eskalation'],
+    table: {
+      head: ['Nr.', 'Datum', 'Feststellung', 'Einstufung', 'Massnahme (K = Korrektur, KM = Korrekturmassnahme)', 'Verantwortlich', 'Termin', 'Status', 'Nachkontrolle'],
+      rows: [
+        ['1', '…', 'Schacht 2 an der Zufahrt offen, Abdeckung zerbrochen', 'Abweichung, wiederholt', 'K: abdecken · KM: befahrbare Stahlplatte, Fahrspur markieren', 'Polier/in · Bauführer/in', '…', 'umgesetzt', 'nach 1 und 4 Wochen'],
+        ['2', '…', 'Fässer des Subunternehmers ohne Auffangwanne am Graben', 'Abweichung', 'K: Wanne · KM: Umweltanforderungen im Subunternehmervertrag, Instruktion', 'Bauführer/in', '…', 'offen (Stufe 2)', '…'],
+      ],
+    },
+    text: 'Status: offen – umgesetzt – wirksam abgeschlossen. Eine Massnahme wird erst geschlossen, wenn die Nachkontrolle zeigt, dass sie wirkt. Funktionen statt Namen; die Liste ist Traktandum jeder Baustellensitzung.',
+    sources: ['praxis'],
+  },
 ];
 
 export const LIB_CATEGORY_LABEL: Record<LibraryEntry['category'], string> = {

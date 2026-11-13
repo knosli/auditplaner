@@ -489,6 +489,16 @@ export const SOURCES: Source[] = [
     note: 'Kostenpflichtige Norm; keine Inhalte im Wortlaut wiedergegeben und nicht im Volltext geprüft. Ausgabe und vertragliche Abweichungen beachten. Vertragsfolgen im Einzelfall durch Fachperson Bauvertrag prüfen.',
   },
   {
+    id: 'bafu-ubb', title: 'BAFU: «Umweltbaubegleitung mit integrierter Erfolgskontrolle» (Reihe Umwelt-Wissen)', short: 'BAFU UBB', kind: 'vollzugshilfe',
+    issuer: 'Bundesamt für Umwelt (BAFU)', url: 'https://www.bafu.admin.ch', version: '2007 – Titel, Jahr und Stand aus der Erinnerung des Autorenteams, nicht am Original geprüft', lastChecked: null, scope: 'Ganze Schweiz; Empfehlung, keine Rechtsverbindlichkeit', review: 'entwurf',
+    note: 'In der App nur allgemein verwendet (Aufgaben und Stellung einer UBB). Ob eine UBB verlangt ist und welche Befugnisse sie hat, ergibt sich aus Bewilligung und Pflichtenheft. Für Strassenprojekte gibt es zudem eine VSS-Norm zur Umweltbaubegleitung (Nummer und Ausgabe nicht geprüft, in der App nicht verwendet).',
+  },
+  {
+    id: 'dsg', title: 'Bundesgesetz über den Datenschutz (Datenschutzgesetz, DSG)', short: 'DSG', kind: 'gesetz', sr: 'SR 235.1',
+    issuer: 'Bundesversammlung', version: 'Totalrevidierte Fassung, in Kraft seit 01.09.2023 – Stand prüfen', lastChecked: null, scope: 'Ganze Schweiz', review: 'entwurf',
+    note: 'In der App nur die Grundsätze (Verhältnismässigkeit, Zweckbindung) sinngemäss, ohne Artikel; nicht am Fedlex-Text geprüft. Massgebend sind die Datenschutzregeln der Firma.',
+  },
+  {
     id: 'praxis',
     title: 'Bewährte Praxis Baustellen-Umweltschutz (Zusammenfassung der App)',
     short: 'Bewährte Praxis',

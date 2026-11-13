@@ -162,7 +162,7 @@ const ok = (c, m) => { console.log((c ? 'OK   ' : 'FAIL ') + m); if (!c) process
     await page.getByRole('button', { name: 'Entscheid bestätigen' }).click();
     ok((await page.locator('.stage-fb.crit').count()) === 1, 'Fall F: kritischer Entscheid markiert');
     // Module 3, 4 und 8
-    for (const [mod, n, sim, txt, label] of [['m3', 5, 'sim-g', 'Fertig ausbauen, aber vorsichtig', 'Fall G'], ['m4', 5, 'sim-h', 'Freigabe ist Freigabe', 'Fall H'], ['m8', 5, 'sim-d', 'Parallel geht schon', 'Fall D']]) {
+    for (const [mod, n, sim, txt, label, crit = true] of [['m3', 5, 'sim-g', 'Fertig ausbauen, aber vorsichtig', 'Fall G'], ['m4', 5, 'sim-h', 'Freigabe ist Freigabe', 'Fall H'], ['m8', 5, 'sim-d', 'Parallel geht schon', 'Fall D'], ['m9', 5, 'sim-i', 'Mit den Mulden und dem Magazin', 'Fall I', false]]) {
       await go('modul-' + mod);
       ok((await page.locator('.lessonlist li').count()) === n, `Modul ${mod.slice(1)}: ${n} Lektionen`);
       await go('lektion-' + mod + '-l1');
@@ -173,7 +173,7 @@ const ok = (c, m) => { console.log((c ? 'OK   ' : 'FAIL ') + m); if (!c) process
       await page.getByRole('button', { name: 'Fall beginnen' }).click();
       await page.getByText(txt).click();
       await page.getByRole('button', { name: 'Entscheid bestätigen' }).click();
-      ok((await page.locator('.stage-fb.crit').count()) === 1, `${label}: kritischer Entscheid markiert`);
+      ok((await page.locator(crit ? '.stage-fb.crit' : '.stage-fb').count()) === 1, `${label}: ${crit ? 'kritischer Entscheid markiert' : 'Rückmeldung zum Entscheid angezeigt'}`);
     }
     await go('pruefung');
     await page.getByText('Modul 1: Umweltrecht').click();
@@ -227,7 +227,7 @@ const ok = (c, m) => { console.log((c ? 'OK   ' : 'FAIL ') + m); if (!c) process
     const heroHref = await page.locator('.hero-cta').getAttribute('href');
     ok(/^#(lektion-|pruefung)/.test(heroHref || ''), 'Hero: genau eine Weiterlernen-Aktion (' + heroHref + ')');
     ok((await page.locator('.hero-cta').count()) === 1, 'Hero hat genau eine primäre Aktion');
-    ok((await page.locator('.lb').count()) === 4 * 5, 'Fortschrittsebenen getrennt (4 Ebenen × 5 Module)');
+    ok((await page.locator('.lb').count()) === 4 * 6, 'Fortschrittsebenen getrennt (4 Ebenen × 6 Module)');
     ok((await page.locator('.shelf .mod-card').count()) === 3, 'Drei Module als Einstieg');
     await page.locator('.hero-cta').click(); await page.waitForTimeout(200);
     ok((await page.evaluate(() => location.hash)) === heroHref, 'Weiterlernen öffnet die Lektion');
@@ -241,7 +241,7 @@ const ok = (c, m) => { console.log((c ? 'OK   ' : 'FAIL ') + m); if (!c) process
     ok((await page.locator('.srclist li').count()) > 20, 'Quellen über eigene Navigation erreichbar');
     ok((await page.locator('.src-group h3').count()) >= 3, 'Quellen nach Rechtsnatur gruppiert');
     await go('fortschritt');
-    ok((await page.locator('.prog-mod').count()) === 5 && (await page.locator('.stage-legend li').count()) === 5, 'Fortschritt je Modul mit fünf Kompetenzstufen');
+    ok((await page.locator('.prog-mod').count()) === 6 && (await page.locator('.stage-legend li').count()) === 5, 'Fortschritt je Modul mit fünf Kompetenzstufen');
     await go('werkzeuge');
     const allTasks = await page.locator('.practice').count();
     await page.getByRole('button', { name: 'Modul 3: Bauabfälle' }).click();

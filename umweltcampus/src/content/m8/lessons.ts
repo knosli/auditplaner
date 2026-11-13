@@ -41,6 +41,7 @@ Wo fangen Sie an – und wie stellen Sie sicher, dass Sie nichts übersehen?` },
 Werkvertrag, besondere Bestimmungen, Leistungsverzeichnis, Pläne, Entsorgungskonzept, Entwässerungskonzept, Bodenschutzkonzept, Schadstoffbericht. Sie zeigen, **was bestellt und bezahlt** ist (Lektion 2).
 
 ### 3. Standortgrundlagen (öffentliche Geodaten des Kantons)
+
 | Karte / Kataster | Frage |
 |---|---|
 | Gewässerschutzkarte | Liegt das Projekt in Au, Ao, Zu/Zo, in einer Grundwasserschutzzone oder im Gewässerraum? |
@@ -264,6 +265,7 @@ Was würden Sie umstellen – und warum?` },
 
 **Materialflüsse**: Aushub, Rückbaumaterial und Abfälle mit möglichst kurzen Wegen und möglichst viel Verwertung vor Ort.` },
       { id: 'm8-l3-explain', kind: 'explain', title: 'Installationsplan: worauf Sie achten', text: `### Elemente und Umweltanforderungen
+
 | Element | Umweltanforderung (Grundsatz) |
 |---|---|
 | Betankung, Lager Treibstoff/Öl/Chemikalien | Befestigte, dichte Fläche, Auffangvolumen, Abstand zu Schächten und Gewässern, Ölbindemittel griffbereit; in Grundwasserschutzzonen (S1–S3) gelten je nach Zone strenge Einschränkungen bis Verbote – Schutzzonenreglement und kantonale Vorgaben prüfen |
@@ -366,6 +368,7 @@ Wie verhindern Sie das beim nächsten Projekt?` },
 
 **Meldefristen** (z. B. meldepflichtige Asbestsanierungen bei der Suva mindestens 14 Tage vorher) und **Freigaben** (Go/No-Go) gehören als Termine in den Plan.` },
       { id: 'm8-l4-explain', kind: 'explain', title: 'Aufbau eines Umweltmassnahmenplans', text: `### Spalten
+
 | Spalte | Inhalt | Beispiel |
 |---|---|---|
 | Anforderung / Quelle | Fundstelle | Bewilligung Ziff. 4.3; Art. 16 VVEA |
@@ -476,6 +479,7 @@ Umweltbedingte Zeitfenster sind oft **fix** und nicht verhandelbar:
 Planen Sie diese Fenster als **Randbedingungen** und bauen Sie Reserven ein.
 
 ### Optimieren statt streichen
+
 | Statt … | … besser |
 |---|---|
 | Absetzanlage weglassen | Waschwasser in den Fahrmischer zurückführen, kleinere Anlage |

@@ -20,6 +20,8 @@ export function Diagram({ id }: { id: string }) {
     case 'deponietypen': return <Kette steps={DEPONIEN} />;
     case 'bodenschichten': return <Kette steps={BODEN} />;
     case 'auflagenkette': return <Kette steps={AUFLAGEN} />;
+    case 'ubb-rollen': return <Kette steps={UBB_ROLLEN} />;
+    case 'feststellungsweg': return <Kette steps={FESTSTELLUNG} />;
     default: return <p className="hint">Schema «{id}» nicht gefunden.</p>;
   }
 }
@@ -231,6 +233,24 @@ const AUFLAGEN = [
   { t: 'Termin / Phase', d: 'Inkl. Vorlaufzeiten (Bewilligung, Analyse, Meldung)', who: 'im Terminplan als Vorgänger' },
   { t: 'Kontrolle', d: 'Wer prüft wie oft?', who: 'Eigenkontrolle bleibt bei der Unternehmung' },
   { t: 'Nachweis', d: 'Protokoll, Foto, Liefer-, Wäge-, Begleitschein', who: 'so viel wie nötig, so wenig wie möglich' },
+];
+
+const UBB_ROLLEN = [
+  { t: 'Behörde', d: 'Bewilligt, ordnet an, kontrolliert (Vollzug)', who: 'Kanton, Gemeinde' },
+  { t: 'Bauherrschaft', d: 'Trägt die Auflagen; beauftragt Planer, Bauleitung, UBB', who: 'in der Regel Adressatin der Bewilligung' },
+  { t: 'Umweltbaubegleitung (UBB)', d: 'Begleitet, kontrolliert, berichtet – gemäss Pflichtenheft', who: 'im Auftrag der Bauherrschaft, wenn verlangt' },
+  { t: 'Bauleitung', d: 'Koordiniert, weist die Unternehmung an, nimmt ab', who: 'im Auftrag der Bauherrschaft' },
+  { t: 'Unternehmung: Bauführung und Polier', d: 'Setzen um, kontrollieren sich selbst (Eigenkontrolle), führen Nachweise', who: 'Weisungsrecht in der Linie' },
+  { t: 'Interne Umweltfachperson', d: 'Berät, instruiert, kontrolliert stichprobenweise, verfolgt nach', who: 'Sie – für die Unternehmung, ohne Weisungsrecht in der Linie' },
+];
+const FESTSTELLUNG = [
+  { t: 'Beobachten', d: 'Was, wo, wann – mit Foto oder Messung', who: 'Beobachtung von Vermutung trennen' },
+  { t: 'Einstufen', d: 'Kritisch, Abweichung oder Hinweis – mit Bezug zur Anforderung', who: 'im Zweifel höher einstufen' },
+  { t: 'Sofortmassnahme', d: 'Bei kritisch: Quelle stoppen, Ausbreitung verhindern, alarmieren bzw. melden', who: 'sofort, Linie einschalten' },
+  { t: 'Korrektur', d: 'Mangel beheben', who: 'verantwortliche Funktion, Termin' },
+  { t: 'Ursache und Korrekturmassnahme', d: 'Mehrmals «Warum?» – Ursache beseitigen', who: 'bei kritischen und wiederholten Feststellungen' },
+  { t: 'Nachkontrolle', d: 'Umgesetzt und wirksam?', who: 'erst dann abschliessen' },
+  { t: 'Vorbeugung', d: 'Standard, AVOR, Instruktion für andere Baustellen', who: 'Lernen im Unternehmen' },
 ];
 
 const EMISSION = [

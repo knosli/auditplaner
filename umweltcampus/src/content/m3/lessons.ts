@@ -264,6 +264,7 @@ Art. 20 VVEA (bestätigt):
 - Asphalt mit **höchstens 250 mg PAK pro kg** soll möglichst vollständig als Rohstoff für Baustoffe verwertet werden.
 - Asphalt mit **mehr als 250 mg PAK pro kg** darf **nicht verwertet** werden.
 ### Übergangsbestimmungen (Art. 52 VVEA, Fassung 2022)
+
 | Zeitraum | Ausbauasphalt > 250 mg PAK/kg | Ausbauasphalt ≤ 250 mg PAK/kg |
 |---|---|---|
 | bis 31.12.2025 | Verwertung bei Bauarbeiten unter Bedingungen noch zulässig (Abs. 1) | verwerten |

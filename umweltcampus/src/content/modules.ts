@@ -34,7 +34,7 @@ export const MODULES: ModuleMeta[] = [
     topics: ['Umweltprüfung vor Baustart', 'Bewilligungsauflagen prüfen', 'Ausschreibung und Werkvertrag', 'Umweltmassnahmen in der AVOR', 'Installationsplanung', 'Entwässerung und Lagerflächen', 'Materialbewirtschaftung', 'Transportplanung', 'Lärm- und Staubschutz', 'Umweltmassnahmenplan', 'Zuständigkeiten', 'Kontroll- und Nachweispflichten', 'Zusammenarbeit Bauherrschaft/Planer', 'Kosten- und Terminfolgen'],
   },
   {
-    id: 'm9', no: 9, title: 'Umweltbaubegleitung und Baustellenkontrollen', short: 'Baubegleitung', pathOrder: 6, status: 'in_entwicklung', deep: true,
+    id: 'm9', no: 9, title: 'Umweltbaubegleitung und Baustellenkontrollen', short: 'Baubegleitung', pathOrder: 6, status: 'verfuegbar', deep: true,
     topics: ['Aufgaben der UBB', 'Interne Beratung vs. formelle UBB', 'Kontrollkonzepte', 'Umweltbegehungen', 'Auditchecklisten', 'Feststellungen und Abweichungen', 'Risikobeurteilung', 'Sofortmassnahmen', 'Korrektur- und Vorbeugemassnahmen', 'Kommunikation mit Bauleitung', 'Fotodokumentation', 'Kontrollberichte', 'Nachverfolgung', 'Eskalation'],
   },
   {
@@ -74,6 +74,11 @@ export const TOPICS: Topic[] = [
   { id: 'm8-installation', moduleId: 'm8', title: 'Installation, Logistik, Emissionen' },
   { id: 'm8-massnahmenplan', moduleId: 'm8', title: 'Massnahmenplan, Kontrollen, Nachweise' },
   { id: 'm8-steuerung', moduleId: 'm8', title: 'Kosten, Termine, Zusammenarbeit' },
+  { id: 'm9-rolle', moduleId: 'm9', title: 'UBB: Aufgaben, Rollen, Abgrenzung' },
+  { id: 'm9-kontrolle', moduleId: 'm9', title: 'Kontrollkonzept und Begehung' },
+  { id: 'm9-feststellung', moduleId: 'm9', title: 'Feststellungen, Risiko, Sofortmassnahmen' },
+  { id: 'm9-bericht', moduleId: 'm9', title: 'Dokumentation und Kontrollbericht' },
+  { id: 'm9-nachverfolgung', moduleId: 'm9', title: 'Korrektur, Nachverfolgung, Eskalation' },
   { id: 'recht', moduleId: 'm2', title: 'Rechtsrahmen Gewässerschutz' },
   { id: 'entwaesserung', moduleId: 'm2', title: 'Baustellenentwässerung' },
   { id: 'alkalisch', moduleId: 'm2', title: 'Betonwaschwasser / alkalisches Wasser' },
