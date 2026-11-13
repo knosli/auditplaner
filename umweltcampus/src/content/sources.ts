@@ -534,6 +534,11 @@ export const SOURCES: Source[] = [
     note: 'In der App nur der Geltungsbereich allgemein; Mengenschwellen bewusst nicht genannt – mit der kantonalen Fachstelle klären.',
   },
   {
+    id: 'suva-staub', title: 'Suva: Informationen zu Quarzfeinstaub, Dieselabgasen und Staub am Arbeitsplatz (Grenzwerte am Arbeitsplatz)', short: 'Suva Staub', kind: 'vollzugshilfe',
+    issuer: 'Suva', url: 'https://www.suva.ch', version: 'Webinformation, Stand prüfen', lastChecked: null, scope: 'Arbeitnehmerschutz (Ganze Schweiz)', review: 'entwurf',
+    note: 'In der App nur allgemein: Quarzfeinstaub und Dieselabgase als Gefährdung der Mitarbeitenden, Massnahmen an der Quelle, Atemschutz. Grenzwerte am Arbeitsplatz nicht wiedergegeben.',
+  },
+  {
     id: 'praxis',
     title: 'Bewährte Praxis Baustellen-Umweltschutz (Zusammenfassung der App)',
     short: 'Bewährte Praxis',

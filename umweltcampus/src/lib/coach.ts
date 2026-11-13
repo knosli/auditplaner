@@ -127,6 +127,11 @@ export const GUIDING: Record<string, string[]> = {
   'm7-chemikalien': ['Wo wird gereinigt – und wohin geht das Wasser?', 'Was ist Sonderabfall, und wer holt es ab?', 'Wie lassen sich Reste vermeiden?'],
   'm7-havarie': ['Kann der Stoff in Schacht, Gewässer oder Boden gelangen? Dann sofort 118/117.', 'Was läuft gleichzeitig: stoppen, eindämmen, alarmieren?', 'Liegt das Material dort, wo es gebraucht wird?'],
   'm7-werkhof': ['Welche Anlagen, Bewilligungen und Pflichten gibt es – und wo sind die Nachweise?', 'Wann wurden Tank und Abscheider zuletzt geprüft bzw. geleert?', 'Was kommt mit dem Rückschub zurück?'],
+  'm5-grundlagen': ['Welche Schadstoffe entstehen hier – und wen treffen sie (Nachbarn, eigene Leute)?', 'Welche Stufe ist angeordnet?', 'Gilt das auch ohne Beschwerde? (Vorsorge)'],
+  'm5-staub': ['Lässt sich das Verfahren staubärmer machen?', 'Wird der Staub an der Quelle gebunden oder nur abgeschirmt?', 'Wohin läuft das Wasser vom Benetzen?'],
+  'm5-maschinen': ['Gibt es für jede Maschine einen Nachweis – auch für Miete und Subunternehmer?', 'Läuft etwas im Leerlauf?', 'Ginge es elektrisch?'],
+  'm5-transporte': ['Welche Fahrten lassen sich vermeiden?', 'Wo warten Lastwagen – mit laufendem Motor?', 'Ist die Strasse sauber?'],
+  'm5-planung': ['Ist die Stufe in ein Konzept nach Phasen übersetzt?', 'Steht das im LV und in den Subunternehmerverträgen?', 'Was sieht man beim Blick über die Grenze?'],
   konzept: ['Beantwortet das Konzept alle sechs Leitfragen?', 'Sind Zuständigkeiten und Kontrollen festgelegt?', 'Was ist Pflicht, was Empfehlung – und was kostet die Alternative?'],
 };
 

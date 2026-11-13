@@ -18,7 +18,7 @@ export const MODULES: ModuleMeta[] = [
     topics: ['Bodenfunktionen', 'Ober- und Unterboden', 'Bodenschutzrecht', 'Bodenverdichtung', 'Befahrbarkeit und Bodenfeuchte', 'Bodenabtrag', 'Bodendepots', 'Rekultivierung', 'Erosion', 'Belasteter Boden', 'Bodenschutz in der AVOR', 'Bodenkundliche Baubegleitung', 'Grenzen der eigenen Fachkompetenz'],
   },
   {
-    id: 'm5', no: 5, title: 'Luftreinhaltung', short: 'Luft', pathOrder: 9, status: 'in_entwicklung',
+    id: 'm5', no: 5, title: 'Luftreinhaltung', short: 'Luft', pathOrder: 9, status: 'verfuegbar',
     topics: ['Luftschadstoffe', 'Baustellenstaub', 'Staubintensive Arbeiten', 'Maschinenemissionen', 'Anforderungen an Baumaschinen', 'Partikelfilter', 'Staubreduktion', 'Transporte', 'Rückbau und Erdbau', 'Planung und Kontrolle'],
   },
   {
@@ -89,6 +89,11 @@ export const TOPICS: Topic[] = [
   { id: 'm7-chemikalien', moduleId: 'm7', title: 'Bauchemikalien, Reinigung, Entsorgung' },
   { id: 'm7-havarie', moduleId: 'm7', title: 'Havariekonzept und Alarmierung' },
   { id: 'm7-werkhof', moduleId: 'm7', title: 'Werkhof, Tankanlagen, Kontrollen' },
+  { id: 'm5-grundlagen', moduleId: 'm5', title: 'Luftschadstoffe und Rechtsrahmen' },
+  { id: 'm5-staub', moduleId: 'm5', title: 'Staub an der Quelle' },
+  { id: 'm5-maschinen', moduleId: 'm5', title: 'Baumaschinen und Nachweise' },
+  { id: 'm5-transporte', moduleId: 'm5', title: 'Transporte, Rückbau, Aufbereitung' },
+  { id: 'm5-planung', moduleId: 'm5', title: 'Massnahmenstufen planen und kontrollieren' },
   { id: 'recht', moduleId: 'm2', title: 'Rechtsrahmen Gewässerschutz' },
   { id: 'entwaesserung', moduleId: 'm2', title: 'Baustellenentwässerung' },
   { id: 'alkalisch', moduleId: 'm2', title: 'Betonwaschwasser / alkalisches Wasser' },

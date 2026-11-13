@@ -331,6 +331,20 @@ Offene Massnahmen der letzten Begehung mit Status.
     ],
     sources: ['gschg', 'kvu-lagerung', 'veva', 'praxis'],
   },
+  {
+    id: 'cl-luft-baustelle', category: 'checkliste', moduleId: 'm5',
+    title: 'Luftreinhaltung auf der Baustelle',
+    summary: 'Kurzcheck für Staub, Maschinen und Transporte – für Stufe A und B auf die Bauphase zuschneiden.',
+    tags: ['Luft', 'Staub', 'Partikelfilter', 'Massnahmenstufe', 'Checkliste', 'Transporte'],
+    items: [
+      { group: 'Grundlagen', points: ['Angeordnete Stufe bekannt (A/B)', 'Luftkonzept nach Phasen vorhanden', 'Massnahmen im LV bzw. Lücken gemeldet', 'Ansprechperson für Anwohnende auf der Bautafel'] },
+      { group: 'Staub', points: ['Staubintensive Arbeiten nass oder mit Absaugung', 'Benetzung funktioniert (Sprühnebel), Abwasser nicht in Meteorschächte', 'Abschirmung zur empfindlichen Seite', 'Schüttgut und Mulden abgedeckt', 'Pisten befestigt bzw. befeuchtet, Tempo begrenzt', 'Reinigung nass, kein Laubbläser'] },
+      { group: 'Maschinen', points: ['Maschinenliste mit Nachweisen, auch Miete und Subunternehmer', 'Nachweis vor dem ersten Einsatz geprüft', 'Motoren aus bei Wartezeiten', 'Elektrische Alternativen genutzt, wo Baustrom vorhanden', 'Kleingeräte mit Alkylatbenzin oder elektrisch'] },
+      { group: 'Transporte', points: ['Fahrten minimiert (Verwertung vor Ort, Bündelung)', 'Wartezone auf dem Areal', 'Reifenreinigung und Strassenreinigung', 'Ladung abgedeckt'] },
+      { group: 'Kontrolle', points: ['Blick über die Grundstücksgrenze und auf die Strasse', 'Bei Ausfall einer Massnahme: staubintensive Arbeit unterbrechen', 'Beschwerden aufgenommen und beantwortet', 'Kein offenes Verbrennen'] },
+    ],
+    sources: ['bafu-luft', 'lrv', 'praxis'],
+  },
 ];
 
 export const LIB_CATEGORY_LABEL: Record<LibraryEntry['category'], string> = {

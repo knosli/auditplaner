@@ -288,6 +288,40 @@ export function IlluStore(_: Props) {
   );
 }
 
+/** Modul 5: Staub an der Quelle binden */
+export function IlluAir(_: Props) {
+  return (
+    <Paper label="Schema: Luftreinhaltung beim Abbruch. Ein Bagger mit Zange bricht ab, ein Sprühnebel bindet den Staub an der Quelle, eine Staubschutzwand schirmt das Schulhaus ab, der Lastwagen wartet mit abgestelltem Motor, die Strasse wird nass gereinigt.">
+      <path d="M24 220h432v50H24z" fill="#cfd6d2" />
+      <path d="M24 220h432" stroke="#9aa6a3" strokeWidth="2" />
+      {/* Altbau im Abbruch */}
+      <path d="M50 220V120h80l-14 30 10 20-8 50" fill="#e4ebe6" stroke="#9db7b0" strokeWidth="2" />
+      {/* Bagger */}
+      <rect x="150" y="186" width="56" height="26" rx="4" fill="#e5aa63" />
+      <rect x="146" y="210" width="64" height="10" rx="5" fill="#2d4c48" />
+      <path d="M190 188l-20-46-26 2" stroke="#d29a55" strokeWidth="7" fill="none" strokeLinecap="round" />
+      <path d="M140 140l-8 10M140 150l-8-2" stroke="#2d4c48" strokeWidth="4" strokeLinecap="round" />
+      {/* Sprühnebel */}
+      <rect x="226" y="196" width="26" height="24" rx="4" fill="#167b70" />
+      <path d="M232 194l-40-44" stroke="#167b70" strokeWidth="4" />
+      {[0, 1, 2, 3, 4, 5].map((i) => <circle key={i} cx={146 + (i % 3) * 12} cy={128 + Math.floor(i / 3) * 12} r="3" fill="#7aa9c4" opacity=".8" />)}
+      <T x={186} y={104} anchor="middle" s={10} c="#0f5a52">Sprühnebel an der Quelle</T>
+      {/* Staubschutzwand */}
+      <rect x="282" y="118" width="10" height="102" fill="#9db7b0" />
+      <T x={287} y={110} anchor="middle" s={9}>Wand</T>
+      {/* Schulhaus */}
+      <path d="M318 220V140l50-26 50 26v80z" fill="#fff2de" stroke="#e5aa63" strokeWidth="2" />
+      <rect x="334" y="160" width="20" height="18" fill="#a7c4c4" /><rect x="382" y="160" width="20" height="18" fill="#a7c4c4" />
+      <T x={368} y={208} anchor="middle" s={10}>Schule</T>
+      {/* Lastwagen Motor aus */}
+      <rect x="60" y="232" width="70" height="22" rx="3" fill="#5f8f88" />
+      <circle cx="76" cy="258" r="6" fill="#2d4c48" /><circle cx="116" cy="258" r="6" fill="#2d4c48" />
+      <T x={150} y={250} s={9} w={600} c="#56645e">Motor aus</T>
+      <T x={240} y={44} anchor="middle" s={10} w={500} c="#56645e">Vermeiden · an der Quelle binden · abschirmen · Strasse nass reinigen</T>
+    </Paper>
+  );
+}
+
 export function ModuleIllustration({ moduleId }: { moduleId: string }) {
   switch (moduleId) {
     case 'm2': return <IlluWater />;
@@ -297,6 +331,7 @@ export function ModuleIllustration({ moduleId }: { moduleId: string }) {
     case 'm9': return <IlluInspect />;
     case 'm10': return <IlluCycle />;
     case 'm7': return <IlluStore />;
+    case 'm5': return <IlluAir />;
     default: return <IlluLaw />;
   }
 }

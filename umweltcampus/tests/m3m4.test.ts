@@ -7,7 +7,7 @@ import { emptyState, normalizeState } from '../src/lib/state';
 import { isLegacyAnswer, isLegacyExam, isLegacyRun } from '../src/lib/versioning';
 import { moduleRequirements } from '../src/lib/learning';
 
-for (const mod of ['m3', 'm4', 'm7', 'm8', 'm9', 'm10']) {
+for (const mod of ['m3', 'm4', 'm5', 'm7', 'm8', 'm9', 'm10']) {
   describe(`Modul ${mod}: Umfang und Struktur`, () => {
     test('verfügbar, 5 Lektionen in Reihenfolge', () => {
       expect(MODULES.find((m) => m.id === mod)!.status).toBe('verfuegbar');
@@ -30,7 +30,7 @@ for (const mod of ['m3', 'm4', 'm7', 'm8', 'm9', 'm10']) {
       }
     });
     test('alle Fragen tragen eine gültige Bewertungsfassung', () => {
-      for (const q of QUESTIONS.filter((x) => x.moduleId === mod)) expect(mod === 'm7' || mod === 'm9' || mod === 'm10' ? [5] : mod === 'm8' ? [4, 5] : [3, 4]).toContain(q.rev);
+      for (const q of QUESTIONS.filter((x) => x.moduleId === mod)) expect(['m5', 'm7', 'm9', 'm10'].includes(mod) ? [5] : mod === 'm8' ? [4, 5] : [3, 4]).toContain(q.rev);
     });
     test('kritische Optionen geben 0 Punkte', () => {
       for (const q of QUESTIONS.filter((x) => x.moduleId === mod && x.type === 'best')) {
@@ -310,5 +310,31 @@ describe('Modul 7: Wassergefährdende und umweltgefährliche Stoffe', () => {
     expect(txt).not.toMatch(/\d+\s*%\s*(des|der)\s*(Volumen|grössten)/i);
     expect(txt).toContain('die App nennt bewusst keine Zahlen');
     for (const l of LESSONS.filter((x) => x.moduleId === 'm7')) expect(l.review).toBe('entwurf');
+  });
+});
+
+describe('Modul 5: Luftreinhaltung', () => {
+  const st = (id: string) => S.get('sim-k')!.stages.find((x) => x.id === id)!;
+  test('Fall K: Weiterarbeiten trotz unwirksamer Benetzung ist kritisch', () => {
+    expect(evaluateStage(st('k1'), { stageId: 'k1', selected: ['o2'] })).toMatchObject({ score: 0, critical: true });
+    expect(evaluateStage(st('k1'), { stageId: 'k1', selected: ['o1'] })).toMatchObject({ score: 1, critical: false });
+    expect(evaluateStage(st('k3'), { stageId: 'k3', selected: ['m1', 'm2', 'm5'] })).toMatchObject({ score: 0, critical: true });
+  });
+  test('Fall K: Abbruch an der Schulseite erst nach den Massnahmen', () => {
+    expect(evaluateRank(st('k4'), ['n2', 'n1', 'n4', 'n3', 'n5'])).toMatchObject({ score: 1, critical: false });
+    expect(evaluateRank(st('k4'), ['n3', 'n1', 'n2', 'n4', 'n5']).score).toBeLessThan(1);
+  });
+  test('Kritische Abwägungen geben 0 Punkte', () => {
+    const sc = (qid: string, oid: string) => scoreQuestion(QUESTIONS.find((q) => q.id === qid)!, [oid]);
+    expect(sc('m5-d02', 'c')).toBe(0);
+    expect(sc('m5-d03', 'a')).toBe(0);
+    expect(sc('m5-d04', 'd')).toBe(0);
+    expect(sc('m5-d05', 'a')).toBe(0);
+  });
+  test('Keine Grenzwerte, Baujahre oder Stufenschwellen; Schwelle 18 kW als offen gekennzeichnet', () => {
+    const txt = JSON.stringify(LESSONS.filter((l) => l.moduleId === 'm5'));
+    expect(txt).not.toMatch(/µg|mg\/m|Baujahr (19|20)\d\d/);
+    expect(txt).toContain('Wortlaut der LRV prüfen');
+    for (const l of LESSONS.filter((x) => x.moduleId === 'm5')) expect(l.review).toBe('entwurf');
   });
 });
