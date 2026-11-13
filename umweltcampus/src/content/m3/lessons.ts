@@ -30,7 +30,7 @@ Was ist daran falsch – und was ist es dem Unternehmen wert, das zu ändern?` }
 
 **Übrige Bauabfälle** werden auf der Baustelle **getrennt** – nur wo das betrieblich nicht geht, in einer Sortieranlage.
 
-**Deponien gibt es in fünf Typen (A–E)**: A für unverschmutzten Aushub, B für mineralische Abfälle mit geprüften Werten, bis E für stärker belastete Abfälle. Je höher der Typ, desto teurer.` },
+**Deponien gibt es in fünf Typen (A–E)**: A für unverschmutzten Aushub, B für mineralische Abfälle mit geprüften Werten, bis E für stärker belastete Abfälle. Je höher der Typ, desto teurer. Die Stichworte sind vereinfacht – welche Abfälle eine Deponie annehmen darf, bestimmen die Annahmekriterien und Grenzwerte in Anhang 5 VVEA und die Analysen.` },
       { id: 'm3-l1-explain', kind: 'explain', title: 'Abfallbegriff, Grundsätze, Kategorien', text: `### Was ist Abfall?
 Abfälle sind bewegliche Sachen, deren sich der Inhaber entledigt oder deren Entsorgung im öffentlichen Interesse geboten ist (Art. 7 Abs. 6 USG, sinngemäss). Abbruchmaterial, Verpackungen, Restbeton, Aushub, Schlamm – alles Abfall im Rechtssinn, auch wenn es später wieder verwertet wird.
 
@@ -154,8 +154,15 @@ Bleihaltige Farben und Rostschutz, Bleirohre; dazu z. B. künstliche Mineralfase
 
 ### Pflichten im Überblick
 - **Abfallrecht**: Bei zu erwartenden Bauschadstoffen verlangt die Behörde Angaben zur Entsorgung (Art. 16 VVEA, bestätigt). Kantonale Checklisten raten bei älteren Gebäuden grundsätzlich zur Schadstoffermittlung.
-- **Arbeitssicherheit**: Der Unternehmer muss bei Verdacht die Gefahren ermitteln und Schutzmassnahmen treffen (Bauarbeitenverordnung; Kosten trägt laut kantonaler Unterlage die Bauherrschaft). Für Asbest gilt die **EKAS-Richtlinie 6503** (aktuelle Fassung seit 27. Juni 2025, bestätigt).
-- **Suva-anerkannte Firmen**: Arbeiten mit erheblicher Freisetzung von Asbestfasern dürfen nur sie ausführen; Sanierungen sind der Suva mindestens 14 Tage vor Beginn zu melden (laut Suva, bestätigt).
+- **Arbeitssicherheit**: Besteht Verdacht auf besonders gesundheitsgefährdende Stoffe wie Asbest oder PCB, sind die Gefahren vor Beginn der Arbeiten zu ermitteln und die Schutzmassnahmen festzulegen (Art. 3 Bauarbeitenverordnung, BauAV – laut Suva und Fachunterlagen). Wer die Kosten der Ermittlung trägt, richtet sich nach Werkvertrag und Verfahren; in der Praxis beauftragt meist die Bauherrschaft die Schadstoffermittlung. Für Asbest gilt die **EKAS-Richtlinie 6503** (Fassung vom 27. Juni 2025, bestätigt).
+- **Suva-anerkannte Firmen**: Arbeiten, bei denen erheblich Asbestfasern freigesetzt werden können, dürfen nur von der Suva anerkannte Asbestsanierungsunternehmen ausführen (Art. 82 BauAV). Solche Sanierungen sind der Suva mindestens 14 Tage vor Beginn zu melden (laut Suva; die Quellen ordnen die Meldepflicht Art. 86 BauAV zu – Artikel am Original prüfen). Nicht jede Tätigkeit an asbesthaltigem Material fällt darunter – welche Arbeiten mit welchen Schutzmassnahmen zulässig sind, regelt die EKAS-Richtlinie 6503.
+
+### Entscheidungsweg bei Asbestverdacht
+1. **Abklären**: Ist das Material untersucht? Baujahr vor 1990 ist ein Verdachtsindikator, kein Befund.
+2. **Tätigkeit bestimmen**: Was genau soll mit dem Material geschehen (entfernen, bohren, schneiden, überdecken)?
+3. **Risiko einstufen**: Kann es zu erheblicher Faserfreisetzung kommen? Beurteilung gemäss EKAS 6503 bzw. durch Fachperson.
+4. **Anerkennung und Meldung**: Bei erheblicher Freisetzung Suva-anerkannte Firma, Meldung an die Suva.
+5. **Entsorgung**: als Sonderabfall mit Begleitschein; Freigabe nach Sanierung.
 
 §> Bauschadstoffe betreffen Umwelt- und Arbeitsrecht zugleich. Hier verbinden sich Ihre beiden Fachgebiete – Arbeitssicherheit und Umwelt.` },
       { id: 'm3-l2-explain-2', kind: 'explain', title: 'Rückbau richtig planen', text: `### Reihenfolge eines geordneten Rückbaus
@@ -206,7 +213,7 @@ Die Schadstoffsanierung ist oft der kritische Pfad eines Umbaus: Ermittlung, Off
 ### 7. Kommunikation
 Mitarbeitende und Anwohnende reagieren auf das Wort «Asbest» oft mit Angst. Sachliche Information (was wurde gefunden, wie wird geschützt, wer ist Ansprechperson) schafft Vertrauen. Betroffene Mitarbeitende nach einer möglichen Exposition nicht allein lassen: informieren, dokumentieren, bei Bedarf arbeitsmedizinisch abklären lassen.
 
-§> EKAS 6503 (Fassung seit 27.6.2025), Suva-Anerkennung und Meldung 14 Tage bestätigt (Suva/EKAS). Verbot 1990 bestätigt. Einzelfragen zum Arbeitsschutz nach der aktuellen Richtlinie bzw. mit der Suva klären.` },
+§> EKAS 6503 (Fassung vom 27.6.2025), Suva-Anerkennung (Art. 82 BauAV) und Meldung 14 Tage bestätigt (Suva/EKAS); Ermittlungspflicht Art. 3 BauAV laut Suva/Fachunterlagen. Verbot 1990 bestätigt. Einzelfragen zum Arbeitsschutz nach der aktuellen Richtlinie bzw. mit der Suva klären.` },
       { id: 'm3-l2-decision', kind: 'decision', title: 'Entscheidungsaufgabe', questionId: 'm3-q08' },
       { id: 'm3-l2-abw', kind: 'decision', title: 'Abwägung: Schwarzer Kleber unter dem Boden', questionId: 'm3-d02' },
       { id: 'm3-l2-task', kind: 'sitetask', title: 'Baustellenaufgabe: Schadstoffbericht lesen', taskId: 'm3-t2' },
@@ -256,9 +263,18 @@ Dazu gehören Betonabbruch, Mischabbruch (Mauerwerk, Beton, Keramik), Strassenau
 Art. 20 VVEA (bestätigt):
 - Asphalt mit **höchstens 250 mg PAK pro kg** soll möglichst vollständig als Rohstoff für Baustoffe verwertet werden.
 - Asphalt mit **mehr als 250 mg PAK pro kg** darf **nicht verwertet** werden.
-Für den Übergang galten Sonderregeln (Art. 52 VVEA); die Fristen werden in den Quellen unterschiedlich dargestellt – **aktuelle Fassung auf Fedlex prüfen**. Stark belasteter Asphalt wird thermisch behandelt bzw. auf einer Deponie des zulässigen Typs abgelagert.
+### Übergangsbestimmungen (Art. 52 VVEA, Fassung 2022)
+| Zeitraum | Ausbauasphalt > 250 mg PAK/kg | Ausbauasphalt ≤ 250 mg PAK/kg |
+|---|---|---|
+| bis 31.12.2025 | Verwertung bei Bauarbeiten unter Bedingungen noch zulässig (Abs. 1) | verwerten |
+| 1.1.2026 – 31.12.2027 | **keine Verwertung mehr**; Ablagerung auf Deponie Typ E noch zulässig (Abs. 2) | verwerten; Ablagerung auf Deponie Typ B noch zulässig (Abs. 3) |
+| ab 1.1.2028 | keine Verwertung; Ablagerung nach Ablauf der Übergangsfrist nicht mehr gestützt auf Abs. 2 – Entsorgung z. B. thermisch, gemäss Kanton | verwerten |
 
-§> VVEA Art. 20 (250-mg/kg-Grenze) bestätigt; Übergangsfristen widersprüchlich in den Quellen – nicht verwenden ohne Prüfung der aktuellen Fassung.` },
+Heute (November 2026) heisst das: Asphalt über 250 mg PAK/kg darf nicht mehr verwertet werden; bis Ende 2027 ist die Ablagerung auf einer Deponie Typ E noch möglich. Ältere kantonale Merkblätter mit anderen Daten stammen meist aus der Zeit vor der Änderung von 2022.
+
+> Quelle: VVEA Art. 52 Abs. 1–3 in der Fassung von 2022 (AS 2022 161), bestätigt über die Bundespublikation und eine externe Prüfung anhand einer Lesefassung vom 1.8.2026. Die Fristen gelten unabhängig vom Kanton; die Entsorgungswege ab 2028 klärt der Kanton.
+
+§> VVEA Art. 20 (250-mg/kg-Grenze) und Art. 52 Abs. 1–3 (Fristen 31.12.2025 bzw. 31.12.2027) bestätigt (AS 2022 161, Lesefassung 1.8.2026).` },
       { id: 'm3-l3-example', kind: 'example', title: 'Beispiel aus dem Hochbau: Recyclingbeton im Neubau', context: 'Hochbau', text: `Für einen Schulhausneubau schreibt die Gemeinde Recyclingbeton für Innenwände und Decken vor. Der Betonabbruch des Vorgängerbaus wird vor Ort sortenrein getrennt und im Recyclingwerk zu Granulat aufbereitet, das in den neuen Beton zurückfliesst.
 
 **Lernpunkt**: Saubere Trennung beim Rückbau ist die Voraussetzung für hochwertige Verwertung. Mischabbruch eignet sich nur eingeschränkt.` },
@@ -305,7 +321,7 @@ Recyclingbaustoffe sind oft günstiger als Primärmaterial und sparen Deponierau
         'Mineralische Bauabfälle möglichst vollständig verwerten.',
         'Recyclingbaustoffe mit Einsatzgrenzen (Grundwasser, Schutzzonen) gemäss Vollzugshilfe.',
         'Ausbauasphalt: ≤ 250 mg PAK/kg verwerten; > 250 mg/kg nicht verwerten (Art. 20 VVEA).',
-        'Übergangsfristen in der aktuellen Fassung prüfen.',
+        'Übergang (Art. 52): Verwertung > 250 mg/kg nur bis 31.12.2025; Deponie Typ E bzw. B noch bis 31.12.2027.',
         'Qualität beginnt beim sortenreinen, schadstofffreien Rückbau.',
       ] },
       { id: 'm3-l3-sources', kind: 'sources', title: 'Quellen und weiterführende Informationen', sourceIds: ['vvea', 'bafu-mineral', 'bafu-bauabfaelle'] },
@@ -343,7 +359,7 @@ Das BAFU hat dazu das Vollzugshilfe-Modul «Aushubmaterial» veröffentlicht.
 Hinweise sind: frühere Nutzung (Garage, Tankstelle, Gewerbe, Schiessanlage, Deponie), Eintrag im **Kataster der belasteten Standorte** des Kantons, Geruch, Verfärbung, Fremdstoffe (Bauschutt, Schlacke, Asche). Dann wird das Material untersucht und je nach Gehalt als schwach oder stark verschmutzt eingestuft, mit entsprechenden Entsorgungswegen.
 
 ### Belastete Standorte
-Die **Altlasten-Verordnung** (AltlV) regelt, wie belastete Standorte erfasst, untersucht und – falls sie Altlasten sind – saniert werden (sinngemäss). Für Bauprojekte heisst das: Bauen auf einem Kataster-Standort ist möglich, wenn die Abklärungen vor Baubeginn erfolgen und Aushub sowie Baugrubenwasser korrekt behandelt werden. Die zuständige kantonale Fachstelle begleitet das.
+Die **Altlasten-Verordnung** (AltlV) regelt, wie belastete Standorte erfasst, untersucht und – falls sie Altlasten sind – saniert werden. Art. 3 AltlV regelt Bauvorhaben auf belasteten Standorten: Sie sind zulässig, wenn der Standort nicht sanierungsbedürftig ist und durch das Vorhaben nicht wird, oder wenn die Sanierung nicht wesentlich erschwert wird bzw. gleichzeitig erfolgt (sinngemäss, laut BAFU-Vollzugshilfe «Bauvorhaben und belastete Standorte» und Kanton ZH). Für die Baustelle heisst das: Bauen auf einem Kataster-Standort ist möglich, wenn die Abklärungen vor Baubeginn erfolgen und Aushub sowie Baugrubenwasser korrekt behandelt werden. Die zuständige kantonale Fachstelle begleitet das.
 
 §> VVEA Art. 19 und Anhang 3 bestätigt; AltlV sinngemäss. Grenzwerte und Einstufung im Original bzw. mit Fachperson.` },
       { id: 'm3-l4-example', kind: 'example', title: 'Beispiel aus dem Hochbau: Neubau auf Gewerbeareal', context: 'Hochbau', text: `Ein Wohnbau entsteht auf einem Areal, das als belasteter Standort eingetragen ist (ehemalige Schreinerei mit Lackiererei). Vor Baubeginn untersucht ein Altlastenbüro den Untergrund und erstellt ein Aushubkonzept: Triage in Zonen, Beprobung während des Aushubs, Zwischenlager auf dichter Fläche mit Abdeckung, Entsorgungswege nach Belastung.
@@ -365,14 +381,14 @@ Bei Verdacht wird nicht «nach Gefühl» geladen. Bewährt ist:
 Zwischenlager für Abfälle können bewilligungspflichtig sein (VVEA, kantonaler Vollzug). Auch ohne Bewilligungspflicht gilt: kein Lager im Gewässerraum oder in Schutzzonen, Schutz vor Auswaschung, klare Kennzeichnung.
 
 ### 3. Kosten und Risiken
-Die Kosten für verschmutzten Aushub hängen stark von der Kategorie ab. Unerwartet verschmutzter Aushub ist eines der grössten Kostenrisiken im Tiefbau. Werkverträge sollten regeln, wer dieses Risiko trägt und wie Mehrmengen abgerechnet werden – meist die Bauherrschaft als Eigentümerin des Baugrunds.
+Die Kosten für verschmutzten Aushub hängen stark von der Kategorie ab. Unerwartet verschmutzter Aushub ist eines der grössten Kostenrisiken im Tiefbau. Wer die Mehrkosten trägt, hängt vom Werkvertrag und vom Sachverhalt ab (Baugrundrisiko, Vertragsklauseln, Nachträge); im öffentlichen Recht kommen die Kostenregeln des Altlastenrechts dazu. Für die Unternehmung heisst das: Verdacht sofort melden, Mehraufwand dokumentieren, Nachtrag anmelden – und das Thema schon in der Offerte ansprechen.
 
 ### 4. Was der Polier wissen muss
 - Woran erkennt er Verdacht?
 - Wen ruft er an?
 - Wohin mit dem Material bis zur Klärung?
 - Was darf er auf keinen Fall (weiterladen, mit sauberem Material mischen)?
-Das Mischen von belastetem mit sauberem Material, um Grenzwerte zu unterschreiten, ist unzulässig (Vermischungsverbot, sinngemäss).
+Das Mischen von belastetem mit sauberem Material, um Grenzwerte zu unterschreiten, ist unzulässig (Vermischungsverbot; kantonale Unterlagen verweisen auf Art. 9 VVEA – Wortlaut am Original prüfen).
 
 ### 5. Grenzen der eigenen Kompetenz
 Die Beurteilung von Altlasten und die Einstufung von Aushub gehören zu spezialisierten Fachleuten (Altlastenbüros). Ihre Aufgabe als Umweltbeauftragter ist, Verdacht früh zu erkennen, die Fachperson beizuziehen und die Abläufe auf der Baustelle zu organisieren.
@@ -383,7 +399,7 @@ Halten Sie jeden Verdachtsfall mit Datum, Ort (Plan, Koordinaten, Tiefe), Fotos,
 ### 7. Verbindung zu Gewässer- und Bodenschutz
 Belasteter Aushub betrifft nicht nur das Abfallrecht: Regenwasser aus Zwischenlagern und Baugrubenwasser können Schadstoffe ins Gewässer tragen (Modul 2), und belasteter Oberboden wird nach den Regeln des Bodenschutzes beurteilt (Modul 4). Ein gutes Aushubkonzept denkt diese Bereiche zusammen.
 
-§> VVEA und AltlV gesetzlich verbindlich; Vermischungsverbot und Bewilligungspflicht für Zwischenlager sinngemäss bzw. laut kantonaler Unterlage – im Einzelfall prüfen.` },
+§> VVEA und AltlV gesetzlich verbindlich; Art. 3 AltlV über BAFU-/kantonale Unterlagen bestätigt. Vermischungsverbot (Art. 9 VVEA laut kantonaler Unterlage) und Bewilligungspflicht für Zwischenlager: genauen Artikel bzw. kantonales Recht im Einzelfall prüfen.` },
       { id: 'm3-l4-decision', kind: 'decision', title: 'Entscheidungsaufgabe', questionId: 'm3-q18' },
       { id: 'm3-l4-abw', kind: 'decision', title: 'Abwägung: Verdacht in der Baugrube', questionId: 'm3-d04' },
       { id: 'm3-l4-task', kind: 'sitetask', title: 'Baustellenaufgabe: Aushubkonzept für ein Garagenareal', taskId: 'm3-t4' },
@@ -443,12 +459,12 @@ Sie stellt dem Entsorgungskonzept die tatsächlichen Mengen gegenüber: je Frakt
 5. **Ablagern**: der letzte Weg.
 
 ### Rechtliche Entwicklung
-Das Parlament hat im März 2024 die parlamentarische Initiative 20.433 «Schweizer Kreislaufwirtschaft stärken» mit einer Revision von USG, Energiegesetz und Beschaffungsrecht verabschiedet; das USG erhält ein neues Kapitel zur Schonung der natürlichen Ressourcen und Stärkung der Kreislaufwirtschaft (bestätigt). Wann welche Bestimmungen in Kraft treten und wie die Verordnungen sie konkretisieren, ist zu verfolgen (Umweltrechtskataster, Modul 1).
+Das Parlament hat im März 2024 die parlamentarische Initiative 20.433 «Schweizer Kreislaufwirtschaft stärken» mit einer Revision von USG, Energiegesetz und Beschaffungsrecht verabschiedet; das USG erhält ein neues Kapitel zur Schonung der natürlichen Ressourcen und Stärkung der Kreislaufwirtschaft (bestätigt). Der Bundesrat hat die neuen Bestimmungen **grösstenteils auf den 1. Januar 2025 in Kraft gesetzt**; die Bestimmungen zum Littering folgen später (Bundesrat, 13.11.2024). Die Ausführungsbestimmungen in den Verordnungen (u. a. VVEA) werden gestaffelt angepasst – deshalb im Umweltrechtskataster (Modul 1) zwischen geltendem Gesetz, bereits geänderten und noch ausstehenden Verordnungsbestimmungen unterscheiden.
 
 ### Für die Baustelle
 Wiederverwendung braucht **Zeit im Rückbau** (sorgfältiger Ausbau), **Lagerplatz**, **Abnehmer** und eine **Bauherrschaft**, die mitzieht. Sie ist heute meist eine freiwillige oder vertraglich vereinbarte Leistung.
 
-§> Revision USG (Pa.Iv. 20.433) vom Parlament verabschiedet (bestätigt); Inkrafttreten und Verordnungsinhalte nicht bestätigt – auf Fedlex/BAFU verfolgen.` },
+§> Revision USG (Pa.Iv. 20.433): Schlussabstimmung 15.3.2024, grösstenteils in Kraft seit 1.1.2025 (bestätigt, Bundesrat). Verordnungsänderungen gestaffelt – Stand jeweils auf Fedlex/BAFU prüfen.` },
       { id: 'm3-l5-example', kind: 'example', title: 'Beispiel aus dem Hochbau: Bauteilbörse', context: 'Hochbau', text: `Beim Rückbau eines Bürogebäudes werden vorab Stahlträger, Brandschutztüren, Lavabos und Teppichfliesen ausgebaut und über eine Bauteilbörse vermittelt bzw. im Neubau wiederverwendet. Der Rückbau dauert zwei Wochen länger; die Bauherrschaft hatte das im Auftrag vorgesehen.
 
 **Lernpunkt**: Wiederverwendung funktioniert, wenn sie früh geplant und bezahlt wird – nicht als Improvisation im Rückbau.` },
@@ -500,7 +516,7 @@ Im Umweltmanagement nach ISO 14001 sind Abfälle meist ein bedeutender Umweltasp
         'Begleitscheine für Sonderabfälle, Liefer-/Waagscheine für alle anderen Abfälle – laufend sammeln.',
         'Entsorgungsbilanz: Menge, Weg, Verwertungsanteil, Abweichungen zum Konzept.',
         'Hierarchie: vermeiden – wiederverwenden – verwerten – energetisch nutzen – ablagern.',
-        'USG-Revision zur Kreislaufwirtschaft 2024 verabschiedet; Umsetzung verfolgen.',
+        'USG-Revision zur Kreislaufwirtschaft grösstenteils seit 1.1.2025 in Kraft; Verordnungen folgen gestaffelt.',
         'Kennzahlen nur, wenn sie zur Steuerung genutzt werden.',
       ] },
       { id: 'm3-l5-sources', kind: 'sources', title: 'Quellen und weiterführende Informationen', sourceIds: ['veva', 'vvea', 'usg-kreislauf', 'bafu-bauabfaelle'] },

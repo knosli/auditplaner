@@ -189,7 +189,7 @@ export const M4_CARDS: Card[] = [
   { id: 'm4-c09', moduleId: M, topic: 'm4-abtrag', level: 1, front: 'Gutes Bodendepot?', back: 'Getrennt, **locker**, nicht befahren, **begrenzte Höhe**, rasch **begrünt**, gepflegt, beschriftet.', sources: ['bafu-boden-bauen'] },
   { id: 'm4-c10', moduleId: M, topic: 'm4-abtrag', level: 2, front: 'Warum Folgebewirtschaftung?', back: 'Rekultivierter Boden ist anfangs **instabil**; Wurzeln und Bodenleben bauen das Gefüge wieder auf.', sources: ['bafu-boden-bauen'] },
   { id: 'm4-c11', moduleId: M, topic: 'm4-abtrag', level: 2, front: 'Boden mit invasiven Neophyten?', back: 'Getrennt behandeln; so verwerten/entsorgen, dass sie sich **nicht weiterverbreiten** (FrSV sinngemäss, kantonale Merkblätter).', sources: ['frsv'] },
-  { id: 'm4-c12', moduleId: M, topic: 'm4-belastung', level: 1, front: 'Richt-, Prüf-, Sanierungswert?', back: '**Richtwert**: Ursachen angehen. **Prüfwert**: Gefährdung abklären, Nutzung einschränken. **Sanierungswert**: bestimmte Nutzungen verboten.', sources: ['vbbo'] },
+  { id: 'm4-c12', moduleId: M, topic: 'm4-belastung', level: 1, front: 'Richt-, Prüf-, Sanierungswert?', back: '**Richtwert**: Ursachen angehen. **Prüfwert**: Gefährdung untersuchen, nur bei Gefährdung Nutzung einschränken. **Sanierungswert**: bestimmte Nutzungen verboten.', sources: ['vbbo'] },
   { id: 'm4-c13', moduleId: M, topic: 'm4-belastung', level: 1, front: 'Typische Verdachtsflächen für Bodenbelastung?', back: 'Strassenränder, Bahnböschungen, **Gärten**, Rebberge/Obstanlagen, **Schiessanlagen**, Industrie, Auffüllungen.', sources: ['vbbo'] },
   { id: 'm4-c14', moduleId: M, topic: 'm4-belastung', level: 2, front: 'Prüfperimeter – was tun?', back: 'Vor der Verschiebung **analysieren** lassen; je nach Ergebnis verwerten, eingeschränkt verwerten oder entsorgen.', sources: ['kanton-boden', 'bafu-boden-verwertung'] },
   { id: 'm4-c15', moduleId: M, topic: 'm4-planung', level: 1, front: 'Aufgaben der BBB?', back: 'Bodenschutzkonzept, Instruktion, **Freigaben**, Kontrolle, Abnahme – wenn Bewilligung/Kanton es verlangen.', sources: ['kanton-boden'] },
@@ -199,7 +199,7 @@ export const M4_CARDS: Card[] = [
 
 // ---------- Baustellensimulation ----------
 export const M4_SCENARIO: Scenario = {
-  id: 'sim-h', code: 'H', moduleId: M, status: 'verfuegbar', rev: 3,
+  id: 'sim-h', code: 'H', moduleId: M, status: 'verfuegbar', rev: 4,
   title: 'Regenwoche auf der Leitungsbaustelle',
   setting: 'Tiefbau', level: 3, minutes: 15,
   topics: ['m4-verdichtung', 'm4-abtrag', 'm4-planung'],
@@ -218,7 +218,7 @@ export const M4_SCENARIO: Scenario = {
       options: [
         { id: 'o1', points: 2, text: 'Die Freigabe galt für die Bedingungen vom Freitag. Nach dem Regen keine Bodenarbeiten ohne neue Freigabe. Ich kläre das sofort mit der BBB; bis dahin Arbeiten auf der bestehenden Piste und im Graben.', feedback: 'Richtig: Freigaben hängen von der aktuellen Bodenfeuchte ab.' },
         { id: 'o2', points: 0, critical: true, text: 'Freigabe ist Freigabe – fangt an.', feedback: 'Kritischer Fehler: Bodenarbeiten bei nassem Boden ohne gültige Freigabe verletzen die Auflage und riskieren bleibende Verdichtung.', consequence: 'Die Lastwagen hinterlassen 30 cm tiefe Spuren; die BBB meldet den Vorfall der Fachstelle.' },
-        { id: 'o3', points: 1, text: 'Nur mit dem Raupenbagger abtragen, Lastwagen warten am Pistenende.', feedback: 'Teilweise: Besser als mit Lastwagen, aber ohne Freigabe trotzdem nicht zulässig.' },
+        { id: 'o3', points: 0, critical: true, text: 'Nur mit dem Raupenbagger abtragen, Lastwagen warten am Pistenende.', feedback: 'Kritischer Fehler: Auch ein Raupenbagger verdichtet nassen Boden. Ohne neue Freigabe der BBB sind Bodenarbeiten nach dem Regen nicht zulässig – die Maschinenwahl ersetzt die Freigabe nicht.', consequence: 'Der Unterboden im Arbeitsstreifen wird verdichtet; die BBB meldet den Verstoss gegen die Auflage.' },
       ],
     },
     {

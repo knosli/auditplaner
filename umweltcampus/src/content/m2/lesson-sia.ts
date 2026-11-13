@@ -93,7 +93,7 @@ Steht ein Projekt auf einer Parzelle im Kataster der belasteten Standorte oder z
 - **Gegenüber Planern**: nach der Begründung der Einstufung fragen; sie gehört ins Entwässerungskonzept.
 - **Grenzen**: Die App vermittelt Grundzüge. Für die Einstufung im Einzelfall brauchen Sie den Normtext oder den Fachspezialisten.
 
-§> Grundzüge der Norm öffentlich bestätigt (Wegleitung SIA, kantonale Unterlagen); Geltungsbereich des interkantonalen Merkblatts bestätigt. Details, die nur aus dem externen Prüfbericht stammen (z. B. Bauchemikalien als Kriterium, Korrigendum C3:2026), sind nicht selbst verifiziert.` },
+§> Grundzüge der Norm öffentlich bestätigt (Wegleitung SIA, kantonale Unterlagen); Geltungsbereich des interkantonalen Merkblatts bestätigt. Korrigendum SIA 431-C3:2026 (gültig ab 1.6.2026) ersetzt laut externer Prüfung Figuren 4 und 5 sowie Tabellen 9 und 13 – die App gibt diese Figuren und Tabellen nicht wieder; für Einstufung und Bemessung gilt die Norm inkl. Korrigendum. Laut Berner Schulungsunterlage gelten die Standardmassnahmen des Merkblatts auch auf Baustellen der Stufen 2 und 3.` },
     { id: 'm2-l7-decision', kind: 'decision', title: 'Entscheidungsaufgabe', questionId: 'm2-q44' },
     { id: 'm2-l7-abw', kind: 'decision', title: 'Abwägung: «Wie immer nach dem Merkblatt»', questionId: 'm2-d07' },
     { id: 'm2-l7-task', kind: 'sitetask', title: 'Baustellenaufgabe: Drei Projekte einstufen', taskId: 'm2-t7' },
@@ -122,7 +122,7 @@ export const M2_L7_QUESTIONS: Question[] = [
       { id: 'd', text: 'Sie schafft die Pflicht für Entwässerungskonzepte ab.' },
     ],
     correct: ['b'],
-    explanation: 'Die Ausgabe 2022 (gültig ab 1. August 2022) baut auf der Empfehlung von 1997 auf und ergänzt ein dreistufiges Verfahren: Stufe 1 Grundmassnahmen, Stufe 2 Risikobeurteilung, Stufe 3 Berechnungen mit Fachspezialist. Eine Norm ersetzt nie das Gesetz.',
+    explanation: 'Die Ausgabe 2022 (gültig ab 1. August 2022) baut auf der Empfehlung von 1997 auf und ergänzt ein dreistufiges Verfahren: Stufe 1 Grundmassnahmen, Stufe 2 Risikobeurteilung, Stufe 3 Berechnungen mit Fachspezialist. Eine Norm ersetzt nie das Gesetz. Seit 1.6.2026 gilt das Korrigendum C3:2026, das u. a. Figuren und Tabellen zur Einstufung ersetzt (laut externer Prüfung) – Einstufung immer mit der aktuellen Normfassung.',
     commonErrors: ['Norm mit Gesetz verwechseln.', 'Annahme, die Norm gelte nur im Tiefbau.'],
     sources: ['sia431', 'sia-wegleitung'],
   },
@@ -167,7 +167,7 @@ export const M2_L7_QUESTIONS: Question[] = [
       { id: 'd', text: 'Nur für Baustellen in Schutzzonen' },
     ],
     correct: ['b'],
-    explanation: 'Das Merkblatt deckt herkömmliche Baustellen ab (Stufe 1). Für komplexere Vorhaben verweist es auf die Norm SIA 431.',
+    explanation: 'Das Merkblatt nennt als Geltungsbereich Baustellen der Stufe 1 (bestätigt am Merkblatt bzw. kantonalen Fassungen). Seine Standardmassnahmen werden in der Praxis auch auf Baustellen der Stufen 2 und 3 angewendet – dort genügen sie aber allein nicht. Für komplexere Vorhaben verweist es auf die Norm SIA 431.',
     commonErrors: ['Merkblatt als vollständige Lösung für jede Baustelle verwenden.'],
     sources: ['ikm-vsa'],
   },

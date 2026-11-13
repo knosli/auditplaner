@@ -148,10 +148,10 @@ Die Behörde ordnet Massnahmen an (z. B. Sofortmassnahmen, Sanierung) und überb
 - **USG Art. 60 (Vergehen)**: vorsätzliche Verstösse u. a. gegen zentrale Vorschriften – Freiheitsstrafe bis drei Jahre oder Geldstrafe (bestätigt).
 - **USG Art. 61 (Übertretungen)**: Busse bis 20 000 Franken; Fahrlässigkeit ist strafbar (bestätigt).
 - **GSchG Art. 70/71** (Modul 2).
-- Bestraft werden natürliche Personen: wer handelt, und unter Umständen Vorgesetzte, die ihre Pflichten verletzt haben. Ein **Unternehmen** kann nur unter den Voraussetzungen von Art. 102 StGB bestraft werden – nicht automatisch.
+- Bestraft werden natürliche Personen: wer handelt, und unter Umständen Vorgesetzte, die ihre Pflichten verletzt haben. Ein **Unternehmen** kann nur unter den Voraussetzungen von Art. 102 StGB bestraft werden – nicht automatisch: nach Abs. 1 subsidiär, wenn ein Verbrechen oder Vergehen wegen mangelhafter Organisation keiner bestimmten Person zugerechnet werden kann; Abs. 2 gilt nur für dort aufgezählte Delikte (keine Umweltdelikte).
 
 ### 3. Haftpflicht: Schadenersatz
-- **Gefährdungshaftung nach Art. 59a USG**: Der Inhaber eines Betriebs oder einer Anlage, mit denen eine besondere Gefahr für die Umwelt verbunden ist, haftet für den Schaden aus Einwirkungen – ohne Verschulden; befreit ist, wer höhere Gewalt oder grobes Verschulden des Geschädigten oder eines Dritten beweist (bestätigt).
+- **Gefährdungshaftung nach Art. 59a USG**: Der Inhaber eines Betriebs oder einer Anlage, mit denen eine besondere Gefahr für die Umwelt verbunden ist, haftet für den Schaden aus Einwirkungen – ohne Verschulden; befreit ist, wer höhere Gewalt oder grobes Verschulden des Geschädigten oder eines Dritten beweist (bestätigt). Das gilt nicht für jeden Baubetrieb, sondern für Schäden aus der Verwirklichung der besonderen Umweltgefahr eines Betriebs oder einer Anlage – im Übrigen gilt das allgemeine Haftpflichtrecht.
 - **Nachbarrecht**: Übermässige Einwirkungen auf Nachbargrundstücke (Lärm, Staub, Erschütterungen) können zivilrechtliche Ansprüche auslösen (ZGB, sinngemäss).
 - **Vertrag**: Werkverträge regeln, wer welche Umweltleistungen schuldet und wer bei Verstössen haftet.
 

@@ -262,7 +262,7 @@ Nicht nur Diesel: Hydraulik- und Motoröle, Schalöle, Bitumenemulsionen und Vor
 Ölverschmutztes Bindemittel, Erdreich und Schachtinhalt werden zuerst **klassiert** (Abfallcode gemäss LVA, gefährliche Eigenschaften) – meist ergibt das **Sonderabfall**. Sie werden einem berechtigten Entsorger übergeben; für Sonderabfälle ist ein **Begleitschein** nach der Verordnung über den Verkehr mit Abfällen (VeVA, SR 814.610) nötig (sinngemäss; Einzelheiten mit dem Entsorger klären). Die Nachweise gehören zur Ereignisdokumentation.
 
 ### 6. Vom Ereignis zur Verbesserung
-Eine wirksame Nachbereitung beantwortet: Was ist passiert? Warum (technisch, organisatorisch, menschlich)? Warum wurde es nicht früher erkannt? Welche Massnahme verhindert die Wiederholung – auf allen Baustellen? Wer setzt sie bis wann um, und wie prüfen wir, ob sie wirkt? Das entspricht der Korrekturmassnahme nach ISO 14001 (Abschnitt 10.2), die Notfallvorsorge dem Abschnitt 8.2.` },
+Eine wirksame Nachbereitung beantwortet: Was ist passiert? Warum (technisch, organisatorisch, menschlich)? Warum wurde es nicht früher erkannt? Welche Massnahme verhindert die Wiederholung – auf allen Baustellen? Wer setzt sie bis wann um, und wie prüfen wir, ob sie wirkt? Das entspricht der Korrekturmassnahme nach ISO 14001 (Abschnitt 10.2 der Ausgabe 2015; in der Ausgabe 2026 prüfen), die Notfallvorsorge dem Abschnitt 8.2.` },
 
     decision: { id: 'm2-l5-abw', kind: 'decision', title: 'Abwägung: Ölfilm im Baugrubenwasser', questionId: 'm2-d05' },
     task: { id: 'm2-l5-task', kind: 'sitetask', title: 'Baustellenaufgabe: Notfallorganisation Installationsplatz am Bach', taskId: 'm2-t5' },
@@ -316,7 +316,7 @@ Nehmen Sie Kosten- und Terminargumente ernst. Wer nur mit dem Gesetz argumentier
 ### 5. Eskalation
 Wenn eine kritische Abweichung nicht behoben wird: schriftlich festhalten, Vorgesetzte der Linie informieren, bei unmittelbarer Gefahr für ein Gewässer die Arbeit unterbrechen lassen – wer dazu befugt ist, muss im Unternehmen geregelt sein. Klären Sie Ihre Befugnisse, bevor Sie sie brauchen.
 
-### 6. Verbindung zu ISO 14001
+### 6. Verbindung zu ISO 14001 (Abschnittsnummern nach Ausgabe 2015; seit April 2026 gilt die Ausgabe 2026)
 Das Entwässerungskonzept ist eine Massnahme der **betrieblichen Planung und Steuerung** (Abschnitt 8.1), die Notfallregeln gehören zur **Notfallvorsorge** (8.2), Messungen und Begehungen zur **Überwachung** (9.1), Abweichungen und Ereignisse zu **Nichtkonformität und Korrekturmassnahmen** (10.2). Wer das Konzept auf allen Baustellen gleich aufbaut, schafft einen nachvollziehbaren Prozess für Audits – Vertiefung in Modul 10.` },
 
     decision: { id: 'm2-l6-abw', kind: 'decision', title: 'Abwägung: «Kannst du das bis morgen absegnen?»', questionId: 'm2-d06' },

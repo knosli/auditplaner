@@ -85,12 +85,12 @@ Organisation: Schilder mit Bildern an jeder Mulde; Startinstruktion für alle Su
     solution: `| Fraktion | Einstufung | Weg | Hinweise |
 |---|---|---|---|
 | Deckschicht | 40 mg PAK/kg (≤ 250) | Verwertung als Rohstoff im Belagswerk (Art. 20 VVEA) | zuerst separat abfräsen |
-| Tragschicht | 1 800 mg PAK/kg (> 250) | keine Verwertung; z. B. thermische Behandlung bzw. Entsorgung gemäss kantonalen Vorgaben, mit Nachweis | separat fräsen und transportieren; Staub- und Dampfschutz (PAK) für Mitarbeitende |
+| Tragschicht | 1 800 mg PAK/kg (> 250) | keine Verwertung (seit 1.1.2026 auch keine Ausnahme mehr); Ablagerung auf Deponie Typ E bis 31.12.2027 zulässig, sonst z. B. thermische Behandlung – mit Nachweis, gemäss Kanton | separat fräsen und transportieren; Staub- und Dampfschutz (PAK) für Mitarbeitende |
 | Kiesfundation | voraussichtlich unverschmutzt | Aufbereitung und Wiedereinbau bzw. Verwertung | Stichproben, falls Auffälligkeiten |
 | Grabenaushub | Ziegelreste → Verdacht auf Fremdstoffe | Triage: sauberer Anteil verwerten, auffälliger Anteil beproben und nach Ergebnis entsorgen | nicht vermischen |
 | Grauguss | Metall | Altmetall-Verwertung | Waagschein |
 
-Nachweise: Analysen, Liefer-/Waagscheine je Fraktion, Entsorgungsbilanz. Übergangsfristen nach Art. 52 VVEA in der aktuellen Fassung prüfen.`,
+Nachweise: Analysen, Liefer-/Waagscheine je Fraktion, Entsorgungsbilanz. Übergangsfristen nach Art. 52 VVEA: Ausnahmeverwertung über 250 mg/kg endete am 31.12.2025, Ablagerung Typ E bzw. B bis 31.12.2027.`,
     sources: ['vvea', 'bafu-mineral'],
   },
   {
@@ -211,11 +211,11 @@ export const M3_CARDS: Card[] = [
   { id: 'm3-c03', moduleId: M, topic: 'm3-klassierung', level: 1, front: 'Wann braucht es einen Begleitschein?', back: 'Für die Übergabe von **Sonderabfällen** an ein berechtigtes Entsorgungsunternehmen (VeVA).', sources: ['veva'] },
   { id: 'm3-c04', moduleId: M, topic: 'm3-klassierung', level: 2, front: 'Deponietypen A–E (grob)?', back: '**A** unverschmutzter Aushub · **B** Inertstoffe (mineralisch, Grenz-/Eluatwerte eingehalten) · **C** bestimmte anorganische Abfälle · **D** Verbrennungsrückstände · **E** stärker belastete Abfälle.', sources: ['vvea'] },
   { id: 'm3-c05', moduleId: M, topic: 'm3-rueckbau', level: 1, front: 'Seit wann ist Asbest in der Schweiz verboten?', back: 'Seit **1990** (Übergangsfristen für einzelne Produkte).', sources: ['suva-asbest'] },
-  { id: 'm3-c06', moduleId: M, topic: 'm3-rueckbau', level: 2, front: 'Wer darf Asbest mit erheblicher Faserfreisetzung entfernen?', back: 'Nur **Suva-anerkannte** Asbestsanierungsunternehmen; Meldung an die Suva **≥ 14 Tage** vor Beginn.', sources: ['suva-asbest'] },
+  { id: 'm3-c06', moduleId: M, topic: 'm3-rueckbau', level: 2, front: 'Wer darf Asbest mit erheblicher Faserfreisetzung entfernen?', back: 'Nur **Suva-anerkannte** Asbestsanierungsunternehmen (Art. 82 BauAV); Meldung an die Suva **≥ 14 Tage** vor Beginn. Nicht jede Tätigkeit an Asbest fällt darunter – EKAS 6503.', sources: ['suva-asbest'] },
   { id: 'm3-c07', moduleId: M, topic: 'm3-rueckbau', level: 1, front: 'Typische Bauschadstoffe und Fundorte?', back: '**Asbest**: Faserzement, Beläge, Kleber · **PCB**: Fugen (1950–70er), Anstriche · **PAK**: Teerbeläge, Dachpappe, Kork · **Blei**: Farben, Rohre.', sources: ['bafu-bauabfaelle'] },
   { id: 'm3-c08', moduleId: M, topic: 'm3-rueckbau', level: 2, front: 'Reihenfolge eines geordneten Rückbaus?', back: 'Schadstoffe ermitteln → Entsorgungskonzept → **Sanierung** → Entkernung → Tragstruktur → Nachweise.', sources: ['vvea', 'ekas6503'] },
   { id: 'm3-c09', moduleId: M, topic: 'm3-rueckbau', level: 1, front: 'Unerwarteter Fund – was tun?', back: '**Stopp – sperren – melden – beproben – entscheiden.**', sources: ['suva-asbest'] },
-  { id: 'm3-c10', moduleId: M, topic: 'm3-mineralisch', level: 1, front: 'Ausbauasphalt: PAK-Grenze für Verwertung?', back: '**≤ 250 mg PAK/kg**: möglichst vollständig verwerten. **> 250 mg/kg**: nicht verwerten (Art. 20 VVEA). Übergangsfristen prüfen.', sources: ['vvea'] },
+  { id: 'm3-c10', moduleId: M, topic: 'm3-mineralisch', level: 1, front: 'Ausbauasphalt: PAK-Grenze für Verwertung?', back: '**≤ 250 mg PAK/kg**: möglichst vollständig verwerten. **> 250 mg/kg**: nicht verwerten (Art. 20 VVEA). Übergang (Art. 52): Ausnahmeverwertung bis 31.12.2025; Deponie Typ E bzw. B bis 31.12.2027.', sources: ['vvea'] },
   { id: 'm3-c11', moduleId: M, topic: 'm3-mineralisch', level: 2, front: 'Was bestimmt die Qualität von Recyclinggranulat?', back: 'Ein **sortenreiner, schadstofffreier** Rückbau (Schadstoffe saniert, entkernt, Beton getrennt von Mauerwerk).', sources: ['bafu-mineral'] },
   { id: 'm3-c12', moduleId: M, topic: 'm3-mineralisch', level: 2, front: 'Senkt Recyclingbeton das CO₂ stark?', back: '**Nur begrenzt**: Er spart Kies und Deponieraum; CO₂ kommt vor allem vom **Zement**.', sources: ['praxis'] },
   { id: 'm3-c13', moduleId: M, topic: 'm3-aushub', level: 1, front: 'Unverschmutzter Aushub (Art. 19 VVEA)?', back: '**Möglichst vollständig verwerten** – als Baustoff, für Geländeanpassungen, Auffüllungen von Materialentnahmestellen.', sources: ['vvea'] },
@@ -223,12 +223,12 @@ export const M3_CARDS: Card[] = [
   { id: 'm3-c15', moduleId: M, topic: 'm3-aushub', level: 2, front: 'Darf man belasteten und sauberen Aushub mischen?', back: '**Nein** – Vermischen, um Grenzwerte zu unterschreiten, ist unzulässig.', sources: ['vvea'] },
   { id: 'm3-c16', moduleId: M, topic: 'm3-kreislauf', level: 1, front: 'Abfallhierarchie?', back: 'Vermeiden → **wiederverwenden** → verwerten → energetisch nutzen → ablagern.', sources: ['usg'] },
   { id: 'm3-c17', moduleId: M, topic: 'm3-kreislauf', level: 2, front: 'Inhalt einer Entsorgungsbilanz?', back: 'Je Fraktion **Ist-Menge**, Empfänger, Weg, **Abweichung zum Konzept**; Grundlage für Kennzahlen.', sources: ['veva'] },
-  { id: 'm3-c18', moduleId: M, topic: 'm3-kreislauf', level: 2, front: 'Stand USG-Revision Kreislaufwirtschaft?', back: 'Pa.Iv. 20.433 – vom Parlament **2024 verabschiedet**; Inkrafttreten und Verordnungen **verfolgen**.', sources: ['usg-kreislauf'] },
+  { id: 'm3-c18', moduleId: M, topic: 'm3-kreislauf', level: 2, front: 'Stand USG-Revision Kreislaufwirtschaft?', back: 'Pa.Iv. 20.433 – verabschiedet März 2024, **grösstenteils in Kraft seit 1.1.2025**; Verordnungen werden gestaffelt angepasst.', sources: ['usg-kreislauf'] },
 ];
 
 // ---------- Baustellensimulation ----------
 export const M3_SCENARIO: Scenario = {
-  id: 'sim-g', code: 'G', moduleId: M, status: 'verfuegbar', rev: 3,
+  id: 'sim-g', code: 'G', moduleId: M, status: 'verfuegbar', rev: 4,
   title: 'Verdächtige Platten beim Rückbau',
   setting: 'Rückbau', level: 3, minutes: 15,
   topics: ['m3-rueckbau', 'm3-klassierung', 'm3-kreislauf'],
@@ -247,7 +247,7 @@ export const M3_SCENARIO: Scenario = {
       options: [
         { id: 'o1', points: 2, text: 'Sofort aufhören, nichts mehr anfassen, die Leute aus dem Raum, Türen schliessen, Raum sperren. Bereits ausgebaute Platten liegen lassen. Ich komme und informiere die Bauleitung.', feedback: 'Richtig: Exposition sofort beenden, Verschleppung verhindern, Verantwortliche informieren.' },
         { id: 'o2', points: 0, critical: true, text: 'Fertig ausbauen, aber vorsichtig – die Platten in die Mischmulde, dann ist das erledigt.', feedback: 'Kritischer Fehler: Möglicherweise asbesthaltiges Material wird weiter bearbeitet und mit anderen Abfällen vermischt.', consequence: 'Die Mischmulde wird später positiv auf Asbest getestet und muss vollständig als Sonderabfall entsorgt werden; die drei Mitarbeitenden müssen arbeitsmedizinisch erfasst werden.' },
-        { id: 'o3', points: 1, text: 'Masken anziehen und weiterarbeiten, bis ich da bin.', feedback: 'Ungenügend: Einfache Staubmasken schützen nicht ausreichend, und Weiterarbeiten setzt weiter Fasern frei. Zuerst stoppen.' },
+        { id: 'o3', points: 0, critical: true, text: 'Masken anziehen und weiterarbeiten, bis ich da bin.', feedback: 'Kritischer Fehler: Bei Asbestverdacht wird die Arbeit sofort eingestellt. Einfache Staubmasken schützen nicht ausreichend, und jedes weitere Brechen setzt Fasern frei und verschleppt sie.', consequence: 'In den 20 Minuten bis zu Ihrer Ankunft werden weitere Platten herausgebrochen; der kontaminierte Bereich und die Zahl der exponierten Personen wachsen.' },
       ],
     },
     {
@@ -280,8 +280,8 @@ export const M3_SCENARIO: Scenario = {
       situation: 'Das Labor bestätigt: Die Platten enthalten Asbest (Chrysotil). Der Subunternehmer bietet an, die restlichen Platten «mit Schutzanzügen selbst rauszunehmen – wir haben das schon oft gemacht».',
       prompt: 'Wie entscheiden Sie?',
       options: [
-        { id: 'r1', points: 0, critical: true, text: 'Annehmen – er hat Erfahrung, und es spart Zeit.', feedback: 'Kritischer Fehler: Arbeiten mit erheblicher Faserfreisetzung dürfen nur Suva-anerkannte Asbestsanierungsunternehmen ausführen (laut Suva). Ob das hier zutrifft, beurteilt die Fachperson – ohne Anerkennung und Meldung ist das Risiko nicht tragbar.', consequence: 'Bei einer Suva-Kontrolle werden die Arbeiten gestoppt.' },
-        { id: 'r2', points: 2, text: 'Sanierung (inkl. Reinigung des kontaminierten Raums und der Mulde) an eine Suva-anerkannte Firma vergeben, Meldung an die Suva, ergänzende Untersuchung des ganzen Bürotrakts; Terminplan anpassen.', feedback: 'Richtig: Vollständige, rechtskonforme Lösung; die ergänzende Untersuchung verhindert den nächsten Fund.' },
+        { id: 'r1', points: 0, critical: true, text: 'Annehmen – er hat Erfahrung, und es spart Zeit.', feedback: 'Kritischer Fehler: Das Herausbrechen von Platten und die Reinigung eines kontaminierten Raums sind typischerweise Arbeiten mit erheblicher Faserfreisetzung – sie dürfen nur Suva-anerkannte Asbestsanierungsunternehmen ausführen (Art. 82 BauAV, laut Suva). Ohne Einstufung durch die Fachperson, Anerkennung und Meldung ist das Risiko nicht tragbar.', consequence: 'Bei einer Suva-Kontrolle werden die Arbeiten gestoppt.' },
+        { id: 'r2', points: 2, text: 'Die Fachperson beurteilt Tätigkeit und Ausmass; für das Entfernen der Platten und die Reinigung des kontaminierten Raums und der Mulde eine Suva-anerkannte Firma beauftragen und der Suva melden; Freigabe nach der Sanierung; ergänzende Untersuchung des ganzen Bürotrakts; Terminplan anpassen.', feedback: 'Richtig: Einstufung, Sanierung, Freigabe und Untersuchung werden getrennt und vollständig geregelt; die ergänzende Untersuchung verhindert den nächsten Fund.' },
         { id: 'r3', points: 1, text: 'Anerkannte Firma nur für den einen Raum beauftragen, den Rest des Bürotrakts normal rückbauen.', feedback: 'Teilweise: Der betroffene Raum ist geregelt, aber die übrigen Verkleidungen sind weiterhin nicht untersucht.' },
       ],
     },

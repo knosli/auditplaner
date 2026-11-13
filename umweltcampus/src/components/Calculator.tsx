@@ -39,7 +39,7 @@ export function AbsetzRechner() {
         <div><dt>Nötige Oberfläche</dt><dd className="mono strong">{need > 100000 ? '> 100 000' : fmt(need, need < 10 ? 1 : 0)} m²</dd></div>
         <div><dt>Vorhanden / nötig</dt><dd className={'mono ' + (ratio >= 1 ? 'ok' : 'crit')}>{need > 0 ? Math.round(ratio * 100) + ' %' : '–'}</dd></div>
       </dl>
-      <p className="hint">Formeln: v = g·(ρs−ρw)·d² / (18·μ) für Quarz; A = Q / v × Zuschlag. Idealisierte Abschätzung zur Plausibilisierung, keine Bemessung: kugelförmige Einzelkörner, ruhige Strömung, keine Flockung. Der Zuschlag ist eine Annahme, kein Normwert. «Vorhandene Oberfläche» meint die wirksame Fläche: Container in Serie addieren sich nicht, parallel geschaltete schon.</p>
+      <p className="hint">Formeln: v = g·(ρs−ρw)·d² / (18·μ) für Quarz; A = Q / v × Zuschlag. Idealisierte Abschätzung zur Plausibilisierung, keine Bemessung (diese erfolgt durch die Fachplanung nach SIA 431 inkl. Korrigendum C3:2026): kugelförmige Einzelkörner, ruhige Strömung, keine Flockung. Der Zuschlag ist eine Annahme, kein Normwert. «Vorhandene Oberfläche» meint die wirksame Fläche: Container in Serie addieren sich nicht, parallel geschaltete schon.</p>
       <RunoffCalc />
     </div>
   );

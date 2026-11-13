@@ -4,6 +4,7 @@ import { buildExam } from '../src/lib/exam';
 import { evaluateRank, evaluateStage } from '../src/lib/scenario';
 import { scoreQuestion } from '../src/lib/learning';
 import { emptyState, normalizeState } from '../src/lib/state';
+import { isLegacyAnswer, isLegacyExam, isLegacyRun } from '../src/lib/versioning';
 import { moduleRequirements } from '../src/lib/learning';
 
 for (const mod of ['m3', 'm4']) {
@@ -21,15 +22,15 @@ for (const mod of ['m3', 'm4']) {
       expect(TASKS.filter((t) => t.moduleId === mod).length).toBe(5);
       expect(SITETASKS.filter((t) => t.moduleId === mod).length).toBe(5);
       expect(FEYNMAN.filter((f) => f.moduleId === mod).length).toBe(2);
-      expect(SCENARIOS.some((x) => x.moduleId === mod && x.status === 'verfuegbar' && x.rev === 3)).toBe(true);
+      expect(SCENARIOS.some((x) => x.moduleId === mod && x.status === 'verfuegbar' && (x.rev ?? 0) >= 3)).toBe(true);
     });
     test('jedes Thema hat Fragen auf mindestens zwei Stufen', () => {
       for (const t of TOPICS.filter((x) => x.moduleId === mod)) {
         expect(new Set(QUESTIONS.filter((q) => q.topic === t.id).map((q) => q.level)).size, t.id).toBeGreaterThanOrEqual(2);
       }
     });
-    test('alle Fragen tragen Bewertungsfassung 3', () => {
-      for (const q of QUESTIONS.filter((x) => x.moduleId === mod)) expect(q.rev, q.id).toBe(3);
+    test('alle Fragen tragen Bewertungsfassung 3 oder 4', () => {
+      for (const q of QUESTIONS.filter((x) => x.moduleId === mod)) expect([3, 4]).toContain(q.rev);
     });
     test('kritische Optionen geben 0 Punkte', () => {
       for (const q of QUESTIONS.filter((x) => x.moduleId === mod && x.type === 'best')) {
@@ -54,7 +55,8 @@ describe('Fachliche Kernaussagen (Regressionen)', () => {
   const text = (mod: string) => JSON.stringify(LESSONS.filter((l) => l.moduleId === mod));
   test('Modul 3: PAK-Grenze 250 mg/kg und Fristen-Vorbehalt', () => {
     expect(text('m3')).toContain('250 mg');
-    expect(text('m3')).toContain('Fedlex prüfen');
+    expect(text('m3')).toContain('31.12.2027');
+    expect(text('m3')).toContain('31.12.2025');
   });
   test('Modul 3: Asbest nur durch Suva-anerkannte Unternehmen, Meldung 14 Tage', () => {
     expect(text('m3')).toContain('Suva-anerkannte');
@@ -73,6 +75,9 @@ describe('Fall G: Asbest beim Rückbau', () => {
   test('Weiterarbeiten und Mischmulde ist kritisch', () => {
     expect(evaluateStage(st('g1'), { stageId: 'g1', selected: ['o2'] })).toMatchObject({ score: 0, critical: true });
   });
+  test('Bewertungsfassung 4: mit Maske weiterarbeiten ist kritisch (0 Punkte)', () => {
+    expect(evaluateStage(st('g1'), { stageId: 'g1', selected: ['o3'] })).toMatchObject({ score: 0, critical: true });
+  });
   test('trocken zusammenwischen ist kritisch, auch mit guten Massnahmen', () => {
     expect(evaluateStage(st('g3'), { stageId: 'g3', selected: ['m1', 'm2', 'm3', 'm4', 'm5'] })).toMatchObject({ score: 0, critical: true });
     expect(evaluateStage(st('g3'), { stageId: 'g3', selected: ['m1', 'm2', 'm3', 'm4'] }).score).toBe(1);
@@ -87,6 +92,9 @@ describe('Fall H: Regenwoche', () => {
   const st = (id: string) => S.get('sim-h')!.stages.find((x) => x.id === id)!;
   test('alte Freigabe nach Regen nutzen ist kritisch', () => {
     expect(evaluateStage(st('h1'), { stageId: 'h1', selected: ['o2'] })).toMatchObject({ score: 0, critical: true });
+  });
+  test('Bewertungsfassung 4: Raupenbagger ohne neue Freigabe ist kritisch (0 Punkte)', () => {
+    expect(evaluateStage(st('h1'), { stageId: 'h1', selected: ['o3'] })).toMatchObject({ score: 0, critical: true });
   });
   test('auf dem Acker wenden ist kritisch', () => {
     expect(evaluateStage(st('h3'), { stageId: 'h3', selected: ['m1', 'm2', 'm3', 'm4', 'm5'] }).critical).toBe(true);
@@ -103,4 +111,39 @@ describe('Bestehende Lernstände', () => {
     expect(s.lessons['m1-l1'].cur).toBe('m1-l1-deep');
     expect(s.answers).toHaveLength(1);
   });
+});
+
+describe('Bewertungsfassung 4 (externe Prüfung 13.11.2026)', () => {
+  const w = (qid: string, oid: string) => QUESTIONS.find((q) => q.id === qid)!.options!.find((o) => o.id === oid)!.weight;
+  test('Teilpunkte gestrichen bzw. herabgesetzt', () => {
+    expect(w('m4-d01', 'c')).toBe(0); // Ober-/Unterboden mischen
+    expect(w('m3-d05', 'c')).toBe(0); // Ausbau ohne Auftrag/Freigaben
+    expect(w('m3-d03', 'c')).toBe(0.25); // Schnelltest nur Vorselektion
+    for (const id of ['m4-d01', 'm3-d05', 'm3-d03']) expect(QUESTIONS.find((q) => q.id === id)!.rev).toBe(4);
+    expect(S.get('sim-g')!.rev).toBe(4);
+    expect(S.get('sim-h')!.rev).toBe(4);
+  });
+  test('frühere Ergebnisse zu neu gewichteten Inhalten gelten als frühere Fassung, andere bleiben gültig', () => {
+    const s = normalizeState({ version: 3,
+      answers: [
+        { q: 'm4-d01', at: 1, score: 0.5, correct: false, ctx: 'lektion', v: 3 },
+        { q: 'm4-d02', at: 1, score: 1, correct: true, ctx: 'lektion', v: 3 },
+        { q: 'm4-d01', at: 2, score: 1, correct: true, ctx: 'lektion', v: 4 },
+      ],
+      scenarios: { 'sim-g': [{ at: 1, total: 0.8, byCriterion: {}, critical: 0, path: [], passed: true, v: 3 }], 'sim-f': [{ at: 1, total: 0.8, byCriterion: {}, critical: 0, path: [], passed: true, v: 3 }] },
+      exams: [{ id: 'e', kind: 'modul', moduleId: 'm4', at: 1, score: 0.9, total: 18, byTopic: {}, passed: true, v: 3 }, { id: 'f', kind: 'modul', moduleId: 'm1', at: 1, score: 0.9, total: 18, byTopic: {}, passed: true, v: 3 }],
+    });
+    expect(s.answers.map(isLegacyAnswer)).toEqual([true, false, false]);
+    expect(isLegacyRun('sim-g', s.scenarios['sim-g'][0])).toBe(true);
+    expect(isLegacyRun('sim-f', s.scenarios['sim-f'][0])).toBe(false);
+    expect(s.exams.map(isLegacyExam)).toEqual([true, false]);
+    expect(s.answers[0].score).toBe(0.5); // nicht still neu benotet
+  });
+});
+
+describe('Rechtsstand-Korrekturen', () => {
+  const all = (mod: string) => JSON.stringify([...LESSONS, ...QUESTIONS].filter((x) => x.moduleId === mod));
+  test('Art. 18 VVEA nur mit Voraussetzungen', () => expect(all('m4')).toContain('sofern'));
+  test('USG-Revision: in Kraft seit 1.1.2025', () => expect(all('m3')).toContain('1. Januar 2025'));
+  test('Art. 102 StGB Abs. 2 unterschieden', () => expect(all('m1')).toContain('Abs. 2'));
 });

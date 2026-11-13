@@ -133,7 +133,7 @@ export function LegacyNotice() {
   if (!c.answers && !c.runs && !c.exams) return null;
   return (
     <div className="callout law"><span className="callout-label">Frühere Fassung</span>
-      <span>Nach einer externen Fachprüfung wurden Lösungen und Bewertungen einzelner Inhalte korrigiert (Bewertungsfassung 3). Ihre früheren Ergebnisse bleiben gespeichert und werden nicht nachträglich neu benotet, zählen aber nicht mehr als Kompetenznachweis: {c.answers} Antwort(en), {c.runs} Fallversuch(e), {c.exams} Prüfung(en) nach früherer Bewertungsfassung. Beantworten bzw. spielen Sie diese Inhalte erneut.</span>
+      <span>Nach einer externen Fachprüfung wurden Lösungen und Bewertungen einzelner Inhalte korrigiert (Bewertungsfassungen 3 und 4). Ihre früheren Ergebnisse bleiben gespeichert und werden nicht nachträglich neu benotet, zählen aber nicht mehr als Kompetenznachweis: {c.answers} Antwort(en), {c.runs} Fallversuch(e), {c.exams} Prüfung(en) nach früherer Bewertungsfassung. Beantworten bzw. spielen Sie diese Inhalte erneut.</span>
     </div>
   );
 }

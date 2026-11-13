@@ -28,7 +28,7 @@ Was ist hier schiefgelaufen – und warum lässt es sich kaum mehr reparieren?` 
 
 **Er besteht aus Oberboden und Unterboden.** Beide werden **getrennt** abgetragen, gelagert und wieder eingebaut.
 
-**Das Recht schützt die Bodenfruchtbarkeit**: Boden darf physikalisch nur so belastet werden, dass seine Fruchtbarkeit nicht nachhaltig beeinträchtigt wird (USG, sinngemäss). Die **VBBo** und die BAFU-Vollzugshilfe «Bodenschutz beim Bauen» konkretisieren das; abgetragener Boden soll verwertet werden (Art. 18 VVEA).
+**Das Recht schützt die Bodenfruchtbarkeit**: Boden darf physikalisch nur so belastet werden, dass seine Fruchtbarkeit nicht nachhaltig beeinträchtigt wird (Art. 33 Abs. 2 USG). Die **VBBo** (Art. 6 und 7) und die BAFU-Vollzugshilfe «Bodenschutz beim Bauen» konkretisieren das; abgetragener Boden soll verwertet werden, wenn er dafür geeignet ist (Art. 18 VVEA).
 
 **Grösste Gefahr auf der Baustelle: Verdichtung** durch Befahren bei zu nassem Boden.` },
       { id: 'm4-l1-explain', kind: 'explain', title: 'Was Boden leistet und wie er aufgebaut ist', text: `### Funktionen
@@ -41,13 +41,13 @@ Boden ist Lebensraum (ein Grossteil der Lebewesen an Land lebt im Boden), Stando
 Die Mächtigkeit ist von Ort zu Ort sehr verschieden – deshalb wird sie vor dem Abtrag bestimmt (Bodenkartierung, Sondierungen).
 
 ### Rechtsgrundlagen
-- **USG**: Schutz der Bodenfruchtbarkeit; Boden darf nur so weit physikalisch belastet werden, dass seine Fruchtbarkeit nicht nachhaltig beeinträchtigt wird (sinngemäss).
-- **VBBo** (SR 814.12): Bodenfruchtbarkeit, Richt-, Prüf- und Sanierungswerte für Schadstoffe; ein Abschnitt zur Vermeidung langfristiger Bodenverdichtung und -erosion und zum Umgang mit abgetragenem Boden (bestätigt).
-- **VVEA Art. 18**: Abgetragener Ober- und Unterboden soll möglichst vollständig verwertet werden (bestätigt).
+- **USG Art. 33 Abs. 2**: Boden darf nur so weit physikalisch belastet werden, dass seine Fruchtbarkeit nicht nachhaltig beeinträchtigt wird (bestätigt).
+- **VBBo** (SR 814.12): Bodenfruchtbarkeit, Richt-, Prüf- und Sanierungswerte für Schadstoffe. **Art. 6**: Wer Anlagen erstellt oder den Boden bearbeitet, muss Maschinen und Verfahren so wählen und einsetzen, dass keine langfristige Verdichtung und Erosion entstehen. **Art. 7**: Ober- und Unterboden sind getrennt abzutragen und zu lagern und so wieder einzubauen, dass die Fruchtbarkeit möglichst wenig beeinträchtigt wird (sinngemäss, bestätigt über Lesefassung 2025).
+- **VVEA Art. 18**: Abgetragener Ober- und Unterboden soll möglichst vollständig verwertet werden – **wenn** er sich dafür eignet, die Richtwerte der VBBo einhält und keine Fremdstoffe bzw. invasiven gebietsfremden Organismen enthält (bestätigt). Es gibt also keine unbedingte Verwertungspflicht: Ungeeigneter oder belasteter Boden wird anders behandelt (Lektion 4).
 - **BAFU-Vollzugshilfe «Bodenschutz beim Bauen»**, Modul «Sachgerechter Umgang mit Boden beim Bauen» (2022, ersetzt den früheren BUWAL-Leitfaden) – konkretisiert Befahrbarkeit, Abtrag, Lagerung und Rekultivierung.
 - **Kantonale Vorgaben**: Bodenschutzfachstellen, Merkblätter, Auflagen in der Baubewilligung (z. B. bodenkundliche Baubegleitung).
 
-§> USG und VVEA gesetzlich verbindlich; VBBo-Gliederung bestätigt, Artikelwortlaut nicht selbst geprüft. Vollzugshilfe des BAFU = Massstab der Behörde.` },
+§> USG Art. 33 Abs. 2, VBBo Art. 6/7 und VVEA Art. 18 bestätigt (externe Prüfung anhand Lesefassungen 2025/2026, nicht am Fedlex-Volltext). Vollzugshilfe des BAFU = Massstab der Behörde.` },
       { id: 'm4-l1-diagram', kind: 'diagram', title: 'Schema: Bodenschichten', diagram: 'bodenschichten', caption: 'Vereinfachte Lernhilfe. Mächtigkeiten und Bezeichnungen variieren je Standort.' },
       { id: 'm4-l1-example', kind: 'example', title: 'Beispiel aus dem Hochbau: Einfamilienhaus am Siedlungsrand', context: 'Hochbau', text: `Ein Einfamilienhaus entsteht auf einer bisherigen Wiese. Vor dem Aushub wird der Oberboden auf der ganzen Bauparzelle abgetragen und am Rand als niedrige Miete gelagert, der Unterboden separat daneben. Nach dem Rohbau wird für den Garten zuerst der Unterboden, dann der Oberboden locker eingebaut – bei trockenem Wetter, ohne Befahren der fertigen Flächen.
 
@@ -257,7 +257,7 @@ In einem hohen, verdichteten oder vernässten Depot fehlt Sauerstoff. Bodenlebew
 Ober- und Unterboden haben unterschiedliche Eigenschaften. Wer sie mischt, verdünnt den Humus und verschlechtert beide. Noch schlimmer ist die Vermischung mit Untergrund, Bauschutt oder Belagsresten: Dann ist der Boden für eine hochwertige Verwertung oft verloren.
 
 ### 3. Invasive Neophyten
-Pflanzen wie Japanknöterich, Berufkraut oder Ambrosia verbreiten sich über Samen und Wurzelteile im Bodenmaterial. Boden mit solchen Pflanzen darf nur so verwertet werden, dass sie sich nicht weiterverbreiten (Freisetzungsverordnung, sinngemäss). Praktisch heisst das: Bestände vor Baubeginn erfassen, getrennt behandeln, Depots pflegen, Material nicht an unbelastete Orte bringen. Kantone haben dazu Merkblätter.
+Pflanzen wie Japanknöterich, Berufkraut oder Ambrosia verbreiten sich über Samen und Wurzelteile im Bodenmaterial. Boden mit solchen Pflanzen darf am Entnahmeort verwertet oder nur so entsorgt werden, dass eine Weiterverbreitung ausgeschlossen ist (Art. 15 Abs. 3 FrSV für Organismen nach Anhang 2, bestätigt über kantonale Unterlagen). Praktisch heisst das: Bestände vor Baubeginn erfassen, getrennt behandeln, Depots pflegen, Material nicht an unbelastete Orte bringen. Kantone haben dazu Merkblätter.
 
 ### 4. Organisation der Rekultivierung
 - Rekultivierungsplan: Flächen, Mächtigkeiten, Reihenfolge, Maschinen, Zeitfenster.
@@ -266,7 +266,7 @@ Pflanzen wie Japanknöterich, Berufkraut oder Ambrosia verbreiten sich über Sam
 - Dokumentation: Fotos, Mächtigkeiten, Freigaben, Abnahmeprotokoll.
 
 ### 5. Verwertung von Überschussboden
-Fällt mehr Boden an, als vor Ort gebraucht wird, soll er möglichst vollständig verwertet werden (Art. 18 VVEA), z. B. zur Aufwertung degradierter Landwirtschaftsflächen oder für Rekultivierungen andernorts. Solche Terrainveränderungen sind meist bewilligungspflichtig; die Qualität des Bodens (Schadstoffe, Neophyten) muss passen. Boden auf eine Deponie zu bringen, ist der falsche Weg.
+Fällt mehr Boden an, als vor Ort gebraucht wird, soll er – sofern geeignet, unter den Richtwerten und frei von Fremdstoffen und invasiven Organismen – möglichst vollständig verwertet werden (Art. 18 VVEA), z. B. zur Aufwertung degradierter Landwirtschaftsflächen oder für Rekultivierungen andernorts. Solche Terrainveränderungen sind meist bewilligungspflichtig; die Qualität des Bodens (Schadstoffe, Neophyten) muss passen. Boden auf eine Deponie zu bringen, ist der falsche Weg.
 
 ### 6. Typische Fehler
 - Depots auf Vorrat aufgeschüttet und befahren.
@@ -280,7 +280,7 @@ Fällt mehr Boden an, als vor Ort gebraucht wird, soll er möglichst vollständi
 - Ist Wasser in Senken am Depotfuss gestaut?
 - Wachsen Neophyten, und werden sie vor der Samenreife entfernt?
 
-§> Art. 18 VVEA bestätigt; Freisetzungsverordnung sinngemäss. Fachliche Details (Schütthöhen, Begrünung, Folgebewirtschaftung) gemäss Vollzugshilfe und Fachperson.` },
+§> Art. 18 VVEA und Art. 15 Abs. 3 FrSV bestätigt. Fachliche Details (Schütthöhen, Begrünung, Folgebewirtschaftung) gemäss Vollzugshilfe und Fachperson.` },
       { id: 'm4-l3-decision', kind: 'decision', title: 'Entscheidungsaufgabe', questionId: 'm4-q13' },
       { id: 'm4-l3-abw', kind: 'decision', title: 'Abwägung: Wohin mit dem Überschussboden?', questionId: 'm4-d03' },
       { id: 'm4-l3-task', kind: 'sitetask', title: 'Baustellenaufgabe: Depot- und Rekultivierungsplan', taskId: 'm4-t3' },
@@ -313,12 +313,12 @@ Was bedeutet das – und dürfen Sie den Boden einfach wiederverwenden?` },
       { id: 'm4-l4-quiz', kind: 'quiz', title: 'Vorwissen prüfen', questionIds: ['m4-q16', 'm4-q17'] },
       { id: 'm4-l4-brief', kind: 'brief', title: 'Kurz erklärt', text: `**Boden kann mit Schadstoffen belastet sein** – z. B. entlang von Strassen, in Familiengärten, Rebbergen, Obstanlagen, bei Schiessanlagen oder auf Industrieflächen.
 
-**Die VBBo kennt drei Werte**: **Richtwert** (Fruchtbarkeit langfristig nicht mehr gewährleistet → Ursachen angehen), **Prüfwert** (Gefährdung möglich → abklären, ggf. Nutzung einschränken), **Sanierungswert** (Gefährdung → bestimmte Nutzungen verboten).
+**Die VBBo kennt drei Werte**: **Richtwert** (Fruchtbarkeit langfristig nicht mehr gewährleistet → Ursachen angehen), **Prüfwert** (Gefährdung möglich → untersuchen; nur wenn eine konkrete Gefährdung besteht, Nutzung einschränken), **Sanierungswert** (Gefährdung → bestimmte Nutzungen verboten).
 
-**Abgetragener Boden** wird je nach Belastung verwertet, eingeschränkt verwertet (z. B. nur am Entnahmeort) oder ist nicht verwertbar. Viele Kantone führen **Prüfperimeter** – dort muss vor der Verschiebung abgeklärt werden.` },
+**Abgetragener Boden** wird je nach Belastung verwertet, eingeschränkt verwertet (z. B. nur am Entnahmeort) oder ist nicht verwertbar. Viele Kantone führen **Prüfperimeter** (Bezeichnung und Rechtsfolgen kantonal verschieden) – dort ist vor einer Verschiebung nach den Vorgaben des Kantons abzuklären.` },
       { id: 'm4-l4-explain', kind: 'explain', title: 'Werte, Verdachtsflächen, Verwertung', text: `### Richt-, Prüf- und Sanierungswerte (VBBo, sinngemäss)
 - **Richtwert**: Bei Überschreitung ist die Fruchtbarkeit langfristig nicht mehr gewährleistet. Die Kantone klären die Ursachen ab und sorgen dafür, dass die Belastung nicht weiter zunimmt.
-- **Prüfwert**: Bei Überschreitung wird geprüft, ob Menschen, Tiere oder Pflanzen konkret gefährdet sind; wenn ja, wird die Nutzung eingeschränkt.
+- **Prüfwert**: Bei Überschreitung wird geprüft, ob Menschen, Tiere oder Pflanzen konkret gefährdet sind; nur wenn das der Fall ist, wird die Nutzung eingeschränkt – nicht automatisch.
 - **Sanierungswert**: Bei Überschreitung sind bestimmte Nutzungen (z. B. Nahrungspflanzen, Kinderspielplätze) verboten.
 Die Zahlenwerte stehen in den Anhängen der VBBo; sie unterscheiden sich je Schadstoff und teils je Nutzung (bestätigte Logik; Zahlen hier bewusst nicht wiedergegeben).
 
@@ -326,7 +326,7 @@ Die Zahlenwerte stehen in den Anhängen der VBBo; sie unterscheiden sich je Scha
 Strassenränder (Blei, PAK aus Verkehr), Bahnböschungen, Familien- und Hausgärten (Asche, Schwermetalle, Pflanzenschutzmittel), Rebberge und Obstanlagen (Kupfer), Schiessanlagen (Blei, Antimon), Industrie- und Gewerbeareale, Auffüllungen, Flächen unter Hochspannungsmasten mit altem Korrosionsschutz. Viele Kantone fassen solche Flächen in **Prüfperimetern** zusammen (Bezeichnung kantonal verschieden).
 
 ### Verwertung abgetragenen Bodens (Art. 18 VVEA, BAFU-Vollzugshilfe 2021)
-Die Vollzugshilfe unterscheidet sinngemäss zwischen Boden, der verwertet werden soll, eingeschränkt verwertbarem Boden (z. B. nur am Entnahmeort oder auf gleich belasteten Flächen) und nicht verwertbarem Boden, der als Abfall entsorgt wird. Die Einstufung erfolgt aufgrund von Analysen durch Fachpersonen.
+Die Vollzugshilfe von 2021 unterscheidet vier Klassen: **verwertungspflichtiger Boden** (vp, Art. 18 VVEA), **eingeschränkt verwertbarer Boden** (evI), **nur am Entnahmeort verwertbarer Boden** (evII) und **nicht verwertbarer Boden** (nv), der als Abfall entsorgt wird. Neben Schadstoffen ist auch die biologische Belastung mit invasiven Organismen ein Kriterium. Die Einstufung erfolgt aufgrund von Analysen durch Fachpersonen nach den Kriterien der Vollzugshilfe.
 
 §> Logik der drei Werte und Art. 18 VVEA bestätigt (BAFU/kantonale Unterlagen). Zahlenwerte und genaue Klassen im Original.` },
       { id: 'm4-l4-example', kind: 'example', title: 'Beispiel aus dem Hochbau: Schulhaus auf Gartenareal', context: 'Hochbau', text: `Die Analysen des Gartenbodens zeigen Bleigehalte über dem Prüfwert. Ein Wiedereinbau auf dem Pausenplatz – also dort, wo Kinder spielen – kommt nicht in Frage. Die Fachperson empfiehlt, den Boden als belastet zu entsorgen bzw. eingeschränkt zu verwerten; für den Rasen wird unbelasteter Boden aus einer anderen Baustelle zugeführt (mit Analyse).
@@ -426,10 +426,10 @@ Offene Böden, frische Depots und Böschungen sind bei Starkregen gefährdet. Ma
 - Bodenfeuchte überwachen und Bodenarbeiten freigeben.
 - Abtrag, Depots, Rekultivierung begleiten und kontrollieren.
 - Berichte an Bauherrschaft und Fachstelle, Abnahme der Rekultivierung.
-In der Schweiz führt die Bodenkundliche Gesellschaft der Schweiz (BGS) eine Liste anerkannter Fachpersonen für die bodenkundliche Baubegleitung; welche Qualifikation verlangt wird, bestimmen Bewilligung und Kanton (prüfen).
+Die Bodenkundliche Gesellschaft der Schweiz (BGS) anerkennt Fachpersonen für die bodenkundliche Baubegleitung und führt eine Liste (laut externer Prüfung); welche Qualifikation verlangt wird, bestimmen Bewilligung und Kanton.
 
 ### Wann wird eine BBB verlangt?
-Typisch bei grösseren Eingriffen in Kulturland, Leitungsbauten über lange Strecken, Materialabbau und Deponien, Terrainveränderungen mit Bodenverschiebungen. Die Schwellen sind kantonal unterschiedlich und stehen in der Bewilligung.
+Typisch bei grösseren Eingriffen in Kulturland, Leitungsbauten über lange Strecken, Materialabbau und Deponien, Terrainveränderungen mit Bodenverschiebungen. Eine schweizweit einheitliche Flächenschwelle gibt es nicht: Einzelne Kantone nennen in ihren Merkblättern Richtgrössen (z. B. der Kanton Zürich), andere entscheiden projektbezogen. Massgebend ist die Auflage in der Bewilligung.
 
 ### Ihre Rolle als Umweltbeauftragter
 - Auflagen zum Boden in der AVOR erkennen und umsetzen.
@@ -437,7 +437,7 @@ Typisch bei grösseren Eingriffen in Kulturland, Leitungsbauten über lange Stre
 - Baustelle kontrollieren und Abweichungen melden.
 - Eigene Grenzen kennen: keine bodenkundlichen Gutachten, keine Einstufung von Belastungen, keine Freigaben anstelle der Fachperson.
 
-§> BBB-Anerkennung durch die BGS: verbreitete Praxis, Anforderungen kantonal prüfen. Schwellen für BBB und Bodenschutzkonzept kantonal.` },
+§> BBB-Anerkennung durch die BGS laut externer Prüfung; keine bundesweite Flächenschwelle – kantonales Merkblatt und Bewilligung massgebend.` },
       { id: 'm4-l5-example', kind: 'example', title: 'Beispiel aus dem Hochbau: Logistikzentrum auf der grünen Wiese', context: 'Hochbau', text: `Für ein Logistikzentrum auf 4 ha Ackerland erstellt die BBB ein Bodenschutzkonzept. Die AVOR der Bauunternehmung übernimmt es in den Installationsplan: Schutzflächen für die spätere Grünzone sind abgezäunt, die Pisten aus Kies auf Vlies, die Depots am Rand. Der Polier ruft jeden Morgen die Freigabe der BBB ab; an zwei Wochen im Herbst ruhen Bodenarbeiten, die Equipe arbeitet am Fundament.
 
 **Lernpunkt**: Wenn die Regeln im Ablauf verankert sind, wird Bodenschutz Routine statt Störung.` },

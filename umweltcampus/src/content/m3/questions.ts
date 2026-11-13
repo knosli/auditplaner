@@ -4,8 +4,9 @@ const M = 'm3';
 const E = 'entwurf' as const;
 const R = 3; // in Bewertungsfassung 3 erstellt
 
-type Q = Omit<Question, 'moduleId' | 'review' | 'rev'>;
-const q = (x: Q): Question => ({ ...x, moduleId: M, review: E, rev: R });
+type Q = Omit<Question, 'moduleId' | 'review' | 'rev'> & { rev?: number };
+// rev 4 = in Bewertungsfassung 4 neu gewichtet (externe Prüfung 13.11.2026)
+const q = (x: Q): Question => ({ ...x, moduleId: M, review: E, rev: x.rev ?? R });
 
 export const M3_QUESTIONS: Question[] = [
   // ---------- L1 Klassierung ----------
@@ -26,7 +27,7 @@ export const M3_QUESTIONS: Question[] = [
       { id: 'c', text: 'Sauberer Betonabbruch' },
       { id: 'd', text: 'Ölverschmutzte Bindemittel und Lappen' },
       { id: 'e', text: 'Unverschmutzter Aushub' },
-    ], correct: ['a', 'b', 'd'], explanation: 'Asbesthaltige Abfälle, Farb- und Lösungsmittelreste sowie ölverschmutzte Materialien sind in der Regel Sonderabfälle. Die genaue Einstufung ergibt sich aus dem Abfallverzeichnis (LVA).',
+    ], correct: ['a', 'b', 'd'], explanation: 'Asbesthaltige Abfälle, Farb- und Lösungsmittelreste sowie ölverschmutzte Materialien sind in der Regel Sonderabfälle. Die genaue Einstufung (Code, Kategorie) erfolgt im Einzelfall nach dem Abfallverzeichnis (LVA, SR 814.610.1) und dem Zustand des Materials – z. B. unterscheidet die LVA verschiedene asbesthaltige Abfälle.',
     commonErrors: ['Kleine Mengen Sonderabfall in die Mischmulde geben.'], sources: ['veva', 'lva'] }),
   q({ id: 'm3-q03', topic: 'm3-klassierung', level: 2, type: 'single', objective: 'Die Trennpflicht durchsetzen',
     prompt: 'Der Polier will nur eine Mischmulde stellen: «Die Sortieranlage trennt das sowieso.» Platz für zwei bis drei kleine Mulden wäre vorhanden. Was gilt?',
@@ -80,13 +81,13 @@ export const M3_QUESTIONS: Question[] = [
     ], correct: ['b'], explanation: 'Schadstoffe werden vor allen anderen Arbeiten saniert. Sonst werden Fasern verschleppt, Menschen gefährdet und saubere Fraktionen verunreinigt.',
     commonErrors: ['Zeitdruck über Reihenfolge stellen.'], sources: ['ekas6503', 'suva-asbest', 'vvea'] }),
   q({ id: 'm3-q09', topic: 'm3-rueckbau', level: 2, type: 'single', objective: 'Asbestarbeiten richtig vergeben',
-    prompt: 'Wer darf Asbestarbeiten mit erheblicher Faserfreisetzung (z. B. Entfernen von Spritzasbest) ausführen?',
+    prompt: 'Wer darf Asbestarbeiten ausführen, bei denen erheblich Fasern freigesetzt werden können (z. B. Entfernen von Spritzasbest)?',
     options: [
       { id: 'a', text: 'Jede Abbruchfirma mit geschultem Personal' },
       { id: 'b', text: 'Nur von der Suva anerkannte Asbestsanierungsunternehmen' },
       { id: 'c', text: 'Die Bauherrschaft selbst' },
       { id: 'd', text: 'Jede Firma, wenn die Gemeinde zustimmt' },
-    ], correct: ['b'], explanation: 'Laut Suva (bestätigt) dürfen solche Arbeiten nur Suva-anerkannte Asbestsanierungsunternehmen ausführen; Sanierungen sind der Suva mindestens 14 Tage vor Beginn zu melden.',
+    ], correct: ['b'], explanation: 'Arbeiten mit erheblicher Faserfreisetzung dürfen nur Suva-anerkannte Asbestsanierungsunternehmen ausführen (Art. 82 BauAV, laut Suva); sie sind der Suva mindestens 14 Tage vor Beginn zu melden. Nicht jede Tätigkeit an asbesthaltigem Material gehört in diese Kategorie – welche Arbeiten mit welchen Schutzmassnahmen auch andere ausführen dürfen, regelt die EKAS-Richtlinie 6503.',
     commonErrors: ['Asbest als «normale Abbrucharbeit» vergeben.'], sources: ['suva-asbest', 'ekas6503'] }),
   q({ id: 'm3-q10', topic: 'm3-rueckbau', level: 2, type: 'multi', objective: 'Bei einem unerwarteten Fund richtig handeln',
     prompt: 'Beim Ausbau einer Wand stösst ein Elektriker auf eine graue, faserige Platte, die im Schadstoffbericht nicht erwähnt ist. Was ist richtig? (Mehrere Antworten)',
@@ -101,7 +102,7 @@ export const M3_QUESTIONS: Question[] = [
   q({ id: 'm3-q11', topic: 'm3-mineralisch', level: 1, type: 'single', objective: 'Die PAK-Grenze für Ausbauasphalt kennen',
     prompt: 'Ab welchem PAK-Gehalt darf Ausbauasphalt nach Art. 20 VVEA nicht mehr verwertet werden?',
     options: [{ id: 'a', text: 'Ab 25 mg/kg' }, { id: 'b', text: 'Über 250 mg/kg' }, { id: 'c', text: 'Über 1 000 mg/kg' }, { id: 'd', text: 'Es gibt keine Grenze' }],
-    correct: ['b'], explanation: 'Art. 20 VVEA (bestätigt): bis 250 mg PAK/kg möglichst vollständig verwerten; über 250 mg/kg nicht verwerten. Übergangsfristen in der aktuellen Fassung prüfen.',
+    correct: ['b'], explanation: 'Art. 20 VVEA (bestätigt): bis 250 mg PAK/kg möglichst vollständig verwerten; über 250 mg/kg nicht verwerten. Übergang nach Art. 52 VVEA: Die Ausnahmeverwertung über 250 mg/kg endete am 31.12.2025; die Ablagerung auf Deponie Typ E (über 250 mg/kg) bzw. Typ B (bis 250 mg/kg) ist noch bis 31.12.2027 zulässig.',
     commonErrors: ['Grenze mit anderen Werten verwechseln.'], sources: ['vvea'] }),
   q({ id: 'm3-q12', topic: 'm3-mineralisch', level: 1, type: 'single', objective: 'Voraussetzung für hochwertiges Recycling kennen',
     prompt: 'Was ist die wichtigste Voraussetzung, damit Betonabbruch zu hochwertigem Recyclinggranulat werden kann?',
@@ -181,10 +182,10 @@ export const M3_QUESTIONS: Question[] = [
     prompt: 'Bei einem Werkvertrag zeigt sich unerwartet verschmutzter Aushub. Wer trägt die Mehrkosten in der Regel?',
     options: [
       { id: 'a', text: 'Immer der Unternehmer' },
-      { id: 'b', text: 'Grundsätzlich die Bauherrschaft als Eigentümerin des Baugrunds – massgebend ist aber, was der Werkvertrag regelt.' },
+      { id: 'b', text: 'Das hängt vom Werkvertrag und vom Sachverhalt ab (Baugrundrisiko, Vertragsklauseln, Nachträge); häufig trägt die Bauherrschaft das Baugrundrisiko, aber nicht automatisch.' },
       { id: 'c', text: 'Die Gemeinde' },
       { id: 'd', text: 'Der Entsorger' },
-    ], correct: ['b'], explanation: 'Das Baugrundrisiko liegt in der Regel bei der Bauherrschaft; Werkverträge (z. B. nach SIA 118) können es anders regeln. Wichtig: Verdacht sofort melden und Mehraufwand dokumentieren.',
+    ], correct: ['b'], explanation: 'Eine pauschale Antwort gibt es nicht: Massgebend sind der Werkvertrag (z. B. SIA 118 als Vertragsbestandteil, besondere Klauseln zum Baugrund), der konkrete Sachverhalt und im öffentlichen Recht allenfalls die Kostenregeln des Altlastenrechts. Für die Unternehmung entscheidend: Verdacht sofort melden, Mehraufwand dokumentieren, Nachtrag anmelden.',
     commonErrors: ['Mehraufwand nicht dokumentieren.'], sources: ['praxis'] }),
   q({ id: 'm3-q21', topic: 'm3-aushub', level: 4, type: 'open', objective: 'Ein Aushubkonzept auf einem belasteten Standort skizzieren',
     prompt: 'Auf dem Areal einer ehemaligen Tankstelle entsteht ein Wohnbau mit zwei Untergeschossen. Skizzieren Sie in 6–8 Sätzen, wie Sie den Aushub organisieren.',
@@ -249,10 +250,10 @@ export const M3_QUESTIONS: Question[] = [
     prompt: 'Was trifft auf die Revision des USG zur Kreislaufwirtschaft (Pa.Iv. 20.433) zu?',
     options: [
       { id: 'a', text: 'Sie wurde vom Parlament abgelehnt.' },
-      { id: 'b', text: 'Das Parlament hat sie 2024 verabschiedet; Inkrafttreten und Verordnungsdetails sind zu verfolgen und im Rechtskataster nachzuführen.' },
+      { id: 'b', text: 'Das Parlament hat sie im März 2024 verabschiedet; sie ist grösstenteils seit 1. Januar 2025 in Kraft. Die Verordnungen werden gestaffelt angepasst – im Rechtskataster nachführen.' },
       { id: 'c', text: 'Sie betrifft nur Haushaltsabfälle.' },
       { id: 'd', text: 'Sie verpflichtet jede Baustelle, 100 % wiederzuverwenden.' },
-    ], correct: ['b'], explanation: 'Die Revision wurde im März 2024 verabschiedet (bestätigt). Für die Praxis entscheidend sind Inkrafttreten und Ausführungsbestimmungen – im Umweltrechtskataster (Modul 1) nachführen.',
+    ], correct: ['b'], explanation: 'Schlussabstimmung 15. März 2024; der Bundesrat hat die Änderungen grösstenteils per 1. Januar 2025 in Kraft gesetzt, die Bestimmungen zum Littering später (bestätigt). Ausführungsbestimmungen in den Verordnungen folgen gestaffelt – im Umweltrechtskataster (Modul 1) getrennt nachführen.',
     commonErrors: ['Neue Pflichten erfinden, bevor sie gelten.'], sources: ['usg-kreislauf'] }),
   // ---------- Zusätzliche Fragen ----------
   q({ id: 'm3-q28', topic: 'm3-klassierung', level: 3, type: 'single', objective: 'Entsorger richtig auswählen',
@@ -268,10 +269,10 @@ export const M3_QUESTIONS: Question[] = [
     prompt: 'Wer lässt in der Regel die Schadstoffermittlung vor einem Umbau durchführen und trägt die Kosten?',
     options: [
       { id: 'a', text: 'Der Plattenleger' },
-      { id: 'b', text: 'Die Bauherrschaft; der Unternehmer muss bei Verdacht zusätzlich die Gefahren für seine Arbeitnehmenden ermitteln.' },
+      { id: 'b', text: 'In der Regel beauftragt die Bauherrschaft die Ermittlung; die Kostentragung richtet sich nach Vertrag und Verfahren. Der Unternehmer hat zusätzlich eigene Arbeitsschutzpflichten (Gefahrenermittlung bei Verdacht).' },
       { id: 'c', text: 'Die Suva' },
       { id: 'd', text: 'Die Gemeinde' },
-    ], correct: ['b'], explanation: 'Die Bauherrschaft lässt ermitteln und trägt die Kosten (laut kantonaler Unterlage); der Unternehmer hat eigene Pflichten im Arbeitsschutz. Beide Pflichten ergänzen sich.',
+    ], correct: ['b'], explanation: 'Drei Ebenen auseinanderhalten: Abfallrecht (Angaben zur Entsorgung im Baubewilligungsverfahren, Art. 16 VVEA – Sache der Bauherrschaft), Arbeitnehmerschutz (Gefahrenermittlung bei Verdacht, Art. 3 BauAV) und Vertrag (wer was bezahlt). Die Pflichten ergänzen sich; eine allgemeine Kostenregel für alle Fälle gibt es nicht.',
     commonErrors: ['Annehmen, der Unternehmer müsse nichts tun, weil es einen Bericht gibt.'], sources: ['suva-asbest', 'vvea'] }),
   q({ id: 'm3-q30', topic: 'm3-rueckbau', level: 4, type: 'open', objective: 'Eine Instruktion zu Bauschadstoffen gestalten',
     prompt: 'Sie instruieren die Subunternehmer eines Umbaus (Baujahr 1965) vor Arbeitsbeginn. Was gehört in 6–8 Sätzen in diese Instruktion?',
@@ -309,7 +310,7 @@ export const M3_QUESTIONS: Question[] = [
     options: [
       { id: 'a', text: 'Mischmulde stellen, weil die Trennung auf der Baustelle betrieblich nicht möglich ist; Sonderabfälle trotzdem separat in einem abschliessbaren Behälter.', weight: 0.5,
         why: 'Teilweise geeignet: Die VVEA lässt die Trennung in Anlagen zu, wenn sie auf der Baustelle betrieblich nicht möglich ist – das muss aber ernsthaft geprüft und begründet sein. Sonderabfälle separat ist richtig.', prerequisites: 'Dokumentierte Begründung; Sortieranlage mit Bewilligung; Absprache mit Bauherrschaft/Behörde, falls das Entsorgungskonzept Trennung vorsieht.', risks: 'Höhere Kosten; Behörde akzeptiert die Begründung nicht.' },
-      { id: 'b', text: 'Kleine Mulden bzw. Big Bags für die Hauptfraktionen, Abholung nach Bedarf (Abrufsystem), Sonderabfall-Behälter; wo das nicht reicht, Trennung im eigenen Werkhof.', weight: 1,
+      { id: 'b', text: 'Kleine Mulden bzw. Big Bags für die Hauptfraktionen, Abholung nach Bedarf (Abrufsystem), Sonderabfall-Behälter; wo das nicht reicht, Trennung im eigenen Werkhof – sofern dieser dafür eingerichtet ist und die Abfälle dort rechtmässig annehmen und weitergeben darf.', weight: 1,
         why: 'Am besten geeignet: Trennpflicht erfüllt, Platzproblem organisatorisch gelöst.', prerequisites: 'Entsorger mit kurzfristiger Abholung; Instruktion; Platz für Big Bags im Geschoss oder am Kran.', risks: 'Mehr Logistikaufwand; Abholung muss zuverlässig funktionieren.' },
       { id: 'c', text: 'Alles in die Mischmulde inklusive Spraydosen und Farbresten – die Anlage sortiert.', weight: 0, critical: true,
         why: 'Kritisch: Sonderabfälle müssen immer getrennt und mit Begleitschein entsorgt werden. Die Mischung kann die ganze Mulde zum Sonderabfall machen.', risks: 'Verstoss gegen VVEA/VeVA, Rückweisung durch Entsorger, Mehrkosten, Busse.' },
@@ -330,15 +331,15 @@ export const M3_QUESTIONS: Question[] = [
         why: 'Kritisch: Bearbeitung eines möglicherweise asbesthaltigen Materials vor der Abklärung, ohne Schutzkonzept nach EKAS 6503.', risks: 'Wie a.' },
     ], correct: ['b'], explanation: 'Unklares Material wird erst bearbeitet, wenn es abgeklärt ist. Schnellanalysen und Umplanung halten den Verzug klein. Überdecken kann eine Option sein – aber nur abgeklärt, dokumentiert und mit Entscheid der Bauherrschaft.',
     commonErrors: ['Termindruck über Gesundheitsschutz stellen.', '«Nass arbeiten» als Ersatz für Abklärung sehen.'], sources: ['ekas6503', 'suva-asbest'] }),
-  q({ id: 'm3-d03', topic: 'm3-mineralisch', level: 3, type: 'best', objective: 'Ausbauasphalt ohne Analyse richtig behandeln',
+  q({ id: 'm3-d03', rev: 4, topic: 'm3-mineralisch', level: 3, type: 'best', objective: 'Ausbauasphalt ohne Analyse richtig behandeln',
     prompt: 'Notfall-Reparatur einer Hauptstrasse (Baujahr unbekannt): 60 t Belag müssen heute Nacht gefräst werden, eine PAK-Analyse fehlt. Was empfehlen Sie?',
     options: [
       { id: 'a', text: 'Fräsgut direkt zur Belagsanlage zur Wiederverwertung.', weight: 0, critical: true,
         why: 'Kritisch: Ohne Analyse kann teerhaltiges Material (über 250 mg PAK/kg) in neue Beläge gelangen – das ist nicht zulässig.', risks: 'Verbotene Verwertung, Kontamination von Neumaterial, Kosten für Rückbau.' },
       { id: 'b', text: 'Fräsen, das Material separat und abgedeckt zwischenlagern (bzw. beim Entsorger separat annehmen lassen), Probe nehmen und je nach Ergebnis verwerten oder als belastet entsorgen.', weight: 1,
         why: 'Am besten geeignet: Notfall wird behoben, Triage erfolgt nachträglich, kein Vermischen.', prerequisites: 'Geeigneter Lagerplatz oder Entsorger mit Quarantänelager; Probenahme organisiert.', risks: 'Zwischenlager braucht Platz und muss vor Regen geschützt sein.' },
-      { id: 'c', text: 'Vor Ort einen PAK-Schnelltest (z. B. Spray oder Messgerät) einsetzen und danach entscheiden.', weight: 0.5,
-        why: 'Teilweise geeignet: Schnelltests geben einen Hinweis und werden in der Praxis zur Triage genutzt, ersetzen aber nicht in jedem Fall die Laboranalyse; im Zweifel als belastet behandeln.', prerequisites: 'Geeignetes Testverfahren, das der Kanton akzeptiert; Schulung.', risks: 'Fehleinstufung bei Grenzfällen.' },
+      { id: 'c', text: 'Vor Ort einen PAK-Schnelltest (z. B. Spray oder Messgerät) einsetzen und danach entscheiden.', weight: 0.25,
+        why: 'Wenig geeignet als alleinige Grundlage: Schnelltests dienen in der Praxis höchstens der Vorselektion; für die Einstufung ist die vorgeschriebene Analyse nötig. Positive oder unklare Ergebnisse immer als belastet behandeln, negative mit Analyse bestätigen.', prerequisites: 'Geeignetes Testverfahren, das der Kanton akzeptiert; Schulung.', risks: 'Fehleinstufung bei Grenzfällen.' },
       { id: 'd', text: 'Alles als stark belastet entsorgen, ohne Analyse.', weight: 0.25,
         why: 'Rechtlich sicher, aber teuer und unnötig, wenn das Material verwertbar wäre – widerspricht dem Verwertungsgedanken.', risks: 'Hohe Kosten, Verlust von Rohstoff.' },
     ], correct: ['b'], explanation: 'Im Notfall gilt: arbeiten, aber trennen und nachträglich triagieren. Nie unanalysiertes Material in die Verwertung geben.',
@@ -356,15 +357,15 @@ export const M3_QUESTIONS: Question[] = [
         why: 'Kritisch: Unkontrollierter Wiedereinbau von möglicherweise belastetem Material – Boden- und Grundwassergefährdung, verdeckt das Problem.', risks: 'Spätere Sanierungspflicht, Haftung, Strafverfahren.' },
     ], correct: ['b'], explanation: 'Auch ohne Katastereintrag gilt: Verdacht separieren, abklären, nicht vermischen. Abgrenzen ermöglicht Weiterarbeit im sauberen Bereich.',
     commonErrors: ['Kataster als abschliessende Information sehen.', 'Problem «vergraben».'], sources: ['vvea', 'altlv'] }),
-  q({ id: 'm3-d05', topic: 'm3-kreislauf', level: 3, type: 'best', objective: 'Wiederverwendung realistisch abwägen',
+  q({ id: 'm3-d05', rev: 4, topic: 'm3-kreislauf', level: 3, type: 'best', objective: 'Wiederverwendung realistisch abwägen',
     prompt: 'Rückbau eines Bürogebäudes. Ein Architekt möchte 40 Brandschutztüren und Stahlträger für einen Neubau wiederverwenden. Der Rückbau ist knapp terminiert; im Vertrag ist Wiederverwendung nicht vorgesehen. Was empfehlen Sie?',
     options: [
       { id: 'a', text: 'Ablehnen – nicht im Vertrag, kein Thema.', weight: 0.25,
         why: 'Formal korrekt, verschenkt aber eine Chance; Wiederverwendung kann wirtschaftlich und ökologisch sinnvoll sein.', risks: 'Imageverlust, verpasste Zusatzleistung.' },
       { id: 'b', text: 'Machbarkeit kurz prüfen (Zustand, Schadstofffreiheit, Ausbauaufwand, Lager, Abnehmer, Normen/Brandschutz-Zulassung), als Nachtrag mit Kosten und Terminfolgen offerieren und erst nach Entscheid der Bauherrschaft umsetzen.', weight: 1,
         why: 'Am besten geeignet: Chance genutzt, Risiken geklärt, Rollen und Kosten sauber geregelt.', prerequisites: 'Bauherrschaft und Abnehmer ziehen mit; Lagerplatz; Prüfung der Eignung (z. B. Zulassung von Brandschutztüren).', risks: 'Verlängerter Rückbau; nicht alle Bauteile eignen sich.' },
-      { id: 'c', text: 'Die Teile einfach sorgfältig ausbauen und dem Architekten geben, ohne Vertrag.', weight: 0.5,
-        why: 'Teilweise geeignet: gute Absicht, aber ungeregelte Kosten, Eigentum, Gewährleistung und Termine.', risks: 'Streit über Kosten und Eigentum; Haftung für Eignung.' },
+      { id: 'c', text: 'Die Teile einfach sorgfältig ausbauen und dem Architekten geben, ohne Vertrag.', weight: 0,
+        why: 'Ungeeignet: Ohne Auftrag, Schadstoffabklärung und Freigaben sind Kosten, Eigentum, Gewährleistung, Sicherheit und Konformität der Bauteile ungeklärt – gute Absicht genügt nicht.', risks: 'Streit über Kosten und Eigentum; Haftung für Eignung.' },
       { id: 'd', text: 'Brandschutztüren ohne Abklärung wiederverwenden, auch wenn sie möglicherweise asbesthaltige Einlagen haben.', weight: 0, critical: true,
         why: 'Kritisch: Ältere Brandschutztüren können asbesthaltige Bestandteile enthalten. Ohne Schadstoffabklärung werden Schadstoffe in einen Neubau verschleppt.', risks: 'Gesundheitsgefährdung, Sanierung im Neubau, Haftung.' },
     ], correct: ['b'], explanation: 'Wiederverwendung braucht Planung, Prüfung (Zustand, Schadstoffe, Zulassung) und einen Auftrag. Sie ist ein Geschäftsfeld, keine Improvisation.',

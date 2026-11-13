@@ -45,7 +45,7 @@ export const SOURCES: Source[] = [
     short: 'USG',
     kind: 'gesetz',
     sr: 'SR 814.01',
-    articles: 'Art. 1 (Vorsorgeprinzip), Art. 2 (Verursacherprinzip)',
+    articles: 'Art. 1 (Vorsorgeprinzip), Art. 2 (Verursacherprinzip), Art. 11 (Emissionsbegrenzung), Art. 33 Abs. 2 (physikalische Bodenbelastung), Art. 59a (Gefährdungshaftung), Art. 60–61 (Strafbestimmungen)',
     issuer: 'Bundesversammlung',
     url: 'https://www.fedlex.admin.ch/eli/cc/1984/1122_1122_1122/de',
     version: 'Geltende Fassung gemäss Fedlex – Stand bei Nutzung prüfen',
@@ -60,7 +60,7 @@ export const SOURCES: Source[] = [
     kind: 'norm',
     issuer: 'Schweizerischer Ingenieur- und Architektenverein (SIA), mit VSA',
     url: 'https://shop.sia.ch',
-    version: 'Ausgabe 2022, gültig ab 1. August 2022 (ersetzt die Empfehlung SIA 431:1997). Laut externem Prüfbericht Korrigendum C3:2026 – nicht bestätigt.',
+    version: 'Ausgabe 2022, gültig ab 1. August 2022 (ersetzt die Empfehlung SIA 431:1997). Korrigendum SIA 431-C3:2026, gültig ab 1.6.2026, ersetzt C2:2024 sowie Figuren 4 und 5 und Tabellen 9 und 13 (laut externer Prüfung anhand des SIA-Shops; in dieser Umgebung nicht selbst eingesehen).',
     lastChecked: null,
     scope: 'Planung und Betrieb der Baustellenentwässerung; verbindlich, wenn vertraglich vereinbart oder von der Behörde verlangt',
     review: 'entwurf',
@@ -172,7 +172,7 @@ export const SOURCES: Source[] = [
     lastChecked: null,
     scope: 'Klassierung von Abfällen',
     review: 'entwurf',
-    note: 'SR-Nummer aus Fachwissen, nicht verifiziert. Vertiefung in Modul 3.',
+    note: 'SR-Nummer 814.610.1 durch externe Prüfung (13.11.2026) bestätigt. Vertiefung in Modul 3.',
   },
   {
     id: 'bv',
@@ -248,13 +248,13 @@ export const SOURCES: Source[] = [
     short: 'VVEA',
     kind: 'gesetz',
     sr: 'SR 814.600',
-    articles: 'Art. 16, 17, 18, 19, 20, 52, Anhang 3, Anhang 5',
+    articles: 'Art. 9 (Vermischungsverbot, laut kantonaler Unterlage), 16, 17, 18, 19, 20, 52, Anhang 3, Anhang 5',
     issuer: 'Bundesrat',
     version: 'Geltende Fassung gemäss Fedlex – prüfen',
     lastChecked: null,
     scope: 'Ganze Schweiz',
     review: 'entwurf',
-    note: 'Art. 16 (Entsorgungsangaben ab mehr als 200 m³ oder bei Bauschadstoffen) und Art. 17 (Trennung) über kantonale Unterlagen bestätigt.',
+    note: 'Bestätigt (kantonale Unterlagen, Bundespublikation AS 2022 161, externe Prüfung anhand Lesefassung 1.8.2026): Art. 16, 17, 18 (Verwertung nur wenn geeignet, Richtwerte eingehalten, frei von Fremdstoffen und invasiven Organismen), 19, 20 (250 mg PAK/kg) und 52 Abs. 1–3 (Ausnahmeverwertung bis 31.12.2025; Deponie Typ E bzw. B bis 31.12.2027). Anhang 5 nur vereinfacht wiedergegeben. Art. 9 nicht selbst geprüft.',
   },
   {
     id: 'vbbo',
@@ -267,8 +267,8 @@ export const SOURCES: Source[] = [
     lastChecked: null,
     scope: 'Ganze Schweiz',
     review: 'entwurf',
-    articles: '3. Abschnitt (Art. 6, 7) – sinngemäss; Richt-, Prüf- und Sanierungswerte (Anhänge)',
-    note: 'Gliederung (3. Abschnitt: Vermeidung langfristiger Bodenverdichtung und -erosion; Umgang mit abgetragenem Boden) über Sekundärquellen bestätigt; Wortlaut der Artikel und Zahlenwerte der Anhänge nicht selbst geprüft.',
+    articles: 'Art. 5–7 (Richt-, Prüf-, Sanierungswerte; Verdichtung und Erosion; abgetragener Boden), Anhänge (Werte)',
+    note: 'Art. 6 (Verdichtung/Erosion vermeiden) und Art. 7 (Ober- und Unterboden getrennt abtragen, lagern, wieder einbauen) sowie die Logik der drei Werte durch externe Prüfung (Lesefassung 1.8.2025) bestätigt; Zahlenwerte der Anhänge bewusst nicht in der App.',
   },
   {
     id: 'nhg',
@@ -340,15 +340,15 @@ export const SOURCES: Source[] = [
   },
   {
     id: 'iso14001',
-    title: 'ISO 14001:2015 Umweltmanagementsysteme – Anforderungen mit Anleitung zur Anwendung',
+    title: 'ISO 14001:2026 Umweltmanagementsysteme – Anforderungen mit Anleitung zur Anwendung (vorher ISO 14001:2015)',
     short: 'ISO 14001',
     kind: 'norm',
     issuer: 'ISO / SNV',
-    version: 'Ausgabe 2015 (Änderungen prüfen)',
+    version: 'Ausgabe 2026 (4. Ausgabe, veröffentlicht 15.04.2026; ersetzt ISO 14001:2015). Übergangsfrist für Zertifikate rund drei Jahre (laut Zertifizierern bis ca. Mai 2029).',
     lastChecked: null,
     scope: 'Zertifizierte Unternehmen',
     review: 'entwurf',
-    note: 'Kostenpflichtige Norm; Abschnittsnummern (6.1.3, 9.1.2, 8.1, 8.2, 10.2) aus Fachwissen. Vertiefung in Modul 10.',
+    note: 'Kostenpflichtige Norm. Die in der App genannten Abschnittsnummern (6.1.3, 8.1, 8.2, 9.1.2, 10.2) stammen aus der Ausgabe 2015 und sind für die Ausgabe 2026 nicht verglichen – vor Verwendung an der aktuellen Norm prüfen. Laut Zertifizierern moderate Änderungen (u. a. Änderungsmanagement, Biodiversität, Ressourcen). Vertiefung in Modul 10.',
   },
   {
     id: 'bafu-wasser',
@@ -419,7 +419,7 @@ export const SOURCES: Source[] = [
   {
     id: 'suva-asbest', title: 'Suva: Asbest – Informationen, anerkannte Asbestsanierungsunternehmen, Meldung von Sanierungen', short: 'Suva Asbest', kind: 'vollzugshilfe',
     issuer: 'Suva', url: 'https://www.suva.ch/asbest', version: 'Webinformation, abgerufen 2026-11', lastChecked: null, scope: 'Ganze Schweiz (Arbeitssicherheit)', review: 'entwurf',
-    note: 'Bestätigt (Suva-Website): Asbestverbot 1990; Arbeiten mit erheblicher Faserfreisetzung nur durch Suva-anerkannte Unternehmen; Meldung mind. 14 Tage vor Beginn. Rechtsgrundlage Bauarbeitenverordnung (BauAV) – Artikel nicht selbst geprüft.',
+    note: 'Bestätigt (Suva-Website, externe Prüfung 13.11.2026): Asbestverbot 1990 (ChemRRV); Arbeiten mit erheblicher Faserfreisetzung nur durch Suva-anerkannte Unternehmen (Art. 82 BauAV); Meldung mind. 14 Tage vor Beginn (laut Suva Art. 86 BauAV – Zuordnung in den Quellen uneinheitlich); Ermittlung bei Verdacht Art. 3 BauAV. Artikelwortlaut nicht am Fedlex-Volltext geprüft.',
   },
   {
     id: 'bafu-bauabfaelle', title: 'BAFU: Vollzugshilfe «Bauabfälle» / Informationen zu Bauabfällen und Bauschadstoffen', short: 'BAFU Bauabfälle', kind: 'vollzugshilfe',
@@ -438,12 +438,13 @@ export const SOURCES: Source[] = [
   {
     id: 'altlv', title: 'Verordnung über die Sanierung von belasteten Standorten (Altlasten-Verordnung, AltlV)', short: 'AltlV', kind: 'gesetz', sr: 'SR 814.680',
     issuer: 'Bundesrat', version: 'Geltende Fassung gemäss Fedlex – prüfen', lastChecked: null, scope: 'Ganze Schweiz; Kataster durch die Kantone', review: 'entwurf',
-    note: 'In der App nur sinngemäss (Kataster, Untersuchung, Sanierung). Keine Artikel zitiert.',
+    articles: 'Art. 3 (Erstellung und Änderung von Bauten und Anlagen auf belasteten Standorten)',
+    note: 'Art. 3 über BAFU-Vollzugshilfe «Bauvorhaben und belastete Standorte» und Kanton ZH bestätigt; übrige Aussagen sinngemäss.',
   },
   {
     id: 'usg-kreislauf', title: 'Parlamentarische Initiative 20.433 «Schweizer Kreislaufwirtschaft stärken» (Änderung USG u. a.)', short: 'Pa.Iv. 20.433', kind: 'gesetz',
-    issuer: 'Bundesversammlung', url: 'https://www.parlament.ch', version: 'Schlussabstimmung März 2024; Inkrafttreten prüfen', lastChecked: null, scope: 'Ganze Schweiz', review: 'entwurf',
-    note: 'Verabschiedung 2024 über Sekundärquellen bestätigt. Inkrafttreten und Ausführungsbestimmungen nicht bestätigt.',
+    issuer: 'Bundesversammlung', url: 'https://www.parlament.ch', version: 'Schlussabstimmung 15.03.2024; grösstenteils in Kraft seit 01.01.2025 (Littering später)', lastChecked: null, scope: 'Ganze Schweiz', review: 'entwurf',
+    note: 'Inkraftsetzung gemäss Bundesratsmitteilung vom 13.11.2024 bestätigt. Verordnungsänderungen gestaffelt – jeweils auf Fedlex/BAFU prüfen.',
   },
   {
     id: 'bafu-boden-bauen', title: 'BAFU: Vollzugshilfe «Bodenschutz beim Bauen», Modul «Sachgerechter Umgang mit Boden beim Bauen»', short: 'BAFU Boden beim Bauen', kind: 'vollzugshilfe',
@@ -463,7 +464,8 @@ export const SOURCES: Source[] = [
   {
     id: 'frsv', title: 'Verordnung über den Umgang mit Organismen in der Umwelt (Freisetzungsverordnung, FrSV)', short: 'FrSV', kind: 'gesetz', sr: 'SR 814.911',
     issuer: 'Bundesrat', version: 'Geltende Fassung gemäss Fedlex – prüfen', lastChecked: null, scope: 'Ganze Schweiz', review: 'entwurf',
-    note: 'In der App nur sinngemäss (Weiterverbreitung invasiver gebietsfremder Organismen verhindern, auch über Bodenmaterial). Artikel nicht zitiert; kantonale Neophyten-Merkblätter beachten.',
+    articles: 'Art. 15 Abs. 3 (abgetragener Boden mit invasiven gebietsfremden Organismen nach Anhang 2)',
+    note: 'Art. 15 Abs. 3 über kantonale Unterlagen und externe Prüfung (Lesefassung 1.12.2025) bestätigt: am Entnahmeort verwerten oder so entsorgen, dass eine Weiterverbreitung ausgeschlossen ist. Kantonale Neophyten-Merkblätter beachten.',
   },
   {
     id: 'praxis',

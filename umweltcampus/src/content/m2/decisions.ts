@@ -43,7 +43,7 @@ export const M2_DECISIONS: Question[] = [
         why: 'Nur letzte Option: Sauberes Wasser in der Kanalisation ist Fremdwasser; es belastet die ARA und erhöht Entlastungen bei Regen. Viele Gemeinden lehnen das ab oder erlauben es nur befristet.',
         prerequisites: 'Ausdrückliche Zustimmung der Gemeinde, Nachweis, dass Versickern und Einleiten ins Gewässer nicht möglich sind.',
         risks: 'Ablehnung, Gebühren, Auflagen; bei Starkregen zusätzliche Entlastungen von Mischwasser in den Bach.' },
-      { id: 'b', text: 'Rückgabe in den Untergrund über eine Versickerungsanlage bzw. Schluckbrunnen ausserhalb des Absenktrichters.', weight: 1,
+      { id: 'b', text: 'Nach hydrogeologischer Abklärung und mit kantonaler Bewilligung: Rückgabe in den Untergrund über eine Versickerungsanlage bzw. Schluckbrunnen ausserhalb des Absenktrichters.', weight: 1,
         why: 'Am besten geeignet: Entspricht der gesetzlichen Reihenfolge (Art. 7 Abs. 2 GSchG: unverschmutztes Wasser versickern lassen). Das Grundwasser bleibt im Kreislauf.',
         prerequisites: 'Geeignete Durchlässigkeit, kein belasteter Standort (Kataster der belasteten Standorte prüfen), genügender Abstand zum Grundwasser, keine Schutzzone; kantonale Bewilligung; Absetzen vor der Versickerung, damit die Anlage nicht verschlammt.',
         risks: 'Verschlammung bei trübem Wasser, Rückstau in die Baugrube bei zu geringer Distanz, hydraulische Beeinflussung von Nachbarbauten.' },

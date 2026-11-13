@@ -267,7 +267,7 @@ export const M1_SCENARIO: Scenario = {
       situation: 'Die Kontrolleurin stellt sich vor und möchte die Baustelle ansehen. Der Vorarbeiter flüstert: «Sag, sie soll später kommen.»',
       prompt: 'Wie reagieren Sie?',
       options: [
-        { id: 'o1', points: 2, text: 'Zutritt gewähren, PSA ausgeben und sie begleiten; Bauführer und Polier sofort telefonisch informieren; Notizen machen.', feedback: 'Richtig: Behörden haben in der Regel Zutritts- und Auskunftsrechte. Begleitung und Information der Verantwortlichen sind professionell.' },
+        { id: 'o1', points: 2, text: 'Zutritt gewähren, PSA ausgeben und sie begleiten; Bauführer und Polier sofort telefonisch informieren; Notizen machen.', feedback: 'Richtig: Vollzugsbehörden haben in der Regel Zutritts- und Auskunftsrechte (Umfang je nach Gesetz und kantonalem Verfahren). Begleitung und Information der Verantwortlichen sind professionell.' },
         { id: 'o2', points: 0, text: 'Bitten, später wiederzukommen, wenn der Bauführer da ist.', feedback: 'Ungeeignet: Eine Verzögerung wirkt, als hätte die Baustelle etwas zu verbergen, und ist je nach kantonalem Recht nicht zulässig.' },
         { id: 'o3', points: 0, critical: true, text: 'Zuerst schnell die Mulde umschichten lassen, dann einlassen.', feedback: 'Kritischer Fehler: Mängel vor der Kontrolle zu verbergen, zerstört Vertrauen und kann rechtlich als Behinderung gewertet werden.', consequence: 'Die Kontrolleurin sieht vom Tor aus, wie Material umgeschichtet wird. Sie protokolliert den Vorgang; das Gespräch beginnt mit Misstrauen.' },
       ],
@@ -321,7 +321,7 @@ export const M1_SCENARIO: Scenario = {
       rankOrder: ['n1', 'n2', 'n3', 'n4', 'n5'],
       rankGroups: [['n1'], ['n2', 'n3'], ['n4'], ['n5']],
       rankEarly: [{ id: 'n1', maxPos: 1, why: 'Die Mängelbehebung kommt zuerst – ohne sie fehlen die Nachweise für die Stellungnahme, und die Verstösse dauern an.' }],
-      rankExplanation: 'Zuerst beheben und belegen. Ursachenanalyse und Stellungnahme laufen parallel innerhalb der Frist. Danach wird der Standard angepasst, damit die Mängel auf anderen Baustellen nicht auftreten, und die Wirksamkeit geprüft (Korrekturmassnahme nach ISO 14001, 10.2).',
+      rankExplanation: 'Zuerst beheben und belegen. Ursachenanalyse und Stellungnahme laufen parallel innerhalb der Frist. Danach wird der Standard angepasst, damit die Mängel auf anderen Baustellen nicht auftreten, und die Wirksamkeit geprüft (Korrekturmassnahme nach ISO 14001, Abschnitt 10.2 der Ausgabe 2015).',
     },
     {
       id: 'f6', title: 'Bericht an die Geschäftsleitung', type: 'justify', criteria: ['begruendung', 'zusammenarbeit'],

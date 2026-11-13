@@ -4,8 +4,9 @@ const M = 'm4';
 const E = 'entwurf' as const;
 const R = 3; // in Bewertungsfassung 3 erstellt
 
-type Q = Omit<Question, 'moduleId' | 'review' | 'rev'>;
-const q = (x: Q): Question => ({ ...x, moduleId: M, review: E, rev: R });
+type Q = Omit<Question, 'moduleId' | 'review' | 'rev'> & { rev?: number };
+// rev 4 = in Bewertungsfassung 4 neu gewichtet (externe Prüfung 13.11.2026)
+const q = (x: Q): Question => ({ ...x, moduleId: M, review: E, rev: x.rev ?? R });
 
 export const M4_QUESTIONS: Question[] = [
   // ---------- L1 Grundlagen ----------
@@ -31,7 +32,7 @@ export const M4_QUESTIONS: Question[] = [
     prompt: 'Ein Bauführer meint: «Für Boden gibt es keine Vorschriften, solange er nicht verschmutzt ist.» Was ist richtig?',
     options: [
       { id: 'a', text: 'Er hat recht.' },
-      { id: 'b', text: 'Auch die physikalische Belastung ist geregelt: Boden darf nur so belastet werden, dass seine Fruchtbarkeit nicht nachhaltig beeinträchtigt wird; abgetragener Boden ist zu verwerten. Die Vollzugshilfe konkretisiert das, Auflagen machen es projektbezogen verbindlich.' },
+      { id: 'b', text: 'Auch die physikalische Belastung ist geregelt: Boden darf nur so belastet werden, dass seine Fruchtbarkeit nicht nachhaltig beeinträchtigt wird; abgetragener Boden ist zu verwerten, sofern er dafür geeignet ist (Art. 18 VVEA). Die Vollzugshilfe konkretisiert das, Auflagen machen es projektbezogen verbindlich.' },
       { id: 'c', text: 'Nur in Landwirtschaftszonen gelten Vorschriften.' },
       { id: 'd', text: 'Vorschriften gelten nur, wenn eine BBB beigezogen wird.' },
     ], correct: ['b'], explanation: 'USG und VBBo schützen die Bodenfruchtbarkeit auch vor Verdichtung und Erosion; Art. 18 VVEA verlangt die Verwertung abgetragenen Bodens (sinngemäss bzw. bestätigt).',
@@ -67,7 +68,7 @@ export const M4_QUESTIONS: Question[] = [
       { id: 'b', text: 'Mit der Saugspannung, gemessen mit Tensiometern' },
       { id: 'c', text: 'Mit dem pH-Wert' },
       { id: 'd', text: 'Mit der Farbe des Bodens' },
-    ], correct: ['b'], explanation: 'Die Saugspannung zeigt, wie stark der Boden Wasser hält; je höher, desto trockener. Grenzwerte gemäss Vollzugshilfe bzw. Auflagen.',
+    ], correct: ['b'], explanation: 'Die Saugspannung zeigt, wie stark der Boden Wasser hält; je höher, desto trockener. Sie ist die Messgrösse – die Grenzwerte für Befahren und Bodenarbeiten kommen aus Auflage bzw. Vollzugshilfe, und die Freigabe gibt die Fachperson (z. B. BBB) anhand aktueller Messwerte, Bodenaufbau und Maschinen. Ein Messwert allein ist kein Freigabeautomatismus.',
     commonErrors: ['Nur nach Augenschein entscheiden.'], sources: ['bafu-boden-bauen'] }),
   q({ id: 'm4-q08', topic: 'm4-verdichtung', level: 2, type: 'single', objective: 'Bei zu nassem Boden richtig entscheiden',
     prompt: 'Nach starkem Regen zeigen die Tensiometer, dass der Boden zu nass für den geplanten Oberbodenabtrag ist. Was tun Sie?',
@@ -162,13 +163,13 @@ export const M4_QUESTIONS: Question[] = [
       { id: 'b', text: 'Es wird geprüft, ob Menschen, Tiere oder Pflanzen konkret gefährdet sind; wenn ja, wird die Nutzung eingeschränkt.' },
       { id: 'c', text: 'Nichts, er ist nur ein Hinweis für Statistiker.' },
       { id: 'd', text: 'Der Boden darf nirgends mehr verwendet werden.' },
-    ], correct: ['b'], explanation: 'Richtwert → Ursachen angehen; Prüfwert → Gefährdung abklären, Nutzung einschränken; Sanierungswert → bestimmte Nutzungen verboten (VBBo, sinngemäss).',
+    ], correct: ['b'], explanation: 'Richtwert → Ursachen angehen; Prüfwert → konkrete Gefährdung untersuchen, nur bei Gefährdung Nutzung einschränken; Sanierungswert → bestimmte Nutzungen verboten (VBBo, sinngemäss).',
     commonErrors: ['Prüf- und Sanierungswert verwechseln.'], sources: ['vbbo'] }),
   q({ id: 'm4-q18', topic: 'm4-belastung', level: 2, type: 'single', objective: 'Boden aus Prüfperimetern richtig behandeln',
     prompt: 'Die Bauparzelle liegt in einem kantonalen Prüfperimeter für Bodenaushub. Ein Landwirt möchte den Oberboden gratis übernehmen. Was gilt?',
     options: [
       { id: 'a', text: 'Abgeben – Oberboden ist immer wertvoll.' },
-      { id: 'b', text: 'Vor der Verschiebung Boden durch eine Fachperson untersuchen lassen; je nach Ergebnis verwerten, eingeschränkt verwerten oder entsorgen – und kantonale Vorgaben zur Abgabe beachten.' },
+      { id: 'b', text: 'Vor der Verschiebung Boden durch eine Fachperson untersuchen lassen; je nach Ergebnis verwerten, eingeschränkt verwerten oder entsorgen – und kantonale Vorgaben zur Abgabe beachten (Rechtsfolgen eines Prüfperimeters sind kantonal unterschiedlich).' },
       { id: 'c', text: 'Abgeben, aber nur die obersten 10 cm.' },
       { id: 'd', text: 'Prüfperimeter betreffen nur Aushub, nicht Boden.' },
     ], correct: ['b'], explanation: 'Prüfperimeter bedeuten: Verdacht auf Belastung – vor der Verschiebung abklären. Belasteter Boden auf Landwirtschaftsflächen verteilt Schadstoffe in die Nahrungskette.',
@@ -177,7 +178,7 @@ export const M4_QUESTIONS: Question[] = [
     prompt: 'Boden einer Strassenböschung liegt über dem Richtwert, unter dem Prüfwert. Wo ist ein Wiedereinbau am ehesten vertretbar?',
     options: [
       { id: 'a', text: 'Im Gemüsegarten einer Schule' },
-      { id: 'b', text: 'Am Entnahmeort, z. B. in der neuen Böschung derselben Strasse – gemäss Einstufung der Fachperson und kantonalen Vorgaben' },
+      { id: 'b', text: 'Am Entnahmeort, z. B. in der neuen Böschung derselben Strasse – nur wenn Fachperson und kantonale Vorgaben das für diesen Boden zulassen' },
       { id: 'c', text: 'Auf einem Biobetrieb' },
       { id: 'd', text: 'Auf einem Kinderspielplatz' },
     ], correct: ['b'], explanation: 'Leicht belasteter Boden bleibt möglichst am Ort bzw. auf vergleichbar belasteten Flächen; sensible Nutzungen sind ausgeschlossen.',
@@ -272,7 +273,7 @@ export const M4_QUESTIONS: Question[] = [
     prompt: 'Die Geschäftsleitung fragt, ob die teure Kiespiste für eine 800 m lange Leitung durch Ackerland wirklich nötig ist. Welche Antwort ist am besten begründet?',
     options: [
       { id: 'a', text: 'Nein, Pisten sind Luxus.' },
-      { id: 'b', text: 'Sie ist meist günstiger als die Folgekosten: Sie schützt den Boden vor bleibender Verdichtung, macht die Baustelle wetterunabhängiger, reduziert Entschädigungen und erfüllt Auflagen – sofern sie vollständig zurückgebaut wird.' },
+      { id: 'b', text: 'Im Vergleich mit den möglichen Folgekosten oft die günstigere Lösung (fallabhängig abwägen): Sie schützt den Boden vor bleibender Verdichtung, macht die Baustelle wetterunabhängiger, reduziert Entschädigungen und erfüllt Auflagen – sofern sie vollständig zurückgebaut wird.' },
       { id: 'c', text: 'Ja, weil das Gesetz Pisten auf jeder Baustelle vorschreibt.' },
       { id: 'd', text: 'Nur nötig, wenn der Landwirt es verlangt.' },
     ], correct: ['b'], explanation: 'Die Antwort verbindet Recht, Technik und Wirtschaftlichkeit; eine pauschale gesetzliche Pistenpflicht wird nicht behauptet.',
@@ -290,15 +291,15 @@ export const M4_QUESTIONS: Question[] = [
     commonErrors: ['Beschwerde abwimmeln.', 'Selbst Schaden beurteilen.'], sources: ['bafu-boden-bauen', 'praxis'] }),
 
   // ---------- Abwägungen (best) ----------
-  q({ id: 'm4-d01', topic: 'm4-grundlagen', level: 3, type: 'best', objective: 'Boden für Umgebungsarbeiten richtig einsetzen',
+  q({ id: 'm4-d01', rev: 4, topic: 'm4-grundlagen', level: 3, type: 'best', objective: 'Boden für Umgebungsarbeiten richtig einsetzen',
     prompt: 'Neubau auf einer Wiese. Der Bauherr möchte den Garten möglichst günstig: «Nehmt einfach den Aushub und legt etwas Humus darüber.» Der abgetragene Ober- und Unterboden liegt getrennt im Depot. Was empfehlen Sie?',
     options: [
       { id: 'a', text: 'Untergrund-Aushub als Gartenunterbau und 10 cm Oberboden darüber, Unterboden entsorgen.', weight: 0.25,
         why: 'Wenig geeignet: Ohne Unterboden fehlt Wurzelraum und Wasserspeicher; der wertvolle Unterboden würde entsorgt statt verwertet (Art. 18 VVEA).', risks: 'Schlechter Wuchs, Staunässe oder Trockenstress; Verstoss gegen Verwertungsgebot.' },
       { id: 'b', text: 'Unterboden und Oberboden aus dem Depot in ursprünglicher Schichtung und Mächtigkeit locker einbauen, bei trockenem Boden; Mehrkosten gegenüber Variante a transparent darlegen.', weight: 1,
         why: 'Am besten geeignet: Bodenfunktionen wiederhergestellt, Boden verwertet, Bauherr informiert.', prerequisites: 'Depot fachgerecht gelagert; trockenes Wetter; kein Befahren der fertigen Fläche.', risks: 'Etwas höhere Kosten; Wetterabhängigkeit.' },
-      { id: 'c', text: 'Ober- und Unterboden mischen und einbauen, das ist einfacher.', weight: 0.5,
-        why: 'Teilweise geeignet: Boden wird verwertet, aber die Vermischung verschlechtert Humusgehalt und Struktur.', prerequisites: 'Nur wenn Fachperson zustimmt.', risks: 'Geringere Bodenqualität.' },
+      { id: 'c', text: 'Ober- und Unterboden mischen und einbauen, das ist einfacher.', weight: 0,
+        why: 'Ungeeignet: Ober- und Unterboden sind getrennt zu behandeln (VBBo Art. 7). Die Vermischung verdünnt den Humus, verschlechtert Struktur und Wasserhaushalt beider Schichten und lässt sich nicht rückgängig machen.', risks: 'Dauerhaft geringere Bodenqualität; Verstoss gegen VBBo bzw. Auflagen.' },
       { id: 'd', text: 'Aushub mit Bauschuttresten als Unterbau verwenden, damit nichts entsorgt werden muss.', weight: 0, critical: true,
         why: 'Kritisch: Bauabfälle im Garten sind eine unzulässige Ablagerung und schädigen den Boden dauerhaft.', risks: 'Verstoss gegen VVEA, spätere Sanierung, Haftung.' },
     ], correct: ['b'], explanation: 'Der beste Garten entsteht aus dem eigenen Boden in richtiger Schichtung. Verwertung vor Entsorgung – und Bauabfälle gehören nie in den Boden.',
@@ -335,7 +336,7 @@ export const M4_QUESTIONS: Question[] = [
       { id: 'a', text: 'Abtragen und den Boden gleich an eine Gärtnerei liefern.', weight: 0, critical: true,
         why: 'Kritisch: Verschiebung von möglicherweise belastetem Boden auf eine sensible Nutzung ohne Analyse.', risks: 'Schadstoffe in Gärten, Rücknahme, Verfahren.' },
       { id: 'b', text: 'Abtragen, getrennt in einem gekennzeichneten Depot auf der Baustelle lagern, nach Vorliegen der Analysen verwerten oder entsorgen.', weight: 1,
-        why: 'Am besten geeignet: Arbeit kann beginnen, ohne Material voreilig zu verschieben.', prerequisites: 'Platz für das Depot; Erosionsschutz; Trennung von anderem Boden.', risks: 'Zwischenlagerkosten.' },
+        why: 'Am besten geeignet – sofern die Triage gesichert ist: Arbeit kann beginnen, ohne Material voreilig zu verschieben.', prerequisites: 'Platz für ein separates Depot mit Erosions- und Witterungsschutz; Trennung von anderem Boden; Auflagen zu Zwischenlagern erfüllt; Bodenfeuchte geeignet bzw. Freigabe der BBB, falls verlangt.', risks: 'Zwischenlagerkosten.' },
       { id: 'c', text: 'Abtrag verschieben, bis die Analysen vorliegen.', weight: 0.5,
         why: 'Teilweise geeignet: sicher, aber unnötig, wenn ein Depot möglich ist.', risks: 'Verzug.' },
       { id: 'd', text: 'Alles vorsorglich als belastet entsorgen.', weight: 0.25,

@@ -34,7 +34,7 @@ describe('Modul 1: Umfang und Struktur', () => {
     }
   });
   test('alle Fragen von Modul 1 tragen Bewertungsfassung 3', () => {
-    for (const q of QUESTIONS.filter((x) => x.moduleId === 'm1')) expect(q.rev, q.id).toBe(3);
+    for (const q of QUESTIONS.filter((x) => x.moduleId === 'm1')) expect([3, 4]).toContain(q.rev);
   });
 });
 
