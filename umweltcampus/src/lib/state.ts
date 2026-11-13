@@ -13,7 +13,7 @@ export const STATE_VERSION = 3;
  * «nach früherer Bewertungsfassung» gekennzeichnet und nicht mehr als
  * Kompetenznachweis gezählt.
  */
-export const SCORING_VERSION = 4;
+export const SCORING_VERSION = 5;
 
 export type Confidence = 1 | 2 | 3; // 1 unsicher, 2 eher sicher, 3 sicher
 

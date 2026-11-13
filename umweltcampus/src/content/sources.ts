@@ -470,17 +470,23 @@ export const SOURCES: Source[] = [
   {
     id: 'uvpv', title: 'Verordnung über die Umweltverträglichkeitsprüfung (UVPV)', short: 'UVPV', kind: 'gesetz', sr: 'SR 814.011',
     issuer: 'Bundesrat', version: 'Geltende Fassung gemäss Fedlex – prüfen', lastChecked: null, scope: 'Ganze Schweiz; Liste der UVP-pflichtigen Anlagen im Anhang', review: 'entwurf',
-    note: 'In der App nur allgemein verwendet (UVP-Pflicht nach Art. 10a USG, Anlagenliste in der UVPV). Schwellenwerte und Anlagentypen nicht wiedergegeben – Original verwenden.',
+    note: 'In der App nur allgemein verwendet: UVP-pflichtig sind die im Anhang der UVPV bezeichneten Anlagetypen, teils mit Schwellenwerten, auch bei wesentlichen Änderungen (Art. 10a USG, Art. 1 UVPV – durch externe Prüfung im Grundsatz bestätigt). Schwellenwerte und Anlagentypen nicht wiedergegeben – Original verwenden.',
   },
   {
     id: 'boeb', title: 'Bundesgesetz über das öffentliche Beschaffungswesen (BöB) bzw. Interkantonale Vereinbarung (IVöB 2019)', short: 'BöB / IVöB', kind: 'gesetz', sr: 'SR 172.056.1 (BöB)',
     issuer: 'Bundesversammlung; Kantone (IVöB)', version: 'Revidierte Fassung (BöB in Kraft seit 2021) – Stand prüfen', lastChecked: null, scope: 'Öffentliche Auftraggeber: Bund (BöB), Kantone und Gemeinden (IVöB bzw. kantonales Recht)', review: 'entwurf',
-    note: 'In der App nur sinngemäss: Nachhaltigkeit als Ziel und als mögliches Eignungs-, Spezifikations- und Zuschlagskriterium. Artikel und Wortlaut nicht geprüft (Fedlex bzw. kantonale Sammlung).',
+    articles: 'Art. 2 (Zweck, Nachhaltigkeit), Art. 27 (Eignung), Art. 29 (Zuschlag), Art. 30 (technische Spezifikationen) – laut externer Prüfung',
+    note: 'In der App nur sinngemäss: Nachhaltigkeit als Ziel und als mögliches Eignungs-, Spezifikations- und Zuschlagskriterium (mit Sachbezug, transparent, gleich für alle). Artikelnummern aus der externen KI-Prüfung vom 13.11.2026, nicht selbst am Fedlex-Text geprüft. Materielle Vorbehalte können zum Ausschluss führen (laut externer Prüfung Art. 33/44 BöB – prüfen). IVöB 2019: Beitritt und Inkraftsetzung je Kanton prüfen.',
+  },
+  {
+    id: 'kbob-nachtrag', title: 'KBOB: Leitfaden zum Nachtragsmanagement bei Bau- und Baudienstleistungen', short: 'KBOB Nachträge', kind: 'vollzugshilfe',
+    issuer: 'Koordinationskonferenz der Bau- und Liegenschaftsorgane der öffentlichen Bauherren (KBOB)', url: 'https://www.kbob.admin.ch', version: 'V2.0, 01.05.2022 – laut externer Prüfung', lastChecked: null, scope: 'Empfehlung für öffentliche Bauherren; keine Rechtsverbindlichkeit für private Verträge', review: 'entwurf',
+    note: 'Quelle aus der externen KI-Prüfung vom 13.11.2026 übernommen; Dokument nicht selbst abgerufen. In der App nur der Grundsatz: Nachtragsmeldung ist kein Anspruch; Vergütung hängt von Vertrag, Risikozuordnung, Anzeige und tatsächlicher Änderung ab.',
   },
   {
     id: 'sia118', title: 'SIA 118 «Allgemeine Bedingungen für Bauarbeiten»', short: 'SIA 118', kind: 'norm',
     issuer: 'Schweizerischer Ingenieur- und Architektenverein (SIA)', url: 'https://www.sia.ch', version: 'Ausgabe gemäss Werkvertrag – prüfen', lastChecked: null, scope: 'Verbindlich nur, wenn im Werkvertrag übernommen', review: 'entwurf',
-    note: 'Kostenpflichtige Norm; keine Inhalte im Wortlaut wiedergegeben. Vertragsfolgen im Einzelfall durch Fachperson Bauvertrag prüfen.',
+    note: 'Kostenpflichtige Norm; keine Inhalte im Wortlaut wiedergegeben und nicht im Volltext geprüft. Ausgabe und vertragliche Abweichungen beachten. Vertragsfolgen im Einzelfall durch Fachperson Bauvertrag prüfen.',
   },
   {
     id: 'praxis',

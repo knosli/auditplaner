@@ -15,13 +15,20 @@ export const RESCORED_V4_SCENARIOS = new Set(['sim-g', 'sim-h']);
 /** Prüfungen dieser Module (und gemischte) können geänderte Fragen enthalten. */
 const RESCORED_V4_EXAM_MODULES = new Set(['m3', 'm4', 'mix']);
 
+// Bewertungsfassung 5 (externe Prüfung Modul 8 vom 13.11.2026): Vergabe- und
+// Nachtragsrecht, Asbest-Freigabekette und Gewichte dreier Abwägungen korrigiert;
+// Fall D mit zwingender Freigabekette (No-Go) neu bewertet.
+export const RESCORED_V5_QUESTIONS = new Set(['m8-q08', 'm8-q17', 'm8-q22', 'm8-d02', 'm8-d03', 'm8-d05']);
+export const RESCORED_V5_SCENARIOS = new Set(['sim-d']);
+const RESCORED_V5_EXAM_MODULES = new Set(['m8', 'mix']);
+
 /** Antwort aus früherer Bewertungsfassung zu einer inzwischen geänderten Frage. */
-export const isLegacyAnswer = (a: AnswerRecord) => (!a.v && RESCORED_V3_QUESTIONS.has(a.q)) || ((a.v ?? 0) < 4 && RESCORED_V4_QUESTIONS.has(a.q));
+export const isLegacyAnswer = (a: AnswerRecord) => (!a.v && RESCORED_V3_QUESTIONS.has(a.q)) || ((a.v ?? 0) < 4 && RESCORED_V4_QUESTIONS.has(a.q)) || ((a.v ?? 0) < 5 && RESCORED_V5_QUESTIONS.has(a.q));
 /** Offene Fragen vor Fassung 3 wurden als «richtig» verbucht, obwohl nur selbst bewertet. */
 export const isLegacySelf = (a: AnswerRecord, isOpen: boolean) => !a.v && isOpen;
-export const isLegacyRun = (scenarioId: string, r: ScenarioRun) => (!r.v && RESCORED_V3_SCENARIOS.has(scenarioId)) || ((r.v ?? 0) < 4 && RESCORED_V4_SCENARIOS.has(scenarioId));
+export const isLegacyRun = (scenarioId: string, r: ScenarioRun) => (!r.v && RESCORED_V3_SCENARIOS.has(scenarioId)) || ((r.v ?? 0) < 4 && RESCORED_V4_SCENARIOS.has(scenarioId)) || ((r.v ?? 0) < 5 && RESCORED_V5_SCENARIOS.has(scenarioId));
 /** Prüfungen enthalten geänderte Fragen und Selbstbewertungen: alle vor Fassung 3 gelten als frühere Fassung. */
-export const isLegacyExam = (e: ExamRun) => !e.v || (e.v < 4 && RESCORED_V4_EXAM_MODULES.has(e.moduleId));
+export const isLegacyExam = (e: ExamRun) => !e.v || (e.v < 4 && RESCORED_V4_EXAM_MODULES.has(e.moduleId)) || (e.v < 5 && RESCORED_V5_EXAM_MODULES.has(e.moduleId));
 
 export function legacyCounts(s: AppState, isOpen: (qid: string) => boolean) {
   return {

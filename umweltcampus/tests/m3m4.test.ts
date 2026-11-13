@@ -29,8 +29,8 @@ for (const mod of ['m3', 'm4', 'm8']) {
         expect(new Set(QUESTIONS.filter((q) => q.topic === t.id).map((q) => q.level)).size, t.id).toBeGreaterThanOrEqual(2);
       }
     });
-    test('alle Fragen tragen Bewertungsfassung 3 oder 4', () => {
-      for (const q of QUESTIONS.filter((x) => x.moduleId === mod)) expect([3, 4]).toContain(q.rev);
+    test('alle Fragen tragen eine gültige Bewertungsfassung', () => {
+      for (const q of QUESTIONS.filter((x) => x.moduleId === mod)) expect(mod === 'm8' ? [4, 5] : [3, 4]).toContain(q.rev);
     });
     test('kritische Optionen geben 0 Punkte', () => {
       for (const q of QUESTIONS.filter((x) => x.moduleId === mod && x.type === 'best')) {
@@ -162,8 +162,61 @@ describe('Modul 8: Planung und AVOR', () => {
     expect(evaluateStage(st('d5'), { stageId: 'd5', selected: ['r2'] })).toMatchObject({ score: 0, critical: true });
   });
   test('Lücken nicht sofort melden ist kritisch', () => {
-    expect(evaluateRank(st('d4'), ['n2', 'n3', 'n1', 'n4', 'n5']).critical).toBe(true);
-    expect(evaluateRank(st('d4'), ['n2', 'n1', 'n3', 'n4', 'n5'])).toMatchObject({ score: 1, critical: false });
+    expect(evaluateRank(st('d4'), ['n2', 'n3', 'n1', 'n4', 'n6', 'n5']).critical).toBe(true);
+    expect(evaluateRank(st('d4'), ['n2', 'n1', 'n3', 'n4', 'n6', 'n5'])).toMatchObject({ score: 1, critical: false });
+  });
+  test('Fassung 5: Freigabekette – Rückbau vor Meldung, Sanierung oder Freigabe ist ein No-Go', () => {
+    const all = ['n1', 'n2', 'n3', 'n4', 'n6', 'n5'];
+    // jede Reihenfolge, in der der Rückbau (n5) nicht am Schluss steht, ist kritisch
+    for (let pos = 0; pos < 5; pos++) {
+      const rest = all.filter((x) => x !== 'n5');
+      const order = [...rest.slice(0, pos), 'n5', ...rest.slice(pos)];
+      if (order[5] === 'n2') continue; // nur Planungsschritt nach dem Rückbau – kein Glied der Freigabekette
+      expect(evaluateRank(st('d4'), order).critical, order.join()).toBe(true);
+    }
+    expect(evaluateRank(st('d4'), ['n1', 'n2', 'n3', 'n4', 'n5', 'n6'])).toMatchObject({ critical: true });
+    expect(evaluateRank(st('d4'), ['n1', 'n2', 'n3', 'n4', 'n5', 'n6']).score).toBeLessThanOrEqual(0.25);
+  });
+  test('Fassung 5: Gewichte der Abwägungen (keine Punkte für fehlende Schutzwirkung oder Intransparenz)', () => {
+    const w = (qid: string, oid: string) => QUESTIONS.find((q) => q.id === qid)!.options!.find((o) => o.id === oid)!.weight;
+    expect(w('m8-d03', 'c')).toBe(0); // Erdwall statt Fassung und Behandlung
+    expect(w('m8-d05', 'c')).toBe(0); // Kosten auf andere Positionen verschieben
+    expect(w('m8-d02', 'c')).toBe(0);
+    expect(w('m8-d02', 'b')).toBe(1);
+    expect(w('m8-d02', 'd')).toBe(0.75); // Pflichtmassnahme gesichert, aber ohne Anzeige
+  });
+  test('Fassung 5: Vertragsrecht – kein automatischer Nachtrag, Vorbehalt kein Standard', () => {
+    const l2 = JSON.stringify(LESSONS.find((l) => l.id === 'm8-l2'));
+    expect(l2).toContain('nicht automatisch');
+    expect(l2).toContain('vier Fälle');
+    expect(l2).not.toContain('Der Nachtrag ist unbestritten');
+    expect(QUESTIONS.find((q) => q.id === 'm8-q08')!.options!.find((o) => o.id === 'b')!.text).toContain('nur nach vergabe- und vertragsrechtlicher Prüfung');
+    expect(JSON.stringify(SITETASKS.find((x) => x.id === 'm8-t2'))).toContain('keine sichere Lösung');
+  });
+  test('Fassung 5: Asbest nur für Arbeiten mit erheblicher Faserfreisetzung pauschalisiert', () => {
+    expect(JSON.stringify(LESSONS.find((l) => l.id === 'm8-l4'))).toContain('erheblicher Faserfreisetzung');
+    expect(CARDS.find((c) => c.id === 'm8-c13')!.back).toContain('erheblicher Faserfreisetzung');
+  });
+  test('Fassung 5: geänderte Inhalte tragen rev 5; frühere Ergebnisse gelten als frühere Fassung, neue nicht', () => {
+    for (const id of ['m8-q08', 'm8-q17', 'm8-q22', 'm8-d02', 'm8-d03', 'm8-d05']) expect(QUESTIONS.find((q) => q.id === id)!.rev, id).toBe(5);
+    expect(S.get('sim-d')!.rev).toBe(5);
+    const mk = (v: number) => ({ q: 'm8-d02', at: 1, score: 1, correct: true, conf: 2, ctx: 'lesson', v }) as never;
+    expect(isLegacyAnswer(mk(4))).toBe(true);
+    expect(isLegacyAnswer(mk(5))).toBe(false);
+    expect(isLegacyAnswer({ q: 'm8-q01', at: 1, score: 1, correct: true, conf: 2, ctx: 'lesson', v: 4 } as never)).toBe(false);
+    expect(isLegacyAnswer({ q: 'm4-d01', at: 1, score: 1, correct: true, conf: 2, ctx: 'lesson', v: 4 } as never)).toBe(false);
+    const run = (v: number) => ({ at: 1, total: 1, objective: 1, byCriterion: {}, critical: 0, path: [], passed: true, v }) as never;
+    expect(isLegacyRun('sim-d', run(4))).toBe(true);
+    expect(isLegacyRun('sim-d', run(5))).toBe(false);
+    expect(isLegacyRun('sim-h', run(4))).toBe(false);
+    const ex = (moduleId: string, v: number) => ({ id: 'x', kind: 'modul', moduleId, at: 1, score: 1, total: 1, byTopic: {}, passed: true, v }) as never;
+    expect(isLegacyExam(ex('m8', 4))).toBe(true);
+    expect(isLegacyExam(ex('m8', 5))).toBe(false);
+    expect(isLegacyExam(ex('m3', 4))).toBe(false);
+  });
+  test('Prüfstatus bleibt Entwurf', () => {
+    for (const l of LESSONS.filter((x) => x.moduleId === 'm8')) expect(l.review).toBe('entwurf');
+    for (const q of QUESTIONS.filter((x) => x.moduleId === 'm8')) expect(q.review).toBe('entwurf');
   });
   test('Fachaussagen: Auflage gilt auch ohne LV-Position; keine Einleitung ohne Zustimmung', () => {
     expect(QUESTIONS.find((q) => q.id === 'm8-q07')!.correct).toEqual(['b']);

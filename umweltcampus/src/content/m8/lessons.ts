@@ -4,6 +4,7 @@ import type { Lesson } from '../types';
 // Rechtliche Aussagen sinngemäss; nur Artikel genannt, die in der App bereits über Sekundärquellen
 // bestätigt wurden (Art. 16 VVEA, Art. 25a RPG, Art. 10a USG, LRV Art. 19a, LSV Art. 6) oder die
 // ausdrücklich als «zu prüfen» markiert sind. Keine Schwellenwerte, keine Normzitate im Wortlaut.
+// Nach externer KI-Fachprüfung vom 13.11.2026 überarbeitet (siehe docs/modul8-korrekturen.md); Prüfstatus bleibt Entwurf.
 
 const M = 'm8';
 const E = 'entwurf' as const;
@@ -42,7 +43,7 @@ Werkvertrag, besondere Bestimmungen, Leistungsverzeichnis, Pläne, Entsorgungsko
 ### 3. Standortgrundlagen (öffentliche Geodaten des Kantons)
 | Karte / Kataster | Frage |
 |---|---|
-| Gewässerschutzkarte | Liegt das Projekt in Au, Ao, Zu/Zo oder in einer Grundwasserschutzzone? |
+| Gewässerschutzkarte | Liegt das Projekt in Au, Ao, Zu/Zo, in einer Grundwasserschutzzone oder im Gewässerraum? |
 | Kataster der belasteten Standorte | Ist die Parzelle oder eine Nachbarparzelle eingetragen? |
 | Kanalisationskataster (Gemeinde) | Wohin führen die Schächte auf und neben dem Areal? |
 | Prüfperimeter Boden (kantonal) | Muss Boden vor der Verschiebung untersucht werden? |
@@ -50,9 +51,11 @@ Werkvertrag, besondere Bestimmungen, Leistungsverzeichnis, Pläne, Entsorgungsko
 | Lärmempfindlichkeitsstufen (Zonenplan) | Wie empfindlich ist die Nachbarschaft? |
 | Neophyten-Standorte (wo vorhanden) | Muss Boden mit invasiven Pflanzen getrennt werden? |
 
-§> Art. 25a RPG und Art. 10a USG sinngemäss (bereits in Modul 1 eingeführt). Welche Karten es gibt und wie sie heissen, ist kantonal verschieden – Geoportal des Standortkantons verwenden.` },
+Der Kanalisationskataster ist die erste amtliche Grundlage; er kann unvollständig oder veraltet sein. Bei kritischen oder unklaren Verbindungen vor Ort prüfen lassen (z. B. Kanal-TV oder Färbeversuch, in Absprache mit der Gemeinde).
+
+§> Art. 25a RPG und Art. 10a USG sinngemäss (bereits in Modul 1 eingeführt). UVP-pflichtig sind die im Anhang der UVPV bezeichneten Anlagetypen (teils mit Schwellenwerten) – nicht jedes Projekt mit spürbaren Umweltwirkungen. Welche Karten es gibt und wie sie heissen, ist kantonal verschieden – Geoportal des Standortkantons verwenden.` },
       { id: 'm8-l1-explain-2', kind: 'explain', title: 'Auflagen erfassen und einordnen', text: `### Vollständig lesen – nicht nur die Umweltkapitel
-Umweltauflagen stehen oft verstreut: unter «Allgemeines», «Kanalisation», «Bauausführung» oder als Verweis auf ein Merkblatt («Das Merkblatt XY ist einzuhalten»). Ein **Verweis auf ein Merkblatt macht dessen Inhalt für das Projekt verbindlich** – das Merkblatt gehört deshalb in den Ordner.
+Umweltauflagen stehen oft verstreut: unter «Allgemeines», «Kanalisation», «Bauausführung» oder als Verweis auf ein Merkblatt («Das Merkblatt XY ist einzuhalten»). Ein **hinreichend bestimmter Verweis in einer rechtskräftigen Auflage kann die Vorgaben des Merkblatts für das Projekt verbindlich machen**. Halten Sie fest, **welche Fassung** gemeint ist und **welche Teile** Vorgaben sind – Beispiele und Empfehlungen im Merkblatt bleiben Empfehlungen. Im Zweifel über die Bauleitung bei der Behörde klären. Das Merkblatt gehört in den Ordner.
 
 ### Rechtsnatur festhalten
 Für jede Anforderung notieren Sie, **woher** sie kommt:
@@ -65,7 +68,10 @@ Für jede Anforderung notieren Sie, **woher** sie kommt:
 ### Unklarheiten und Widersprüche
 Widersprechen sich zwei Auflagen oder ist eine unklar («geeignete Massnahmen»), klären Sie das **vor Baustart** über die Bauherrschaft bzw. Bauleitung mit der Behörde – schriftlich. Sie legen Auflagen nicht selbst aus.
 
-!> Eine fehlende Bewilligung (z. B. für die Wasserhaltung) ist ein Grund, mit dieser Arbeit nicht zu beginnen. Melden Sie sie sofort – nicht erst, wenn der Bagger steht.` },
+### Go/No-Go-Punkte festhalten
+Für jede Arbeit, die eine Bewilligung, Zustimmung, Meldung oder Freigabe voraussetzt, steht in der Auflagenliste ein **Go/No-Go-Punkt**: Was muss nachweislich vorliegen, bevor diese Arbeit beginnt? Typisch: Baufreigabe (wo der Kanton eine solche kennt), Bewilligung Wasserhaltung, Zustimmung zur Einleitung, Sanierung mit Freigabe des Bereichs vor dem Rückbau, Freigabe von Bodenarbeiten durch die BBB. «Zustimmung», «Bewilligung», «Meldung» und «Freigabe» sind verschiedene Dinge – notieren Sie, **welche** verlangt ist und **von wem**.
+
+!> Eine fehlende Bewilligung (z. B. für die Wasserhaltung) ist ein Grund, mit dieser Arbeit nicht zu beginnen. Melden Sie sie sofort – nicht erst, wenn der Bagger steht. Andere Arbeiten können beginnen, **soweit für sie alle nötigen Freigaben vorliegen**.` },
       { id: 'm8-l1-diagram', kind: 'diagram', title: 'Schema: Vom Projekt zur Ausführung', diagram: 'bewilligungsweg', caption: 'Wo Umweltanforderungen entstehen und wo die Unternehmung sie übernimmt. Vereinfachte Lernhilfe.' },
       { id: 'm8-l1-example', kind: 'example', title: 'Beispiel aus dem Hochbau: Wohnbau mit Tiefgarage', context: 'Hochbau', text: `Beim Durchsehen der Bewilligung findet die Umweltbeauftragte unter «Kanalisation» den Satz: «Für die Wasserhaltung ist vor Baubeginn beim kantonalen Amt eine Bewilligung einzuholen.» Die Gewässerschutzkarte zeigt Bereich Au, der Baugrundbericht Grundwasser zwei Meter über der Baugrubensohle. Eine Bewilligung liegt nicht im Ordner. Sie meldet das der Bauleitung schriftlich; die Bauherrschaft reicht das Gesuch ein, der Aushub unter den Grundwasserspiegel wird im Terminplan nach hinten geschoben.
 
@@ -85,7 +91,7 @@ Umweltmassnahmen brauchen **Platz, Zeit und Geld**: ein Waschplatz mit Absetzbec
 6. **Übergabe an die Massnahmenplanung** (Lektion 4): aus der Liste wird der Umweltmassnahmenplan.
 
 ### 3. Wer ist Adressat?
-Auflagen richten sich formell an die **Bauherrschaft** (sie ist Gesuchstellerin). Die Bauherrschaft überträgt ihre Umsetzung über Ausschreibung und Werkvertrag an Planer und Unternehmer. Für Sie heisst das: Eine Auflage ist nicht automatisch Ihre Aufgabe – aber was im Vertrag steht oder Ihre Arbeit betrifft (z. B. Entwässerung, Maschinen, Entsorgung), müssen Sie umsetzen. Gesetzliche Pflichten wie das Verunreinigungsverbot gelten ohnehin für alle.
+Auflagen richten sich **in der Regel** an die Gesuchstellerin bzw. den Gesuchsteller – meist die **Bauherrschaft**. Wer im Einzelfall verpflichtet ist, ergibt sich aus dem konkreten Entscheid und dem kantonalen Recht: Einzelne Pflichten (z. B. die Meldung von Baubeginn und Bauvollendung) können je nach Kanton ausdrücklich die Bauleitung oder die Unternehmung treffen. Die Bauherrschaft überträgt die Umsetzung über Ausschreibung und Werkvertrag an Planer und Unternehmer. Für Sie heisst das: Eine Auflage ist nicht automatisch Ihre Aufgabe – aber was im Vertrag steht oder Ihre Arbeit betrifft (z. B. Entwässerung, Maschinen, Entsorgung), müssen Sie umsetzen. Gesetzliche Pflichten wie das Verunreinigungsverbot gelten ohnehin für alle Beteiligten selbst.
 
 ### 4. Typische Lücken, die Sie finden werden
 - Nebenbewilligung für Wasserhaltung oder Einleitung fehlt oder ist noch hängig.
@@ -95,8 +101,10 @@ Auflagen richten sich formell an die **Bauherrschaft** (sie ist Gesuchstellerin)
 - Kataster-Standort auf der Parzelle, aber kein Konzept für belasteten Aushub.
 - Verweis auf ein kantonales Merkblatt in veralteter Fassung.
 
+Je nach Projekt und Standort zusätzlich prüfen (nicht jedes Thema löst eine Pflicht aus – massgebend sind Bewilligung, Kanton und Gemeinde): invasive Neophyten bzw. biologisch belasteter Boden, Baustellenbeleuchtung (Lichtemissionen), Erschütterungen und allfälliges Monitoring, Gewässerraum und Artenschutz, Benützung von Strassen und öffentlichem Grund, Nacht- und Spezialarbeiten, Störfallbetriebe in der Umgebung.
+
 ### 5. Standortrisiken lesen
-Die Karten liefern **Hinweise, keine Gewissheit**. Ein Eintrag im Kataster der belasteten Standorte heisst nicht, dass der Aushub belastet ist – aber er löst Abklärungen aus (bei Bauvorhaben auf belasteten Standorten gilt Art. 3 AltlV, sinngemäss). Umgekehrt schützt ein leerer Kataster nicht vor einer alten Auffüllung. Kombinieren Sie Karten mit der Geschichte des Ortes, Gutachten und einer Begehung.
+Die Karten liefern **Hinweise, keine Gewissheit**. Ein Eintrag im Kataster der belasteten Standorte heisst nicht, dass der Aushub belastet ist – aber er löst Abklärungen aus (bei Bauvorhaben auf belasteten Standorten gilt Art. 3 AltlV, sinngemäss). Ein Eintrag auf einer **Nachbarparzelle** ist ein Hinweis, kein Befund für die eigene Baugrube. Umgekehrt schützt ein leerer Kataster nicht vor einer alten Auffüllung. Kombinieren Sie Karten mit der Geschichte des Ortes, Gutachten und einer Begehung.
 
 ### 6. Rechtsnatur sauber trennen
 Der Check ist auch eine Übung in Ehrlichkeit: Was **muss** sein (Gesetz, Auflage), was ist **vereinbart** (Norm im Vertrag), was ist **empfohlen** (Vollzugshilfe ohne Verweis, Praxis)? Diese Trennung ist entscheidend, wenn später über Kosten gesprochen wird: Eine Auflage ist nicht verhandelbar; eine Empfehlung kann man begründet anders lösen.
@@ -112,9 +120,9 @@ Sie prüfen, ordnen ein und melden. Sie **erteilen keine Bewilligung**, legen Au
       { id: 'm8-l1-practice', kind: 'practice', title: 'Praxisauftrag', taskId: 'm8-p1' },
       { id: 'm8-l1-summary', kind: 'summary', title: 'Zusammenfassung', points: [
         'Drei Fragen: Was verlangt die Bewilligung, der Vertrag, der Standort?',
-        'Auflagen vollständig lesen – auch Verweise auf Merkblätter und Nebenbewilligungen.',
+        'Auflagen vollständig lesen – auch Verweise auf Merkblätter (Fassung, Reichweite) und Nebenbewilligungen.',
         'Standortrisiken über Geoportal und Kanalisationskataster prüfen.',
-        'Jede Anforderung mit Quelle, Rechtsnatur, Adressat und Frist in eine Auflagenliste.',
+        'Jede Anforderung mit Quelle, Rechtsnatur, Adressat, Frist und Go/No-Go-Punkt in eine Auflagenliste.',
         'Lücken und Widersprüche vor Baustart schriftlich klären – nicht selbst auslegen.',
       ] },
       { id: 'm8-l1-sources', kind: 'sources', title: 'Quellen und weiterführende Informationen', sourceIds: ['rpg', 'usg', 'uvpv', 'vvea', 'altlv', 'gemeinde-entwaesserung'] },
@@ -139,7 +147,7 @@ Wer bezahlt den Waschplatz? Und was hätte man früher anders machen können?` }
 
 **Der Unternehmer** prüft in der Offertphase, ob die Umweltanforderungen vollständig und klar sind – und stellt Fragen, wenn nicht.
 
-**Die Auflage gilt trotzdem**, auch wenn sie im LV fehlt. Offen ist nur, **wer die Kosten trägt** – das richtet sich nach dem Werkvertrag (z. B. SIA 118, wenn vereinbart).
+**Die Auflage gilt trotzdem**, auch wenn sie im LV fehlt. **Wer die Kosten trägt, ist eine separate Frage** des gesamten Werkvertrags (nicht nur des LV; z. B. SIA 118, wenn vereinbart). Eine fehlende Position bedeutet **nicht automatisch** einen Nachtragsanspruch.
 
 **Subunternehmer** erhalten die Umweltpflichten schriftlich weitergegeben (Maschinen, Entsorgung, Verhalten im Notfall).` },
       { id: 'm8-l2-explain', kind: 'explain', title: 'Wie Umweltanforderungen in den Vertrag kommen', text: `### Ausschreibung
@@ -153,18 +161,27 @@ In der Ausschreibung beschreibt die Bauherrschaft, **was** gebaut wird und **unt
 - Sind Mengen realistisch (z. B. Entsorgung belasteter Aushub, Wasserbehandlung über die ganze Bauzeit)?
 - Sind Termine mit Umweltauflagen vereinbar (Bodenfeuchte, Brutzeit, Sanierung vor Rückbau)?
 - Sind unklare Formulierungen («nach Weisung der UBB», «geeignete Massnahmen») kalkulierbar?
-Lücken melden Sie **in der Fragerunde** oder mit einem klar formulierten **Vorbehalt in der Offerte** – nicht stillschweigend.
+Lücken klären Sie **in der Fragerunde** – fristgerecht und schriftlich. Ist die Fragerunde vorbei, ersuchen Sie die ausschreibende Stelle um Präzisierung oder kalkulieren ausschreibungskonform inklusive der Pflichtmassnahmen. Ein **Vorbehalt in der Offerte** ist kein gleichwertiger Ersatz: Bei öffentlichen Vergaben kann er zum Ausschluss führen, und er garantiert keinen Anspruch. Er kommt nur nach vergabe- und vertragsrechtlicher Prüfung in Frage.
 
 ### Nach Vertragsabschluss
-Neue oder geänderte Umweltanforderungen (z. B. eine nachträgliche Auflage, eine strengere Massnahmenstufe) sind eine **Bestellungsänderung**: Mehrkosten und Termine als **Nachtrag** anmelden, bevor die Leistung erbracht wird – soweit der Vertrag das vorsieht.
+Taucht nach Vertragsabschluss eine Umweltanforderung auf, die nicht kalkuliert wurde, unterscheiden Sie **vier Fälle** – die Kostenfolge ist jedes Mal anders:
 
-§> SIA 118 «Allgemeine Bedingungen für Bauarbeiten» gilt nur, wenn sie im Werkvertrag übernommen ist. Konkrete Vertragsfolgen im Einzelfall durch die Rechtsabteilung bzw. Fachperson Bauvertrag prüfen lassen.` },
+| Fall | Beispiel | Kostenfolge (Grundsatz) |
+|---|---|---|
+| 1. Bereits geschuldete Pflicht | Auflage lag der Ausschreibung bei; Vertrag verlangt «Einhaltung aller Auflagen» | Meist im Preis enthalten – kein Nachtrag allein, weil eine LV-Position fehlt |
+| 2. Unklare oder lückenhafte Ausschreibung | Auflage war nicht beigelegt oder widersprüchlich beschrieben | Offen – hängt von Vertrag, Risikozuordnung und Rangfolge der Vertragsbestandteile ab |
+| 3. Tatsächlich neue Bestellung | Bauherrschaft verlangt nachträglich mehr oder anderes | Bestellungsänderung – Nachtrag nach den Regeln des Vertrags |
+| 4. Neue behördliche Anordnung | Behörde verschärft während des Baus | Wer das Risiko trägt, regelt der Vertrag |
+
+In allen vier Fällen gilt: **Pflichtmassnahme rechtzeitig umsetzen**, die Bauleitung **unverzüglich schriftlich** informieren (Anzeige) und den Anspruch **prüfen lassen**. Eine Nachtragsmeldung ist noch kein Anspruch; ob und wie viel vergütet wird, hängt von Vertragsinhalt, Risikozuordnung, rechtzeitiger Anzeige und der tatsächlichen Änderung ab.
+
+§> SIA 118 «Allgemeine Bedingungen für Bauarbeiten» gilt nur, wenn sie im Werkvertrag übernommen ist (Ausgabe und vertragliche Abweichungen beachten; Norm nicht im Volltext geprüft). Die Fallunterscheidung folgt sinngemäss dem KBOB-Leitfaden zum Nachtragsmanagement (2022, laut externer Prüfung; Original nicht selbst geprüft). Konkrete Vertragsfolgen immer durch die Rechtsabteilung bzw. Fachperson Bauvertrag prüfen lassen.` },
       { id: 'm8-l2-explain-2', kind: 'explain', title: 'Öffentliche Beschaffung und Subunternehmer', text: `### Öffentliche Bauherrschaften
-Bund, Kantone und Gemeinden vergeben nach dem Beschaffungsrecht (Bund: BöB; Kantone und Gemeinden: IVöB bzw. kantonales Recht). Das revidierte Beschaffungsrecht nennt die **Nachhaltigkeit** ausdrücklich als Ziel und lässt ökologische Kriterien bei Eignung, technischen Spezifikationen und Zuschlag zu (sinngemäss, Wortlaut prüfen). Für Sie heisst das: Umweltangaben in der Offerte (Maschinenpark, Transportkonzept, Entsorgungswege) können über den Zuschlag mitentscheiden – und werden später **vertraglich geschuldet**.
+Bund, Kantone und Gemeinden vergeben nach dem Beschaffungsrecht (Bund: BöB; Kantone und Gemeinden: IVöB bzw. kantonales Recht). Das revidierte Beschaffungsrecht nennt die **Nachhaltigkeit** ausdrücklich als Ziel und lässt ökologische Kriterien bei Eignung, technischen Spezifikationen und Zuschlag zu – mit Sachbezug zum Auftrag, transparent und für alle Anbieter gleich (BöB Art. 2, 27, 29, 30 laut externer Prüfung; für Kantone gilt die IVöB 2019, soweit beigetreten und in Kraft gesetzt – Wortlaut prüfen). Für Sie heisst das: Umweltangaben in der Offerte (Maschinenpark, Transportkonzept, Entsorgungswege) können über den Zuschlag mitentscheiden – und werden später **vertraglich geschuldet**.
 
 ### Subunternehmer und Lieferanten
 Die Bauherrschaft hat einen Vertrag mit Ihnen – nicht mit Ihren Subunternehmern. Was Sie zusagen, müssen Sie **weitergeben**:
-- Maschinen: Nachweise nach LRV (Partikelfilter-Pflicht für Baumaschinen über 18 kW, Art. 19a LRV, mit Übergangsregeln).
+- Maschinen: Nachweise nach LRV für Baumaschinen mit Dieselmotor über 18 kW (Art. 19a LRV; massgebend sind Motorart, Baujahr und der Konformitätsnachweis – nicht bloss ein sichtbarer Filter; Schwelle und Übergangsregeln im Wortlaut prüfen).
 - Entsorgung: Fraktionen, Annahmestellen, Nachweise (Liefer-, Wäge-, Begleitscheine).
 - Verhalten: Betankung, Waschplatz, Notfallorganisation, Bodenschutz (nur Pisten befahren).
 - Teilnahme an Instruktionen und Kontrollen; Folgen bei Verstössen.
@@ -172,10 +189,10 @@ Die Bauherrschaft hat einen Vertrag mit Ihnen – nicht mit Ihren Subunternehmer
 !> Ein Subunternehmer ohne Instruktion ist eines der grössten Umweltrisiken auf jeder Baustelle – gerade weil er die Baustelle und ihre Auflagen nicht kennt.` },
       { id: 'm8-l2-example', kind: 'example', title: 'Beispiel aus dem Hochbau: Schulhaus-Erweiterung', context: 'Hochbau', text: `Die Gemeinde schreibt eine Schulhaus-Erweiterung aus. Die Bewilligung verlangt Massnahmenstufe B Luft und einen Lärmschutz während des Schulbetriebs. Das LV enthält keine Position für Staubschutzwände und keine Regel zu lärmintensiven Arbeiten während der Unterrichtszeit. Die Umweltbeauftragte des Unternehmers stellt in der Fragerunde zwei Fragen: Wie sind Staubschutz und Lärmzeiten abzugelten? Antwort der Bauherrschaft: neue Positionen und ein Zeitfenster für lärmintensive Arbeiten. Alle Anbieter offerieren nun dasselbe.
 
-**Lernpunkt**: Eine Frage in der Offertphase kostet nichts – ein Streit über Nachträge während des Baus viel.` },
-      { id: 'm8-l2-example-2', kind: 'example', title: 'Beispiel aus dem Tiefbau: Strassensanierung mit Ausbauasphalt', context: 'Tiefbau', text: `Ein Kanton schreibt eine Belagssanierung aus. Das LV enthält «Belag abbrechen und entsorgen» als eine Position, ohne Angaben zum PAK-Gehalt. Der Unternehmer offeriert mit dem ausdrücklichen Vorbehalt: «Preis gilt für Ausbauasphalt mit weniger als 250 mg PAK/kg; bei höherem Gehalt Nachtrag nach Analyse.» Nach dem Zuschlag zeigen Bohrkerne in einem Abschnitt höhere Werte. Der Nachtrag ist unbestritten, weil der Vorbehalt klar war.
+**Lernpunkt**: Eine fristgerecht und sauber gestellte Frage in der Offertphase kostet wenig – ein Streit über Nachträge während des Baus viel.` },
+      { id: 'm8-l2-example-2', kind: 'example', title: 'Beispiel aus dem Tiefbau: Strassensanierung mit Ausbauasphalt', context: 'Tiefbau', text: `Ein Kanton schreibt eine Belagssanierung aus. Das LV enthält «Belag abbrechen und entsorgen» als eine Position, ohne Angaben zum PAK-Gehalt. Der Unternehmer fragt in der Fragerunde: «Liegen PAK-Analysen vor? Wie wird Ausbauasphalt über 250 mg PAK/kg abgegolten?» Die Vergabestelle lässt Bohrkerne untersuchen und teilt die Position für alle Anbieter in Einheitspreise je PAK-Klasse mit geschätzten Mengen auf. Später zeigt ein Abschnitt tatsächlich höhere Werte – abgerechnet wird nach der vorgesehenen Position.
 
-**Lernpunkt**: Ein klarer Vorbehalt schützt beide Seiten – und sorgt dafür, dass das belastete Material korrekt entsorgt wird, statt aus Kostendruck «mitzulaufen».` },
+**Lernpunkt**: Die Klärung vor der Eingabe schafft gleiche Bedingungen und sorgt dafür, dass belastetes Material korrekt entsorgt wird, statt aus Kostendruck «mitzulaufen». Ein eigener Vorbehalt in der Offerte wäre bei dieser öffentlichen Vergabe riskant gewesen (möglicher Ausschluss) und hätte keinen Anspruch garantiert.` },
       { id: 'm8-l2-deep', kind: 'deep', title: 'Fachvertiefung: Vertrag, Kosten und Verantwortung', text: `### 1. Drei Ebenen, die man nicht verwechseln darf
 - **Öffentlich-rechtliche Pflicht**: Gesetz und Auflage gelten unabhängig vom Vertrag. Die Behörde kann ihre Einhaltung durchsetzen – gegenüber der Bauherrschaft und, je nach Fall, gegenüber den Verursachern.
 - **Vertragliche Pflicht**: Was der Unternehmer der Bauherrschaft schuldet, steht im Werkvertrag mit allen Bestandteilen (LV, besondere Bestimmungen, Pläne, ggf. SIA 118).
@@ -191,8 +208,11 @@ Eine gute Position ist **messbar und kalkulierbar**: Was genau, wie viel, wie la
 ### 3. Pauschalen und Regie
 Umweltleistungen werden oft pauschal offeriert («Baustelleneinrichtung inkl. Umweltmassnahmen»). Das ist einfach, verdeckt aber den Aufwand. Wenn später zusätzliche Massnahmen verlangt werden, ist schwer zu belegen, was in der Pauschale enthalten war. Für unsichere Mengen (z. B. belasteter Aushub) eignen sich Einheitspreise mit geschätzten Mengen oder Regie.
 
-### 4. Vorbehalte und Fragen
-Ein Vorbehalt muss **konkret** sein: Was ist angenommen, und was passiert, wenn die Annahme nicht stimmt? «Unter Vorbehalt der Umweltauflagen» nützt niemandem. Wichtig: In öffentlichen Vergaben können Vorbehalte zum Ausschluss führen – deshalb besser früh in der Fragerunde klären.
+### 4. Fragen vor Vorbehalten
+Der sichere Weg ist die **Frage an die ausschreibende Stelle** vor Ablauf der Frist. Materielle Vorbehalte oder abweichende Offerten können bei öffentlichen Vergaben als ausschreibungswidrig ausgeschlossen werden (nicht jeder Hinweis ist ein Ausschlussgrund – aber das Risiko trägt der Anbieter). Wo Varianten zugelassen sind, braucht es in der Regel zusätzlich ein vollständiges, ausschreibungskonformes Grundangebot. Bei privaten Bauherrschaften ist ein **konkreter** Vorbehalt eher möglich (Was ist angenommen? Was gilt, wenn die Annahme nicht stimmt?) – «unter Vorbehalt der Umweltauflagen» nützt niemandem. Ob ein Vorbehalt zulässig und wirksam ist, entscheidet nicht die Umweltfachperson, sondern die Fachperson Vergabe bzw. Bauvertrag.
+
+### 4a. Nachtrag: Anzeige ist nicht Anspruch
+Wer nach Vertragsabschluss eine nicht kalkulierte Umweltanforderung entdeckt, prüft zuerst, **welcher der vier Fälle** vorliegt (bereits geschuldet, unklare Ausschreibung, neue Bestellung, neue behördliche Anordnung). Die Pflichtmassnahme wird in jedem Fall rechtzeitig umgesetzt; die Mehrkosten werden unverzüglich schriftlich angezeigt. Ob daraus ein Vergütungs- oder Fristanspruch entsteht, hängt vom Vertrag ab – versprechen Sie der Baustelle keinen Nachtrag, bevor das geprüft ist.
 
 ### 5. Weitergabe an Subunternehmer
 Was Sie der Bauherrschaft schulden, müssen Sie im Subunternehmervertrag **ausdrücklich** weitergeben. Eine Standard-Beilage «Umweltanforderungen für Subunternehmer» spart Zeit: Maschinen, Betankung, Waschplatz, Entsorgung, Bodenschutz, Notfall, Instruktion, Kontrollen. Sie ersetzt nicht die projektspezifische Instruktion vor Ort.
@@ -210,13 +230,13 @@ Sie sind nicht die Bauvertragsjuristin. Sie liefern aber die **fachliche Grundla
       { id: 'm8-l2-review', kind: 'review', title: 'Wiederholungsfragen', questionIds: ['m8-q09', 'm8-q10'] },
       { id: 'm8-l2-practice', kind: 'practice', title: 'Praxisauftrag', taskId: 'm8-p2' },
       { id: 'm8-l2-summary', kind: 'summary', title: 'Zusammenfassung', points: [
-        'Auflagen gelten auch, wenn sie im LV fehlen – offen ist nur die Kostenfrage.',
+        'Auflagen gelten auch, wenn sie im LV fehlen; die Kostenfrage ist separat und nicht automatisch ein Nachtrag.',
         'Umweltleistungen messbar und kalkulierbar ausschreiben bzw. offerieren.',
-        'Lücken in der Fragerunde klären oder mit konkretem Vorbehalt offerieren.',
-        'Neue Anforderungen nach Vertragsabschluss als Nachtrag anmelden, bevor geleistet wird.',
+        'Lücken in der Fragerunde klären; ein Vorbehalt ist kein sicherer Ersatz (öffentliche Vergabe: Ausschlussrisiko).',
+        'Nach Vertragsabschluss: vier Fälle unterscheiden, Pflichtmassnahme umsetzen, sofort schriftlich anzeigen, Anspruch prüfen lassen.',
         'Umweltpflichten schriftlich an Subunternehmer weitergeben und vor Ort instruieren.',
       ] },
-      { id: 'm8-l2-sources', kind: 'sources', title: 'Quellen und weiterführende Informationen', sourceIds: ['sia118', 'boeb', 'lrv', 'vvea', 'praxis'] },
+      { id: 'm8-l2-sources', kind: 'sources', title: 'Quellen und weiterführende Informationen', sourceIds: ['sia118', 'kbob-nachtrag', 'boeb', 'lrv', 'vvea', 'praxis'] },
     ],
   },
   // =====================================================================
@@ -238,7 +258,7 @@ Was würden Sie umstellen – und warum?` },
 
 **Gewässerschutz**: Betankung, Lager wassergefährdender Stoffe und Waschplatz auf befestigter, entwässerter Fläche – weg von Meteorschächten, Gewässern und Schutzzonen.
 
-**Boden**: Installationen nicht auf gewachsenem Boden; Depots und Pisten einplanen.
+**Boden**: Beanspruchung von gewachsenem Boden so klein wie möglich halten; wo sie nötig ist, nach Bodenschutzkonzept (Abtrag, Piste, Schutz). Depots einplanen.
 
 **Nachbarschaft**: Lärm- und Staubquellen (Mulden, Brecher, Kompressoren) weg von empfindlichen Nutzungen; Zufahrten und Transportrouten planen.
 
@@ -246,7 +266,7 @@ Was würden Sie umstellen – und warum?` },
       { id: 'm8-l3-explain', kind: 'explain', title: 'Installationsplan: worauf Sie achten', text: `### Elemente und Umweltanforderungen
 | Element | Umweltanforderung (Grundsatz) |
 |---|---|
-| Betankung, Lager Treibstoff/Öl/Chemikalien | Befestigte, dichte Fläche, Auffangvolumen, Abstand zu Schächten und Gewässern, Ölbindemittel griffbereit; in Schutzzonen grundsätzlich nicht |
+| Betankung, Lager Treibstoff/Öl/Chemikalien | Befestigte, dichte Fläche, Auffangvolumen, Abstand zu Schächten und Gewässern, Ölbindemittel griffbereit; in Grundwasserschutzzonen (S1–S3) gelten je nach Zone strenge Einschränkungen bis Verbote – Schutzzonenreglement und kantonale Vorgaben prüfen |
 | Waschplatz (Beton, Geräte) | Gefasst, mit Absetzbecken und Neutralisation; Ableitung nur gemäss Entwässerungskonzept und Zustimmung |
 | Mulden und Abfallplatz | Trennung nach Fraktionen, beschriftet, gedeckt wo nötig; Sonderabfälle separat und geschützt |
 | Bodendepots | Getrennt Ober-/Unterboden, nicht befahren, nicht auf späteren Gartenflächen ohne Konzept |
@@ -256,7 +276,7 @@ Was würden Sie umstellen – und warum?` },
 | Lärmintensive Geräte | Abgeschirmt, weg von Wohnungen, Schulen, Spitälern |
 
 ### Entwässerung auf dem Plan
-Jeder Schacht auf und neben dem Areal wird im Plan markiert: **Meteor, Schmutz oder Misch** (laut Kanalisationskataster, nicht nach Aussehen). Daraus ergibt sich, welche Schächte abzudecken sind und wohin behandeltes Wasser darf (Modul 2, Entwässerungskonzept nach SIA 431).
+Jeder Schacht auf und neben dem Areal wird im Plan markiert: **Meteor, Schmutz oder Misch** (laut Kanalisationskataster, nicht nach Aussehen; bei unklaren oder kritischen Verbindungen vor Ort prüfen lassen). Daraus ergibt sich, welche Schächte abzudecken sind und wohin behandeltes Wasser darf (Modul 2, Entwässerungskonzept nach SIA 431).
 
 ### Phasen
 Der Plan ändert sich: Rückbau, Baugrube, Rohbau, Ausbau, Umgebung. Prüfen Sie **jede Phase** – der Waschplatz von der Rohbauphase steht in der Umgebungsphase oft im Weg und wird dann improvisiert verschoben.
@@ -265,14 +285,14 @@ Der Plan ändert sich: Rückbau, Baugrube, Rohbau, Ausbau, Umgebung. Prüfen Sie
       { id: 'm8-l3-explain-2', kind: 'explain', title: 'Transporte, Luft und Lärm in der Planung', text: `### Transporte
 - **Menge abschätzen**: Aushub, Beton, Rückbaumaterial – Anzahl Fahrten pro Tag in Spitzenzeiten.
 - **Routen** festlegen (Schulwege, Wohnquartiere meiden, Auflagen der Gemeinde), Wartezonen auf dem Areal statt im Quartier.
-- **Verwertung vor Ort** prüfen (Aushub für Hinterfüllung, mobile Aufbereitung – Bewilligung und Emissionen beachten); jede vermiedene Fahrt spart Lärm, Staub, CO₂ und Geld.
+- **Verwertung vor Ort** prüfen (Aushub für Hinterfüllung, mobile Aufbereitung – je nach Kanton und Standort Melde- oder Bewilligungspflicht abklären, Emissionen begrenzen); jede vermiedene Fahrt spart Lärm, Staub, CO₂ und Geld.
 - **Bahn** prüfen, wenn grosse Mengen über weite Strecken gehen und Anschlüsse bestehen.
 
 ### Luft (Massnahmenstufen der BAFU-Richtlinie «Luftreinhaltung auf Baustellen»)
 Die Behörde ordnet im Bewilligungsverfahren **Massnahmenstufe A** (Basismassnahmen) oder **B** (grössere bzw. länger dauernde Baustellen, empfindliche Lage) an. In der AVOR folgen daraus: Maschinenliste mit Partikelfilter-Nachweisen (Art. 19a LRV), Befeuchtung bei staubintensiven Arbeiten, Abdeckung von Schüttgut, Reinigung der Zufahrten, Verbot offener Feuer.
 
 ### Lärm (Baulärm-Richtlinie des BAFU, Art. 6 LSV)
-Die Richtlinie kennt **Massnahmenstufen A, B und C** für Bauarbeiten (Transporte A und B). Sie hängen u. a. von der Lärmempfindlichkeit der Umgebung, der Dauer und der Tageszeit ab. In der AVOR: lärmarme Verfahren wählen (z. B. Bohren statt Rammen, Zange statt Abbauhammer, wo möglich), lärmintensive Arbeiten in Zeitfenster legen, Abschirmungen planen, **Anwohnende informieren**.
+Die Richtlinie kennt **Massnahmenstufen A, B und C** für Bauarbeiten (Transporte A und B). Sie hängen u. a. von der Lärmempfindlichkeit der Umgebung, der Dauer und der Tageszeit ab. In der AVOR: lärmarme Verfahren wählen (z. B. Bohren statt Rammen, Zange statt Abbauhammer, wo möglich), lärmintensive Arbeiten in Zeitfenster legen, Abschirmungen planen, **Anwohnende informieren** (vom BAFU empfohlen; eine Pflicht ergibt sich aus Auflage bzw. kantonalem oder kommunalem Recht). Nacht- und Ruhezeitarbeiten können je nach Kanton, Gemeinde oder Auflage bewilligungspflichtig sein – ein schweizweit einheitliches Zeitfenster gibt es nicht. Bei Nachtarbeit auch die Baustellenbeleuchtung, bei Ramm-, Abbruch- und Verdichtungsarbeiten auch Erschütterungen mitplanen.
 
 §> Stufenlogik Luft (A/B) und Lärm (A/B/C) über BAFU- und kantonale Unterlagen bestätigt; Schwellen und Massnahmenkataloge im Original. Vertiefung in den Modulen 5 und 6.` },
       { id: 'm8-l3-example', kind: 'example', title: 'Beispiel aus dem Hochbau: Enge Baustelle in der Stadt', context: 'Hochbau', text: `Ein Ersatzneubau füllt die ganze Parzelle; Platz für Installationen gibt es nur auf der Strasse (Bewilligung der Stadt) und später in der Tiefgarage. Die AVOR plant: Betankung durch Tankwagen auf Wanne statt Tankcontainer, Betonpumpe mit Waschwasser-Rückführung in den Fahrmischer statt Waschplatz, Mulden auf dem Trottoir mit Abdeckung, Anlieferungen nur zwischen 7 und 9 Uhr nach Auflage. Die Meteorschächte der Strasse werden im Plan rot markiert und während der Bauzeit gesichert.
@@ -293,7 +313,7 @@ Für jedes Element des Installationsplans fragen Sie: **Was kann austreten** (Tr
 - Keine Fläche für ein Zwischenlager, obwohl ein Kataster-Standort bekannt ist.
 
 ### 3. Materialbewirtschaftung
-Eine **Materialbilanz** (Massenbilanz) zeigt, wie viel Aushub, Rückbaumaterial und Bodenmaterial anfällt und wie viel wieder eingebaut wird. Sie ist die Grundlage für Transporte, Zwischenlager, Entsorgungskonzept und Kosten. Verwertung vor Ort hat Vorrang, wenn das Material geeignet ist und die Anforderungen (z. B. der Vollzugshilfen zur VVEA) erfüllt – mobile Aufbereitungsanlagen brauchen aber selbst Bewilligungen und erzeugen Staub und Lärm.
+Eine **Materialbilanz** (Massenbilanz) zeigt, wie viel Aushub, Rückbaumaterial und Bodenmaterial anfällt und wie viel wieder eingebaut wird. Sie ist die Grundlage für Transporte, Zwischenlager, Entsorgungskonzept und Kosten. Verwertung vor Ort hat Vorrang, wenn das Material geeignet ist und die Anforderungen (z. B. der Vollzugshilfen zur VVEA) erfüllt – mobile Aufbereitungsanlagen können aber je nach Kanton und Standort selbst melde- oder bewilligungspflichtig sein und erzeugen Staub und Lärm (vorher abklären).
 
 ### 4. Transportplanung ist Umweltplanung
 Auf vielen Baustellen verursachen die Transporte mehr Lärm, Staub und CO₂ als die Baustelle selbst. Eine gute Planung reduziert Fahrten (Verwertung vor Ort, volle Fahrten, Rückfrachten), wählt Routen bewusst und vermeidet Wartezeiten mit laufendem Motor im Quartier. Für die Nachbarschaft ist die Route oft das sichtbarste Zeichen, ob eine Baustelle Rücksicht nimmt.
@@ -302,7 +322,7 @@ Auf vielen Baustellen verursachen die Transporte mehr Lärm, Staub und CO₂ als
 Das Vorsorgeprinzip des USG verlangt, Emissionen unabhängig von der bestehenden Belastung so weit zu begrenzen, wie technisch und betrieblich möglich und wirtschaftlich tragbar (sinngemäss). In der AVOR heisst das: Verfahren und Maschinen so wählen, dass Emissionen gar nicht erst entstehen – das ist wirksamer und meist billiger als nachträgliche Abschirmung.
 
 ### 6. Kommunikation mit Anwohnenden einplanen
-Information vor Baustart (Dauer, laute Phasen, Ansprechperson), Hinweise vor besonders lauten Arbeiten und ein klarer Umgang mit Beschwerden gehören in die AVOR. Die Baulärm-Richtlinie nennt Information als Massnahme; viele Gemeinden verlangen sie in der Auflage.
+Information vor Baustart (Dauer, laute Phasen, Ansprechperson), Hinweise vor besonders lauten Arbeiten und ein klarer Umgang mit Beschwerden gehören in die AVOR. Die Baulärm-Richtlinie nennt Information als Massnahme; ob sie Pflicht ist, ergibt sich aus der Auflage bzw. dem kantonalen oder kommunalen Recht.
 
 ### 7. Prüfung mit dem Polier
 Gehen Sie den Plan **mit dem Polier** durch, idealerweise vor Ort. Er kennt die Abläufe, Sie die Risiken. Fragen Sie für jede Phase: Wo wird betankt, gewaschen, gelagert, wo fahren die Lastwagen, wo ist der nächste Schacht – und was passiert bei Starkregen?
@@ -340,11 +360,11 @@ Wie verhindern Sie das beim nächsten Projekt?` },
       { id: 'm8-l4-quiz', kind: 'quiz', title: 'Vorwissen prüfen', questionIds: ['m8-q16', 'm8-q17'] },
       { id: 'm8-l4-brief', kind: 'brief', title: 'Kurz erklärt', text: `**Ein Umweltmassnahmenplan** übersetzt jede Anforderung in eine **konkrete Massnahme** mit **verantwortlicher Funktion**, **Termin bzw. Bauphase**, **Kontrolle** und **Nachweis**.
 
-**Funktionen statt Namen**: «Polier/in Rohbau» statt «Herr X» – der Plan bleibt gültig, wenn Personen wechseln, und enthält keine unnötigen Personendaten.
+**Funktionen statt Namen**: «Polier/in Rohbau» statt «Herr X» – der Plan bleibt gültig, wenn Personen wechseln, und enthält keine unnötigen Personendaten. Wer die Funktion aktuell besetzt, steht im internen Organigramm bzw. Einsatzplan.
 
 **Nachweise** sind der Beleg, dass etwas getan wurde: Protokolle, Fotos, Lieferscheine, Begleitscheine, Maschinenliste.
 
-**Meldefristen** (z. B. Asbestsanierung bei der Suva mindestens 14 Tage vorher) gehören als Termine in den Plan.` },
+**Meldefristen** (z. B. meldepflichtige Asbestsanierungen bei der Suva mindestens 14 Tage vorher) und **Freigaben** (Go/No-Go) gehören als Termine in den Plan.` },
       { id: 'm8-l4-explain', kind: 'explain', title: 'Aufbau eines Umweltmassnahmenplans', text: `### Spalten
 | Spalte | Inhalt | Beispiel |
 |---|---|---|
@@ -357,19 +377,22 @@ Wie verhindern Sie das beim nächsten Projekt?` },
 | Nachweis | Was wird abgelegt? | pH-Protokoll, Fotos |
 | Status | offen, umgesetzt, abgeschlossen | – |
 
-Eine Vorlage finden Sie in der Fachbibliothek («Vorlage Umweltmassnahmenplan»).
+Eine Vorlage finden Sie in der Fachbibliothek («Vorlage Umweltmassnahmenplan»). Das Beispiel gilt für eine Baustelle mit Betonarbeiten und bewilligter Ableitung: Messungen und Protokolle (z. B. pH, Trübung) braucht es nur, wo Wasser anfällt bzw. eingeleitet wird – Parameter und Häufigkeit ergeben sich aus Bewilligung und Entwässerungskonzept.
+
+Ergänzen Sie für Arbeiten mit Vorbedingung eine Spalte **Go/No-Go**: Welche Bewilligung, Meldung oder Freigabe muss vorliegen, bevor begonnen wird?
 
 ### Zuständigkeiten klären
 Typische Rollen: **Bauherrschaft** (Gesuch, Konzepte, Beizug von Fachpersonen wie UBB oder BBB), **Bauleitung** (Koordination, Abnahmen), **Unternehmer – Bauführung** (Umsetzung, Eigenkontrolle, Nachweise), **Polier** (Umsetzung vor Ort, Instruktion), **Subunternehmer** (eigene Arbeiten nach Vorgaben), **Fachpersonen** (UBB, BBB, Schadstoffe, Hydrogeologie – Beratung, Freigaben, Kontrollen gemäss Auftrag). Eine Massnahme ohne verantwortliche Funktion wird nicht umgesetzt.
 
 ### Meldungen und Fristen
-- Asbestsanierungen: Meldung bei der Suva mindestens 14 Tage vor Beginn (laut Suva; nur anerkannte Unternehmen).
+- Asbest: Nicht jede Asbestarbeit ist gleich geregelt. Der **Schadstoffbericht** bestimmt Bereich und Verfahren. Arbeiten mit **erheblicher Faserfreisetzung** dürfen nur Suva-anerkannte Unternehmen ausführen; sie melden die Sanierung mindestens 14 Tage vor Beginn der Suva (laut Suva, BauAV Art. 82/86). Der Rückbau im betroffenen Bereich beginnt erst nach der Sanierung, den für das Verfahren verlangten Kontrollen und der **schriftlichen Freigabe des Bereichs**.
+- Je nach Kanton treffen Meldepflichten (z. B. Baubeginn, Bauvollendung) ausdrücklich die Bauleitung oder die Unternehmung – nicht nur die Bauherrschaft (z. B. Kanton Zürich laut externer Prüfung; kantonales Recht und Bewilligung prüfen).
 - Einleitungen: Zustimmung bzw. Bewilligung **vor** der ersten Einleitung.
 - Weitere Meldungen gemäss Auflage (z. B. Baubeginn an die Fachstelle, Beginn Bodenarbeiten an die BBB, Abschluss für Abnahme).
 
-§> Meldefrist Asbest gemäss Suva (siehe Modul 3). Weitere Meldepflichten ergeben sich aus der Bewilligung und kantonalem Recht.` },
+§> Meldefrist und Anerkennungspflicht gemäss Suva für Arbeiten mit erheblicher Faserfreisetzung (siehe Modul 3; Artikelwortlaut der BauAV nicht am Original geprüft). Weitere Meldepflichten und ihr Adressat ergeben sich aus der Bewilligung und kantonalem Recht.` },
       { id: 'm8-l4-diagram', kind: 'diagram', title: 'Schema: Von der Anforderung zum Nachweis', diagram: 'auflagenkette', caption: 'Jede Anforderung braucht alle sechs Glieder – fehlt eines, bleibt sie Papier. Vereinfachte Lernhilfe.' },
-      { id: 'm8-l4-example', kind: 'example', title: 'Beispiel aus dem Hochbau: Umbau eines Geschäftshauses', context: 'Hochbau', text: `Der Schadstoffbericht zeigt asbesthaltige Bodenbeläge und PCB-haltige Fugen. Der Massnahmenplan enthält: Sanierung durch Suva-anerkannte Firma (Verantwortlich: Bauherrschaft beauftragt, Bauleitung koordiniert), Meldung an die Suva (Sanierungsfirma, mind. 14 Tage vorher), Freimessung bzw. Abnahme vor Rückbau (Fachperson), Entsorgung mit Begleitscheinen (Bauführung sammelt), Rückbau erst nach schriftlicher Freigabe (Bauleitung). Im Terminplan stehen die 14 Tage und die Abnahme als Meilensteine.
+      { id: 'm8-l4-example', kind: 'example', title: 'Beispiel aus dem Hochbau: Umbau eines Geschäftshauses', context: 'Hochbau', text: `Der Schadstoffbericht zeigt asbesthaltige Bodenbeläge und PCB-haltige Fugen. Der Bericht legt Verfahren und Bereiche fest; die Bodenbeläge müssen mit erheblicher Faserfreisetzung entfernt werden. Der Massnahmenplan enthält deshalb: Sanierung durch Suva-anerkannte Firma (Verantwortlich: Bauherrschaft beauftragt, Bauleitung koordiniert), Meldung an die Suva (Sanierungsfirma, mind. 14 Tage vorher), die für das Verfahren verlangte Kontrolle bzw. Freimessung (Fachperson), Entsorgung mit Begleitscheinen (Bauführung sammelt) und als **No-Go-Punkt**: Rückbau im Bereich erst nach schriftlicher Freigabe (Bauleitung). Im Terminplan stehen die 14 Tage und die Abnahme als Meilensteine.
 
 **Lernpunkt**: Der Plan macht sichtbar, dass die Sanierung den Rückbau-Start bestimmt – nicht umgekehrt.` },
       { id: 'm8-l4-example-2', kind: 'example', title: 'Beispiel aus dem Tiefbau: Kanalisationsersatz mit Wasserhaltung', context: 'Tiefbau', text: `Für einen Kanalisationsersatz im Grundwasser verlangt die Bewilligung eine tägliche Kontrolle des abgepumpten Wassers (Trübung, pH) und eine wöchentliche Meldung der Pumpmengen. Der Massnahmenplan legt fest: Messung durch den Maschinisten der Wasserhaltung, Protokoll im Baustellenbüro, Wochenmeldung durch die Bauführung, Grenzwertüberschreitung → Sofortmassnahme und Meldung gemäss Bewilligung. Ein Formular mit Feldern für Datum, Uhrzeit, Messwerte und Visum ersetzt die bisherigen Notizen auf Zetteln.
@@ -384,11 +407,11 @@ Nicht jede Massnahme muss ein Projekt sein, aber sie muss **prüfbar** sein. «G
 ### 3. Kontrolle und Nachweis unterscheiden
 - **Eigenkontrolle** der Unternehmung: Polier und Bauführung prüfen laufend, ob Massnahmen umgesetzt sind.
 - **Kontrolle durch Dritte**: Bauleitung, UBB/BBB im Auftrag der Bauherrschaft, Behörde.
-- **Nachweis**: das Dokument, das die Umsetzung belegt. Ohne Nachweis gilt in einer Kontrolle meist: nicht gemacht.
+- **Nachweis**: das Dokument, das die Umsetzung belegt. Ohne Nachweis lässt sich die Umsetzung in einer Kontrolle kaum belegen; gesetzlich oder in der Auflage vorgeschriebene Dokumentation ist ohnehin Pflicht.
 Planen Sie für jede Massnahme, **welcher Nachweis** genügt – so wenig wie möglich, so viel wie nötig. Fotos mit Datum, kurze Protokolle und vollständige Entsorgungsbelege decken den grössten Teil ab.
 
 ### 4. Datenschutz und Vertraulichkeit
-Nachweise enthalten oft Namen, Kontrollschilder oder Fotos von Personen. Erfassen Sie nur, was für den Nachweis nötig ist (Funktion statt Name, Fotos ohne erkennbare Personen, wo möglich). Projektunterlagen von Bauherrschaften sind vertraulich – keine ungeprüfte Weitergabe an Dritte oder an externe Dienste.
+Nachweise enthalten oft Namen, Kontrollschilder oder Fotos von Personen. Erfassen Sie nur, was für den Nachweis nötig ist (Funktion statt Name, Fotos ohne erkennbare Personen, wo möglich). Datensparsamkeit heisst nicht Anonymität: Verantwortlichkeiten müssen intern zuordenbar bleiben (Organigramm, Einsatzplan). Für echte Projektunterlagen gelten die Regeln Ihrer Firma zu Zugriffsrechten, Aufbewahrung und Löschung. Projektunterlagen von Bauherrschaften sind vertraulich – keine ungeprüfte Weitergabe an Dritte oder an externe Dienste.
 
 ### 5. Fristen und Abhängigkeiten
 Viele Umweltmassnahmen haben **Vorlaufzeiten**: Bewilligungen (Wasserhaltung, Einleitung, Rodung), Analysen (Bohrkerne, Bodenproben), Meldungen (Suva), Verfügbarkeit von Fachpersonen und Entsorgungswegen. Diese Vorlaufzeiten gehören in den Terminplan – als Vorgänger der betroffenen Bauarbeiten. Häufig ist das der eigentliche Mehrwert des Massnahmenplans: Er macht Abhängigkeiten sichtbar, bevor sie den Bau blockieren.
@@ -407,7 +430,7 @@ Am Projektende: Nachweise vollständig übergeben, Entsorgungsbilanz gegen Konze
       { id: 'm8-l4-practice', kind: 'practice', title: 'Praxisauftrag', taskId: 'm8-p4' },
       { id: 'm8-l4-feynman', kind: 'feynman', title: 'Erklären Sie es dem Bauführer (Feynman-Methode)', feynmanId: 'm8-f1' },
       { id: 'm8-l4-summary', kind: 'summary', title: 'Zusammenfassung', points: [
-        'Anforderung → Massnahme → Verantwortung → Termin → Kontrolle → Nachweis.',
+        'Anforderung → Massnahme → Verantwortung → Termin → Kontrolle → Nachweis; Arbeiten mit Vorbedingung erhalten einen Go/No-Go-Punkt.',
         'Funktionen statt Namen; nur nötige Personendaten.',
         'Vorlaufzeiten (Bewilligungen, Analysen, Meldungen) in den Terminplan.',
         'Plan in Startsitzung, Baustellensitzungen und Begehungen nutzen.',
@@ -446,9 +469,9 @@ Was antworten Sie – und welche Unterlagen bräuchten Sie dafür?` },
 ### Termine
 Umweltbedingte Zeitfenster sind oft **fix** und nicht verhandelbar:
 - Bodenarbeiten nur bei geeigneter Bodenfeuchte (Modul 4).
-- Rodungen und Eingriffe in Hecken oder Ufer meist ausserhalb der Brutzeit (kantonal, Auflage).
+- Eingriffe in Wald, Hecken und Ufervegetation: Zuerst klären, ob sie überhaupt zulässig bzw. bewilligt sind (Rodung von Wald braucht eine Bewilligung nach Waldgesetz, unabhängig von der Jahreszeit; Ufervegetation ist nach NHG geschützt). Dazu kommen Schonzeiten gemäss Auflage bzw. kantonalem Recht (z. B. Brutzeit).
 - Arbeiten am Gewässer in Abstimmung mit der Fischerei (Laichzeiten).
-- Schadstoffsanierung **vor** Rückbau, inkl. Meldefrist und Abnahme.
+- Schadstoffsanierung **vor** Rückbau, inkl. allfälliger Meldefrist, Kontrollen und Freigabe des Bereichs.
 - Bewilligungen mit Bearbeitungszeit.
 Planen Sie diese Fenster als **Randbedingungen** und bauen Sie Reserven ein.
 
@@ -478,7 +501,7 @@ Wenn Verfahren, Installationsort, Bauablauf oder Materialien ändern, fragen Sie
       { id: 'm8-l5-example', kind: 'example', title: 'Beispiel aus dem Hochbau: Terminverkürzung mit Folgen', context: 'Hochbau', text: `Um zwei Wochen aufzuholen, will die Bauleitung im Ausbau Samstagsarbeit und eine zusätzliche Betonetappe vorziehen. Die Umweltbeauftragte prüft: Samstagsarbeit ist laut Bewilligung nur mit Gesuch an die Gemeinde zulässig; die vorgezogene Betonetappe fällt in eine Phase, in der die Absetzanlage bereits zurückgebaut werden sollte. Lösung: Gesuch für vier Samstage ohne lärmintensive Arbeiten, Absetzanlage zwei Wochen länger betreiben, Anwohnende informieren.
 
 **Lernpunkt**: Jede Terminänderung ist auch eine Umweltänderung – meist lösbar, wenn man sie früh prüft.` },
-      { id: 'm8-l5-example-2', kind: 'example', title: 'Beispiel aus dem Tiefbau: Brecher statt Abtransport', context: 'Tiefbau', text: `Bei einem Strassenneubau schlägt der Unternehmer vor, Rückbaubeton und Aushub mit einem mobilen Brecher vor Ort aufzubereiten und wieder einzubauen. Das spart 1 200 Lastwagenfahrten. Die Umweltbeauftragte stellt die Bedingungen zusammen: Bewilligung bzw. Zustimmung für die Anlage, Qualität des Materials gemäss Vollzugshilfe, Staubmassnahmen (Befeuchtung), Lärm (Standort, Zeiten), Abstand zu Wohnhäusern. Die Bauherrschaft holt die Zustimmung ein; die Idee wird mit Auflagen umgesetzt.
+      { id: 'm8-l5-example-2', kind: 'example', title: 'Beispiel aus dem Tiefbau: Brecher statt Abtransport', context: 'Tiefbau', text: `Bei einem Strassenneubau schlägt der Unternehmer vor, Rückbaubeton und Aushub mit einem mobilen Brecher vor Ort aufzubereiten und wieder einzubauen. Das spart 1 200 Lastwagenfahrten. Die Umweltbeauftragte stellt die offenen Punkte zusammen: Abklärung beim Kanton, ob die Anlage an diesem Standort melde- oder bewilligungspflichtig ist, Qualität des Materials gemäss Vollzugshilfe, Staubmassnahmen (Befeuchtung), Lärm (Standort, Zeiten), Abstand zu Wohnhäusern. Die Bauherrschaft klärt das mit der Behörde; die Idee wird mit deren Vorgaben umgesetzt.
 
 **Lernpunkt**: Gute Umweltideen brauchen eine saubere Prüfung – dann sind sie oft auch wirtschaftlich die besten.` },
       { id: 'm8-l5-deep', kind: 'deep', title: 'Fachvertiefung: Umweltberatung in der Projektsteuerung', text: `### 1. Die Rolle: beraten, nicht verhindern
@@ -492,7 +515,7 @@ Eine wirkungsvolle Argumentation hat drei Teile:
 Entscheiden müssen am Ende die Verantwortlichen (Bauherrschaft, Projektleitung) – Ihre Aufgabe ist eine **entscheidungsfähige Grundlage**.
 
 ### 3. Wenn eine Pflicht gestrichen werden soll
-Bei gesetzlichen Pflichten und behördlichen Auflagen gibt es keinen Ermessensspielraum der Projektbeteiligten. Wenn trotzdem Druck kommt: sachlich bleiben, die Fundstelle zeigen, Varianten zur Umsetzung anbieten und den Entscheid **schriftlich** festhalten. Wenn eine Auflage unverhältnismässig erscheint, ist der richtige Weg ein **begründetes Gesuch an die Behörde** über die Bauherrschaft – nicht das stillschweigende Weglassen.
+Bei gesetzlichen Pflichten und behördlichen Auflagen gibt es keinen Ermessensspielraum der Projektbeteiligten. Wenn trotzdem Druck kommt: sachlich bleiben, die Fundstelle zeigen, Varianten zur Umsetzung anbieten und den Entscheid **schriftlich** festhalten. Wenn eine Auflage unverhältnismässig erscheint, ist der richtige Weg ein **begründetes Gesuch an die Behörde** über die Bauherrschaft – nicht das stillschweigende Weglassen. Auch die Bauherrschaft kann eine Auflage nicht selbst ändern; Verfahren und Fristen richten sich nach dem kantonalen Recht.
 
 ### 4. Termine realistisch machen
 Umweltbedingte Zeitfenster sind selten Überraschungen, wenn man sie kennt: Bodenarbeiten bei Nässe, Brutzeiten, Laichzeiten, Sanierung vor Rückbau, Bewilligungsfristen. In der AVOR werden sie im Terminplan **sichtbar** gemacht – als Randbedingung mit Begründung. Das schützt das Projekt vor unrealistischen Versprechen gegenüber der Bauherrschaft.
@@ -520,7 +543,7 @@ Wenige Kennzahlen helfen bei Diskussionen: Anteil verwerteter Bauabfälle, Anzah
         'Fachpersonen sind Partner; Rollen und Freigabewege zu Beginn klären.',
         'Jede Projektänderung auf Umweltfolgen und Bewilligungsbedarf prüfen.',
       ] },
-      { id: 'm8-l5-sources', kind: 'sources', title: 'Quellen und weiterführende Informationen', sourceIds: ['usg', 'sia118', 'bafu-boden-bauen', 'nhg', 'praxis'] },
+      { id: 'm8-l5-sources', kind: 'sources', title: 'Quellen und weiterführende Informationen', sourceIds: ['usg', 'sia118', 'bafu-boden-bauen', 'nhg', 'wag', 'praxis'] },
     ],
   },
 ];
