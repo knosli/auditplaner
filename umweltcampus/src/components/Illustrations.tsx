@@ -149,11 +149,54 @@ export function IlluLaw(_: Props) {
   );
 }
 
+/** Modul 8: Installationsplan in der AVOR (Draufsicht) */
+export function IlluPlan(_: Props) {
+  return (
+    <Paper label="Schema: Installationsplan in der Draufsicht. Betankung und Waschplatz liegen auf befestigter Fläche weg vom Bach, der Meteorschacht ist markiert, Mulden und Lärmquellen weg von den Wohnhäusern, Bodendepot ausserhalb der Baufläche.">
+      {/* Raster */}
+      <path d="M40 48h300v206H40z" fill="#ffffff" stroke="#9db7b0" strokeWidth="1.5" />
+      <path d="M40 98h300M40 148h300M40 198h300M100 48v206M160 48v206M220 48v206M280 48v206" stroke="#eef2ee" />
+      {/* Bach */}
+      <path d="M352 40c-10 40 14 70 2 110s12 80 0 112" stroke="#7aa9c4" strokeWidth="14" fill="none" strokeLinecap="round" opacity=".8" />
+      <T x={410} y={58} anchor="middle" s={10} c="#2f6f8f">Bach</T>
+      {/* Neubau */}
+      <rect x="120" y="110" width="120" height="84" rx="4" fill="#e4ebe6" stroke="#5f8f88" strokeWidth="2" />
+      <T x={180} y={156} anchor="middle">Neubau</T>
+      {/* Wohnhäuser */}
+      <path d="M40 30h80v14H40zM140 30h80v14h-80z" fill="#cfdcd7" />
+      <T x={130} y={24} anchor="middle" s={9} w={600} c="#56645e">Wohnhäuser</T>
+      {/* Mulden/Kompressor weg von Wohnhäusern */}
+      <rect x="250" y="214" width="28" height="18" rx="3" fill="#c7a27a" /><rect x="282" y="214" width="28" height="18" rx="3" fill="#9aa6a3" />
+      <T x={280} y={248} anchor="middle" s={9}>Mulden</T>
+      {/* Betankung und Waschplatz auf befestigter Fläche */}
+      <rect x="54" y="206" width="84" height="40" rx="6" fill="#e9f3ef" stroke="#167b70" strokeWidth="2" />
+      <circle cx="76" cy="226" r="9" fill="#e5aa63" /><T x={76} y={230} anchor="middle" s={8} c="#3d2a10">Tank</T>
+      <rect x="94" y="216" width="34" height="20" rx="3" fill="#dbe9e6" stroke="#5f8f88" />
+      <T x={111} y={230} anchor="middle" s={8}>Wasch</T>
+      <T x={96} y={200} anchor="middle" s={9} c="#0f5a52">befestigt, gefasst</T>
+      {/* Meteorschacht markiert */}
+      <circle cx="300" cy="80" r="8" fill="#fff" stroke="#c14c40" strokeWidth="3" />
+      <T x={300} y={104} anchor="middle" s={9} c="#c14c40">Meteor → Bach</T>
+      {/* Bodendepot */}
+      <path d="M54 92q24-30 48 0z" fill="#5b4433" /><T x={78} y={106} anchor="middle" s={9}>Bodendepot</T>
+      {/* Zufahrt */}
+      <path d="M180 254v-60" stroke="#b8b2a6" strokeWidth="12" />
+      <T x={196} y={250} s={9} w={600} c="#56645e">Zufahrt</T>
+      {/* Legende */}
+      <T x={366} y={196} s={10} w={700}>Quelle</T>
+      <T x={366} y={210} s={10} w={700}>weg vom</T>
+      <T x={366} y={224} s={10} w={700}>Schutzgut</T>
+      <T x={366} y={246} s={9} w={500} c="#56645e">Plan je Bauphase</T>
+    </Paper>
+  );
+}
+
 export function ModuleIllustration({ moduleId }: { moduleId: string }) {
   switch (moduleId) {
     case 'm2': return <IlluWater />;
     case 'm3': return <IlluWaste />;
     case 'm4': return <IlluSoil />;
+    case 'm8': return <IlluPlan />;
     default: return <IlluLaw />;
   }
 }

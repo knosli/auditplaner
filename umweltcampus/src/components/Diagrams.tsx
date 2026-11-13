@@ -19,6 +19,7 @@ export function Diagram({ id }: { id: string }) {
     case 'verordnungen': return <Verordnungen />;
     case 'deponietypen': return <Kette steps={DEPONIEN} />;
     case 'bodenschichten': return <Kette steps={BODEN} />;
+    case 'auflagenkette': return <Kette steps={AUFLAGEN} />;
     default: return <p className="hint">Schema «{id}» nicht gefunden.</p>;
   }
 }
@@ -221,6 +222,15 @@ const BODEN = [
   { t: 'Oberboden (A-Horizont)', d: 'Humusreich, dunkel, stark belebt, meist 20–30 cm', who: 'separat abtragen und lagern' },
   { t: 'Unterboden (B-Horizont)', d: 'Heller, durchwurzelt, Struktur für Wasser und Luft', who: 'separat abtragen, nie mit Oberboden mischen' },
   { t: 'Untergrund (C-Horizont)', d: 'Verwittertes Ausgangsgestein unter dem Boden', who: 'in der Regel als Aushub behandelt (Modul 3)' },
+];
+
+const AUFLAGEN = [
+  { t: 'Anforderung', d: 'Fundstelle in Bewilligung, Gesetz, Vertrag oder Norm', who: 'mit Rechtsnatur festhalten' },
+  { t: 'Massnahme', d: 'Konkret und prüfbar: was, wo, wie', who: 'nicht «Gewässerschutz beachten»' },
+  { t: 'Verantwortung', d: 'Funktion, nicht Name', who: 'z. B. Polier/in Rohbau' },
+  { t: 'Termin / Phase', d: 'Inkl. Vorlaufzeiten (Bewilligung, Analyse, Meldung)', who: 'im Terminplan als Vorgänger' },
+  { t: 'Kontrolle', d: 'Wer prüft wie oft?', who: 'Eigenkontrolle bleibt bei der Unternehmung' },
+  { t: 'Nachweis', d: 'Protokoll, Foto, Liefer-, Wäge-, Begleitschein', who: 'so viel wie nötig, so wenig wie möglich' },
 ];
 
 const EMISSION = [

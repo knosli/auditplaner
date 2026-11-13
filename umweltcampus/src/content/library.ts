@@ -228,6 +228,20 @@ Offene Massnahmen der letzten Begehung mit Status.
     ],
     sources: ['bafu-boden-bauen', 'kanton-boden', 'vvea'],
   },
+  {
+    id: 'cl-avor-umwelt', category: 'checkliste', moduleId: 'm8',
+    title: 'Umweltcheck in der AVOR',
+    summary: 'Kurzcheck vor Baustart: Bewilligung, Vertrag, Standort, Installation, Massnahmenplan.',
+    tags: ['AVOR', 'Auflagen', 'Installationsplan', 'Massnahmenplan', 'Checkliste', 'Baustart'],
+    items: [
+      { group: 'Bewilligung', points: ['Bewilligung vollständig gelesen, inkl. Beilagen und Verweise auf Merkblätter', 'Nebenbewilligungen vorhanden (Wasserhaltung, Einleitung, Rodung, Nachtarbeit …)', 'Auflagenliste mit Fundstelle und Rechtsnatur erstellt', 'Unklarheiten und Widersprüche schriftlich gemeldet'] },
+      { group: 'Vertrag', points: ['Umweltauflagen im LV abgebildet – Lücken gemeldet bzw. Nachtrag angemeldet', 'Konzepte vorhanden (Entsorgung, Entwässerung, Boden, Schadstoffe)', 'Umweltpflichten an Subunternehmer weitergegeben'] },
+      { group: 'Standort', points: ['Gewässerschutzkarte und Schutzzonen geprüft', 'Kataster belasteter Standorte geprüft', 'Schächte nach Kanalisationskataster markiert', 'Boden, Natur, Lärmempfindlichkeit der Umgebung geprüft'] },
+      { group: 'Installation und Ablauf', points: ['Betankung, Lager, Waschplatz weg von Schächten und Gewässern', 'Depots, Zwischenlager, Pisten eingeplant', 'Transportrouten und Materialbilanz', 'Massnahmenstufen Luft/Lärm in Verfahren, Maschinen und Zeiten übersetzt', 'Umweltbedingte Zeitfenster und Vorlaufzeiten im Terminplan'] },
+      { group: 'Organisation', points: ['Umweltmassnahmenplan mit Funktion, Termin, Kontrolle, Nachweis', 'Umweltpunkt in der Startsitzung', 'Instruktion der Equipe und Subunternehmer geplant', 'Notfallorganisation festgelegt', 'Anwohnende informiert (falls verlangt)'] },
+    ],
+    sources: ['praxis', 'vvea', 'kanton-merkblatt'],
+  },
 ];
 
 export const LIB_CATEGORY_LABEL: Record<LibraryEntry['category'], string> = {

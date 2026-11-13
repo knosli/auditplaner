@@ -219,10 +219,6 @@ export const SCENARIOS: Scenario[] = [
     topics: [], intro: 'Rückbau eines Gewerbebaus in einem Wohngebiet: Technische, organisatorische und kommunikative Massnahmen bei Beschwerden beurteilen.', facts: [], stages: [], debrief: '', sources: [],
   },
   {
-    id: 'sim-d', code: 'D', moduleId: 'm8', status: 'in_entwicklung', title: 'Umweltprüfung in der AVOR', setting: 'AVOR', level: 3, minutes: 25,
-    topics: [], intro: 'Ein neues Projekt in der Arbeitsvorbereitung: relevante Unterlagen und Umweltanforderungen identifizieren und einen Massnahmenplan entwickeln.', facts: [], stages: [], debrief: '', sources: [],
-  },
-  {
     id: 'sim-e', code: 'E', moduleId: 'm10', status: 'in_entwicklung', title: 'ISO-14001-Audit: Kontrollen nicht nachvollziehbar', setting: 'Management', level: 4, minutes: 25,
     topics: [], intro: 'Ein Auditor stellt fest, dass Umweltkontrollen nicht nachvollziehbar dokumentiert sind. Ursachen untersuchen und wirksame Verbesserungsmassnahmen definieren.', facts: [], stages: [], debrief: '', sources: [],
   },

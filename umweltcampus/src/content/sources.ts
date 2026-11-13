@@ -468,6 +468,21 @@ export const SOURCES: Source[] = [
     note: 'Art. 15 Abs. 3 über kantonale Unterlagen und externe Prüfung (Lesefassung 1.12.2025) bestätigt: am Entnahmeort verwerten oder so entsorgen, dass eine Weiterverbreitung ausgeschlossen ist. Kantonale Neophyten-Merkblätter beachten.',
   },
   {
+    id: 'uvpv', title: 'Verordnung über die Umweltverträglichkeitsprüfung (UVPV)', short: 'UVPV', kind: 'gesetz', sr: 'SR 814.011',
+    issuer: 'Bundesrat', version: 'Geltende Fassung gemäss Fedlex – prüfen', lastChecked: null, scope: 'Ganze Schweiz; Liste der UVP-pflichtigen Anlagen im Anhang', review: 'entwurf',
+    note: 'In der App nur allgemein verwendet (UVP-Pflicht nach Art. 10a USG, Anlagenliste in der UVPV). Schwellenwerte und Anlagentypen nicht wiedergegeben – Original verwenden.',
+  },
+  {
+    id: 'boeb', title: 'Bundesgesetz über das öffentliche Beschaffungswesen (BöB) bzw. Interkantonale Vereinbarung (IVöB 2019)', short: 'BöB / IVöB', kind: 'gesetz', sr: 'SR 172.056.1 (BöB)',
+    issuer: 'Bundesversammlung; Kantone (IVöB)', version: 'Revidierte Fassung (BöB in Kraft seit 2021) – Stand prüfen', lastChecked: null, scope: 'Öffentliche Auftraggeber: Bund (BöB), Kantone und Gemeinden (IVöB bzw. kantonales Recht)', review: 'entwurf',
+    note: 'In der App nur sinngemäss: Nachhaltigkeit als Ziel und als mögliches Eignungs-, Spezifikations- und Zuschlagskriterium. Artikel und Wortlaut nicht geprüft (Fedlex bzw. kantonale Sammlung).',
+  },
+  {
+    id: 'sia118', title: 'SIA 118 «Allgemeine Bedingungen für Bauarbeiten»', short: 'SIA 118', kind: 'norm',
+    issuer: 'Schweizerischer Ingenieur- und Architektenverein (SIA)', url: 'https://www.sia.ch', version: 'Ausgabe gemäss Werkvertrag – prüfen', lastChecked: null, scope: 'Verbindlich nur, wenn im Werkvertrag übernommen', review: 'entwurf',
+    note: 'Kostenpflichtige Norm; keine Inhalte im Wortlaut wiedergegeben. Vertragsfolgen im Einzelfall durch Fachperson Bauvertrag prüfen.',
+  },
+  {
     id: 'praxis',
     title: 'Bewährte Praxis Baustellen-Umweltschutz (Zusammenfassung der App)',
     short: 'Bewährte Praxis',

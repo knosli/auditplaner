@@ -30,7 +30,7 @@ export const MODULES: ModuleMeta[] = [
     topics: ['Treibstoffe und Öle', 'Lagerung und Umschlag', 'Auffangwannen', 'Kennzeichnung', 'Sicherheitsdatenblätter', 'Chemikalien auf Baustellen', 'Havariekonzepte', 'Umweltnotfälle', 'Erste Massnahmen bei Leckagen', 'Alarmierung und Meldestellen', 'Werkhofkontrollen'],
   },
   {
-    id: 'm8', no: 8, title: 'Umwelt in Bauplanung und AVOR', short: 'Planung & AVOR', pathOrder: 5, status: 'in_entwicklung', deep: true,
+    id: 'm8', no: 8, title: 'Umwelt in Bauplanung und AVOR', short: 'Planung & AVOR', pathOrder: 5, status: 'verfuegbar', deep: true,
     topics: ['Umweltprüfung vor Baustart', 'Bewilligungsauflagen prüfen', 'Ausschreibung und Werkvertrag', 'Umweltmassnahmen in der AVOR', 'Installationsplanung', 'Entwässerung und Lagerflächen', 'Materialbewirtschaftung', 'Transportplanung', 'Lärm- und Staubschutz', 'Umweltmassnahmenplan', 'Zuständigkeiten', 'Kontroll- und Nachweispflichten', 'Zusammenarbeit Bauherrschaft/Planer', 'Kosten- und Terminfolgen'],
   },
   {
@@ -69,6 +69,11 @@ export const TOPICS: Topic[] = [
   { id: 'm4-abtrag', moduleId: 'm4', title: 'Abtrag, Depots, Rekultivierung' },
   { id: 'm4-belastung', moduleId: 'm4', title: 'Belasteter Boden und Verwertung' },
   { id: 'm4-planung', moduleId: 'm4', title: 'Planung, Erosion, Baubegleitung' },
+  { id: 'm8-grundlagen', moduleId: 'm8', title: 'Umweltcheck vor Baustart und Auflagen' },
+  { id: 'm8-vertrag', moduleId: 'm8', title: 'Ausschreibung und Werkvertrag' },
+  { id: 'm8-installation', moduleId: 'm8', title: 'Installation, Logistik, Emissionen' },
+  { id: 'm8-massnahmenplan', moduleId: 'm8', title: 'Massnahmenplan, Kontrollen, Nachweise' },
+  { id: 'm8-steuerung', moduleId: 'm8', title: 'Kosten, Termine, Zusammenarbeit' },
   { id: 'recht', moduleId: 'm2', title: 'Rechtsrahmen Gewässerschutz' },
   { id: 'entwaesserung', moduleId: 'm2', title: 'Baustellenentwässerung' },
   { id: 'alkalisch', moduleId: 'm2', title: 'Betonwaschwasser / alkalisches Wasser' },

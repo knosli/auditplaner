@@ -7,7 +7,7 @@ import { emptyState, normalizeState } from '../src/lib/state';
 import { isLegacyAnswer, isLegacyExam, isLegacyRun } from '../src/lib/versioning';
 import { moduleRequirements } from '../src/lib/learning';
 
-for (const mod of ['m3', 'm4']) {
+for (const mod of ['m3', 'm4', 'm8']) {
   describe(`Modul ${mod}: Umfang und Struktur`, () => {
     test('verfügbar, 5 Lektionen in Reihenfolge', () => {
       expect(MODULES.find((m) => m.id === mod)!.status).toBe('verfuegbar');
@@ -146,4 +146,28 @@ describe('Rechtsstand-Korrekturen', () => {
   test('Art. 18 VVEA nur mit Voraussetzungen', () => expect(all('m4')).toContain('sofern'));
   test('USG-Revision: in Kraft seit 1.1.2025', () => expect(all('m3')).toContain('1. Januar 2025'));
   test('Art. 102 StGB Abs. 2 unterschieden', () => expect(all('m1')).toContain('Abs. 2'));
+});
+
+describe('Modul 8: Planung und AVOR', () => {
+  const st = (id: string) => S.get('sim-d')!.stages.find((x) => x.id === id)!;
+  test('Fall D ersetzt den Platzhalter (stabile ID sim-d, nur einmal vorhanden)', () => {
+    expect(SCENARIOS.filter((x) => x.id === 'sim-d').length).toBe(1);
+    expect(S.get('sim-d')!.moduleId).toBe('m8');
+    expect(S.get('sim-d')!.status).toBe('verfuegbar');
+  });
+  test('Rückbau parallel zur nicht gemeldeten Asbestsanierung ist kritisch', () => {
+    expect(evaluateStage(st('d1'), { stageId: 'd1', selected: ['o2'] })).toMatchObject({ score: 0, critical: true });
+  });
+  test('Zementwasser in den Meteorschacht ist kritisch', () => {
+    expect(evaluateStage(st('d5'), { stageId: 'd5', selected: ['r2'] })).toMatchObject({ score: 0, critical: true });
+  });
+  test('Lücken nicht sofort melden ist kritisch', () => {
+    expect(evaluateRank(st('d4'), ['n2', 'n3', 'n1', 'n4', 'n5']).critical).toBe(true);
+    expect(evaluateRank(st('d4'), ['n2', 'n1', 'n3', 'n4', 'n5'])).toMatchObject({ score: 1, critical: false });
+  });
+  test('Fachaussagen: Auflage gilt auch ohne LV-Position; keine Einleitung ohne Zustimmung', () => {
+    expect(QUESTIONS.find((q) => q.id === 'm8-q07')!.correct).toEqual(['b']);
+    const d1 = QUESTIONS.find((q) => q.id === 'm8-d01')!;
+    expect(d1.options!.find((o) => o.id === 'c')!.critical).toBe(true);
+  });
 });

@@ -107,6 +107,11 @@ export const GUIDING: Record<string, string[]> = {
   'm4-abtrag': ['Sind Ober- und Unterboden getrennt?', 'Ist das Depot locker, niedrig, begrünt und geschützt?', 'Wann und wie wird rekultiviert – und wer bewirtschaftet danach?'],
   'm4-belastung': ['Liegt die Fläche in einem Prüfperimeter oder auf einem Kataster-Standort?', 'Was zeigt die Analyse – und welche Nutzung ist geplant?', 'Wer stuft den Boden ein?'],
   'm4-planung': ['Sind Pisten, Depots und Schutzflächen im Installationsplan?', 'Regelt der Vertrag Regentage?', 'Wer gibt frei – und was ist Ihre Rolle, was die der Fachperson?'],
+  'm8-grundlagen': ['Haben Sie alle Auflagen gelesen – auch Verweise und Nebenbewilligungen?', 'Was zeigen Gewässerschutzkarte, Kataster und Kanalisationskataster?', 'Welche Lücke müssen Sie vor Baustart schriftlich melden?'],
+  'm8-vertrag': ['Gilt die Anforderung, auch wenn sie nicht im LV steht?', 'Ist das eine Pflicht-, eine Vertrags- oder eine Kostenfrage?', 'Wissen die Subunternehmer, was Sie zugesagt haben?'],
+  'm8-installation': ['Was kann wo austreten – und wohin gelangt es?', 'Wohin führt der nächste Schacht?', 'Stimmt der Plan auch für die nächste Bauphase?'],
+  'm8-massnahmenplan': ['Hat jede Anforderung eine Massnahme, eine Funktion, einen Termin, eine Kontrolle und einen Nachweis?', 'Welche Vorlaufzeiten fehlen im Terminplan?', 'Welche Nachweise sind Pflicht, welche nur nützlich?'],
+  'm8-steuerung': ['Ist das Pflicht, Vereinbarung oder Empfehlung?', 'Was kostet die Alternative ohne Massnahme?', 'Welche Projektänderung hat Umweltfolgen, die noch niemand geprüft hat?'],
   konzept: ['Beantwortet das Konzept alle sechs Leitfragen?', 'Sind Zuständigkeiten und Kontrollen festgelegt?', 'Was ist Pflicht, was Empfehlung – und was kostet die Alternative?'],
 };
 
