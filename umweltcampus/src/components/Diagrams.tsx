@@ -22,6 +22,7 @@ export function Diagram({ id }: { id: string }) {
     case 'auflagenkette': return <Kette steps={AUFLAGEN} />;
     case 'ubb-rollen': return <Kette steps={UBB_ROLLEN} />;
     case 'iso-regelkreis': return <Kette steps={ISO_REGELKREIS} />;
+    case 'stoffpruefung': return <Kette steps={STOFFPRUEFUNG} />;
     case 'feststellungsweg': return <Kette steps={FESTSTELLUNG} />;
     default: return <p className="hint">Schema «{id}» nicht gefunden.</p>;
   }
@@ -236,6 +237,14 @@ const AUFLAGEN = [
   { t: 'Nachweis', d: 'Protokoll, Foto, Liefer-, Wäge-, Begleitschein', who: 'so viel wie nötig, so wenig wie möglich' },
 ];
 
+const STOFFPRUEFUNG = [
+  { t: 'Etikett lesen', d: 'Produktname, Piktogramme, H-Sätze (H400er: Gewässer)', who: 'kein Etikett: sichern, nicht verwenden' },
+  { t: 'SDB holen', d: 'Abschnitte 2, 6, 7, 8, 12, 13', who: 'beim Lieferanten bzw. Subunternehmer' },
+  { t: 'Ersatz prüfen', d: 'Gibt es ein weniger gefährliches Produkt?', who: '«bio» bleibt wassergefährdend' },
+  { t: 'Lager und Arbeitsplatz', d: 'Wanne, Dach, Trennung, weg von Schächten; Abfüllen über Rückhalt', who: 'kantonale Vorgaben' },
+  { t: 'Notfall', d: 'Was tun, wenn es ausläuft? Material am Ort, Alarmierung', who: '118 / 117 bei Gefahr für Wasser oder Boden' },
+  { t: 'Entsorgung', d: 'Reste, Gebinde, Lappen – meist Sonderabfall', who: 'berechtigter Entsorger, Begleitschein' },
+];
 const ISO_REGELKREIS = [
   { t: 'Kontext und Führung', d: 'Umfeld, interessierte Parteien, Anwendungsbereich; Politik, Rollen', who: 'oberste Leitung trägt die Rechenschaft' },
   { t: 'Planen', d: 'Umweltaspekte, bindende Verpflichtungen, Risiken und Chancen, Ziele', who: 'Worauf konzentrieren wir uns?' },

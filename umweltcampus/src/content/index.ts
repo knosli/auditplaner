@@ -24,6 +24,9 @@ import { M9_CARDS, M9_FEYNMAN, M9_SCENARIO, M9_SITETASKS, M9_TASKS } from './m9/
 import { M10_LESSONS } from './m10/lessons';
 import { M10_QUESTIONS } from './m10/questions';
 import { M10_CARDS, M10_FEYNMAN, M10_SCENARIO, M10_SITETASKS, M10_TASKS } from './m10/tasks';
+import { M7_LESSONS } from './m7/lessons';
+import { M7_QUESTIONS } from './m7/questions';
+import { M7_CARDS, M7_FEYNMAN, M7_SCENARIO, M7_SITETASKS, M7_TASKS } from './m7/tasks';
 import { M2_SITETASKS } from './m2/sitetasks';
 import { M2_L7, M2_L7_CARDS, M2_L7_QUESTIONS, M2_P7, M2_T7 } from './m2/lesson-sia';
 import type { Card, FeynmanTask, Lesson, PracticeTask, Question, Scenario, SiteTask } from './types';
@@ -35,15 +38,15 @@ export { LIBRARY, LIB_CATEGORY_LABEL } from './library';
 export { CRITERION_LABEL } from './m2/scenarios';
 
 // Neue Module: hier ihre Datensätze anhängen.
-export const QUESTIONS: Question[] = [...M1_QUESTIONS, ...M2_QUESTIONS, ...M2_DECISIONS, ...M2_L7_QUESTIONS, ...M3_QUESTIONS, ...M4_QUESTIONS, ...M8_QUESTIONS, ...M9_QUESTIONS, ...M10_QUESTIONS];
-export const CARDS: Card[] = [...M1_CARDS, ...M2_CARDS, ...M2_L7_CARDS, ...M3_CARDS, ...M4_CARDS, ...M8_CARDS, ...M9_CARDS, ...M10_CARDS];
+export const QUESTIONS: Question[] = [...M1_QUESTIONS, ...M2_QUESTIONS, ...M2_DECISIONS, ...M2_L7_QUESTIONS, ...M3_QUESTIONS, ...M4_QUESTIONS, ...M8_QUESTIONS, ...M9_QUESTIONS, ...M10_QUESTIONS, ...M7_QUESTIONS];
+export const CARDS: Card[] = [...M1_CARDS, ...M2_CARDS, ...M2_L7_CARDS, ...M3_CARDS, ...M4_CARDS, ...M8_CARDS, ...M9_CARDS, ...M10_CARDS, ...M7_CARDS];
 // Reihenfolge: nach Lernpfad (Modul) und innerhalb des Moduls nach Lektion
 const pathOrder = (moduleId: string) => MODULES.find((m) => m.id === moduleId)?.pathOrder ?? 99;
-export const LESSONS: Lesson[] = [...M1_LESSONS, ...M1_LESSONS_2, ...M2_LESSONS, M2_L7, ...M3_LESSONS, ...M4_LESSONS, ...M8_LESSONS, ...M9_LESSONS, ...M10_LESSONS].sort((a, b) => pathOrder(a.moduleId) - pathOrder(b.moduleId) || a.order - b.order);
-export const TASKS: PracticeTask[] = [...M1_TASKS, ...M2_TASKS, M2_P7, ...M3_TASKS, ...M4_TASKS, ...M8_TASKS, ...M9_TASKS, ...M10_TASKS];
-export const FEYNMAN: FeynmanTask[] = [...M1_FEYNMAN, ...M2_FEYNMAN, ...M3_FEYNMAN, ...M4_FEYNMAN, ...M8_FEYNMAN, ...M9_FEYNMAN, ...M10_FEYNMAN];
-export const SITETASKS: SiteTask[] = [...M1_SITETASKS, ...M2_SITETASKS, M2_T7, ...M3_SITETASKS, ...M4_SITETASKS, ...M8_SITETASKS, ...M9_SITETASKS, ...M10_SITETASKS];
-export const SCENARIOS: Scenario[] = [...M2_SCENARIOS.filter((x) => x.status === 'verfuegbar'), M1_SCENARIO, M3_SCENARIO, M4_SCENARIO, M8_SCENARIO, M9_SCENARIO, M10_SCENARIO, ...M2_SCENARIOS.filter((x) => x.status !== 'verfuegbar')];
+export const LESSONS: Lesson[] = [...M1_LESSONS, ...M1_LESSONS_2, ...M2_LESSONS, M2_L7, ...M3_LESSONS, ...M4_LESSONS, ...M8_LESSONS, ...M9_LESSONS, ...M10_LESSONS, ...M7_LESSONS].sort((a, b) => pathOrder(a.moduleId) - pathOrder(b.moduleId) || a.order - b.order);
+export const TASKS: PracticeTask[] = [...M1_TASKS, ...M2_TASKS, M2_P7, ...M3_TASKS, ...M4_TASKS, ...M8_TASKS, ...M9_TASKS, ...M10_TASKS, ...M7_TASKS];
+export const FEYNMAN: FeynmanTask[] = [...M1_FEYNMAN, ...M2_FEYNMAN, ...M3_FEYNMAN, ...M4_FEYNMAN, ...M8_FEYNMAN, ...M9_FEYNMAN, ...M10_FEYNMAN, ...M7_FEYNMAN];
+export const SITETASKS: SiteTask[] = [...M1_SITETASKS, ...M2_SITETASKS, M2_T7, ...M3_SITETASKS, ...M4_SITETASKS, ...M8_SITETASKS, ...M9_SITETASKS, ...M10_SITETASKS, ...M7_SITETASKS];
+export const SCENARIOS: Scenario[] = [...M2_SCENARIOS.filter((x) => x.status === 'verfuegbar'), M1_SCENARIO, M3_SCENARIO, M4_SCENARIO, M8_SCENARIO, M9_SCENARIO, M10_SCENARIO, M7_SCENARIO, ...M2_SCENARIOS.filter((x) => x.status !== 'verfuegbar')];
 
 const byId = <T extends { id: string }>(arr: T[]) => new Map(arr.map((x) => [x.id, x] as const));
 export const Q = byId(QUESTIONS);

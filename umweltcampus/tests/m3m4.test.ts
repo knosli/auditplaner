@@ -7,7 +7,7 @@ import { emptyState, normalizeState } from '../src/lib/state';
 import { isLegacyAnswer, isLegacyExam, isLegacyRun } from '../src/lib/versioning';
 import { moduleRequirements } from '../src/lib/learning';
 
-for (const mod of ['m3', 'm4', 'm8', 'm9', 'm10']) {
+for (const mod of ['m3', 'm4', 'm7', 'm8', 'm9', 'm10']) {
   describe(`Modul ${mod}: Umfang und Struktur`, () => {
     test('verfügbar, 5 Lektionen in Reihenfolge', () => {
       expect(MODULES.find((m) => m.id === mod)!.status).toBe('verfuegbar');
@@ -30,7 +30,7 @@ for (const mod of ['m3', 'm4', 'm8', 'm9', 'm10']) {
       }
     });
     test('alle Fragen tragen eine gültige Bewertungsfassung', () => {
-      for (const q of QUESTIONS.filter((x) => x.moduleId === mod)) expect(mod === 'm9' || mod === 'm10' ? [5] : mod === 'm8' ? [4, 5] : [3, 4]).toContain(q.rev);
+      for (const q of QUESTIONS.filter((x) => x.moduleId === mod)) expect(mod === 'm7' || mod === 'm9' || mod === 'm10' ? [5] : mod === 'm8' ? [4, 5] : [3, 4]).toContain(q.rev);
     });
     test('kritische Optionen geben 0 Punkte', () => {
       for (const q of QUESTIONS.filter((x) => x.moduleId === mod && x.type === 'best')) {
@@ -279,5 +279,36 @@ describe('Modul 10: ISO 14001 und Umweltmanagement', () => {
   });
   test('Zertifikat ist kein Freibrief', () => {
     expect(QUESTIONS.find((q) => q.id === 'm10-q02')!.correct).toEqual(['b']);
+  });
+});
+
+describe('Modul 7: Wassergefährdende und umweltgefährliche Stoffe', () => {
+  const st = (id: string) => S.get('sim-j')!.stages.find((x) => x.id === id)!;
+  test('Fall J: Abwarten oder Wegspülen ist kritisch, sofort alarmieren ist richtig', () => {
+    expect(evaluateStage(st('j1'), { stageId: 'j1', selected: ['o2'] })).toMatchObject({ score: 0, critical: true });
+    expect(evaluateStage(st('j1'), { stageId: 'j1', selected: ['o3'] })).toMatchObject({ score: 0, critical: true });
+    expect(evaluateStage(st('j1'), { stageId: 'j1', selected: ['o1'] })).toMatchObject({ score: 1, critical: false });
+  });
+  test('Fall J: In den Schacht steigen ist kritisch', () => {
+    expect(evaluateStage(st('j3'), { stageId: 'j3', selected: ['m1', 'm2', 'm5'] })).toMatchObject({ score: 0, critical: true });
+  });
+  test('Fall J: Meldung an das Amt nicht erst nach Bericht und Ursachenanalyse', () => {
+    expect(evaluateRank(st('j4'), ['n3', 'n2', 'n1', 'n4', 'n5'])).toMatchObject({ score: 1, critical: false });
+    expect(evaluateRank(st('j4'), ['n2', 'n3', 'n4', 'n5', 'n1']).critical).toBe(true);
+  });
+  test('Kritische Abwägungen: nicht melden, auskippen, rückdatieren, in Schacht leiten = 0 Punkte', () => {
+    const sc = (qid: string, oid: string) => scoreQuestion(QUESTIONS.find((q) => q.id === qid)!, [oid]);
+    expect(sc('m7-d04', 'a')).toBe(0);
+    expect(sc('m7-d04', 'c')).toBe(0);
+    expect(sc('m7-d02', 'a')).toBe(0);
+    expect(sc('m7-d05', 'a')).toBe(0);
+    expect(sc('m7-d03', 'a')).toBe(0);
+    expect(sc('m7-d01', 'c')).toBe(0);
+  });
+  test('Keine Rückhaltevolumen, Mengenschwellen oder Literangaben als Grenzwert', () => {
+    const txt = JSON.stringify(LESSONS.filter((l) => l.moduleId === 'm7'));
+    expect(txt).not.toMatch(/\d+\s*%\s*(des|der)\s*(Volumen|grössten)/i);
+    expect(txt).toContain('die App nennt bewusst keine Zahlen');
+    for (const l of LESSONS.filter((x) => x.moduleId === 'm7')) expect(l.review).toBe('entwurf');
   });
 });

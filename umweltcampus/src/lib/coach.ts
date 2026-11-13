@@ -122,6 +122,11 @@ export const GUIDING: Record<string, string[]> = {
   'm10-betrieb': ['In welchen bestehenden Arbeitsschritt gehört diese Vorgabe?', 'Können es die Leute – und tun sie es?', 'Wurde der Notfall schon einmal geübt?'],
   'm10-audit': ['Was ist die Anforderung, was der Nachweis?', 'Welche Schwäche im System steckt hinter dieser Feststellung?', 'Ist dieser Nachweis echt und zum richtigen Zeitpunkt entstanden?'],
   'm10-verbesserung': ['Welche Entscheidung stützt diese Kennzahl?', 'Was beantragen Sie – mit welchen Kosten und welcher Wirkung?', 'Was können Sie weglassen?'],
+  'm7-stoffe': ['Was steht auf dem Etikett und im SDB (Abschnitte 2, 6, 7, 13)?', 'Was passiert, wenn das hier ausläuft – wohin läuft es?', 'Gibt es ein weniger gefährliches Produkt?'],
+  'm7-lagerung': ['Ist die Wanne dicht, leer, überdacht und gross genug?', 'Wo wird abgefüllt und betankt – über Rückhalt?', 'Was steht zusammen, das nicht zusammengehört?'],
+  'm7-chemikalien': ['Wo wird gereinigt – und wohin geht das Wasser?', 'Was ist Sonderabfall, und wer holt es ab?', 'Wie lassen sich Reste vermeiden?'],
+  'm7-havarie': ['Kann der Stoff in Schacht, Gewässer oder Boden gelangen? Dann sofort 118/117.', 'Was läuft gleichzeitig: stoppen, eindämmen, alarmieren?', 'Liegt das Material dort, wo es gebraucht wird?'],
+  'm7-werkhof': ['Welche Anlagen, Bewilligungen und Pflichten gibt es – und wo sind die Nachweise?', 'Wann wurden Tank und Abscheider zuletzt geprüft bzw. geleert?', 'Was kommt mit dem Rückschub zurück?'],
   konzept: ['Beantwortet das Konzept alle sechs Leitfragen?', 'Sind Zuständigkeiten und Kontrollen festgelegt?', 'Was ist Pflicht, was Empfehlung – und was kostet die Alternative?'],
 };
 

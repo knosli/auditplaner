@@ -514,6 +514,26 @@ export const SOURCES: Source[] = [
     note: 'In der App nur als Teil des integrierten Managementsystems erwähnt. Kein Normtext.',
   },
   {
+    id: 'chemg', title: 'Bundesgesetz über den Schutz vor gefährlichen Stoffen und Zubereitungen (Chemikaliengesetz, ChemG)', short: 'ChemG', kind: 'gesetz', sr: 'SR 813.1',
+    issuer: 'Bundesversammlung', version: 'Geltende Fassung gemäss Fedlex – prüfen', lastChecked: null, scope: 'Ganze Schweiz', review: 'entwurf',
+    note: 'In der App nur allgemein verwendet (Grundlage für Einstufung, Kennzeichnung, Sicherheitsdatenblatt). Artikel nicht genannt und nicht geprüft.',
+  },
+  {
+    id: 'chemv', title: 'Verordnung über den Schutz vor gefährlichen Stoffen und Zubereitungen (Chemikalienverordnung, ChemV)', short: 'ChemV', kind: 'gesetz', sr: 'SR 813.11',
+    issuer: 'Bundesrat', version: 'Geltende Fassung gemäss Fedlex – prüfen', lastChecked: null, scope: 'Ganze Schweiz; Kennzeichnung nach GHS, abgestimmt auf die EU-Regeln (CLP)', review: 'entwurf',
+    note: 'In der App sinngemäss: Kennzeichnung mit GHS-Piktogrammen und H-Sätzen; Abgabe des Sicherheitsdatenblatts an berufliche Verwender; SDB mit 16 Abschnitten. Artikel nicht genannt und nicht am Original geprüft.',
+  },
+  {
+    id: 'sdr', title: 'Verordnung über die Beförderung gefährlicher Güter auf der Strasse (SDR)', short: 'SDR', kind: 'gesetz', sr: 'SR 741.621',
+    issuer: 'Bundesrat', version: 'Geltende Fassung gemäss Fedlex – prüfen; übernimmt das europäische ADR', lastChecked: null, scope: 'Strassentransport von Gefahrgut', review: 'entwurf',
+    note: 'In der App nur erwähnt; Freistellungen für Kleinmengen und Handwerkertransporte nicht wiedergegeben und nicht geprüft.',
+  },
+  {
+    id: 'stfv', title: 'Verordnung über den Schutz vor Störfällen (Störfallverordnung, StFV)', short: 'StFV', kind: 'gesetz', sr: 'SR 814.012',
+    issuer: 'Bundesrat', version: 'Geltende Fassung gemäss Fedlex – prüfen', lastChecked: null, scope: 'Betriebe mit gefährlichen Stoffen über den Mengenschwellen im Anhang', review: 'entwurf',
+    note: 'In der App nur der Geltungsbereich allgemein; Mengenschwellen bewusst nicht genannt – mit der kantonalen Fachstelle klären.',
+  },
+  {
     id: 'praxis',
     title: 'Bewährte Praxis Baustellen-Umweltschutz (Zusammenfassung der App)',
     short: 'Bewährte Praxis',

@@ -246,6 +246,48 @@ export function IlluCycle(_: Props) {
   );
 }
 
+/** Modul 7: Lager für wassergefährdende Stoffe */
+export function IlluStore(_: Props) {
+  return (
+    <Paper label="Schema: Lager für wassergefährdende Stoffe. Fässer stehen in einer überdachten Auffangwanne auf befestigter Fläche, Abfüllen über der Wanne, der Schacht ist abgedeckt, Bindemittel und Notfallblatt liegen bereit.">
+      <path d="M24 214h432v56H24z" fill="#cfd6d2" />
+      <path d="M24 214h432" stroke="#9aa6a3" strokeWidth="2" />
+      {/* Dach */}
+      <path d="M70 92h200l14 18H56z" fill="#9db7b0" />
+      <path d="M76 110v104M264 110v104" stroke="#7d918b" strokeWidth="4" />
+      {/* Wanne */}
+      <path d="M84 176h172v36H84z" fill="#e5aa63" opacity=".35" stroke="#c98a3f" strokeWidth="2" />
+      {/* Fässer */}
+      {[104, 148, 192].map((x) => (
+        <g key={x}>
+          <rect x={x} y={130} width="34" height="50" rx="5" fill="#2d4c48" />
+          <path d={`M${x} 144h34M${x} 166h34`} stroke="#4f7d78" strokeWidth="2" />
+        </g>
+      ))}
+      {/* GHS-Raute */}
+      <g transform="translate(234 148) rotate(45)">
+        <rect x="-11" y="-11" width="22" height="22" fill="#fff" stroke="#c14c40" strokeWidth="3" />
+      </g>
+      <path d="M228 150q6-6 12 0" stroke="#184542" strokeWidth="2" fill="none" />
+      <T x={170} y={84} anchor="middle">überdacht · Wanne leer · getrennt</T>
+      {/* Schacht abgedeckt */}
+      <rect x="330" y="214" width="34" height="36" fill="#c9d5d1" stroke="#7d918b" strokeWidth="2" />
+      <rect x="324" y="208" width="46" height="7" rx="2" fill="#167b70" />
+      <T x={347} y={266} anchor="middle" s={9}>Schacht abgedeckt</T>
+      {/* Notfallkiste */}
+      <rect x="290" y="176" width="40" height="30" rx="4" fill="#fff2de" stroke="#e5aa63" strokeWidth="2" />
+      <T x={310} y={195} anchor="middle" s={8} c="#3d2a10">Binder</T>
+      {/* Notfallblatt */}
+      <rect x="388" y="120" width="56" height="74" rx="6" fill="#fff" stroke="#9db7b0" />
+      <T x={416} y={140} anchor="middle" s={9} c="#c14c40">Notfall</T>
+      <T x={416} y={156} anchor="middle" s={9}>118 · 117</T>
+      <T x={416} y={172} anchor="middle" s={8} w={500} c="#56645e">stoppen</T>
+      <T x={416} y={184} anchor="middle" s={8} w={500} c="#56645e">eindämmen</T>
+      <T x={240} y={44} anchor="middle" s={10} w={500} c="#56645e">Etikett · SDB · Lager · Umschlag · Notfall · Entsorgung</T>
+    </Paper>
+  );
+}
+
 export function ModuleIllustration({ moduleId }: { moduleId: string }) {
   switch (moduleId) {
     case 'm2': return <IlluWater />;
@@ -254,6 +296,7 @@ export function ModuleIllustration({ moduleId }: { moduleId: string }) {
     case 'm8': return <IlluPlan />;
     case 'm9': return <IlluInspect />;
     case 'm10': return <IlluCycle />;
+    case 'm7': return <IlluStore />;
     default: return <IlluLaw />;
   }
 }

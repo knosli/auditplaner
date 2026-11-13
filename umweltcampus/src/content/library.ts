@@ -302,6 +302,35 @@ Offene Massnahmen der letzten Begehung mit Status.
     ],
     sources: ['iso14001', 'iso19011', 'praxis'],
   },
+  {
+    id: 'cl-lager-gefahrstoffe', category: 'checkliste', moduleId: 'm7',
+    title: 'Baustellenlager für wassergefährdende Stoffe',
+    summary: 'Kurzcheck für Lager, Betankungs- und Abfüllplatz auf der Baustelle.',
+    tags: ['Lagerung', 'Auffangwanne', 'Gefahrstoffe', 'Checkliste', 'Betankung', 'SDB'],
+    items: [
+      { group: 'Ort', points: ['Befestigte, dichte Fläche', 'Kein Schacht und kein Gefälle Richtung Schacht, Böschung oder Gewässer', 'Nicht in einer Grundwasserschutzzone (sonst Vorgaben prüfen)', 'Gegen Anfahren geschützt, abschliessbar'] },
+      { group: 'Rückhalt', points: ['Alle Gebinde in Wanne bzw. doppelwandig', 'Wanne dicht, leer, überdacht', 'Volumen gemäss kantonalen Vorgaben'] },
+      { group: 'Gebinde und Trennung', points: ['Gebinde geschlossen und beschriftet', 'Umgefülltes gekennzeichnet; keine Getränkeflaschen', 'Säuren, Laugen, Brennbares getrennt', 'Brennbares weg von Zündquellen; Gasflaschen stehend gesichert', 'Leere Gebinde verschlossen gelagert'] },
+      { group: 'Umschlag', points: ['Abfüllen und Betanken nur über Rückhalt', 'Pumpe bzw. Auslaufhahn statt Kippen', 'Nie unbeaufsichtigt'] },
+      { group: 'Information und Notfall', points: ['Stoffinventar aktuell', 'SDB vorhanden und zugänglich', 'Bindemittel und Schachtabdeckungen am Platz', 'Notfallblatt mit Nummern sichtbar'] },
+    ],
+    sources: ['kvu-lagerung', 'gschg', 'chemv'],
+  },
+  {
+    id: 'cl-werkhofkontrolle', category: 'checkliste', moduleId: 'm7',
+    title: 'Werkhofkontrolle Umwelt',
+    summary: 'Periodische Kontrolle von Tankanlage, Waschplatz, Werkstatt, Lager, Rückschub und Nachweisen.',
+    tags: ['Werkhof', 'Tankanlage', 'Ölabscheider', 'Kontrolle', 'Checkliste', 'Sonderabfall'],
+    items: [
+      { group: 'Tankanlage', points: ['Leckanzeige in Betrieb, keine Störung', 'Keine Ölspuren an Zapfsäule und Leitungen', 'Betankungsplatz dicht, entwässert über Abscheider', 'Nachweis der letzten Kontrolle vorhanden'] },
+      { group: 'Waschplatz und Abscheider', points: ['Schlammfang und Abscheider nicht übervoll', 'Letzte Leerung mit Beleg', 'Nur abscheiderverträgliche Reiniger', 'Kein Waschen ausserhalb des Platzes', 'Einleitbewilligung vorhanden'] },
+      { group: 'Werkstatt und Lager', points: ['Altöl in geschlossenen Behältern in Wanne', 'Filter, Batterien, Lappen getrennt gesammelt', 'Lager wie Baustellenlager (Checkliste)', 'Stoffinventar aktuell'] },
+      { group: 'Rückschub und Abfälle', points: ['Gebinde nur mit Etikett und Herkunft angenommen', 'Unbekanntes gesichert und gemeldet', 'Sonderabfälle mit Begleitschein entsorgt'] },
+      { group: 'Entwässerung und Notfall', points: ['Schächte sauber, Platzwasser verschmutzter Flächen behandelt', 'Notfallmaterial an Tankstelle, Waschplatz, Lager', 'Notfallblatt aktuell'] },
+      { group: 'Organisation', points: ['Verantwortliche/r und Stellvertretung bestimmt', 'Jahresplan mit allen Fristen', 'Ablage mit Bewilligungen, Kontrollen, Belegen', 'Offene Massnahmen aus letzter Kontrolle erledigt'] },
+    ],
+    sources: ['gschg', 'kvu-lagerung', 'veva', 'praxis'],
+  },
 ];
 
 export const LIB_CATEGORY_LABEL: Record<LibraryEntry['category'], string> = {

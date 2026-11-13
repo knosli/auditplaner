@@ -26,7 +26,7 @@ export const MODULES: ModuleMeta[] = [
     topics: ['Schall und Lärm', 'BAFU-Baulärm-Richtlinie', 'Massnahmenstufen', 'Lärmschutzkonzepte', 'Lärmarme Verfahren', 'Arbeitszeiten und Auflagen', 'Erschütterungen', 'Beschwerdemanagement', 'Information Anwohnende', 'Baustellenplanung'],
   },
   {
-    id: 'm7', no: 7, title: 'Wassergefährdende und umweltgefährliche Stoffe', short: 'Gefahrstoffe', pathOrder: 8, status: 'in_entwicklung',
+    id: 'm7', no: 7, title: 'Wassergefährdende und umweltgefährliche Stoffe', short: 'Gefahrstoffe', pathOrder: 8, status: 'verfuegbar',
     topics: ['Treibstoffe und Öle', 'Lagerung und Umschlag', 'Auffangwannen', 'Kennzeichnung', 'Sicherheitsdatenblätter', 'Chemikalien auf Baustellen', 'Havariekonzepte', 'Umweltnotfälle', 'Erste Massnahmen bei Leckagen', 'Alarmierung und Meldestellen', 'Werkhofkontrollen'],
   },
   {
@@ -84,6 +84,11 @@ export const TOPICS: Topic[] = [
   { id: 'm10-betrieb', moduleId: 'm10', title: 'Kompetenz, Betrieb, Notfallvorsorge' },
   { id: 'm10-audit', moduleId: 'm10', title: 'Interne Audits und Zertifizierung' },
   { id: 'm10-verbesserung', moduleId: 'm10', title: 'Kennzahlen, Managementbewertung, integriertes System' },
+  { id: 'm7-stoffe', moduleId: 'm7', title: 'Stoffe erkennen: Kennzeichnung, SDB' },
+  { id: 'm7-lagerung', moduleId: 'm7', title: 'Lagerung und Umschlag' },
+  { id: 'm7-chemikalien', moduleId: 'm7', title: 'Bauchemikalien, Reinigung, Entsorgung' },
+  { id: 'm7-havarie', moduleId: 'm7', title: 'Havariekonzept und Alarmierung' },
+  { id: 'm7-werkhof', moduleId: 'm7', title: 'Werkhof, Tankanlagen, Kontrollen' },
   { id: 'recht', moduleId: 'm2', title: 'Rechtsrahmen Gewässerschutz' },
   { id: 'entwaesserung', moduleId: 'm2', title: 'Baustellenentwässerung' },
   { id: 'alkalisch', moduleId: 'm2', title: 'Betonwaschwasser / alkalisches Wasser' },
