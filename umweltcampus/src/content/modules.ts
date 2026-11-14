@@ -22,7 +22,7 @@ export const MODULES: ModuleMeta[] = [
     topics: ['Luftschadstoffe', 'Baustellenstaub', 'Staubintensive Arbeiten', 'Maschinenemissionen', 'Anforderungen an Baumaschinen', 'Partikelfilter', 'Staubreduktion', 'Transporte', 'Rückbau und Erdbau', 'Planung und Kontrolle'],
   },
   {
-    id: 'm6', no: 6, title: 'Baulärm und Erschütterungen', short: 'Baulärm', pathOrder: 10, status: 'in_entwicklung',
+    id: 'm6', no: 6, title: 'Baulärm und Erschütterungen', short: 'Baulärm', pathOrder: 10, status: 'verfuegbar',
     topics: ['Schall und Lärm', 'BAFU-Baulärm-Richtlinie', 'Massnahmenstufen', 'Lärmschutzkonzepte', 'Lärmarme Verfahren', 'Arbeitszeiten und Auflagen', 'Erschütterungen', 'Beschwerdemanagement', 'Information Anwohnende', 'Baustellenplanung'],
   },
   {
@@ -94,6 +94,11 @@ export const TOPICS: Topic[] = [
   { id: 'm5-maschinen', moduleId: 'm5', title: 'Baumaschinen und Nachweise' },
   { id: 'm5-transporte', moduleId: 'm5', title: 'Transporte, Rückbau, Aufbereitung' },
   { id: 'm5-planung', moduleId: 'm5', title: 'Massnahmenstufen planen und kontrollieren' },
+  { id: 'm6-grundlagen', moduleId: 'm6', title: 'Schall, Lärm, Rechtsrahmen' },
+  { id: 'm6-massnahmen', moduleId: 'm6', title: 'Massnahmen gegen Baulärm' },
+  { id: 'm6-planung', moduleId: 'm6', title: 'Lärmschutzkonzept und Arbeitszeiten' },
+  { id: 'm6-erschuetterung', moduleId: 'm6', title: 'Erschütterungen' },
+  { id: 'm6-kommunikation', moduleId: 'm6', title: 'Information und Beschwerden' },
   { id: 'recht', moduleId: 'm2', title: 'Rechtsrahmen Gewässerschutz' },
   { id: 'entwaesserung', moduleId: 'm2', title: 'Baustellenentwässerung' },
   { id: 'alkalisch', moduleId: 'm2', title: 'Betonwaschwasser / alkalisches Wasser' },

@@ -345,6 +345,20 @@ Offene Massnahmen der letzten Begehung mit Status.
     ],
     sources: ['bafu-luft', 'lrv', 'praxis'],
   },
+  {
+    id: 'cl-baulaerm', category: 'checkliste', moduleId: 'm6',
+    title: 'Baulärm und Erschütterungen',
+    summary: 'Kurzcheck von der Planung bis zur Beschwerde – auf die angeordnete Stufe zuschneiden.',
+    tags: ['Baulärm', 'Erschütterungen', 'Massnahmenstufe', 'Beschwerden', 'Checkliste', 'Information'],
+    items: [
+      { group: 'Grundlagen', points: ['Angeordnete Stufe bekannt (A/B/C, Transporte A/B)', 'Arbeits- und Ruhezeiten der Gemeinde bekannt', 'Empfindliche Nachbarn erfasst (Schulen, Heime, Spitäler, Praxen)', 'Lärmschutzkonzept nach Phasen; Massnahmen im LV'] },
+      { group: 'An der Quelle', points: ['Leiseres Verfahren geprüft (bohren, Zange, Säge)', 'Lärmarme bzw. elektrische Maschinen', 'Schalldämpfer intakt, Wartung', 'Motoren aus statt Leerlauf; kein Warmlaufen vor Arbeitsbeginn'] },
+      { group: 'Ausbreitung und Zeit', points: ['Abschirmung nah an Quelle oder Betroffenen, dicht', 'Kompressor, Mulden, Wartezone weg von Wohnungen', 'Besonders lärmige Arbeiten gebündelt in Zeitfenstern', 'Ausnahmebewilligung für Nacht- und Wochenendarbeit vorhanden'] },
+      { group: 'Erschütterungen', points: ['Erschütterungsarme Verfahren geprüft', 'Zustandsaufnahme der Nachbargebäude vor Baubeginn', 'Messprogramm mit Schwellen und Reaktionsplan, wo nötig'] },
+      { group: 'Information und Beschwerden', points: ['Information vor Baubeginn und vor lauten Phasen', 'Ansprechperson mit Telefonnummer an der Bautafel', 'Beschwerden aufgenommen, geprüft, beantwortet, dokumentiert', 'Beschwerdeliste ausgewertet'] },
+    ],
+    sources: ['bafu-baulaerm', 'kanton-laerm', 'sn640312', 'praxis'],
+  },
 ];
 
 export const LIB_CATEGORY_LABEL: Record<LibraryEntry['category'], string> = {

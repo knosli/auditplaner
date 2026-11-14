@@ -539,6 +539,26 @@ export const SOURCES: Source[] = [
     note: 'In der App nur allgemein: Quarzfeinstaub und Dieselabgase als Gefährdung der Mitarbeitenden, Massnahmen an der Quelle, Atemschutz. Grenzwerte am Arbeitsplatz nicht wiedergegeben.',
   },
   {
+    id: 'malv', title: 'Verordnung über die Lärmemissionen von Geräten und Maschinen, die im Freien verwendet werden (Maschinenlärmverordnung, MaLV)', short: 'MaLV', kind: 'gesetz', sr: 'SR 814.412.2',
+    issuer: 'Bundesrat', version: 'Geltende Fassung gemäss Fedlex – prüfen; abgestimmt auf EU-Regeln', lastChecked: null, scope: 'Inverkehrbringen und Kennzeichnung von Geräten und Maschinen für den Einsatz im Freien', review: 'entwurf',
+    note: 'In der App nur allgemein erwähnt (Kennzeichnung der Geräuschemission). Titel und SR-Nummer aus der Erinnerung, nicht am Original geprüft.',
+  },
+  {
+    id: 'suva-laerm', title: 'Suva: Lärm am Arbeitsplatz, Gehörschutz und Gehörvorsorge', short: 'Suva Lärm', kind: 'vollzugshilfe',
+    issuer: 'Suva', url: 'https://www.suva.ch', version: 'Webinformation, Stand prüfen', lastChecked: null, scope: 'Arbeitnehmerschutz (Ganze Schweiz)', review: 'entwurf',
+    note: 'In der App nur allgemein (Gehörschutz bei lärmigen Arbeiten, Rückfahrwarner als Sicherheitsthema). Grenzwerte nicht wiedergegeben.',
+  },
+  {
+    id: 'sn640312', title: 'VSS-Norm SN 640 312a «Erschütterungen – Erschütterungseinwirkungen auf Bauwerke»', short: 'SN 640 312a', kind: 'norm',
+    issuer: 'Schweizerischer Verband der Strassen- und Verkehrsfachleute (VSS)', version: 'Ausgabe prüfen', lastChecked: null, scope: 'Beurteilung von Erschütterungen auf Bauwerke; verbindlich, wenn vereinbart oder verfügt', review: 'entwurf',
+    note: 'Kostenpflichtige Norm; Bezeichnung aus der Erinnerung, Inhalt (Richtwerte, Gebäudeklassen) nicht wiedergegeben und nicht geprüft. Für Einwirkungen auf Menschen werden u. a. ausländische Normen (z. B. DIN 4150) beigezogen.',
+  },
+  {
+    id: 'kanton-laerm', title: 'Kantonale und kommunale Vorschriften zu Arbeits- und Ruhezeiten (Polizei-, Lärm- und Baureglemente) sowie kantonale Baulärm-Vollzugshilfen', short: 'Kanton/Gemeinde Lärm', kind: 'gesetz',
+    issuer: 'Kantone und Gemeinden', version: 'örtlich verschieden', lastChecked: null, scope: 'Standort der Baustelle', cantonal: 'Massgebend sind Reglement der Standortgemeinde und Bewilligung.', review: 'entwurf',
+    note: 'Die App nennt keine Uhrzeiten, weil sie je nach Ort verschieden sind. Ausnahmen in der Regel bewilligungspflichtig.',
+  },
+  {
     id: 'praxis',
     title: 'Bewährte Praxis Baustellen-Umweltschutz (Zusammenfassung der App)',
     short: 'Bewährte Praxis',

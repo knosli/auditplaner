@@ -132,6 +132,11 @@ export const GUIDING: Record<string, string[]> = {
   'm5-maschinen': ['Gibt es für jede Maschine einen Nachweis – auch für Miete und Subunternehmer?', 'Läuft etwas im Leerlauf?', 'Ginge es elektrisch?'],
   'm5-transporte': ['Welche Fahrten lassen sich vermeiden?', 'Wo warten Lastwagen – mit laufendem Motor?', 'Ist die Strasse sauber?'],
   'm5-planung': ['Ist die Stufe in ein Konzept nach Phasen übersetzt?', 'Steht das im LV und in den Subunternehmerverträgen?', 'Was sieht man beim Blick über die Grenze?'],
+  'm6-grundlagen': ['Welche Stufe ist angeordnet – und welche Zeiten gelten hier?', 'Wer ist betroffen, und wann ist es für sie besonders störend?', 'Wie laut wird es wirklich (dB-Faustregeln)?'],
+  'm6-massnahmen': ['Gibt es ein leiseres Verfahren?', 'Steht die Abschirmung nah an der Quelle und dicht?', 'Was ist vermeidbarer Lärm (Leerlauf, Werfen, Warmlaufen)?'],
+  'm6-planung': ['Ist die Stufe in ein Konzept nach Phasen übersetzt?', 'Braucht diese Arbeit eine Ausnahmebewilligung?', 'Stehen Massnahmen und Zeitfenster im LV und in der Kalkulation?'],
+  'm6-erschuetterung': ['Gibt es eine Zustandsaufnahme der Nachbargebäude?', 'Wer misst, welche Schwellen gelten, was passiert bei Überschreitung?', 'Lässt sich erschütterungsärmer bauen?'],
+  'm6-kommunikation': ['Weiss die Nachbarschaft, was kommt und wen sie anrufen kann?', 'Wurde die Beschwerde geprüft und beantwortet?', 'Welches Muster zeigen die Beschwerden?'],
   konzept: ['Beantwortet das Konzept alle sechs Leitfragen?', 'Sind Zuständigkeiten und Kontrollen festgelegt?', 'Was ist Pflicht, was Empfehlung – und was kostet die Alternative?'],
 };
 

@@ -7,7 +7,7 @@ import { emptyState, normalizeState } from '../src/lib/state';
 import { isLegacyAnswer, isLegacyExam, isLegacyRun } from '../src/lib/versioning';
 import { moduleRequirements } from '../src/lib/learning';
 
-for (const mod of ['m3', 'm4', 'm5', 'm7', 'm8', 'm9', 'm10']) {
+for (const mod of ['m3', 'm4', 'm5', 'm6', 'm7', 'm8', 'm9', 'm10']) {
   describe(`Modul ${mod}: Umfang und Struktur`, () => {
     test('verfügbar, 5 Lektionen in Reihenfolge', () => {
       expect(MODULES.find((m) => m.id === mod)!.status).toBe('verfuegbar');
@@ -30,7 +30,7 @@ for (const mod of ['m3', 'm4', 'm5', 'm7', 'm8', 'm9', 'm10']) {
       }
     });
     test('alle Fragen tragen eine gültige Bewertungsfassung', () => {
-      for (const q of QUESTIONS.filter((x) => x.moduleId === mod)) expect(['m5', 'm7', 'm9', 'm10'].includes(mod) ? [5] : mod === 'm8' ? [4, 5] : [3, 4]).toContain(q.rev);
+      for (const q of QUESTIONS.filter((x) => x.moduleId === mod)) expect(['m5', 'm6', 'm7', 'm9', 'm10'].includes(mod) ? [5] : mod === 'm8' ? [4, 5] : [3, 4]).toContain(q.rev);
     });
     test('kritische Optionen geben 0 Punkte', () => {
       for (const q of QUESTIONS.filter((x) => x.moduleId === mod && x.type === 'best')) {
@@ -336,5 +336,33 @@ describe('Modul 5: Luftreinhaltung', () => {
     expect(txt).not.toMatch(/µg|mg\/m|Baujahr (19|20)\d\d/);
     expect(txt).toContain('Wortlaut der LRV prüfen');
     for (const l of LESSONS.filter((x) => x.moduleId === 'm5')) expect(l.review).toBe('entwurf');
+  });
+});
+
+describe('Modul 6: Baulärm und Erschütterungen', () => {
+  const st = (id: string) => S.get('sim-c')!.stages.find((x) => x.id === id)!;
+  test('Fall C ersetzt den Platzhalter (stabile ID sim-c, nur einmal vorhanden)', () => {
+    expect(SCENARIOS.filter((x) => x.id === 'sim-c').length).toBe(1);
+    expect(S.get('sim-c')!.moduleId).toBe('m6');
+    expect(S.get('sim-c')!.status).toBe('verfuegbar');
+  });
+  test('Fall C: lärmige Samstagsarbeit ohne Bewilligung ist kritisch', () => {
+    expect(evaluateStage(st('c3'), { stageId: 'c3', selected: ['m1', 'm2', 'm5'] })).toMatchObject({ score: 0, critical: true });
+    expect(evaluateStage(st('c3'), { stageId: 'c3', selected: ['m1', 'm2', 'm3', 'm4'] })).toMatchObject({ score: 1, critical: false });
+  });
+  test('Fall C: Sofortmassnahmen vor Gesprächen', () => {
+    expect(evaluateRank(st('c4'), ['n2', 'n1', 'n3', 'n4', 'n5'])).toMatchObject({ score: 1, critical: false });
+    expect(evaluateRank(st('c4'), ['n2', 'n3', 'n4', 'n1', 'n5']).critical).toBe(true);
+  });
+  test('dB-Faustregeln und keine Grenzwerte für Baulärm', () => {
+    expect(QUESTIONS.find((q) => q.id === 'm6-q01')!.correct).toEqual(['b']);
+    expect(QUESTIONS.find((q) => q.id === 'm6-q02')!.correct).toEqual(['b']);
+    expect(scoreQuestion(QUESTIONS.find((q) => q.id === 'm6-d03')!, ['a'])).toBe(0);
+  });
+  test('Keine Uhrzeiten als allgemeine Regel, keine Erschütterungs-Richtwerte; Prüfstatus Entwurf', () => {
+    const txt = JSON.stringify(LESSONS.filter((l) => l.moduleId === 'm6'));
+    expect(txt).not.toMatch(/mm\/s/);
+    expect(txt).toContain('Die App nennt keine Uhrzeiten');
+    for (const l of LESSONS.filter((x) => x.moduleId === 'm6')) expect(l.review).toBe('entwurf');
   });
 });

@@ -214,10 +214,6 @@ export const SCENARIOS: Scenario[] = [
     sources: ['gschg', 'kanton-merkblatt', 'sia431', 'praxis'],
   },
   // =====================================================================
-  {
-    id: 'sim-c', code: 'C', moduleId: 'm6', status: 'in_entwicklung', title: 'Lärmbeschwerden beim Rückbau im Wohngebiet', setting: 'Rückbau', level: 3, minutes: 20,
-    topics: [], intro: 'Rückbau eines Gewerbebaus in einem Wohngebiet: Technische, organisatorische und kommunikative Massnahmen bei Beschwerden beurteilen.', facts: [], stages: [], debrief: '', sources: [],
-  },
 ];
 
 export const CRITERION_LABEL: Record<string, string> = {

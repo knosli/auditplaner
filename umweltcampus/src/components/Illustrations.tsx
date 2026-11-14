@@ -322,6 +322,41 @@ export function IlluAir(_: Props) {
   );
 }
 
+/** Modul 6: Lärm an der Quelle mindern, abschirmen, informieren */
+export function IlluNoise(_: Props) {
+  return (
+    <Paper label="Schema: Baulärm. Eine Maschine erzeugt Schallwellen, eine Lärmschutzwand nahe der Quelle schirmt die unteren Geschosse des Wohnhauses ab; oben hilft nur die leisere Quelle. Ein Seismograf-Symbol steht für Erschütterungsmessung, ein Schild für die Ansprechperson.">
+      <path d="M24 222h432v48H24z" fill="#cfd6d2" />
+      <path d="M24 222h432" stroke="#9aa6a3" strokeWidth="2" />
+      {/* Maschine */}
+      <rect x="60" y="190" width="70" height="26" rx="4" fill="#e5aa63" />
+      <rect x="56" y="214" width="78" height="10" rx="5" fill="#2d4c48" />
+      <path d="M120 192l24-34" stroke="#d29a55" strokeWidth="7" strokeLinecap="round" />
+      {/* Schallwellen */}
+      {[30, 52, 74].map((r) => <path key={r} d={`M${150 + r * 0.2} ${170 - r * 0.9}a${r} ${r} 0 0 1 0 ${r * 1.8}`} fill="none" stroke="#c14c40" strokeWidth="2" opacity={0.9 - r / 120} />)}
+      {/* Wand */}
+      <rect x="214" y="150" width="12" height="72" fill="#9db7b0" />
+      <T x={220} y={142} anchor="middle" s={9}>Wand</T>
+      {/* Wohnhaus */}
+      <rect x="300" y="70" width="90" height="152" fill="#e4ebe6" stroke="#9db7b0" strokeWidth="2" />
+      {[86, 118, 150, 182].map((y) => <g key={y}><rect x="314" y={y} width="20" height="16" fill="#a7c4c4" /><rect x="356" y={y} width="20" height="16" fill="#a7c4c4" /></g>)}
+      <path d="M226 160l74 34" stroke="#c14c40" strokeDasharray="4 4" />
+      <path d="M150 120l150-40" stroke="#c14c40" strokeDasharray="4 4" />
+      <T x={410} y={96} s={9} w={500} c="#56645e">oben: Quelle</T>
+      <T x={410} y={108} s={9} w={500} c="#56645e">leiser machen</T>
+      <T x={410} y={196} s={9} w={500} c="#56645e">unten: Wand</T>
+      <T x={410} y={208} s={9} w={500} c="#56645e">wirkt</T>
+      {/* Seismograf */}
+      <path d="M240 250l10 0 6-10 8 20 8-20 6 10 10 0" stroke="#167b70" strokeWidth="2.5" fill="none" />
+      <T x={262} y={266} anchor="middle" s={9}>Erschütterung messen</T>
+      {/* Schild */}
+      <rect x="40" y="236" width="90" height="26" rx="4" fill="#fff" stroke="#9db7b0" />
+      <T x={85} y={253} anchor="middle" s={9}>Kontakt: Tel. …</T>
+      <T x={240} y={44} anchor="middle" s={10} w={500} c="#56645e">Leiseres Verfahren · Zeitfenster · Abschirmung · Information</T>
+    </Paper>
+  );
+}
+
 export function ModuleIllustration({ moduleId }: { moduleId: string }) {
   switch (moduleId) {
     case 'm2': return <IlluWater />;
@@ -332,6 +367,7 @@ export function ModuleIllustration({ moduleId }: { moduleId: string }) {
     case 'm10': return <IlluCycle />;
     case 'm7': return <IlluStore />;
     case 'm5': return <IlluAir />;
+    case 'm6': return <IlluNoise />;
     default: return <IlluLaw />;
   }
 }
