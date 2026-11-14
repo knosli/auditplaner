@@ -275,7 +275,7 @@ export function ModuleDetail({ id }: { id: string }) {
           <div className="mod-hero-meta"><span>{lessons.length} Lektionen</span><span>{doneN} abgeschlossen</span><span>{(() => { const n = SCENARIOS.filter((x) => x.moduleId === id && x.status === 'verfuegbar').length; return `${n} Baustellenf${n === 1 ? 'all' : 'älle'}`; })()}</span><span>{tasks.length} Praxisaufträge</span></div>
         </div>
       </section>
-      <p className="trust"><Icon name="alert" size={16} /> <span><strong>Prüfstatus Entwurf.</strong> Fachlich sorgfältig erstellt und extern KI-geprüft, aber nicht durch eine Fachperson am Originaltext freigegeben. Kantone, Gemeinden und Bewilligungen können zusätzliche Anforderungen stellen.</span></p>
+      <p className="trust"><Icon name="alert" size={16} /> <span><strong>Prüfstatus Entwurf.</strong> {['m1', 'm2', 'm3', 'm4', 'm8'].includes(id) ? 'Fachlich sorgfältig erstellt und nach einer externen KI-Fachprüfung korrigiert, aber nicht durch eine Fachperson am Originaltext freigegeben.' : 'Fachlich sorgfältig erstellt, aber noch nicht extern geprüft und nicht durch eine Fachperson am Originaltext freigegeben.'} Kantone, Gemeinden und Bewilligungen können zusätzliche Anforderungen stellen.</span></p>
 
       <section className="section">
         <div className="section-head"><h2>Ihr Weg durch die vier Lernstufen</h2><span className="hint">{pct(moduleProgress(s, id))} des Modulabschlusses</span></div>

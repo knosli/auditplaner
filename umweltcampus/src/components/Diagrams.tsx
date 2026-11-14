@@ -24,6 +24,7 @@ export function Diagram({ id }: { id: string }) {
     case 'iso-regelkreis': return <Kette steps={ISO_REGELKREIS} />;
     case 'stoffpruefung': return <Kette steps={STOFFPRUEFUNG} />;
     case 'feststellungsweg': return <Kette steps={FESTSTELLUNG} />;
+    case 'lebenszyklus': return <Kette steps={LEBENSZYKLUS} />;
     default: return <p className="hint">Schema «{id}» nicht gefunden.</p>;
   }
 }
@@ -237,6 +238,13 @@ const AUFLAGEN = [
   { t: 'Nachweis', d: 'Protokoll, Foto, Liefer-, Wäge-, Begleitschein', who: 'so viel wie nötig, so wenig wie möglich' },
 ];
 
+const LEBENSZYKLUS = [
+  { t: 'Rohstoffe und Herstellung', d: 'Zement, Stahl, Glas, Dämmstoffe – die grauen Emissionen', who: 'Hebel: Produktwahl, Varianten, Mengen' },
+  { t: 'Transport', d: 'Lieferungen, Aushub- und Abbruchtransporte', who: 'Hebel: Logistik, Verwertung vor Ort, Bahn' },
+  { t: 'Bauprozess', d: 'Maschinen, Baustrom, Heizung, Abfälle', who: 'Hebel: direkt durch die Unternehmung' },
+  { t: 'Nutzung', d: 'Heizung, Kühlung, Strom, Unterhalt', who: 'Hebel: Planung der Bauherrschaft' },
+  { t: 'Rückbau', d: 'Abbruch, Wiederverwendung, Verwertung, Deponie', who: 'Hebel: sortenrein, wiederverwenden' },
+];
 const STOFFPRUEFUNG = [
   { t: 'Etikett lesen', d: 'Produktname, Piktogramme, H-Sätze (H400er: Gewässer)', who: 'kein Etikett: sichern, nicht verwenden' },
   { t: 'SDB holen', d: 'Abschnitte 2, 6, 7, 8, 12, 13', who: 'beim Lieferanten bzw. Subunternehmer' },

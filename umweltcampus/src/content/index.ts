@@ -33,6 +33,9 @@ import { M5_CARDS, M5_FEYNMAN, M5_SCENARIO, M5_SITETASKS, M5_TASKS } from './m5/
 import { M6_LESSONS } from './m6/lessons';
 import { M6_QUESTIONS } from './m6/questions';
 import { M6_CARDS, M6_FEYNMAN, M6_SCENARIO, M6_SITETASKS, M6_TASKS } from './m6/tasks';
+import { M11_LESSONS } from './m11/lessons';
+import { M11_QUESTIONS } from './m11/questions';
+import { M11_CARDS, M11_FEYNMAN, M11_SCENARIO, M11_SITETASKS, M11_TASKS } from './m11/tasks';
 import { M2_SITETASKS } from './m2/sitetasks';
 import { M2_L7, M2_L7_CARDS, M2_L7_QUESTIONS, M2_P7, M2_T7 } from './m2/lesson-sia';
 import type { Card, FeynmanTask, Lesson, PracticeTask, Question, Scenario, SiteTask } from './types';
@@ -44,15 +47,15 @@ export { LIBRARY, LIB_CATEGORY_LABEL } from './library';
 export { CRITERION_LABEL } from './m2/scenarios';
 
 // Neue Module: hier ihre Datensätze anhängen.
-export const QUESTIONS: Question[] = [...M1_QUESTIONS, ...M2_QUESTIONS, ...M2_DECISIONS, ...M2_L7_QUESTIONS, ...M3_QUESTIONS, ...M4_QUESTIONS, ...M8_QUESTIONS, ...M9_QUESTIONS, ...M10_QUESTIONS, ...M7_QUESTIONS, ...M5_QUESTIONS, ...M6_QUESTIONS];
-export const CARDS: Card[] = [...M1_CARDS, ...M2_CARDS, ...M2_L7_CARDS, ...M3_CARDS, ...M4_CARDS, ...M8_CARDS, ...M9_CARDS, ...M10_CARDS, ...M7_CARDS, ...M5_CARDS, ...M6_CARDS];
+export const QUESTIONS: Question[] = [...M1_QUESTIONS, ...M2_QUESTIONS, ...M2_DECISIONS, ...M2_L7_QUESTIONS, ...M3_QUESTIONS, ...M4_QUESTIONS, ...M8_QUESTIONS, ...M9_QUESTIONS, ...M10_QUESTIONS, ...M7_QUESTIONS, ...M5_QUESTIONS, ...M6_QUESTIONS, ...M11_QUESTIONS];
+export const CARDS: Card[] = [...M1_CARDS, ...M2_CARDS, ...M2_L7_CARDS, ...M3_CARDS, ...M4_CARDS, ...M8_CARDS, ...M9_CARDS, ...M10_CARDS, ...M7_CARDS, ...M5_CARDS, ...M6_CARDS, ...M11_CARDS];
 // Reihenfolge: nach Lernpfad (Modul) und innerhalb des Moduls nach Lektion
 const pathOrder = (moduleId: string) => MODULES.find((m) => m.id === moduleId)?.pathOrder ?? 99;
-export const LESSONS: Lesson[] = [...M1_LESSONS, ...M1_LESSONS_2, ...M2_LESSONS, M2_L7, ...M3_LESSONS, ...M4_LESSONS, ...M8_LESSONS, ...M9_LESSONS, ...M10_LESSONS, ...M7_LESSONS, ...M5_LESSONS, ...M6_LESSONS].sort((a, b) => pathOrder(a.moduleId) - pathOrder(b.moduleId) || a.order - b.order);
-export const TASKS: PracticeTask[] = [...M1_TASKS, ...M2_TASKS, M2_P7, ...M3_TASKS, ...M4_TASKS, ...M8_TASKS, ...M9_TASKS, ...M10_TASKS, ...M7_TASKS, ...M5_TASKS, ...M6_TASKS];
-export const FEYNMAN: FeynmanTask[] = [...M1_FEYNMAN, ...M2_FEYNMAN, ...M3_FEYNMAN, ...M4_FEYNMAN, ...M8_FEYNMAN, ...M9_FEYNMAN, ...M10_FEYNMAN, ...M7_FEYNMAN, ...M5_FEYNMAN, ...M6_FEYNMAN];
-export const SITETASKS: SiteTask[] = [...M1_SITETASKS, ...M2_SITETASKS, M2_T7, ...M3_SITETASKS, ...M4_SITETASKS, ...M8_SITETASKS, ...M9_SITETASKS, ...M10_SITETASKS, ...M7_SITETASKS, ...M5_SITETASKS, ...M6_SITETASKS];
-export const SCENARIOS: Scenario[] = [...M2_SCENARIOS.filter((x) => x.status === 'verfuegbar'), M1_SCENARIO, M3_SCENARIO, M4_SCENARIO, M8_SCENARIO, M9_SCENARIO, M10_SCENARIO, M7_SCENARIO, M5_SCENARIO, M6_SCENARIO, ...M2_SCENARIOS.filter((x) => x.status !== 'verfuegbar')];
+export const LESSONS: Lesson[] = [...M1_LESSONS, ...M1_LESSONS_2, ...M2_LESSONS, M2_L7, ...M3_LESSONS, ...M4_LESSONS, ...M8_LESSONS, ...M9_LESSONS, ...M10_LESSONS, ...M7_LESSONS, ...M5_LESSONS, ...M6_LESSONS, ...M11_LESSONS].sort((a, b) => pathOrder(a.moduleId) - pathOrder(b.moduleId) || a.order - b.order);
+export const TASKS: PracticeTask[] = [...M1_TASKS, ...M2_TASKS, M2_P7, ...M3_TASKS, ...M4_TASKS, ...M8_TASKS, ...M9_TASKS, ...M10_TASKS, ...M7_TASKS, ...M5_TASKS, ...M6_TASKS, ...M11_TASKS];
+export const FEYNMAN: FeynmanTask[] = [...M1_FEYNMAN, ...M2_FEYNMAN, ...M3_FEYNMAN, ...M4_FEYNMAN, ...M8_FEYNMAN, ...M9_FEYNMAN, ...M10_FEYNMAN, ...M7_FEYNMAN, ...M5_FEYNMAN, ...M6_FEYNMAN, ...M11_FEYNMAN];
+export const SITETASKS: SiteTask[] = [...M1_SITETASKS, ...M2_SITETASKS, M2_T7, ...M3_SITETASKS, ...M4_SITETASKS, ...M8_SITETASKS, ...M9_SITETASKS, ...M10_SITETASKS, ...M7_SITETASKS, ...M5_SITETASKS, ...M6_SITETASKS, ...M11_SITETASKS];
+export const SCENARIOS: Scenario[] = [...M2_SCENARIOS.filter((x) => x.status === 'verfuegbar'), M1_SCENARIO, M3_SCENARIO, M4_SCENARIO, M8_SCENARIO, M9_SCENARIO, M10_SCENARIO, M7_SCENARIO, M5_SCENARIO, M6_SCENARIO, M11_SCENARIO, ...M2_SCENARIOS.filter((x) => x.status !== 'verfuegbar')];
 
 const byId = <T extends { id: string }>(arr: T[]) => new Map(arr.map((x) => [x.id, x] as const));
 export const Q = byId(QUESTIONS);

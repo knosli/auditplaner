@@ -359,6 +359,20 @@ Offene Massnahmen der letzten Begehung mit Status.
     ],
     sources: ['bafu-baulaerm', 'kanton-laerm', 'sn640312', 'praxis'],
   },
+  {
+    id: 'cl-nachhaltigkeit', category: 'checkliste', moduleId: 'm11',
+    title: 'Klima und Ressourcen im Projekt',
+    summary: 'Von der Offerte bis zum Bericht – nur zusagen und kommunizieren, was machbar und belegt ist.',
+    tags: ['Klima', 'CO₂', 'Scope', 'Beton', 'Kreislauf', 'Wiederverwendung', 'Greenwashing', 'Checkliste'],
+    items: [
+      { group: 'Offerte', points: ['Anforderungen eingeordnet (Gesetz, Vertrag/Label, Zuschlagskriterium, Ziel)', 'Zusagen machbar, kalkuliert, nachweisbar', 'Unternehmervorschläge mit Daten (Deklarationen)', 'Baustrom-Termin und Lieferbarkeit der Sorten geklärt'] },
+      { group: 'Baustoffe', points: ['Varianten technisch (Ingenieur) und vertraglich (Bauherrschaft) freigegeben', 'Winter: Festigkeitsentwicklung und Ausnahmeregel geklärt', 'Lieferscheine kontrolliert; kein Sortenwechsel ohne Freigabe', 'Restbeton und Verschnitt minimiert'] },
+      { group: 'Baustelle', points: ['Baustrom statt Aggregat', 'Elektrische und effiziente Maschinen, Leerlaufregel', 'Container gedämmt, Heizung geregelt', 'Transporte gebündelt, Verwertung vor Ort'] },
+      { group: 'Kreislauf', points: ['Schadstoffermittlung und Bauteilinventar vor dem Rückbau', 'Wiederverwendung mit Bauherrschaft und Abnehmer geklärt', 'Sortenreiner Rückbau, hochwertige Verwertung', 'Materialbilanz geführt'] },
+      { group: 'Daten und Kommunikation', points: ['Diesel und Strom je Baustelle erfasst', 'Abweichungen von Zusagen offen gemeldet und vereinbart', 'Aussagen konkret, belegt, verhältnismässig', 'Kein «klimaneutral» ohne Bilanz und belegte Kompensation'] },
+    ],
+    sources: ['ghg-protocol', 'kbob-oekobilanz', 'vvea', 'uwg', 'praxis'],
+  },
 ];
 
 export const LIB_CATEGORY_LABEL: Record<LibraryEntry['category'], string> = {

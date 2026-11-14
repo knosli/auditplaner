@@ -559,6 +559,42 @@ export const SOURCES: Source[] = [
     note: 'Die App nennt keine Uhrzeiten, weil sie je nach Ort verschieden sind. Ausnahmen in der Regel bewilligungspflichtig.',
   },
   {
+    id: 'klg', title: 'Bundesgesetz über die Ziele im Klimaschutz, die Innovation und die Stärkung der Energiesicherheit (Klima- und Innovationsgesetz, KlG)', short: 'Klimagesetz (KlG)', kind: 'gesetz', sr: 'SR 814.310 (zu prüfen)',
+    issuer: 'Bundesversammlung', url: 'https://www.fedlex.admin.ch', version: 'In Kraft seit 01.01.2025 (zu prüfen)', lastChecked: null, scope: 'Ganze Schweiz', review: 'entwurf',
+    note: 'Ziel Netto-Null bis 2050, Zwischen- und Sektorziele, Förderprogramme (u. a. für Fahrpläne zur Emissionsminderung von Unternehmen). In der App sinngemäss, ohne Artikel und ohne Zahlen der Zwischenziele; nicht am Fedlex-Text geprüft.',
+  },
+  {
+    id: 'co2g', title: 'Bundesgesetz über die Reduktion der CO₂-Emissionen (CO₂-Gesetz) und CO₂-Verordnung', short: 'CO₂-Gesetz', kind: 'gesetz', sr: 'SR 641.71 (Gesetz, zu prüfen)',
+    issuer: 'Bundesversammlung / Bundesrat', url: 'https://www.fedlex.admin.ch', version: 'Revidierte Fassung, in Kraft ab 2025 (zu prüfen)', lastChecked: null, scope: 'Ganze Schweiz', review: 'entwurf',
+    note: 'CO₂-Abgabe auf fossile Brennstoffe (nicht auf Treibstoffe), Kompensationspflicht der Treibstoffimporteure, Vorschriften für Gebäude und Fahrzeuge. Sinngemäss, ohne Abgabesätze; nicht am Original geprüft.',
+  },
+  {
+    id: 'klimabericht', title: 'Obligationenrecht (Berichterstattung über nichtfinanzielle Belange, Art. 964a ff. OR) und Verordnung über die Berichterstattung über Klimabelange', short: 'Klimaberichterstattung', kind: 'gesetz', sr: 'SR 220 (OR); Verordnung: SR-Nummer zu prüfen',
+    issuer: 'Bundesversammlung / Bundesrat', url: 'https://www.fedlex.admin.ch', version: 'Geltende Fassung gemäss Fedlex – prüfen', lastChecked: null, scope: 'Grosse Unternehmen von öffentlichem Interesse (Schwellenwerte im Gesetz)', review: 'entwurf',
+    articles: 'Art. 964a ff. OR (zu prüfen)',
+    note: 'Schwellenwerte und Inhalte der Berichtspflicht in der App nicht genannt; laufende Revisionen beachten. Sinngemäss, nicht am Original geprüft.',
+  },
+  {
+    id: 'ghg-protocol', title: 'Greenhouse Gas Protocol: Corporate Accounting and Reporting Standard (Scope 1, 2, 3)', short: 'GHG Protocol', kind: 'norm',
+    issuer: 'World Resources Institute (WRI) / World Business Council for Sustainable Development (WBCSD)', url: 'https://ghgprotocol.org', version: 'Ausgabe gemäss Website – prüfen', lastChecked: null, scope: 'Freiwilliger, international verbreiteter Bilanzierungsstandard', review: 'entwurf',
+    note: 'Privater Standard, nicht gesetzlich verbindlich (ausser wenn eine Berichtspflicht oder ein Vertrag darauf verweist). In der App nur die Scope-Systematik sinngemäss; Standard nicht im Original geprüft.',
+  },
+  {
+    id: 'kbob-oekobilanz', title: 'KBOB / ecobau / IPB: Ökobilanzdaten im Baubereich', short: 'KBOB Ökobilanzdaten', kind: 'vollzugshilfe',
+    issuer: 'Koordinationskonferenz der Bau- und Liegenschaftsorgane der öffentlichen Bauherren (KBOB) u. a.', url: 'https://www.kbob.admin.ch', version: 'Aktuelle Ausgabe gemäss KBOB – prüfen', lastChecked: null, scope: 'Empfehlung; in öffentlichen Projekten und Labels häufig vorgegeben', review: 'entwurf',
+    note: 'Liste mit Umweltkennwerten von Baustoffen, Energie und Transporten. In der App werden keine Werte wiedergegeben.',
+  },
+  {
+    id: 'sia2032', title: 'SIA-Merkblatt 2032 «Graue Energie – Ökobilanzierung für die Erstellung von Gebäuden» und SIA-Merkblatt 2040 «SIA-Effizienzpfad Energie»', short: 'SIA 2032 / 2040', kind: 'norm',
+    issuer: 'Schweizerischer Ingenieur- und Architektenverein (SIA)', url: 'https://www.sia.ch', version: 'Ausgabe prüfen', lastChecked: null, scope: 'Verbindlich nur, wenn vertraglich oder über ein Label vereinbart', review: 'entwurf',
+    note: 'Kostenpflichtige Merkblätter; Titel und Ausgaben nicht im Original geprüft, keine Inhalte wiedergegeben.',
+  },
+  {
+    id: 'uwg', title: 'Bundesgesetz gegen den unlauteren Wettbewerb (UWG)', short: 'UWG', kind: 'gesetz', sr: 'SR 241',
+    issuer: 'Bundesversammlung', url: 'https://www.fedlex.admin.ch', version: 'Geltende Fassung gemäss Fedlex – prüfen', lastChecked: null, scope: 'Ganze Schweiz', review: 'entwurf',
+    note: 'Unrichtige oder irreführende Angaben über eigene Leistungen können unlauter sein (sinngemäss). Anwendung auf Umweltaussagen im Einzelfall durch Fachperson prüfen; nicht vertieft.',
+  },
+  {
     id: 'praxis',
     title: 'Bewährte Praxis Baustellen-Umweltschutz (Zusammenfassung der App)',
     short: 'Bewährte Praxis',

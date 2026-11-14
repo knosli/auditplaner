@@ -42,7 +42,7 @@ export const MODULES: ModuleMeta[] = [
     topics: ['Systematik', 'Kontext der Organisation', 'Umweltaspekte', 'Compliance-Verpflichtungen', 'Umweltziele', 'Rollen', 'Risikobasierter Ansatz', 'Interne Audits', 'Korrekturmassnahmen', 'Managementbewertung', 'Kontinuierliche Verbesserung', 'Kennzahlen', 'Grossunternehmen und Niederlassungen', 'Integriertes Managementsystem 9001/14001/45001'],
   },
   {
-    id: 'm11', no: 11, title: 'Klima, Ressourcen und Nachhaltigkeit', short: 'Nachhaltigkeit', pathOrder: 11, status: 'in_entwicklung',
+    id: 'm11', no: 11, title: 'Klima, Ressourcen und Nachhaltigkeit', short: 'Nachhaltigkeit', pathOrder: 11, status: 'verfuegbar',
     topics: ['Klimawirkung des Bauens', 'CO₂-Emissionen', 'Scope 1, 2, 3', 'THG-Bilanzierung', 'Graue Emissionen', 'Materialkreisläufe', 'Energieeffizienz', 'Nachhaltige Beschaffung', 'Kennzahlen', 'Ressourcenschonende Verfahren', 'Pflicht, Norm oder freiwillig'],
   },
   {
@@ -99,6 +99,11 @@ export const TOPICS: Topic[] = [
   { id: 'm6-planung', moduleId: 'm6', title: 'Lärmschutzkonzept und Arbeitszeiten' },
   { id: 'm6-erschuetterung', moduleId: 'm6', title: 'Erschütterungen' },
   { id: 'm6-kommunikation', moduleId: 'm6', title: 'Information und Beschwerden' },
+  { id: 'm11-grundlagen', moduleId: 'm11', title: 'Klimawirkung und Rechtsrahmen' },
+  { id: 'm11-bilanz', moduleId: 'm11', title: 'Treibhausgasbilanz und Kennzahlen' },
+  { id: 'm11-material', moduleId: 'm11', title: 'Graue Emissionen und Baustoffe' },
+  { id: 'm11-kreislauf', moduleId: 'm11', title: 'Ressourcen und Kreislauf' },
+  { id: 'm11-umsetzung', moduleId: 'm11', title: 'Umsetzung und Kommunikation' },
   { id: 'recht', moduleId: 'm2', title: 'Rechtsrahmen Gewässerschutz' },
   { id: 'entwaesserung', moduleId: 'm2', title: 'Baustellenentwässerung' },
   { id: 'alkalisch', moduleId: 'm2', title: 'Betonwaschwasser / alkalisches Wasser' },

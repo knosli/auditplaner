@@ -357,6 +357,42 @@ export function IlluNoise(_: Props) {
   );
 }
 
+/** Modul 11: Baustoffe im Kreislauf, weniger Emissionen */
+export function IlluLoop(_: Props) {
+  return (
+    <Paper label="Schema: Klima und Ressourcen. Ein Kreislauf verbindet Rückbau, Aufbereitung und Neubau; ein Fahrmischer bringt CO₂-reduzierten Beton, ein Elektro-Minibagger arbeitet am Baustrom. Daneben eine kleine Bilanz mit Scope 1, 2 und 3.">
+      <path d="M24 222h432v48H24z" fill="#cfd6d2" />
+      <path d="M24 222h432" stroke="#9aa6a3" strokeWidth="2" />
+      {/* Kreislauf */}
+      <circle cx="140" cy="130" r="62" fill="none" stroke="#167b70" strokeWidth="5" strokeDasharray="60 14" />
+      <path d="M196 112l8 14-16 2" fill="#167b70" />
+      <path d="M84 148l-8-14 16-2" fill="#167b70" />
+      <T x={140} y={58} anchor="middle" s={9}>Rückbau</T>
+      <T x={206} y={96} anchor="start" s={9}>Aufbereitung</T>
+      <T x={66} y={198} anchor="middle" s={9}>Neubau</T>
+      <rect x="116" y="112" width="48" height="36" rx="4" fill="#e4ebe6" stroke="#9db7b0" />
+      <T x={140} y={135} anchor="middle" s={9} w={600}>Bauteil</T>
+      {/* Minibagger am Baustrom */}
+      <rect x="286" y="196" width="44" height="20" rx="4" fill="#5f8f88" />
+      <rect x="282" y="214" width="52" height="8" rx="4" fill="#2d4c48" />
+      <path d="M318 198l18-24" stroke="#5f8f88" strokeWidth="6" strokeLinecap="round" />
+      <path d="M286 206c-20 0-24-30-44-30" stroke="#e5aa63" strokeWidth="2.5" fill="none" />
+      <rect x="230" y="166" width="16" height="22" rx="2" fill="#e5aa63" />
+      <T x={290} y={240} anchor="middle" s={9}>Baustrom</T>
+      {/* Bilanz */}
+      <rect x="360" y="92" width="80" height="110" rx="6" fill="#fff" stroke="#9db7b0" />
+      <T x={400} y={110} anchor="middle" s={9} w={600}>Bilanz</T>
+      <rect x="372" y="120" width="12" height="14" fill="#c14c40" />
+      <T x={390} y={131} s={8}>Scope 1</T>
+      <rect x="372" y="142" width="8" height="14" fill="#e5aa63" />
+      <T x={390} y={153} s={8}>Scope 2</T>
+      <rect x="372" y="164" width="12" height="28" fill="#167b70" />
+      <T x={390} y={182} s={8}>Scope 3</T>
+      <T x={240} y={44} anchor="middle" s={10} w={500} c="#56645e">Vermeiden · wiederverwenden · klinkerarm · belegt kommunizieren</T>
+    </Paper>
+  );
+}
+
 export function ModuleIllustration({ moduleId }: { moduleId: string }) {
   switch (moduleId) {
     case 'm2': return <IlluWater />;
@@ -368,6 +404,7 @@ export function ModuleIllustration({ moduleId }: { moduleId: string }) {
     case 'm7': return <IlluStore />;
     case 'm5': return <IlluAir />;
     case 'm6': return <IlluNoise />;
+    case 'm11': return <IlluLoop />;
     default: return <IlluLaw />;
   }
 }

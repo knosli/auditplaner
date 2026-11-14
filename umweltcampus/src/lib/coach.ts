@@ -137,6 +137,11 @@ export const GUIDING: Record<string, string[]> = {
   'm6-planung': ['Ist die Stufe in ein Konzept nach Phasen übersetzt?', 'Braucht diese Arbeit eine Ausnahmebewilligung?', 'Stehen Massnahmen und Zeitfenster im LV und in der Kalkulation?'],
   'm6-erschuetterung': ['Gibt es eine Zustandsaufnahme der Nachbargebäude?', 'Wer misst, welche Schwellen gelten, was passiert bei Überschreitung?', 'Lässt sich erschütterungsärmer bauen?'],
   'm6-kommunikation': ['Weiss die Nachbarschaft, was kommt und wen sie anrufen kann?', 'Wurde die Beschwerde geprüft und beantwortet?', 'Welches Muster zeigen die Beschwerden?'],
+  'm11-grundlagen': ['Ist das Pflicht, vertraglich vereinbart oder freiwillig?', 'Wo entsteht hier die grösste Klimawirkung?', 'Ist diese Aussage belegt?'],
+  'm11-bilanz': ['Zu welchem Scope gehört das – und wo ist die Systemgrenze?', 'Woher stammen Daten und Faktoren?', 'Sinkt die Zahl wegen Massnahmen oder wegen weniger Bautätigkeit?'],
+  'm11-material': ['Was treibt die Emissionen dieses Baustoffs?', 'Wird auf derselben funktionalen Einheit verglichen?', 'Wer muss die Variante technisch und vertraglich freigeben?'],
+  'm11-kreislauf': ['Lässt sich das vermeiden oder wiederverwenden, bevor es verwertet wird?', 'Wem gehört das Material, und ist es schadstofffrei?', 'Ist die Verwertung hochwertig oder nur Auffüllung?'],
+  'm11-umsetzung': ['Ist diese Zusage machbar, kalkuliert und nachweisbar?', 'Wird die Zusage auf der Baustelle tatsächlich eingehalten?', 'Ist die Aussage konkret, belegt und verhältnismässig?'],
   konzept: ['Beantwortet das Konzept alle sechs Leitfragen?', 'Sind Zuständigkeiten und Kontrollen festgelegt?', 'Was ist Pflicht, was Empfehlung – und was kostet die Alternative?'],
 };
 

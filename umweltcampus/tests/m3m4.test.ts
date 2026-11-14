@@ -7,7 +7,7 @@ import { emptyState, normalizeState } from '../src/lib/state';
 import { isLegacyAnswer, isLegacyExam, isLegacyRun } from '../src/lib/versioning';
 import { moduleRequirements } from '../src/lib/learning';
 
-for (const mod of ['m3', 'm4', 'm5', 'm6', 'm7', 'm8', 'm9', 'm10']) {
+for (const mod of ['m3', 'm4', 'm5', 'm6', 'm7', 'm8', 'm9', 'm10', 'm11']) {
   describe(`Modul ${mod}: Umfang und Struktur`, () => {
     test('verfügbar, 5 Lektionen in Reihenfolge', () => {
       expect(MODULES.find((m) => m.id === mod)!.status).toBe('verfuegbar');
@@ -30,7 +30,7 @@ for (const mod of ['m3', 'm4', 'm5', 'm6', 'm7', 'm8', 'm9', 'm10']) {
       }
     });
     test('alle Fragen tragen eine gültige Bewertungsfassung', () => {
-      for (const q of QUESTIONS.filter((x) => x.moduleId === mod)) expect(['m5', 'm6', 'm7', 'm9', 'm10'].includes(mod) ? [5] : mod === 'm8' ? [4, 5] : [3, 4]).toContain(q.rev);
+      for (const q of QUESTIONS.filter((x) => x.moduleId === mod)) expect(['m5', 'm6', 'm7', 'm9', 'm10', 'm11'].includes(mod) ? [5] : mod === 'm8' ? [4, 5] : [3, 4]).toContain(q.rev);
     });
     test('kritische Optionen geben 0 Punkte', () => {
       for (const q of QUESTIONS.filter((x) => x.moduleId === mod && x.type === 'best')) {
@@ -364,5 +364,35 @@ describe('Modul 6: Baulärm und Erschütterungen', () => {
     expect(txt).not.toMatch(/mm\/s/);
     expect(txt).toContain('Die App nennt keine Uhrzeiten');
     for (const l of LESSONS.filter((x) => x.moduleId === 'm6')) expect(l.review).toBe('entwurf');
+  });
+});
+
+describe('Modul 11: Klima, Ressourcen und Nachhaltigkeit', () => {
+  const st = (id: string) => S.get('sim-l')!.stages.find((x) => x.id === id)!;
+  test('Fall L ist verfügbar und gehört zu Modul 11', () => {
+    expect(SCENARIOS.filter((x) => x.id === 'sim-l').length).toBe(1);
+    expect(S.get('sim-l')!.moduleId).toBe('m11');
+    expect(S.get('sim-l')!.status).toBe('verfuegbar');
+  });
+  test('Fall L: unbelegte Klimaaussage und verschwundene Lieferscheine sind kritisch', () => {
+    expect(evaluateStage(st('l1'), { stageId: 'l1', selected: ['o2'] }).critical).toBe(true);
+    expect(evaluateStage(st('l3'), { stageId: 'l3', selected: ['m1', 'm2', 'm5'] })).toMatchObject({ score: 0, critical: true });
+    expect(evaluateStage(st('l3'), { stageId: 'l3', selected: ['m1', 'm2', 'm3', 'm4'] })).toMatchObject({ score: 1, critical: false });
+  });
+  test('Fall L: Bauherrschaft früh informieren, Bericht zuletzt', () => {
+    expect(evaluateRank(st('l4'), ['n2', 'n1', 'n4', 'n3', 'n5'])).toMatchObject({ score: 1, critical: false });
+    expect(evaluateRank(st('l4'), ['n2', 'n3', 'n4', 'n1', 'n5']).critical).toBe(true);
+  });
+  test('Scope-Zuordnung, Recyclingbeton und kritische Abwägungen', () => {
+    expect(QUESTIONS.find((q) => q.id === 'm11-q06')!.correct).toEqual(['a']);
+    expect(QUESTIONS.find((q) => q.id === 'm11-q07')!.correct).toEqual(['c']);
+    expect(QUESTIONS.find((q) => q.id === 'm11-q12')!.correct).toEqual(['b']);
+    for (const id of ['m11-d01', 'm11-d03', 'm11-d05']) expect(scoreQuestion(QUESTIONS.find((q) => q.id === id)!, ['a'])).toBe(0);
+  });
+  test('Keine Emissionsfaktoren in Zahlen; Prüfstatus Entwurf', () => {
+    const txt = JSON.stringify(LESSONS.filter((l) => l.moduleId === 'm11'));
+    expect(txt).not.toMatch(/kg CO₂-?(Äq|eq)[^u]*\/|\d+\s*kg CO/);
+    expect(txt).toContain('die App nennt keine Zahlen');
+    for (const l of LESSONS.filter((x) => x.moduleId === 'm11')) expect(l.review).toBe('entwurf');
   });
 });
