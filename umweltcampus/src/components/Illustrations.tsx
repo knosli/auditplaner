@@ -393,6 +393,42 @@ export function IlluLoop(_: Props) {
   );
 }
 
+/** Modul 12: Führen – Plan, Linie, Kontrolle, Bericht */
+export function IlluLead(_: Props) {
+  return (
+    <Paper label="Schema: Umweltführung. Eine Geschäftsleitung am Tisch mit Entscheidungsvorlage, darunter die Linie mit Bauführung und Polier auf der Baustelle; Pfeile zeigen Plan nach unten und Bericht nach oben, eine Kennzahl-Kurve zeigt Wirkung.">
+      <path d="M24 222h432v48H24z" fill="#cfd6d2" />
+      <path d="M24 222h432" stroke="#9aa6a3" strokeWidth="2" />
+      {/* Tisch GL */}
+      <rect x="150" y="84" width="180" height="12" rx="4" fill="#9db7b0" />
+      {[168, 200, 280, 312].map((x) => <g key={x}><circle cx={x} cy={68} r="9" fill="#5f8f88" /><rect x={x - 10} y={76} width="20" height="10" rx="4" fill="#5f8f88" /></g>)}
+      <rect x="222" y="62" width="34" height="22" rx="2" fill="#fff" stroke="#9db7b0" />
+      <T x={239} y={76} anchor="middle" s={8} w={600}>Antrag</T>
+      <T x={240} y={116} anchor="middle" s={9}>Geschäftsleitung</T>
+      {/* Pfeile */}
+      <path d="M210 126v52" stroke="#167b70" strokeWidth="3" />
+      <path d="M204 172l6 10 6-10" fill="#167b70" />
+      <T x={204} y={156} anchor="end" s={9} c="#0f5a52">Plan, Mittel</T>
+      <path d="M270 182v-52" stroke="#e5aa63" strokeWidth="3" />
+      <path d="M264 136l6-10 6 10" fill="#e5aa63" />
+      <T x={278} y={156} s={9} c="#8a5a1f">Bericht</T>
+      {/* Linie */}
+      {[190, 236, 282].map((x, i) => <g key={x}><circle cx={x} cy={196} r="8" fill={i === 1 ? '#e5aa63' : '#2d4c48'} /><rect x={x - 9} y={203} width="18" height="18" rx="4" fill={i === 1 ? '#e5aa63' : '#2d4c48'} /></g>)}
+      <T x={236} y={240} anchor="middle" s={9}>Linie: Bauführung, Polier, Equipe</T>
+      {/* Kennzahl */}
+      <rect x="360" y="110" width="84" height="76" rx="6" fill="#fff" stroke="#9db7b0" />
+      <path d="M370 172l16-10 14 4 14-18 18-8" stroke="#167b70" strokeWidth="2.5" fill="none" />
+      <T x={402} y={126} anchor="middle" s={8} w={600}>Wirkung</T>
+      {/* Fachstelle */}
+      <rect x="40" y="120" width="86" height="40" rx="6" fill="#e4ebe6" stroke="#9db7b0" />
+      <T x={83} y={137} anchor="middle" s={9}>Fachstelle</T>
+      <T x={83} y={150} anchor="middle" s={8} c="#56645e">berät · prüft</T>
+      <path d="M126 140h24" stroke="#9db7b0" strokeDasharray="3 3" />
+      <T x={240} y={40} anchor="middle" s={10} w={500} c="#56645e">Verantwortung in der Linie · ehrlich berichten · Wirkung prüfen</T>
+    </Paper>
+  );
+}
+
 export function ModuleIllustration({ moduleId }: { moduleId: string }) {
   switch (moduleId) {
     case 'm2': return <IlluWater />;
@@ -405,6 +441,7 @@ export function ModuleIllustration({ moduleId }: { moduleId: string }) {
     case 'm5': return <IlluAir />;
     case 'm6': return <IlluNoise />;
     case 'm11': return <IlluLoop />;
+    case 'm12': return <IlluLead />;
     default: return <IlluLaw />;
   }
 }

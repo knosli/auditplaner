@@ -7,7 +7,7 @@ import { emptyState, normalizeState } from '../src/lib/state';
 import { isLegacyAnswer, isLegacyExam, isLegacyRun } from '../src/lib/versioning';
 import { moduleRequirements } from '../src/lib/learning';
 
-for (const mod of ['m3', 'm4', 'm5', 'm6', 'm7', 'm8', 'm9', 'm10', 'm11']) {
+for (const mod of ['m3', 'm4', 'm5', 'm6', 'm7', 'm8', 'm9', 'm10', 'm11', 'm12']) {
   describe(`Modul ${mod}: Umfang und Struktur`, () => {
     test('verfügbar, 5 Lektionen in Reihenfolge', () => {
       expect(MODULES.find((m) => m.id === mod)!.status).toBe('verfuegbar');
@@ -30,7 +30,7 @@ for (const mod of ['m3', 'm4', 'm5', 'm6', 'm7', 'm8', 'm9', 'm10', 'm11']) {
       }
     });
     test('alle Fragen tragen eine gültige Bewertungsfassung', () => {
-      for (const q of QUESTIONS.filter((x) => x.moduleId === mod)) expect(['m5', 'm6', 'm7', 'm9', 'm10', 'm11'].includes(mod) ? [5] : mod === 'm8' ? [4, 5] : [3, 4]).toContain(q.rev);
+      for (const q of QUESTIONS.filter((x) => x.moduleId === mod)) expect(['m5', 'm6', 'm7', 'm9', 'm10', 'm11', 'm12'].includes(mod) ? [5] : mod === 'm8' ? [4, 5] : [3, 4]).toContain(q.rev);
     });
     test('kritische Optionen geben 0 Punkte', () => {
       for (const q of QUESTIONS.filter((x) => x.moduleId === mod && x.type === 'best')) {
@@ -394,5 +394,31 @@ describe('Modul 11: Klima, Ressourcen und Nachhaltigkeit', () => {
     expect(txt).not.toMatch(/kg CO₂-?(Äq|eq)[^u]*\/|\d+\s*kg CO/);
     expect(txt).toContain('die App nennt keine Zahlen');
     for (const l of LESSONS.filter((x) => x.moduleId === 'm11')) expect(l.review).toBe('entwurf');
+  });
+});
+
+describe('Modul 12: Führung und strategische Umweltverantwortung', () => {
+  const st = (id: string) => S.get('sim-m')!.stages.find((x) => x.id === id)!;
+  test('Fall M ist verfügbar und gehört zu Modul 12', () => {
+    expect(SCENARIOS.filter((x) => x.id === 'sim-m').length).toBe(1);
+    expect(S.get('sim-m')!.moduleId).toBe('m12');
+    expect(S.get('sim-m')!.status).toBe('verfuegbar');
+  });
+  test('Fall M: Falschinformation des VR und verzögerte Meldung sind kritisch', () => {
+    expect(evaluateStage(st('m1'), { stageId: 'm1', selected: ['o2'] }).critical).toBe(true);
+    expect(evaluateStage(st('m3'), { stageId: 'm3', selected: ['p1', 'p2', 'p5'] })).toMatchObject({ score: 0, critical: true });
+    expect(evaluateStage(st('m3'), { stageId: 'm3', selected: ['p1', 'p2', 'p3', 'p4'] })).toMatchObject({ score: 1, critical: false });
+  });
+  test('Fall M: Sofortkontrolle zuerst', () => {
+    expect(evaluateRank(st('m4'), ['n2', 'n1', 'n3', 'n5', 'n4', 'n6'])).toMatchObject({ score: 1, critical: false });
+    expect(evaluateRank(st('m4'), ['n2', 'n3', 'n1', 'n4', 'n5', 'n6']).critical).toBe(true);
+  });
+  test('Linie verantwortlich; kritische Abwägungen', () => {
+    expect(QUESTIONS.find((q) => q.id === 'm12-q01')!.correct).toEqual(['b']);
+    for (const id of ['m12-d04', 'm12-d05']) expect(scoreQuestion(QUESTIONS.find((q) => q.id === id)!, ['a'])).toBe(0);
+  });
+  test('Alle zwölf Module verfügbar; Prüfstatus Entwurf', () => {
+    expect(MODULES.filter((m) => m.status === 'verfuegbar').length).toBe(12);
+    for (const l of LESSONS.filter((x) => x.moduleId === 'm12')) expect(l.review).toBe('entwurf');
   });
 });

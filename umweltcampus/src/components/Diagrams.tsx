@@ -25,6 +25,7 @@ export function Diagram({ id }: { id: string }) {
     case 'stoffpruefung': return <Kette steps={STOFFPRUEFUNG} />;
     case 'feststellungsweg': return <Kette steps={FESTSTELLUNG} />;
     case 'lebenszyklus': return <Kette steps={LEBENSZYKLUS} />;
+    case 'fuehrungskreis': return <Kette steps={FUEHRUNGSKREIS} />;
     default: return <p className="hint">Schema «{id}» nicht gefunden.</p>;
   }
 }
@@ -238,6 +239,14 @@ const AUFLAGEN = [
   { t: 'Nachweis', d: 'Protokoll, Foto, Liefer-, Wäge-, Begleitschein', who: 'so viel wie nötig, so wenig wie möglich' },
 ];
 
+const FUEHRUNGSKREIS = [
+  { t: 'Strategie', d: 'Risiken, Pflichten, Chancen, Ist-Stand', who: 'GL entscheidet, Fachstelle bereitet vor' },
+  { t: 'Jahresplan und Ziele', d: 'Wenige Schwerpunkte, Verantwortliche, Mittel, Kennzahlen', who: 'von der GL verabschiedet' },
+  { t: 'Umsetzung', d: 'Standards, Ausrüstung, Schulung, Abläufe', who: 'Linie setzt um, Fachstelle unterstützt' },
+  { t: 'Kontrolle', d: 'Begehungen, Audits, Kennzahlen, Vorfälle', who: 'Fachstelle und Linie' },
+  { t: 'Bericht und Entscheid', d: 'Managementbericht, Entscheidungsvorlagen', who: 'GL und Verwaltungsrat' },
+  { t: 'Anpassen', d: 'Was wirkt, was nicht – nächster Zyklus', who: 'Managementbewertung' },
+];
 const LEBENSZYKLUS = [
   { t: 'Rohstoffe und Herstellung', d: 'Zement, Stahl, Glas, Dämmstoffe – die grauen Emissionen', who: 'Hebel: Produktwahl, Varianten, Mengen' },
   { t: 'Transport', d: 'Lieferungen, Aushub- und Abbruchtransporte', who: 'Hebel: Logistik, Verwertung vor Ort, Bahn' },

@@ -373,6 +373,38 @@ Offene Massnahmen der letzten Begehung mit Status.
     ],
     sources: ['ghg-protocol', 'kbob-oekobilanz', 'vvea', 'uwg', 'praxis'],
   },
+  {
+    id: 'vl-entscheidungsvorlage', category: 'vorlage', moduleId: 'm12',
+    title: 'Vorlage Entscheidungsvorlage (GL)',
+    summary: 'Zwei Seiten, ein Antrag: so entscheidet die Führung in zehn Minuten.',
+    tags: ['Entscheidungsvorlage', 'Antrag', 'Geschäftsleitung', 'Varianten', 'Vorlage', 'Beratung'],
+    table: {
+      head: ['Teil', 'Inhalt', 'Hinweis'],
+      rows: [
+        ['Ausgangslage', 'Was ist passiert bzw. wie ist die Lage?', 'Fakten, kurz, mit Zahlen'],
+        ['Risiko', 'Was droht, wenn nichts geschieht?', 'Pflicht oder Empfehlung klar benennen'],
+        ['Varianten', '2–3 Varianten inkl. «nichts tun»', 'Kosten, Nutzen, Risiken, Aufwand, Termin'],
+        ['Empfehlung', 'Welche Variante und warum', 'Begründung nachvollziehbar'],
+        ['Antrag', 'Was genau beschlossen werden soll', 'Budget, Verantwortlich, Termin, Wirkungskontrolle'],
+      ],
+    },
+    text: 'Vorab verschicken. Funktionen statt Namen. Nach dem Entscheid: Beschluss festhalten und Umsetzung im Managementbericht verfolgen.',
+    sources: ['praxis'],
+  },
+  {
+    id: 'cl-umweltfuehrung', category: 'checkliste', moduleId: 'm12',
+    title: 'Umweltführung im Unternehmen',
+    summary: 'Jährlicher Kurzcheck für Fachstelle und Geschäftsleitung.',
+    tags: ['Führung', 'Organisation', 'Jahresplan', 'Kennzahlen', 'Schulung', 'Kultur', 'Checkliste'],
+    items: [
+      { group: 'Organisation', points: ['Rollen, Kompetenzen, Eskalationswege schriftlich', 'Verantwortlichkeitsmatrix in Kraft', 'Stopp-Kompetenz bei unmittelbarer Gefahr geregelt', 'Kontaktpersonen vor Ort, fachlich geführt'] },
+      { group: 'Planung', points: ['Strategie aus Risiken, Pflichten, Chancen', 'Jahresplan mit höchstens 4–5 Schwerpunkten, von der GL verabschiedet', 'Ressourcen in Tagen gerechnet', 'Kennzahlen ohne Fehlanreize (Melden belohnt)'] },
+      { group: 'Wirkung', points: ['Schulungskonzept nach Zielgruppen und Risiken', 'Praxisnahe, kurze Formen; Linie instruiert', 'Wirksamkeit an Verhalten und Ergebnis geprüft', 'Ereignisse ohne Schuldzuweisung ausgewertet'] },
+      { group: 'Beratung und Bericht', points: ['Entscheidungsvorlagen mit Varianten und Antrag', 'Managementbericht regelmässig, Vorfälle vorne', 'Pflicht und Empfehlung unterschieden', 'Verwaltungsrat vollständig informiert'] },
+      { group: 'Kultur', points: ['Vorgesetzte fragen auf Begehungen nach Umweltthemen', 'Gerechte Kultur gelebt', 'Eskalationen sachlich und dokumentiert', 'Meldepflichten im Notfall bekannt und gelebt'] },
+    ],
+    sources: ['or-vr', 'iso14001', 'praxis'],
+  },
 ];
 
 export const LIB_CATEGORY_LABEL: Record<LibraryEntry['category'], string> = {

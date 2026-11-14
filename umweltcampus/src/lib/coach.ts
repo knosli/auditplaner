@@ -142,6 +142,11 @@ export const GUIDING: Record<string, string[]> = {
   'm11-material': ['Was treibt die Emissionen dieses Baustoffs?', 'Wird auf derselben funktionalen Einheit verglichen?', 'Wer muss die Variante technisch und vertraglich freigeben?'],
   'm11-kreislauf': ['Lässt sich das vermeiden oder wiederverwenden, bevor es verwertet wird?', 'Wem gehört das Material, und ist es schadstofffrei?', 'Ist die Verwertung hochwertig oder nur Auffüllung?'],
   'm11-umsetzung': ['Ist diese Zusage machbar, kalkuliert und nachweisbar?', 'Wird die Zusage auf der Baustelle tatsächlich eingehalten?', 'Ist die Aussage konkret, belegt und verhältnismässig?'],
+  'm12-organisation': ['Wer ist hier verantwortlich – und wer berät nur?', 'Ist diese Rolle schriftlich geregelt?', 'Hat die Person die Kompetenzen und Mittel für die Aufgabe?'],
+  'm12-planung': ['Welches Risiko verhindert dieses Vorhaben?', 'Reichen die Ressourcen – in Tagen gerechnet?', 'Welche Entscheidung stützt diese Kennzahl, und welchen Fehlanreiz könnte sie setzen?'],
+  'm12-wirkung': ['Fehlt Wissen – oder Ausrüstung, Zeit, Klarheit oder Führung?', 'Woran erkennen Sie auf der Baustelle, dass es wirkt?', 'Wer in der Linie kann das instruieren?'],
+  'm12-beratung': ['Ist das Pflicht oder Empfehlung?', 'Welche Varianten gibt es – inklusive nichts tun?', 'Was genau soll entschieden werden?'],
+  'm12-kultur': ['Welches berechtigte Problem steckt hinter dem Widerstand?', 'Ist das ein Fehler, riskantes Verhalten oder ein bewusster Verstoss?', 'Muss hier sofort gehandelt oder eskaliert werden?'],
   konzept: ['Beantwortet das Konzept alle sechs Leitfragen?', 'Sind Zuständigkeiten und Kontrollen festgelegt?', 'Was ist Pflicht, was Empfehlung – und was kostet die Alternative?'],
 };
 

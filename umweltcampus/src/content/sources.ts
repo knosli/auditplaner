@@ -595,6 +595,12 @@ export const SOURCES: Source[] = [
     note: 'Unrichtige oder irreführende Angaben über eigene Leistungen können unlauter sein (sinngemäss). Anwendung auf Umweltaussagen im Einzelfall durch Fachperson prüfen; nicht vertieft.',
   },
   {
+    id: 'or-vr', title: 'Obligationenrecht (OR): Unübertragbare und unentziehbare Aufgaben des Verwaltungsrats', short: 'OR Verwaltungsrat', kind: 'gesetz', sr: 'SR 220',
+    issuer: 'Bundesversammlung', url: 'https://www.fedlex.admin.ch', version: 'Geltende Fassung gemäss Fedlex – prüfen', lastChecked: null, scope: 'Aktiengesellschaften; sinngemäss für andere Rechtsformen prüfen', review: 'entwurf',
+    articles: 'Art. 716a (zu prüfen)',
+    note: 'Oberleitung, Organisation und Oberaufsicht sinngemäss. Haftungsfragen nicht vertieft; im Einzelfall Rechtsberatung beiziehen.',
+  },
+  {
     id: 'praxis',
     title: 'Bewährte Praxis Baustellen-Umweltschutz (Zusammenfassung der App)',
     short: 'Bewährte Praxis',

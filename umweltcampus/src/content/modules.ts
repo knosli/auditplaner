@@ -46,7 +46,7 @@ export const MODULES: ModuleMeta[] = [
     topics: ['Klimawirkung des Bauens', 'CO₂-Emissionen', 'Scope 1, 2, 3', 'THG-Bilanzierung', 'Graue Emissionen', 'Materialkreisläufe', 'Energieeffizienz', 'Nachhaltige Beschaffung', 'Kennzahlen', 'Ressourcenschonende Verfahren', 'Pflicht, Norm oder freiwillig'],
   },
   {
-    id: 'm12', no: 12, title: 'Führung und strategische Umweltverantwortung', short: 'Führung', pathOrder: 12, status: 'in_entwicklung',
+    id: 'm12', no: 12, title: 'Führung und strategische Umweltverantwortung', short: 'Führung', pathOrder: 12, status: 'verfuegbar',
     topics: ['Umweltorganisation', 'Umweltjahresplan', 'Fachliche Führung', 'Ziele und Kennzahlen', 'Schulungskonzepte', 'Beratung von Führungskräften', 'Managementberichte', 'Entscheidungsvorlagen', 'Wirksamkeitskontrollen', 'Umgang mit Widerstand', 'Unternehmenskultur', 'Umweltrechtskataster', 'Umweltstrategie'],
   },
 ];
@@ -104,6 +104,11 @@ export const TOPICS: Topic[] = [
   { id: 'm11-material', moduleId: 'm11', title: 'Graue Emissionen und Baustoffe' },
   { id: 'm11-kreislauf', moduleId: 'm11', title: 'Ressourcen und Kreislauf' },
   { id: 'm11-umsetzung', moduleId: 'm11', title: 'Umsetzung und Kommunikation' },
+  { id: 'm12-organisation', moduleId: 'm12', title: 'Umweltorganisation und Verantwortung' },
+  { id: 'm12-planung', moduleId: 'm12', title: 'Strategie, Jahresplan, Ziele' },
+  { id: 'm12-wirkung', moduleId: 'm12', title: 'Schulung und Wirksamkeit' },
+  { id: 'm12-beratung', moduleId: 'm12', title: 'Beratung und Berichte' },
+  { id: 'm12-kultur', moduleId: 'm12', title: 'Widerstand, Kultur, Integrität' },
   { id: 'recht', moduleId: 'm2', title: 'Rechtsrahmen Gewässerschutz' },
   { id: 'entwaesserung', moduleId: 'm2', title: 'Baustellenentwässerung' },
   { id: 'alkalisch', moduleId: 'm2', title: 'Betonwaschwasser / alkalisches Wasser' },
