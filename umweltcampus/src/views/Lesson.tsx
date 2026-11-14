@@ -1,4 +1,6 @@
 import { useEffect, useRef } from 'react';
+import { DeepText } from '../components/DeepText';
+import { useFocus } from '../lib/focus';
 import { CARDS, L, LEVEL_LABEL, LESSONS, MODULES, Q } from '../content';
 import type { Lesson, Step } from '../content/types';
 import { useStore } from '../store';
@@ -11,6 +13,8 @@ import { ReviewBadge, SourceList, Bar } from '../components/ui';
 import { Icon } from '../components/Icons';
 import { newItem } from '../lib/srs';
 import type { LessonProgress } from '../lib/state';
+import { lessonStatus } from '../lib/learning';
+import { StatusTrio, StatusTodo } from '../components/LessonStatus';
 
 const STEP_LABEL: Record<Step['kind'], string> = {
   situation: 'Einstieg', quiz: 'Wissensabfrage', brief: 'Kurz erklärt', explain: 'Erklärung', diagram: 'Schema', example: 'Beispiel', deep: 'Vertiefung',
@@ -29,6 +33,7 @@ export function LessonView({ id }: { id: string }) {
   const lesson = L.get(id);
   const { s, update, log, setCoachCtx } = useStore();
   const top = useRef<HTMLDivElement>(null);
+  const [focus, setFocus] = useFocus();
   const p: LessonProgress | undefined = s.lessons[id];
 
   useEffect(() => {
@@ -55,6 +60,22 @@ export function LessonView({ id }: { id: string }) {
     setCoachCtx({ label: `Lektion «${lesson.title}», Schritt: ${st?.title ?? ''}`, text: `Lernziele: ${lesson.objectives.join('; ')}` });
     return () => setCoachCtx(null);
   }, [lesson, idx, setCoachCtx]);
+
+  // Tastatur: Pfeil links/rechts wechselt den Schritt (nicht in Eingabefeldern), Esc beendet den Fokusmodus
+  useEffect(() => {
+    if (!lesson) return;
+    const on = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement | null;
+      if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+      if (t && (/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) || t.isContentEditable)) return;
+      if (e.key === 'Escape' && focus) { setFocus(false); return; }
+      const i = Math.max(0, lesson.steps.findIndex((st) => st.id === s.lessons[id]?.cur));
+      if (e.key === 'ArrowRight' && i < lesson.steps.length - 1) { e.preventDefault(); document.getElementById('step-next')?.click(); }
+      if (e.key === 'ArrowLeft' && i > 0) { e.preventDefault(); document.getElementById('step-prev')?.click(); }
+    };
+    window.addEventListener('keydown', on);
+    return () => window.removeEventListener('keydown', on);
+  }, [lesson, id, s.lessons, focus, setFocus]);
 
   if (!lesson) return <div className="page"><p>Lektion nicht gefunden.</p><a href="#module">Zur Modulübersicht</a></div>;
   const mod = MODULES.find((m) => m.id === lesson.moduleId)!;
@@ -98,7 +119,10 @@ export function LessonView({ id }: { id: string }) {
 
   return (
     <div className="page lesson" ref={top}>
-      <a className="back-link" href={'#modul-' + mod.id}><Icon name="back" size={16} /> Modul {mod.no}: {mod.short}</a>
+      <div className="lesson-top">
+        <a className="back-link" href={'#modul-' + mod.id}><Icon name="back" size={16} /> Modul {mod.no}: {mod.short}</a>
+        <button type="button" id="focus-toggle" className="btn small quiet" aria-pressed={focus} onClick={() => setFocus(!focus)} title="Navigation und Seitenleiste ausblenden (Esc beendet, Pfeiltasten wechseln den Schritt)">{focus ? 'Fokus beenden' : 'Fokusmodus'}</button>
+      </div>
       <header className="lesson-head">
         <span className="eyebrow">Modul {String(mod.no).padStart(2, '0')} · {mod.short} · Lektion {lesson.order} von {inMod.length}</span>
         <h1>{lesson.title}</h1>
@@ -107,6 +131,7 @@ export function LessonView({ id }: { id: string }) {
           <span><Icon name="clock" size={14} /> ca. {lesson.minutes} Min.</span>
           <ReviewBadge status={lesson.review} />
         </div>
+        <StatusTrio st={lessonStatus(s, id)} />
       </header>
 
       <div className="lesson-progress">
@@ -126,13 +151,14 @@ export function LessonView({ id }: { id: string }) {
           </section>
 
           <div className="step-nav">
-            <button type="button" className="btn" disabled={idx === 0} onClick={() => go(idx - 1)}><Icon name="back" size={16} /> <span className="nav-l">Zurück</span></button>
+            <button type="button" id="step-prev" className="btn" disabled={idx === 0} onClick={() => go(idx - 1)}><Icon name="back" size={16} /> <span className="nav-l">Zurück</span></button>
             {!isLast && (curOpen > 0
-              ? <button type="button" className="btn quiet" onClick={() => go(idx + 1)} title="Die Frage ist noch nicht ausgewertet">Weiter ohne Antwort: {stepLabel(lesson.steps[idx + 1])}</button>
-              : <button type="button" className="btn primary" onClick={() => go(idx + 1)}>Weiter: {stepLabel(lesson.steps[idx + 1])} <Icon name="arrow" size={16} /></button>)}
+              ? <button type="button" id="step-next" className="btn quiet" onClick={() => go(idx + 1)} title="Die Frage ist noch nicht ausgewertet">Weiter ohne Antwort: {stepLabel(lesson.steps[idx + 1])}</button>
+              : <button type="button" id="step-next" className="btn primary" onClick={() => go(idx + 1)}>Weiter: {stepLabel(lesson.steps[idx + 1])} <Icon name="arrow" size={16} /></button>)}
             {isLast && (
               <div className="finish">
-                {missing > 0 && <span className="hint">{missing} Frage{missing === 1 ? '' : 'n'} noch nicht beantwortet – Sie können trotzdem abschliessen.</span>}
+                <StatusTodo st={lessonStatus(s, id)} />
+                {missing > 0 && <span className="hint">Sie können die Lektion trotzdem abschliessen.</span>}
                 <button type="button" className="btn primary" onClick={complete}>{p?.completedAt ? 'Weiter zur nächsten Lektion' : 'Lektion abschliessen'}</button>
               </div>
             )}
@@ -212,8 +238,9 @@ function StepBody({ step, lesson }: { step: Step; lesson: Lesson }) {
     case 'brief':
       return <div className="brief"><RichText text={step.text} /><p className="hint">Das Wesentliche in einer Minute – so können Sie es auf der Baustelle erklären. Die Erklärung und die Vertiefung folgen.</p></div>;
     case 'explain':
-    case 'deep':
       return <RichText text={step.text} />;
+    case 'deep':
+      return <DeepText text={step.text} id={step.id} />;
     case 'example':
       return <><span className="badge">{step.context}</span><RichText text={step.text} /></>;
     case 'diagram':
@@ -234,7 +261,7 @@ function StepBody({ step, lesson }: { step: Step; lesson: Lesson }) {
       return <ul className="summary">{step.points.map((x) => <li key={x}>{x}</li>)}</ul>;
     case 'sources':
       return <>
-        <div className="callout law"><span className="callout-label">Verlässlichkeit</span><span>Die Inhalte stehen auf Prüfstatus «Entwurf». Ausgewählte Rechtsaussagen sind über kantonale Vollzugshilfen bestätigt (gekennzeichnet), aber noch nicht durch eine Fachperson am Originaltext geprüft. Kantone, Gemeinden, Bewilligungsauflagen und besondere Projektbedingungen können zusätzliche Anforderungen stellen. Bei kritischen Entscheiden aktuelle Vorgaben prüfen und Fachpersonen beiziehen.</span></div>
+        <div className="callout law"><span className="callout-label">Verlässlichkeit</span><span>Die Inhalte stehen auf Prüfstatus «Entwurf». Ausgewählte Rechtsaussagen sind mit dem Wortlaut auf Fedlex bzw. mit amtlichen Vollzugshilfen abgeglichen (jeweils bei der Quelle vermerkt), aber noch nicht durch eine Fachperson geprüft. Kantone, Gemeinden, Bewilligungsauflagen und besondere Projektbedingungen können zusätzliche Anforderungen stellen. Bei kritischen Entscheiden aktuelle Vorgaben prüfen und Fachpersonen beiziehen.</span></div>
         <SourceList ids={step.sourceIds} />
       </>;
   }

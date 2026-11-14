@@ -1,4 +1,4 @@
-// Browser-Durchlauf aller Funktionen (Desktop + Handy), inkl. Migration eines Lernstands aus Version 1.
+// Browser-Durchlauf aller Funktionen (Desktop, Tablet, Handy), inkl. Migration eines Lernstands aus Version 1.
 // Aufruf: npm run build && npm run e2e   (benötigt Playwright mit Chromium)
 const { chromium, devices } = require('playwright');
 const path = require('path');
@@ -21,7 +21,7 @@ const ok = (c, m) => { console.log((c ? 'OK   ' : 'FAIL ') + m); if (!c) process
   await new Promise((res) => server.listen(0, '127.0.0.1', res));
   url = `http://127.0.0.1:${server.address().port}/index.html`;
   const browser = await chromium.launch();
-  for (const [name, opts] of [['desktop', { viewport: { width: 1360, height: 900 } }], ['mobile', { ...devices['iPhone 13'] }]]) {
+  for (const [name, opts] of [['desktop', { viewport: { width: 1360, height: 900 } }], ['tablet', { ...devices['iPad (gen 7)'] }], ['mobile', { ...devices['iPhone 13'] }]]) {
     const ctx = await browser.newContext({ ...opts, acceptDownloads: true });
     const page = await ctx.newPage();
     const errs = [];
@@ -36,8 +36,8 @@ const ok = (c, m) => { console.log((c ? 'OK   ' : 'FAIL ') + m); if (!c) process
     console.log('--- ' + name);
     // Migration
     await go('modul-m2');
-    ok((await page.locator('.lessonlist li.done').count()) === 1, 'v1-Fortschritt: Lektion 1 abgeschlossen');
-    ok((await page.locator('.lessonlist li').nth(2).textContent()).includes('Schritt'), 'v1-Fortschritt: Lektion 3 begonnen');
+    ok((await page.locator('.lessonlist > li.done').count()) === 1, 'v1-Fortschritt: Lektion 1 abgeschlossen');
+    ok((await page.locator('.lessonlist > li').nth(2).textContent()).includes('Schritt'), 'v1-Fortschritt: Lektion 3 begonnen');
     const stored = await page.evaluate(() => JSON.parse(localStorage.getItem('umweltcampus.v1')));
     ok(stored.version === 3 && stored.lessons['m2-l3'].cur === 'm2-l3-feynman', 'gespeicherter Stand auf Version 3 migriert');
     await go('dashboard');
@@ -145,7 +145,7 @@ const ok = (c, m) => { console.log((c ? 'OK   ' : 'FAIL ') + m); if (!c) process
     ok((await page.locator('#rechner').count()) === 1, 'Rechner unter Praxiswerkzeuge');
     // Modul 1
     await go('modul-m1');
-    ok((await page.locator('.lessonlist li').count()) === 6, 'Modul 1: 6 Lektionen');
+    ok((await page.locator('.lessonlist > li').count()) === 6, 'Modul 1: 6 Lektionen');
     await go('lektion-m1-l3');
     const m1steps = await page.locator('.stepper button').allTextContents();
     await page.locator('.stepper button').nth(m1steps.findIndex((l) => l.includes('Schema'))).click(); await page.waitForTimeout(100);
@@ -164,7 +164,7 @@ const ok = (c, m) => { console.log((c ? 'OK   ' : 'FAIL ') + m); if (!c) process
     // Module 3, 4 und 8
     for (const [mod, n, sim, txt, label, crit = true] of [['m3', 5, 'sim-g', 'Fertig ausbauen, aber vorsichtig', 'Fall G'], ['m4', 5, 'sim-h', 'Freigabe ist Freigabe', 'Fall H'], ['m8', 5, 'sim-d', 'Parallel geht schon', 'Fall D'], ['m9', 5, 'sim-i', 'Mit den Mulden und dem Magazin', 'Fall I', false], ['m10', 5, 'sim-e', 'Dem Vorschlag folgen', 'Fall E'], ['m7', 5, 'sim-j', 'Streu den Rest Bindemittel', 'Fall J'], ['m5', 5, 'sim-k', 'stärker benetzen und weitermachen', 'Fall K'], ['m6', 5, 'sim-c', 'Wir halten alle Auflagen ein. Baustellen', 'Fall C', false], ['m11', 5, 'sim-l', 'Freigeben – das Konzept war ja Teil der Offerte', 'Fall L'], ['m12', 5, 'sim-m', 'Einverstanden, wir stellen es als Einzelfall dar', 'Fall M']]) {
       await go('modul-' + mod);
-      ok((await page.locator('.lessonlist li').count()) === n, `Modul ${mod.slice(1)}: ${n} Lektionen`);
+      ok((await page.locator('.lessonlist > li').count()) === n, `Modul ${mod.slice(1)}: ${n} Lektionen`);
       await go('lektion-' + mod + '-l1');
       const st = await page.locator('.stepper button').allTextContents();
       await page.locator('.stepper button').nth(st.findIndex((l) => l.includes('Schema'))).click(); await page.waitForTimeout(100);
@@ -184,6 +184,37 @@ const ok = (c, m) => { console.log((c ? 'OK   ' : 'FAIL ') + m); if (!c) process
     await mixBtn.click();
     ok((await page.locator('h1').first().textContent()).includes('Gemischte Prüfung'), 'Gemischte Prüfung gestartet');
     await page.getByRole('button', { name: 'Abbrechen' }).click();
+    // UX-Update: Lernstufen, Fachvertiefung, Fokusmodus, Tastatur, Simulator-Szenen, spezifisches Feedback
+    await go('lektion-m2-l1');
+    ok((await page.locator('.lesson-head .trio > li').count()) === 3, 'Lektion zeigt drei Stufen: gelesen, bearbeitet, nachgewiesen');
+    { const lbl = await page.locator('.stepper button').allTextContents(); await page.locator('.stepper button').nth(lbl.findIndex((l) => l.includes('Vertiefung'))).click(); await page.waitForTimeout(150); }
+    const tocN = await page.locator('.deep-toc li').count();
+    await page.locator('.deep-toc li button').nth(2).click(); await page.waitForTimeout(150);
+    ok(tocN >= 3 && (await page.locator('.deep-sec h3 button[aria-expanded="true"]').count()) >= 2, 'Fachvertiefung: Übersicht mit Kernsätzen, Abschnitte aufklappbar');
+    await page.locator('.deep-sec h3 button').nth(3).focus(); await page.keyboard.press('Enter'); await page.waitForTimeout(100);
+    ok((await page.locator('.deep-sec h3 button').nth(3).getAttribute('aria-expanded')) === 'true', 'Tastatur: Abschnitt mit Enter öffnen');
+    await page.click('#focus-toggle'); await page.waitForTimeout(100);
+    const stepBefore = await page.locator('.lp-label').textContent();
+    await page.locator('body').click({ position: { x: 5, y: 300 } }).catch(() => {});
+    await page.keyboard.press('ArrowRight'); await page.waitForTimeout(200);
+    ok((await page.locator('.app.focus').count()) === 1 && !(await page.locator('.sidenav').isVisible()) && (await page.locator('.lp-label').textContent()) !== stepBefore, 'Fokusmodus: Navigation ausgeblendet, Pfeiltaste wechselt den Schritt');
+    await page.keyboard.press('Escape'); await page.waitForTimeout(100);
+    ok((await page.locator('.app.focus').count()) === 0, 'Fokusmodus mit Esc beendet');
+    await go('lektion-m12-l5');
+    { const lbl = await page.locator('.stepper button').allTextContents(); await page.locator('.stepper button').nth(lbl.findIndex((l) => l.includes('Abwägung'))).click(); await page.waitForTimeout(150); }
+    await page.locator('.question .opt').first().click();
+    await page.locator('.question .conf label').last().click();
+    await page.getByRole('button', { name: 'Antwort prüfen' }).click(); await page.waitForTimeout(150);
+    const cf = (await page.locator('.crit-fb').textContent()) || '';
+    ok(cf.includes('Fachlich richtig wäre') && cf.includes('Mögliche Folgen') && !cf.includes('Gewässer gefährden oder ist ohne Bewilligung'), 'Kritischer Fehler: themen- und entscheidungsspezifische Rückmeldung');
+    ok((await page.locator('.badge.eval-obj').count()) >= 1, 'Bewertungsart gekennzeichnet (objektiv ausgewertet)');
+    await go('szenario-sim-a');
+    ok(await page.evaluate(() => document.activeElement && document.activeElement.id === 'main'), 'Tastatur: nach Seitenwechsel steht der Fokus am Anfang des Inhalts');
+    ok((await page.locator('.scene-map svg').count()) === 1 && (await page.locator('.sm-list li').count()) >= 3, 'Simulator: technische Szene mit Gefahren und Schutzgütern');
+    await page.getByRole('button', { name: 'Fall beginnen' }).click(); await page.waitForTimeout(150);
+    ok((await page.locator('.infoboard').count()) === 1 && (await page.locator('.infoboard').textContent()).includes('Fehlt noch'), 'Simulator: Lagebild mit «Liegt vor» und «Fehlt noch»');
+    { const fresh = await ctx.newPage(); await fresh.goto(url + '#dashboard'); await fresh.waitForTimeout(400); await fresh.keyboard.press('Tab');
+      ok(await fresh.evaluate(() => document.activeElement && document.activeElement.classList.contains('skip')), 'Tastatur: erster Tab erreicht «Zum Inhalt springen»'); await fresh.close(); }
     // Kanton & Standort
     await go('modul-m2');
     ok((await page.locator('#vor-ort').count()) === 1 && (await page.locator('#vor-ort').textContent()).includes('Einstellungen'), 'Vor Ort prüfen: ohne Kanton Hinweis auf Einstellungen');
@@ -271,7 +302,7 @@ const ok = (c, m) => { console.log((c ? 'OK   ' : 'FAIL ') + m); if (!c) process
     await page.locator('.mod-radio', { hasText: 'Modul 4' }).click();
     ok((await page.locator('h2', { hasText: 'Abschluss von Modul 4' }).count()) === 1, 'Prüfungstraining: Modulwahl wirkt');
     let wide = [];
-    for (const h of ['dashboard', 'module', 'modul-m2', 'lektion-m2-l2', 'simulator', 'szenario-sim-g', 'lernpfad', 'pruefung', 'wiederholung', 'bibliothek', 'werkzeuge', 'fortschritt', 'einstellungen']) {
+    for (const h of ['dashboard', 'module', 'modul-m2', 'lektion-m2-l2', 'simulator', 'szenario-sim-g', 'lernpfad', 'pruefung', 'wiederholung', 'bibliothek', 'werkzeuge', 'fortschritt', 'einstellungen', 'kanton', 'quellen']) {
       await go(h); if (h.startsWith('szenario')) { await page.getByRole('button', { name: 'Fall beginnen' }).click(); await page.waitForTimeout(150); }
       const w = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth); if (w > 1) wide.push(h + ':' + w);
     }

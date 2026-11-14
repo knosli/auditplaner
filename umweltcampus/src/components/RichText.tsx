@@ -88,3 +88,40 @@ function groupLines(lines: string[]): G[] {
 export function InlineText({ text }: { text: string }) {
   return <Inline text={text} />;
 }
+
+/** Kernsatz: erster Satz eines Abschnitts, ohne Markup. */
+export function keySentence(body: string): string {
+  const plain = body.split('\n').filter((l) => l.trim() && !/^(§>|!>|> |\|)/.test(l.trim())).map((l) => l.replace(/^(- |\d+\. )/, '')).join(' ')
+    .replace(/\*\*(.+?)\*\*/g, '$1').replace(/\[\[[a-z0-9-]+\|(.+?)\]\]/g, '$1').replace(/\[\[([a-z0-9-]+)\]\]/g, '$1');
+  if (!plain.trim()) {
+    const head = body.split('\n').find((l) => l.trim().startsWith('|'));
+    return head ? 'Übersicht als Tabelle: ' + head.trim().replace(/^\||\|$/g, '').split('|').map((c) => c.trim()).join(', ') : '';
+  }
+  // Satzende: Punkt/Ausrufe-/Fragezeichen + Leerraum, aber nicht nach Abkürzungen, Ziffern oder Einzelbuchstaben
+  const ABBR = /(?:^|[\s(])(?:Art|Abs|Ziff|Bst|lit|Nr|bzw|ca|vgl|inkl|evtl|ggf|usw|resp|max|min|Mio|Fr|St|SR|Anh|Kap|Abschn|z\.\s?B|d\.\s?h|u\.\s?a|u\.\s?U|[A-Za-zÄÖÜäöü]|\d+)\.$/;
+  let end = -1;
+  const re = /[.!?](?=\s|$)/g;
+  let mm: RegExpExecArray | null;
+  while ((mm = re.exec(plain))) { if (!ABBR.test(plain.slice(0, mm.index + 1))) { end = mm.index + 1; break; } }
+  const s = (end > 0 ? plain.slice(0, end) : plain).trim();
+  return s.length > 180 ? s.slice(0, 177).replace(/\s+\S*$/, '') + ' …' : s;
+}
+
+export interface DeepSection { title: string; body: string }
+export function splitDeep(text: string): { intro: string; sections: DeepSection[]; legal: string } {
+  const lines = text.trim().split('\n');
+  const sections: DeepSection[] = [];
+  const intro: string[] = [];
+  for (const l of lines) {
+    if (l.startsWith('### ')) sections.push({ title: l.slice(4).trim(), body: '' });
+    else if (sections.length) sections[sections.length - 1].body += l + '\n';
+    else intro.push(l);
+  }
+  let legal = '';
+  const last = sections[sections.length - 1];
+  if (last) {
+    const m = last.body.match(/\n?(§> [^\n]+)\s*$/);
+    if (m) { legal = m[1]; last.body = last.body.slice(0, m.index); }
+  }
+  return { intro: intro.join('\n'), sections, legal };
+}

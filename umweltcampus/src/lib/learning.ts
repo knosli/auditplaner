@@ -294,3 +294,47 @@ export function progressLayers(s: AppState, moduleId: string) {
     { key: 'bestaetigt', label: 'In der Praxis bestätigt', done: tasks.filter((t) => s.practice[t.id]?.status === 'bestaetigt').length, total: tasks.length, unit: 'Praxisaufträge' },
   ];
 }
+
+// ---------- Drei getrennte Lernstufen je Lektion ----------
+
+const READ_KINDS = new Set(['situation', 'brief', 'explain', 'diagram', 'example', 'deep', 'summary']);
+
+export interface LessonStatus {
+  /** Alle Inhaltsschritte angesehen */
+  read: { done: number; total: number; ok: boolean };
+  /** Alle Fragen der Lektion beantwortet und die Baustellenaufgabe bearbeitet */
+  worked: { done: number; total: number; ok: boolean };
+  /** Alle geschlossenen Fragen der Lektion zuletzt richtig (aktuelle Bewertungsfassung, keine Selbstbewertung, kein kritischer Fehler) */
+  proven: { done: number; total: number; ok: boolean };
+  /** Offene Fragen: nur Selbstbewertung möglich – zählen nie als Nachweis */
+  openOnly: number;
+}
+
+/**
+ * Trennt «gelesen» (Inhalte angesehen), «bearbeitet» (Fragen beantwortet, Aufgabe
+ * bearbeitet) und «nachgewiesen» (objektiv ausgewertete Antworten richtig).
+ * Selbstbewertungen und KI-Feedback zählen nie als Nachweis.
+ */
+export function lessonStatus(s: AppState, lessonId: string): LessonStatus {
+  const l = LESSONS.find((x) => x.id === lessonId);
+  const empty = { done: 0, total: 0, ok: false };
+  if (!l) return { read: empty, worked: empty, proven: empty, openOnly: 0 };
+  const p = s.lessons[lessonId];
+  const seen = new Set(p?.seen ?? []);
+  const readSteps = l.steps.filter((st) => READ_KINDS.has(st.kind));
+  const readDone = readSteps.filter((st) => seen.has(st.id)).length;
+  const qIds = l.steps.flatMap((st) => (st.kind === 'quiz' || st.kind === 'review' ? st.questionIds : st.kind === 'decision' ? [st.questionId] : []));
+  const tasks = l.steps.flatMap((st) => (st.kind === 'sitetask' ? [st.taskId] : []));
+  const answeredAny = new Set(s.answers.map((a) => a.q));
+  const qDone = qIds.filter((q) => !!p?.answers[q]?.length || !!p?.open[q] || answeredAny.has(q)).length;
+  const tDone = tasks.filter((t) => (s.siteTasks[t]?.text ?? '').trim().length > 0).length;
+  const closed = qIds.filter((q) => !OPEN.has(q));
+  const last = lastAnswers(s);
+  const provenN = closed.filter((q) => { const a = last.get(q); return !!a && a.correct && !a.crit; }).length;
+  return {
+    read: { done: readDone, total: readSteps.length, ok: readSteps.length > 0 && readDone === readSteps.length },
+    worked: { done: qDone + tDone, total: qIds.length + tasks.length, ok: qIds.length + tasks.length > 0 && qDone + tDone === qIds.length + tasks.length },
+    proven: { done: provenN, total: closed.length, ok: closed.length > 0 && provenN === closed.length },
+    openOnly: qIds.length - closed.length,
+  };
+}

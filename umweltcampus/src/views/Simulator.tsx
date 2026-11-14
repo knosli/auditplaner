@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { CRITERION_LABEL, MODULES, S, SCENARIOS, TOPICS } from '../content';
 import { Icon } from '../components/Icons';
 import { ModuleIllustration } from '../components/Illustrations';
+import { SceneMap } from '../components/SceneMap';
+import { SCENES } from '../content/scenes';
 import { metaOf } from '../components/moduleMeta';
 import type { Scenario, ScenarioStage } from '../content/types';
 import { useStore } from '../store';
@@ -31,7 +33,7 @@ export function SimulatorView() {
           const ok = cur.some((r) => r.passed);
           return (
             <article key={sc.id} className={'sim-card tone-' + metaOf(sc.moduleId).tone}>
-              <div className="sim-banner"><ModuleIllustration moduleId={sc.moduleId} /><span className="code-chip big">{sc.code}</span></div>
+              <div className="sim-banner">{SCENES[sc.id] ? <SceneMap id={sc.id} mode="thumb" /> : <ModuleIllustration moduleId={sc.moduleId} />}<span className="code-chip big">{sc.code}</span></div>
               <div className="sim-body">
                 <span className="eyebrow">Modul {mod?.no} · {mod?.short}</span>
                 <h3><a href={'#szenario-' + sc.id} className="stretched">{sc.title}</a></h3>
@@ -127,8 +129,8 @@ export function ScenarioPlayer({ id }: { id: string }) {
         </header>
         <div className="sim-start">
           <div className={'sim-stage-card tone-' + metaOf(sc.moduleId).tone}>
-            <div className="sim-banner"><ModuleIllustration moduleId={sc.moduleId} /></div>
             <div className="sim-body">
+              {SCENES[sc.id] ? <SceneMap id={sc.id} /> : <ModuleIllustration moduleId={sc.moduleId} />}
               <span className="step-kind"><Icon name="site" size={16} /> Ausgangslage</span>
               <p className="sim-intro">{sc.intro}</p>
               <h3>Was Sie vor Ort sehen</h3>
@@ -156,8 +158,8 @@ export function ScenarioPlayer({ id }: { id: string }) {
 
   if (done && run) {
     const crit = [
-      ...sc.stages.flatMap((st) => (st.options ?? []).filter((o) => o.critical && answers[st.id]?.selected.includes(o.id)).map((o) => ({ key: st.id + o.id, title: st.title, text: `${o.text} – ${o.feedback}` }))),
-      ...results.flatMap((r) => (r.criticalWhy ?? []).map((w, i) => ({ key: r.stageId + i, title: sc.stages.find((x) => x.id === r.stageId)?.title ?? '', text: w }))),
+      ...sc.stages.flatMap((st) => (st.options ?? []).filter((o) => o.critical && answers[st.id]?.selected.includes(o.id)).map((o) => ({ key: st.id + o.id, title: st.title, text: `«${o.text}» – ${o.feedback}`, consequence: o.consequence, better: (st.options ?? []).filter((x) => x.points === 2).map((x) => x.text).join(' – oder gleichwertig: ') }))),
+      ...results.flatMap((r) => (r.criticalWhy ?? []).map((w, i) => ({ key: r.stageId + i, title: sc.stages.find((x) => x.id === r.stageId)?.title ?? '', text: w, consequence: undefined as string | undefined, better: '' }))),
     ];
     return (
       <div className="page scenario">
@@ -171,8 +173,14 @@ export function ScenarioPlayer({ id }: { id: string }) {
         {crit.length > 0 && (
           <div className="callout crit"><span className="callout-label">Kritische Fehler</span>
             <span>
-              {crit.map((c) => <span key={c.key} className="block"><strong>{c.title}:</strong> {c.text}</span>)}
-              <span className="block">Bei einem kritischen Fehler gilt der Fall unabhängig von der Punktzahl als nicht bestanden. In der Realität könnte ein solcher Entscheid einen Gewässerschaden, ein Strafverfahren und hohe Kosten auslösen.</span>
+              {crit.map((c) => (
+                <span key={c.key} className="block crit-item">
+                  <strong>{c.title}:</strong> {c.text}
+                  {c.consequence && <span className="block"><strong>Was daraus folgt:</strong> {c.consequence}</span>}
+                  {c.better && <span className="block"><strong>Fachlich richtig wäre:</strong> {c.better}</span>}
+                </span>
+              ))}
+              <span className="block hint">Bei einem kritischen Fehler gilt der Fall unabhängig von der Punktzahl als nicht bestanden.</span>
             </span>
           </div>
         )}
@@ -193,6 +201,12 @@ export function ScenarioPlayer({ id }: { id: string }) {
             })}
           </ol>
         </section>
+        {SCENES[sc.id] && (
+          <section className="section">
+            <h2>Gefahren, Massnahmen und Folgen im Überblick</h2>
+            <SceneMap id={sc.id} mode="debrief" />
+          </section>
+        )}
         <section className="section">
           <h2>Fachliche Einordnung</h2>
           <p>{sc.debrief}</p>
@@ -231,6 +245,7 @@ export function ScenarioPlayer({ id }: { id: string }) {
             <span className="eyebrow">Fall {sc.code} · Schritt {stepNo} · {revealed ? "Konsequenz" : PHASE[stage.type]}</span>
             <h1>{stage.title}</h1>
           </header>
+          {SCENES[sc.id] && <details className="scene-peek"><summary>Lageplan und Gefahren ansehen</summary><SceneMap id={sc.id} /></details>}
           <div className="scene"><RichText text={stage.situation} /></div>
           <StageInput key={stage.id} sc={sc} stage={stage} a={a} setA={setA} revealed={revealed} />
           {!revealed ? (
@@ -245,9 +260,43 @@ export function ScenarioPlayer({ id }: { id: string }) {
             </>
           )}
         </div>
-        <Timeline sc={sc} results={results} current={stage} revealed={revealed} />
+        <div className="sim-side-col">
+          <InfoBoard sc={sc} results={results} answers={answers} />
+          <Timeline sc={sc} results={results} current={stage} revealed={revealed} />
+        </div>
       </div>
     </div>
+  );
+}
+
+/** Lagebild: Was liegt für den Entscheid vor, was fehlt noch? */
+function InfoBoard({ sc, results, answers }: { sc: Scenario; results: StageResult[]; answers: Record<string, StageAnswer> }) {
+  const doneIds = new Set(results.map((r) => r.stageId));
+  const askStages = sc.stages.filter((st) => st.type === 'ask');
+  const known: string[] = [];
+  const open: string[] = [];
+  for (const st of askStages) {
+    if (!doneIds.has(st.id)) continue;
+    const sel = answers[st.id]?.selected ?? [];
+    for (const o of st.options ?? []) {
+      if (sel.includes(o.id) && o.reveal && o.reveal !== '—') known.push(`${o.text}: ${o.reveal}`);
+      else if (!sel.includes(o.id) && o.relevant) open.push(o.text);
+    }
+  }
+  const pendingAsk = askStages.find((st) => !doneIds.has(st.id));
+  return (
+    <aside className="panel infoboard" aria-label="Lagebild">
+      <span className="side-title">Lagebild</span>
+      <h4 className="ib-h ok">Liegt vor</h4>
+      <ul className="ib-list">
+        {sc.facts.map((f) => <li key={f}>{f}</li>)}
+        {known.map((k) => <li key={k} className="ib-new">{k}</li>)}
+      </ul>
+      <h4 className="ib-h miss">Fehlt noch</h4>
+      {open.length > 0 && <ul className="ib-list">{open.map((o) => <li key={o}>Nicht erfragt: {o}</li>)}</ul>}
+      {pendingAsk && <p className="hint">Wichtige Angaben sind noch unbekannt. Im Schritt «{pendingAsk.title}» können Sie gezielt nachfragen.</p>}
+      {!pendingAsk && open.length === 0 && <p className="hint">Keine der wichtigen Fragen ist offen geblieben. Was die Lage ausserdem verändert, erfahren Sie in den Rückmeldungen.</p>}
+    </aside>
   );
 }
 
@@ -333,6 +382,7 @@ function StageFeedback({ stage, a, result }: { stage: ScenarioStage; a: StageAns
   const chosen = (stage.options ?? []).filter((o) => a.selected.includes(o.id));
   return (
     <div className={'feedback stage-fb' + (result.critical ? ' crit' : '')}>
+      <span className={'badge ' + (result.self ? 'eval-self' : 'eval-obj')}>{result.self ? 'Selbstbewertung · kein Nachweis' : 'Objektiv ausgewertet'}</span>
       <p className="fb-verdict">{result.self ? 'Ihre Selbstbewertung' : 'Bewertung dieses Schritts'}: <span className="mono">{pct(result.score)}</span>{result.critical && <span className="badge crit"> kritischer Fehler</span>}</p>
       {(result.criticalWhy ?? []).map((w) => <p key={w} className="consequence"><strong>Kritisch:</strong> {w}</p>)}
       {stage.type === 'ask' && (

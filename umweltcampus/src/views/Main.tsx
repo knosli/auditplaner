@@ -1,8 +1,9 @@
 import { LocalCheck } from '../components/LocalCheck';
+import { StatusTrio } from '../components/LessonStatus';
 import { LESSONS, LEVEL_LABEL, LEVEL_SHORT, MODULES, SCENARIOS, TASKS } from '../content';
 import { useStore } from '../store';
 import { Bar, DevBadge, pct } from '../components/ui';
-import { continueLesson, dueItems, knowledgeGaps, levelStats, moduleProgress, moduleRequirements, progressLayers, recommendedLevel, studyMinutes } from '../lib/learning';
+import { continueLesson, lessonStatus, dueItems, knowledgeGaps, levelStats, moduleProgress, moduleRequirements, progressLayers, recommendedLevel, studyMinutes } from '../lib/learning';
 import { Icon } from '../components/Icons';
 import { ModuleIllustration } from '../components/Illustrations';
 import { MOD_GROUP_LABEL, metaOf, type ModGroup } from '../components/moduleMeta';
@@ -52,7 +53,7 @@ export function Dashboard() {
           <div className="hero-copy">
             <span className="eyebrow">Alle verfügbaren Lektionen abgeschlossen</span>
             <h2>Jetzt anwenden und prüfen.</h2>
-            <p>Festigen Sie Ihr Wissen in den Baustellenfällen und in den Modulprüfungen. Weitere Module sind in Entwicklung.</p>
+            <p>Festigen Sie Ihr Wissen in den Baustellenfällen, in den Modulprüfungen und mit den Praxisaufträgen auf Ihren eigenen Baustellen.</p>
             <a className="btn sand hero-cta" href="#pruefung">Zum Prüfungstraining <Icon name="arrow" size={18} /></a>
           </div>
           <div className="hero-art"><ModuleIllustration moduleId="m1" /></div>
@@ -234,7 +235,7 @@ export function ModulesView() {
       <header className="page-head">
         <span className="eyebrow">Wissen systematisch aufbauen</span>
         <h1>Ihre Fachmodule.</h1>
-        <p className="lead">Zwölf Module mit je vier Lernstufen – von den rechtlichen Grundlagen über die Baustellenpraxis bis zur fachlichen Führung. {avail} Module sind verfügbar, die übrigen in Entwicklung.</p>
+        <p className="lead">Zwölf Module mit je vier Lernstufen – von den rechtlichen Grundlagen über die Baustellenpraxis bis zur fachlichen Führung. {avail === MODULES.length ? 'Alle Module sind verfügbar.' : `${avail} Module sind verfügbar, die übrigen in Entwicklung.`}</p>
       </header>
       <div className="toolbar" role="search">
         <div className="chips" role="group" aria-label="Nach Bereich filtern">
@@ -305,6 +306,7 @@ export function ModuleDetail({ id }: { id: string }) {
                           <div>
                             <a href={'#lektion-' + l.id} className="stretched"><strong>{l.title}</strong></a>
                             <span className="hint">ca. {l.minutes} Min. · {state2}{l.level > rec ? ' · Stufe noch nicht empfohlen' : ''}</span>
+                            {p && <StatusTrio st={lessonStatus(s, l.id)} compact />}
                           </div>
                           {p && !p.completedAt && <span className="ll-bar" aria-hidden="true"><span style={{ width: (pos / l.steps.length) * 100 + '%' }} /></span>}
                         </li>

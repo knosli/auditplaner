@@ -38,7 +38,7 @@ export function LibraryView({ initialTab = 'alle' }: { initialTab?: 'alle' | 'be
         ))}
       </div>
       {n && !terms.length && !entries.length && !srcs.length && (
-        <p className="hint">Keine Treffer für «{q}». Prüfen Sie Schreibweise oder Synonyme; manche Themen gehören zu Modulen in Entwicklung.</p>
+        <p className="hint">Keine Treffer für «{q}». Prüfen Sie Schreibweise oder Synonyme.</p>
       )}
       {(tab === 'alle' || tab === 'begriffe') && terms.length > 0 && (
         <Section title="Fachbegriffe">

@@ -7,7 +7,7 @@ import { InlineText, RichText } from './RichText';
 import { ConfidencePicker, SourceList } from './ui';
 import { feedbackPrompt } from '../lib/coach';
 import { aiErrorText } from '../lib/platform';
-import { LEVEL_SHORT } from '../content';
+import { LEVEL_SHORT, TOPICS } from '../content';
 
 interface Props {
   q: Question;
@@ -86,6 +86,28 @@ function ClosedQuestion({ q, ctx, initial, onAnswered, silent, label }: Props) {
   );
 }
 
+/** Rückmeldung bei kritischem Fehler: themen- und entscheidungsspezifisch statt allgemein. */
+function CriticalFeedback({ q, crit }: { q: Question; crit: NonNullable<Question['options']> }) {
+  const topic = TOPICS.find((t) => t.id === q.topic)?.title;
+  const bestOpt = (q.options ?? []).find((o) => (q.type === 'best' ? (o.weight ?? 0) >= 0.999 : q.correct?.includes(o.id)));
+  return (
+    <div className="callout crit crit-fb" role="alert">
+      <span className="callout-label">Kritischer Fehler{topic ? ` · ${topic}` : ''}</span>
+      <div>
+        {crit.map((o) => (
+          <div key={o.id} className="crit-item">
+            <p><strong>Ihre Wahl:</strong> {o.text}</p>
+            {o.why && <p><strong>Warum kritisch:</strong> {o.why.replace(/^Kritisch:\s*/, '')}</p>}
+            {o.risks && <p><strong>Mögliche Folgen:</strong> {o.risks}</p>}
+          </div>
+        ))}
+        {bestOpt && <p className="crit-better"><strong>Fachlich richtig wäre:</strong> {bestOpt.text}</p>}
+        <p className="hint">Kritische Fehler ergeben 0 Punkte und werden gezielt wiederholt – unabhängig davon, wie sicher Sie waren.</p>
+      </div>
+    </div>
+  );
+}
+
 export function weightLabel(w: number, critical?: boolean) {
   if (critical) return 'kritisch – unzulässig';
   return w >= 0.999 ? 'am besten geeignet' : w >= 0.5 ? 'unter Voraussetzungen vertretbar' : w > 0 ? 'wenig geeignet' : 'ungeeignet';
@@ -99,11 +121,8 @@ function Feedback({ q, score, conf, sel }: { q: Question; score: number; conf?: 
   const crit = (q.options ?? []).filter((o) => o.critical && sel.includes(o.id));
   return (
     <div className="feedback">
-      {crit.length > 0 && (
-        <div className="callout crit"><span className="callout-label">Kritischer Fehler</span>
-          <span>Diese Wahl würde ein Gewässer gefährden oder ist ohne Bewilligung unzulässig. Sie erhält 0 Punkte und wird wie eine Fehlannahme gezielt wiederholt – unabhängig davon, wie sicher Sie waren.</span>
-        </div>
-      )}
+      {crit.length > 0 && <CriticalFeedback q={q} crit={crit} />}
+      <span className="badge eval-obj">Objektiv ausgewertet</span>
       <p className="fb-verdict">
         {best
           ? score >= 0.999 ? 'Sie haben die am besten geeignete Massnahme gewählt.' : score >= 0.5 ? `Vertretbar, aber nicht die beste Wahl (${Math.round(score * 100)} %).` : `Wenig geeignet (${Math.round(score * 100)} %).`
@@ -168,6 +187,7 @@ function OpenQuestion({ q, ctx, initialText, onAnswered, silent, label }: Props)
       {phase === 'rate' && <RubricRating rubric={rubric} text={text} ticks={ticks} setTicks={setTicks} onDone={finish} task={q.prompt} noAI={silent} />}
       {phase === 'done' && !silent && (
         <div className="feedback">
+          <span className="badge eval-self">Selbstbewertung · kein Nachweis</span>
           <p className="hint">Ihre Selbstbewertung: {ticks.length} von {rubric.length} Rasterpunkten. Das ist eine Selbsteinschätzung, kein unabhängiger Fachnachweis.</p>
           <h5>Musterüberlegung</h5>
           <RichText text={q.explanation} />
@@ -207,6 +227,7 @@ export function RubricRating({ rubric, text, ticks, setTicks, onDone, task, audi
   };
   return (
     <div className="rubric">
+      <span className="badge eval-self">Selbstbewertung · kein Nachweis</span>
       <h5>Selbstbewertung am Raster – haken Sie ehrlich ab, was Ihre Antwort tatsächlich enthält</h5>
       <p className="hint">Die Selbstbewertung hilft beim Lernen und plant Wiederholungen. Sie zählt nicht als unabhängige Fachprüfung und nicht für «sicher beherrscht».</p>
       <ul>
@@ -225,7 +246,7 @@ export function RubricRating({ rubric, text, ticks, setTicks, onDone, task, audi
         {ai && !noAI && s.settings.coachMode !== 'pruefen' && <button type="button" className="btn" onClick={askAI} disabled={busy}>{busy ? 'Feedback läuft …' : 'KI-Feedback einholen'}</button>}
         <button type="button" className="btn primary" onClick={onDone}>Bewertung speichern ({ticks.length}/{rubric.length})</button>
       </div>
-      {aiText && <div className="aibox"><span className="badge ai">KI-Feedback · nicht fachlich geprüft</span><RichText text={aiText} /></div>}
+      {aiText && <div className="aibox"><span className="badge ai">KI-Feedback · nicht bewertet, nicht fachlich geprüft</span><RichText text={aiText} /></div>}
       {aiErr && <p className="error">{aiErr}</p>}
     </div>
   );

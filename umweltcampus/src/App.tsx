@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { StoreProvider, useStore, useStudyTimer } from './store';
 import { Dashboard, LearningPath, ModuleDetail, ModulesView } from './views/Main';
 import { LessonView } from './views/Lesson';
@@ -10,12 +10,14 @@ import { ProgressView } from './views/Progress';
 import { SettingsView } from './views/Settings';
 import { CantonView } from './views/Canton';
 import { CoachPanel, GlossaryDrawer } from './components/Drawers';
-import { dueItems } from './lib/learning';
+import { dueItems, recommendations } from './lib/learning';
+import { loadNavOpen, saveNavOpen, useFocus } from './lib/focus';
 import { Icon } from './components/Icons';
 import { L, MODULES, S } from './content';
 
 type NavItem = { id: string; label: string; icon: string };
-const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
+/** Gruppen mit «fold: true» sind einklappbar (eingeklappt, ausser die aktuelle Seite liegt darin). */
+const NAV_GROUPS: { label: string; items: NavItem[]; fold?: boolean }[] = [
   { label: 'Mein Lernen', items: [
     { id: 'dashboard', label: 'Dashboard', icon: 'home' },
     { id: 'module', label: 'Fachmodule', icon: 'book' },
@@ -27,12 +29,12 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
     { id: 'wiederholung', label: 'Wiederholungen', icon: 'review' },
     { id: 'werkzeuge', label: 'Praxisaufträge & Werkzeuge', icon: 'practice' },
   ] },
-  { label: 'Nachschlagen', items: [
+  { label: 'Nachschlagen', fold: true, items: [
     { id: 'bibliothek', label: 'Fachbibliothek', icon: 'library' },
     { id: 'quellen', label: 'Quellen', icon: 'sources' },
     { id: 'kanton', label: 'Kanton & Standort', icon: 'site' },
   ] },
-  { label: 'Persönlich', items: [
+  { label: 'Persönlich', fold: true, items: [
     { id: 'fortschritt', label: 'Lernfortschritt', icon: 'chart' },
     { id: 'einstellungen', label: 'Einstellungen', icon: 'settings' },
   ] },
@@ -60,11 +62,18 @@ function Shell() {
   const route = useHash();
   const { s, sync, openTerm, setCoachOpen, toastMsg, ai } = useStore();
   const [menu, setMenu] = useState(false);
+  const [focus] = useFocus();
+  const [navOpen, setNavOpen] = useState<Record<string, boolean>>(loadNavOpen);
+  const toggleGroup = (g: string, v: boolean) => { const n = { ...navOpen, [g]: v }; setNavOpen(n); saveNavOpen(n); };
   const learning = /^(lektion-|szenario-|pruefung|wiederholung)/.test(route);
   useStudyTimer(learning);
+  const firstRoute = useRef(true);
   useEffect(() => {
     setMenu(false);
     window.scrollTo({ top: 0 });
+    // Barrierefreiheit: nach einem Seitenwechsel Fokus an den Anfang des Inhalts (nicht beim ersten Laden)
+    if (firstRoute.current) { firstRoute.current = false; return; }
+    document.getElementById('main')?.focus({ preventScroll: true });
   }, [route]);
   const due = dueItems(s).length;
   const cur = navOf(route);
@@ -99,7 +108,7 @@ function Shell() {
   })();
 
   return (
-    <div className={'app' + (menu ? ' menu-open' : '')}>
+    <div className={'app' + (menu ? ' menu-open' : '') + (focus && route.startsWith('lektion-') ? ' focus' : '')}>
       <a className="skip" href="#main">Zum Inhalt springen</a>
       <nav className={'sidenav' + (menu ? ' open' : '')} aria-label="Hauptnavigation" id="sidenav">
         <a href="#dashboard" className="brand">
@@ -107,10 +116,16 @@ function Shell() {
           <span className="brand-text"><strong>UmweltCampus</strong><span>Bau CH · Academy</span></span>
         </a>
         <button type="button" className="nav-close" aria-label="Menü schliessen" onClick={() => setMenu(false)}><Icon name="close" /></button>
-        {NAV_GROUPS.map((g) => (
-          <div className="nav-group" key={g.label}>
-            <span className="nav-glabel">{g.label}</span>
-            <ul>
+        {NAV_GROUPS.map((g) => {
+          const hasCur = g.items.some((n) => n.id === cur);
+          const isOpen = !g.fold || hasCur || !!navOpen[g.label];
+          const gid = 'navg-' + g.label.replace(/\W+/g, '');
+          return (
+          <div className={'nav-group' + (g.fold ? ' fold' : '')} key={g.label}>
+            {g.fold
+              ? <button type="button" className="nav-glabel nav-gtoggle" aria-expanded={isOpen} aria-controls={gid} disabled={hasCur} onClick={() => toggleGroup(g.label, !isOpen)}>{g.label}<span aria-hidden="true">{isOpen ? '−' : '+'}</span></button>
+              : <span className="nav-glabel">{g.label}</span>}
+            <ul id={gid} hidden={!isOpen}>
               {g.items.map((n) => (
                 <li key={n.id}>
                   <a href={'#' + n.id} className={cur === n.id ? 'cur' : ''} aria-current={cur === n.id ? 'page' : undefined}>
@@ -122,7 +137,8 @@ function Shell() {
               ))}
             </ul>
           </div>
-        ))}
+          );
+        })}
         <div className="nav-goal">
           <span className="nav-glabel">Ihr Lernziel</span>
           <strong>Leitender Umweltbeauftragter</strong>
@@ -137,6 +153,7 @@ function Shell() {
             <span className="crumb-root">UmweltCampus</span>
             {crumb.map((c, i) => <span key={i} className="crumb-part"><span aria-hidden="true">/</span>{c.href ? <a href={c.href}>{c.label}</a> : <span aria-current="page">{c.label}</span>}</span>)}
           </nav>
+          <NextAction route={route} />
           <div className="top-actions">
             <span className={'sync st-' + sync} title={syncLabel}>{syncLabel}</span>
             <button type="button" className="btn small quiet" onClick={() => openTerm('')}><Icon name="terms" size={16} /><span className="tb-l">Begriffe</span></button>
@@ -149,6 +166,19 @@ function Shell() {
       <CoachPanel />
       {toastMsg && <div className="toast" role="status">{toastMsg}</div>}
     </div>
+  );
+}
+
+/** Wichtigste nächste Lernhandlung – immer in der Kopfzeile erreichbar (nicht in Lektion und Fall). */
+function NextAction({ route }: { route: string }) {
+  const { s } = useStore();
+  if (/^(lektion-|szenario-|pruefung|dashboard$)/.test(route) || route === '' ) return null;
+  const r = recommendations(s)[0];
+  if (!r) return null;
+  return (
+    <a className="btn small next-action" href={r.href} title={r.why}>
+      <Icon name="arrow" size={16} /><span className="na-l">{r.title}</span>
+    </a>
   );
 }
 
