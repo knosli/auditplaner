@@ -376,6 +376,7 @@ Für die Beurteilung der Einwirkungen auf Bauwerke wird in der Schweiz die VSS-N
 - **Wer**: neutrale Fachperson (oft im Auftrag der Bauherrschaft), mit Einverständnis der Eigentümer.
 - **Was**: Fotos und Beschreibung bestehender Risse und Schäden innen und aussen, ggf. Rissmarken; Protokoll von beiden Seiten unterschrieben.
 - **Nach Bauende**: Schlussaufnahme zum Vergleich.
+- **Was sie nicht ist**: Die Zustandsaufnahme sichert Beweise über den Zustand **vor** den Arbeiten. Sie beweist weder, dass ein späterer Riss von der Baustelle stammt, noch das Gegenteil. Ob ein Schaden verursacht wurde, beurteilt eine Fachperson anhand von Vergleich, Messdaten und Schadensbild.
 
 ### Überwachung während der Arbeiten
 - **Erschütterungsmessungen** an kritischen Gebäuden während der relevanten Arbeiten, mit Alarmschwellen nach Norm bzw. Fachgutachten.

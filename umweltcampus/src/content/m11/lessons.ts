@@ -27,9 +27,9 @@ Was antworten Sie?` },
       { id: 'm11-l1-quiz', kind: 'quiz', title: 'Vorwissen prüfen', questionIds: ['m11-q01', 'm11-q02'] },
       { id: 'm11-l1-brief', kind: 'brief', title: 'Kurz erklärt', text: `**Das Bauen** verursacht Treibhausgase vor allem über die **Herstellung von Baustoffen** (Zement, Stahl, Aluminium, Glas, Dämmstoffe), über **Maschinen und Transporte** und später über den **Betrieb** der Gebäude. Es verbraucht zudem grosse Mengen **Rohstoffe** (Kies, Sand) und erzeugt den grössten Teil der Abfälle der Schweiz.
 
-**Rechtsrahmen** (Grundzüge): Die Schweiz hat sich gesetzlich das Ziel **Netto-Null bis 2050** gesetzt (Klimagesetz). Das CO₂-Gesetz und das Energierecht regeln Abgaben, Vorschriften und Förderungen. Grosse Unternehmen von öffentlichem Interesse müssen über Klimabelange berichten. Die Kreislaufwirtschaft ist seit 2025 im USG gestärkt.
+**Rechtsrahmen** (Grundzüge): Die Schweiz hat sich gesetzlich das Ziel **Netto-Null bis 2050** gesetzt (Klimagesetz, Art. 3). Zudem müssen **alle Unternehmen spätestens 2050 Netto-Null-Emissionen** aufweisen, mindestens unter Berücksichtigung der direkten und indirekten Emissionen (Art. 5 Abs. 1 KlG). Das CO₂-Gesetz und das Energierecht regeln Abgaben, Vorschriften und Förderungen. Grosse Unternehmen von öffentlichem Interesse müssen über Klimabelange berichten. Die Kreislaufwirtschaft ist seit 2025 im USG gestärkt.
 
-**Für eine Bauunternehmung** ist vieles davon **nicht direkte Pflicht**, sondern kommt über **Verträge** (Bauherrschaft verlangt z. B. Recyclingbeton, Labels), **Beschaffung** (Nachhaltigkeit als Zuschlagskriterium) und **eigene Ziele**.
+**Für eine Bauunternehmung** gilt also ein gesetzliches Ziel für 2050; Weg, Fahrplan und Zwischenschritte legt das Gesetz aber nicht im Einzelnen fest. Viele konkrete Anforderungen kommen heute über **Verträge** (Bauherrschaft verlangt z. B. Recyclingbeton, Labels), **Beschaffung** (Nachhaltigkeit als Zuschlagskriterium) und **eigene Ziele**.
 
 **Wichtig**: Pflicht, vereinbart und freiwillig sauber trennen – und nur behaupten, was belegt ist.` },
       { id: 'm11-l1-explain', kind: 'explain', title: 'Wo die Klimawirkung entsteht', text: `### Lebenszyklus eines Bauwerks
@@ -49,7 +49,7 @@ Bauen braucht vor allem mineralische Rohstoffe (Kies, Sand, Kalk, Ton) und erzeu
 
 §> Lebenszyklusphasen sinngemäss nach der üblichen Systematik von Ökobilanzen im Bauwesen; keine Anteile in Prozent genannt, weil sie stark vom Objekt abhängen.` },
       { id: 'm11-l1-explain-2', kind: 'explain', title: 'Pflicht, Norm oder freiwillig?', text: `### Gesetzlich (Grundzüge)
-- **Klimagesetz**: Ziel Netto-Null bis 2050, Zwischenziele, Förderprogramme (u. a. für Unternehmen, die einen Fahrplan zur Emissionsminderung erstellen). Es schafft vor allem Ziele und Förderung, kaum direkte Pflichten für einzelne Bauunternehmen.
+- **Klimagesetz (KlG)**: Art. 3 – Ziel des Bundes Netto-Null bis 2050 mit Zwischenzielen. Art. 5 Abs. 1 – **alle Unternehmen** müssen spätestens 2050 Netto-Null-Emissionen aufweisen (mindestens direkte und indirekte Emissionen). Art. 5 Abs. 2–3 – Unternehmen können Fahrpläne erarbeiten; wer das bis 2029 tut, erhält vom Bund Grundlagen, Standards und Beratung. Art. 6 – Finanzhilfen für neuartige Technologien und Prozesse (Voraussetzungen im Original prüfen).
 - **CO₂-Gesetz**: u. a. CO₂-Abgabe auf Brennstoffe (z. B. Heizöl, Gas – nicht auf Treibstoffe wie Diesel), Vorschriften für Gebäude und Fahrzeuge, Kompensationspflicht für Treibstoffimporteure.
 - **Berichterstattung über Klimabelange**: Grosse Unternehmen von öffentlichem Interesse müssen nach Obligationenrecht und zugehöriger Verordnung über Klimabelange berichten. Mittlere Bauunternehmen sind meist nicht direkt erfasst – können aber als Lieferanten solcher Unternehmen Daten liefern müssen.
 - **USG (Kreislaufwirtschaft)**: Schonung der Ressourcen, ressourcenschonendes Bauen, Verwertung (Modul 3).
@@ -63,7 +63,7 @@ Bauen braucht vor allem mineralische Rohstoffe (Kies, Sand, Kalk, Ton) und erzeu
 ### Freiwillig
 - Eigene Klimaziele der Firma, Treibhausgasbilanz, Kompensationen, Initiativen.
 
-§> Klimagesetz, CO₂-Gesetz, Berichterstattungspflicht (OR und Verordnung über die Klimaberichterstattung) sinngemäss, ohne Artikel und Schwellenwerte; nicht am Fedlex-Text geprüft. Labels und SIA-Merkblätter nur als Beispiele genannt.` },
+§> KlG Art. 3, 5 und 6, CO₂-Gesetz Art. 29 und OR Art. 964a mit den Fedlex-Fassungen verglichen (automatisierter Abgleich 14.11.2026); übrige Aussagen sinngemäss. Labels und SIA-Merkblätter nur als Beispiele genannt.` },
       { id: 'm11-l1-diagram', kind: 'diagram', title: 'Schema: Lebenszyklus eines Bauwerks', diagram: 'lebenszyklus', caption: 'Vereinfachte Lernhilfe. Der Einfluss der Bauunternehmung ist in Herstellung (Produktwahl), Transport, Bauprozess und Rückbau am grössten.' },
       { id: 'm11-l1-example', kind: 'example', title: 'Beispiel aus dem Hochbau: Die Anfrage der Pensionskasse', context: 'Hochbau', text: `Eine Pensionskasse schreibt eine Wohnüberbauung nach SNBS aus und verlangt mit der Offerte Angaben zu Recyclinganteil, Zementart und Treibhausgasemissionen der Baustelle. Die Hochbaufirma hat bisher keine Zahlen. Sie liefert, was belegbar ist (Betonsorten mit Lieferantendaten, Maschinenliste, geschätzter Dieselverbrauch mit Annahmen) und kennzeichnet Schätzungen als solche. Nach dem Zuschlag wird vereinbart, die Daten während des Baus zu erfassen.
 
@@ -149,7 +149,7 @@ Was fehlt in dieser Rechnung – und wo fangen Sie an?` },
 | 3 | Geschäftsreisen, Pendeln | Spesen, Umfrage |
 
 ### Zuordnung ist Definitionssache
-Ob ein Baustrom-Anschluss zu Scope 2 der Unternehmung oder der Bauherrschaft gehört, hängt davon ab, wer ihn bezieht und bezahlt. Ob Baustoffe in die Bilanz der Unternehmung gehören (Scope 3) oder der Bauherrschaft zugerechnet werden, ist ebenfalls eine Frage der festgelegten Systemgrenze. **Wichtig ist, dass die Grenzen klar beschrieben und konsequent angewendet werden.**
+Ob ein Baustrom-Anschluss zu Scope 2 der Unternehmung oder der Bauherrschaft gehört, hängt von der gewählten Konsolidierungsmethode (nach GHG Protocol: operative bzw. finanzielle Kontrolle oder Kapitalanteil) und den vertraglichen Rollen ab – nicht allein davon, wer die Rechnung bezahlt. Ob Baustoffe in die Bilanz der Unternehmung gehören (Scope 3) oder der Bauherrschaft zugerechnet werden, ist ebenfalls eine Frage der festgelegten Systemgrenze. **Wichtig ist, dass die Grenzen klar beschrieben und konsequent angewendet werden.**
 
 ### Emissionsfaktoren
 Für Brenn- und Treibstoffe, Strom und Baustoffe gibt es veröffentlichte Faktoren (z. B. Ökobilanzdaten im Baubereich der KBOB, Angaben des Bundes, Produktdeklarationen der Hersteller). Für Strom hängt der Faktor stark vom bezogenen Produkt ab. Nennen Sie immer, welche Faktoren Sie verwenden – die App nennt keine Zahlen.
@@ -193,7 +193,7 @@ Tankkarten und Tankanlagen (Scope 1), Rechnungen (Scope 2), Einkaufssystem und L
 Die Wahl der Emissionsfaktoren kann das Ergebnis stark beeinflussen. Verwenden Sie anerkannte, für die Schweiz passende Quellen; dokumentieren Sie die Quelle und das Jahr. Herstellerdeklarationen (Umweltproduktdeklarationen) sind für konkrete Produkte genauer als Durchschnittswerte – sofern sie vergleichbar sind.
 
 ### 5. Von der Bilanz zum Plan
-Eine Bilanz ist kein Selbstzweck. Sie zeigt die grössten Positionen. Daraus entstehen Ziele und Massnahmen (Modul 10): z. B. CO₂-reduzierte Betonsorten als Standardvariante, Elektrifizierung kleiner Maschinen, Baustrom statt Aggregat, Leerlaufregel, Transportplanung. Wer einen Fahrplan zur Emissionsminderung erarbeitet, kann je nach Programm Förderung erhalten (Klimagesetz) – Voraussetzungen im Original prüfen.
+Eine Bilanz ist kein Selbstzweck. Sie zeigt die grössten Positionen. Daraus entstehen Ziele und Massnahmen (Modul 10): z. B. CO₂-reduzierte Betonsorten als Standardvariante, Elektrifizierung kleiner Maschinen, Baustrom statt Aggregat, Leerlaufregel, Transportplanung. Ein Fahrplan ist zugleich der Weg zum gesetzlichen Ziel: Alle Unternehmen müssen spätestens 2050 Netto-Null erreichen (Art. 5 Abs. 1 KlG). Wer bis 2029 einen Fahrplan erarbeitet, erhält vom Bund Grundlagen, Standards und Beratung (Art. 5 Abs. 3); Finanzhilfen gibt es für neuartige Technologien (Art. 6) – Voraussetzungen im Original prüfen.
 
 ### 6. Typische Fehler
 - Nur Scope 1 und 2 ausweisen und den Eindruck erwecken, das sei «die» Bilanz.

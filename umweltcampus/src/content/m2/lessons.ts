@@ -185,7 +185,7 @@ Bevorzugt mit **CO₂** ([[neutralisation|Neutralisation]]): Es bildet Kohlensä
 pH vor der Ableitung messen: im Chargenbetrieb mit einem vor Gebrauch kalibrierten Handgerät, im Dauerbetrieb mit einer Sonde mit Aufzeichnung, Alarm und automatischer Abschaltung. Protokoll mit Datum, Zeit, Wert, Visum, Massnahme bei Abweichung.
 
 ### 5. Ableiten gemäss Bewilligung
-In der Regel in den Schmutzwasserkanal, mit Zustimmung bzw. Bewilligung von Gemeinde oder Kanton und unter deren Bedingungen. Für die Ableitung gilt in der Regel ein pH zwischen **6.5 und 9.0** (GSchV Anhang 3.2 Ziff. 2, von kantonalen Merkblättern für Baustellenabwasser angewendet). Nach der Neutralisation braucht es eine **pH-Endkontrolle**.
+In der Regel in den Schmutzwasserkanal, mit Zustimmung bzw. Bewilligung von Gemeinde oder Kanton und unter deren Bedingungen. Für die Ableitung gilt in der Regel ein pH zwischen **6.5 und 9.0** (GSchV Anhang 3.2 Ziff. 2, von kantonalen Merkblättern für Baustellenabwasser angewendet). Nach der Neutralisation braucht es eine **pH-Endkontrolle**. Aus diesem Lernwert folgt keine Einleitbewilligung: Ob, wohin und mit welchen Werten eingeleitet werden darf, steht in der konkreten Bewilligung bzw. Zustimmung.
 
 §> pH-Bereich und Endkontrolle bestätigt über die Merkblätter der Kantone Aargau und Schwyz (Abgleich 12.11.2026). Massgebend ist die konkrete Bewilligung.` },
       { id: 'm2-l3-diagram-2', kind: 'diagram', title: 'Schema: Behandlungskette', diagram: 'behandlungskette', caption: 'Reihenfolge der Behandlung. Jeder Schritt hat eine verantwortliche Person und einen Nachweis.' },

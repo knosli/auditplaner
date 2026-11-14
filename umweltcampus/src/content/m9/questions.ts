@@ -294,7 +294,7 @@ export const M9_QUESTIONS: Question[] = [
     explanation: 'Ein Befund auf vielen Baustellen ist ein Systemthema. Die Lösung liegt in Standard, Planung und Mitteln – nicht in sieben einzelnen Ermahnungen.',
     commonErrors: ['Bei Einzelfällen stehen bleiben.', 'Nur Schulung vorschlagen.'], sources: ['iso14001', 'praxis'] }),
   // ---------- Abwägungen ----------
-  q({ id: 'm9-d01', topic: 'm9-rolle', level: 3, type: 'best', objective: 'Mit dem Wunsch umgehen, die UBB selbst zu übernehmen',
+  q({ id: 'm9-d01', rev: 7, topic: 'm9-rolle', level: 3, type: 'best', objective: 'Mit dem Wunsch umgehen, die UBB selbst zu übernehmen',
     prompt: 'Die Bewilligung verlangt eine UBB. Die Bauherrschaft fragt Ihre Firma (ausführende Unternehmung): «Könnt ihr die UBB nicht gleich selbst machen? Ihr habt ja einen Umweltbeauftragten.» Was empfehlen Sie?',
     options: [
       { id: 'a', text: 'Zusagen und sofort beginnen.', weight: 0,
@@ -303,8 +303,8 @@ export const M9_QUESTIONS: Question[] = [
         why: 'Am besten geeignet: Die Bauherrschaft bleibt Herrin der Auflage, der Konflikt ist offen benannt, die Unternehmung bietet, was sie leisten kann.', prerequisites: 'Offenes Gespräch mit der Bauherrschaft; Behörde erreichbar.', risks: 'Die Bauherrschaft muss eine externe UBB bezahlen.' },
       { id: 'c', text: 'Ablehnen, ohne Begründung.', weight: 0.25,
         why: 'Wenig geeignet: schützt vor dem Konflikt, hilft der Bauherrschaft aber nicht weiter.', risks: 'Verstimmung; die Frage bleibt ungeklärt.' },
-      { id: 'd', text: 'Zusagen unter der Bedingung, dass die Behörde schriftlich zustimmt und Aufgaben, Unabhängigkeit und Berichtswege in einem Pflichtenheft geregelt sind.', weight: 0.75,
-        why: 'Gut geeignet, wo die Behörde es akzeptiert: Die Entscheidung liegt dort, wo sie hingehört. Der Interessenkonflikt bleibt aber bestehen und muss organisatorisch entschärft werden.', prerequisites: 'Schriftliche Zustimmung der Behörde; verlangte Qualifikation vorhanden; personelle Trennung von der Bauführung.', risks: 'Glaubwürdigkeit der Kontrolle; Druck aus der eigenen Firma.' },
+      { id: 'd', text: 'Zusagen unter der Bedingung, dass die Behörde schriftlich zustimmt und Aufgaben, Unabhängigkeit und Berichtswege in einem Pflichtenheft geregelt sind.', weight: 0.5,
+        why: 'Teilweise geeignet: Die Entscheidung liegt bei der Behörde, und Pflichtenheft, Auftraggeber, Berichtslinie und Unabhängigkeit werden geregelt. Ausführung und Kontrolle bleiben aber in einer Hand; der Interessenkonflikt wird nur organisatorisch gemildert, nicht aufgehoben.', prerequisites: 'Schriftliche Zustimmung der Behörde; verlangte Qualifikation vorhanden; personelle Trennung von der Bauführung.', risks: 'Glaubwürdigkeit der Kontrolle; Druck aus der eigenen Firma.' },
     ], correct: ['b'], explanation: 'Über die Erfüllung einer Auflage entscheiden Bauherrschaft und Behörde. Die Unternehmung benennt den Interessenkonflikt offen.',
     commonErrors: ['Die Rolle ohne Klärung übernehmen.'], sources: ['bafu-ubb', 'praxis'] }),
   q({ id: 'm9-d02', topic: 'm9-kontrolle', level: 3, type: 'best', objective: 'Angemeldete und unangemeldete Begehungen abwägen',

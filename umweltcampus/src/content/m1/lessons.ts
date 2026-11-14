@@ -138,7 +138,7 @@ Gemeinden erteilen je nach Kanton die Baubewilligung (und koordinieren dabei kan
 1. **Verfassung und Gesetz** – gelten für alle.
 2. **Verordnung** – konkretisiert das Gesetz, gilt ebenfalls für alle.
 3. **Bewilligung bzw. Verfügung** mit **Auflagen** – gilt für dieses Projekt.
-4. **Vollzugshilfen, Richtlinien, Merkblätter** – Massstab der Behörde; oft in der Bewilligung verbindlich erklärt.
+4. **Vollzugshilfen, Richtlinien, Merkblätter** – Massstab der Behörde; richten sich primär an die Vollzugsbehörden, andere rechtskonforme Lösungen sind zulässig. Für die Baustelle verbindlich werden sie, wenn die Bewilligung sie als Auflage anordnet.
 5. **Technische Normen** (SIA, SN, ISO) – verbindlich durch Vertrag oder Behörde, als anerkannte Regel der Technik Massstab der Sorgfalt.
 6. **Interne Standards** – verbindlich im Unternehmen.
 

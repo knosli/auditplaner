@@ -28,7 +28,7 @@ export const M11_SITETASKS: SiteTask[] = [
 | Minergie-P-ECO | Vertraglich (Standard der Bauherrschaft) | Bestätigung, ECO-Anforderungen an Baustoffe beachten (Produktwahl, Deklarationen) |
 | Recyclingbeton Innenwände | Vertraglich bei Zuschlag | Betonsorte mit Werk geklärt, Lieferbarkeit bestätigt |
 | Zuschlagskriterium Baustellenkonzept | Wird bewertet und Vertragsbestandteil | Baustrom ab wann, Akku-Kleingeräte, Leerlaufregel, Transportplanung, Datenerfassung – nur Machbares |
-| Netto-Null der Gemeinde | Ziel der Bauherrschaft, keine Pflicht der Unternehmung | Hinweis, wie das Konzept dazu beiträgt |
+| Netto-Null der Gemeinde (2040) | Ziel der Bauherrschaft, keine Pflicht der Unternehmung (für die Unternehmung selbst gilt gesetzlich Netto-Null spätestens 2050, Art. 5 KlG) | Hinweis, wie das Konzept dazu beiträgt |
 | Unternehmervorschläge | Möglichkeit | Variante: klinkerärmerer Zement in Decken, belegt mit Deklaration des Werks; Freigabe durch Ingenieur |
 
 **Wichtig**: Jede Zusage im Konzept ist bei Zuschlag geschuldet – Machbarkeit (Baustrom-Anschluss, Geräte im Magazin, Lieferbarkeit) vor dem Einreichen prüfen.`,
@@ -213,7 +213,7 @@ export const M11_FEYNMAN: FeynmanTask[] = [
 // ---------- Wiederholungskarten ----------
 export const M11_CARDS: Card[] = [
   { id: 'm11-c01', moduleId: M, topic: 'm11-grundlagen', level: 1, front: 'Wo entsteht die Klimawirkung des Bauens?', back: '**Baustoffe** (graue Emissionen), **Transporte**, **Maschinen**, **Betrieb**, **Rückbau**.', sources: ['kbob-oekobilanz'] },
-  { id: 'm11-c02', moduleId: M, topic: 'm11-grundlagen', level: 1, front: 'Pflicht, vereinbart, freiwillig?', back: '**Gesetz** (z. B. CO₂-Gesetz, VVEA) – **Vertrag/Label** (geschuldet, wenn vereinbart) – **freiwillig** (eigene Ziele).', sources: ['praxis'] },
+  { id: 'm11-c02', moduleId: M, topic: 'm11-grundlagen', level: 1, front: 'Pflicht, vereinbart, freiwillig?', back: '**Gesetz** (z. B. Netto-Null aller Unternehmen bis 2050 nach Art. 5 KlG, CO₂-Gesetz, VVEA) – **Vertrag/Label** (geschuldet, wenn vereinbart) – **freiwillig** (eigene Zwischenziele, Bilanzform, Kompensation).', sources: ['praxis'] },
   { id: 'm11-c03', moduleId: M, topic: 'm11-grundlagen', level: 1, front: 'CO₂-Abgabe worauf?', back: 'Auf fossile **Brennstoffe** (Heizöl, Gas) – **nicht** auf Treibstoffe wie Diesel.', sources: ['co2g'] },
   { id: 'm11-c04', moduleId: M, topic: 'm11-grundlagen', level: 2, front: 'Berichtspflicht über Klimabelange?', back: '**Grosse Unternehmen** von öffentlichem Interesse (OR + Verordnung). Mittlere Firmen oft **indirekt** über Kundenanfragen.', sources: ['klimabericht'] },
   { id: 'm11-c05', moduleId: M, topic: 'm11-bilanz', level: 1, front: 'Scope 1, 2, 3?', back: '**1**: eigene Treib- und Brennstoffe. **2**: eingekaufte Energie. **3**: Wertschöpfungskette (Baustoffe, Dritte, Entsorgung).', sources: ['ghg-protocol'] },

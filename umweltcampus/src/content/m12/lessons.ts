@@ -56,14 +56,14 @@ Pflichten lassen sich übertragen – die Verantwortung für die Übertragung bl
 - **überwachen**: stichprobenweise kontrollieren und bei Mängeln eingreifen.
 
 ### Folgen bei Verstössen (Grundzüge)
-- **Strafrecht**: Umweltgesetze (z. B. USG, GSchG) enthalten Strafbestimmungen. Bestraft werden in erster Linie die handelnden bzw. verantwortlichen Personen; ein Unternehmen kann subsidiär verantwortlich sein, wenn eine Tat wegen mangelhafter Organisation keiner Person zugerechnet werden kann (Art. 102 StGB, sinngemäss).
+- **Strafrecht**: Umweltgesetze (z. B. USG, GSchG) enthalten Strafbestimmungen. Bestraft werden in erster Linie natürliche Personen, die handeln oder pflichtwidrig nicht handeln. Ein Unternehmen wird nach Art. 102 Abs. 1 StGB nur subsidiär bestraft, wenn ein Verbrechen oder Vergehen wegen mangelhafter Organisation keiner bestimmten Person zugerechnet werden kann (Busse bis 5 Mio. Franken); die weitergehende Haftung nach Abs. 2 betrifft nur dort aufgezählte Delikte, keine Umweltdelikte. Ob im Einzelfall eine Strafbarkeit vorliegt, hängt von den Umständen ab – keine pauschale Haftungsformel.
 - **Verwaltungsrecht**: Verfügungen, Baustopp, Kosten für Massnahmen und Sanierungen.
 - **Zivilrecht und Vertrag**: Schadenersatz, Vertragsfolgen, Ausschluss von Vergaben.
 
 ### Was heisst das für Sie?
-Als Fachstelle beraten Sie und sind für die Qualität Ihrer Beratung und Kontrollen verantwortlich. Wer eine Ihnen ausdrücklich übertragene Aufgabe hat (z. B. Rechtskataster aktuell halten), ist dafür verantwortlich. Schreiben Sie Ihre Rolle deshalb klar auf – auch, was **nicht** Ihre Aufgabe ist.
+Als Fachstelle beraten Sie und sind für die Qualität Ihrer Beratung und Kontrollen verantwortlich. Eine Stabsfunktion schützt nicht vor persönlicher Verantwortung: Wer falsch berät, eine übernommene Aufgabe vernachlässigt, eigene Anweisungen gibt oder eine Pflicht kennt und nichts unternimmt, kann – je nach Aufgaben, Befugnissen und Organisation – selbst verantwortlich werden. Wer eine Ihnen ausdrücklich übertragene Aufgabe hat (z. B. Rechtskataster aktuell halten), ist dafür verantwortlich. Schreiben Sie Ihre Rolle deshalb klar auf – auch, was **nicht** Ihre Aufgabe ist.
 
-§> Grundsätze der Delegation und Verantwortlichkeit sinngemäss; Strafbestimmungen nicht im Detail wiedergegeben. Im Einzelfall Rechtsberatung beiziehen.` },
+§> Art. 102 StGB mit der Fedlex-Fassung vom 1.11.2026 verglichen (automatisierter Abgleich); Grundsätze der Delegation sinngemäss; Strafbestimmungen der Umweltgesetze nicht im Detail wiedergegeben. Im Einzelfall Rechtsberatung beiziehen.` },
       { id: 'm12-l1-diagram', kind: 'diagram', title: 'Schema: Der Führungskreislauf im Umweltschutz', diagram: 'fuehrungskreis', caption: 'Vereinfachte Lernhilfe. Die Fachstelle unterstützt jeden Schritt, entscheidet aber nicht an Stelle der Leitung.' },
       { id: 'm12-l1-example', kind: 'example', title: 'Beispiel aus dem Hochbau: Die Kompetenz zum Stopp', context: 'Hochbau', text: `Eine Hochbaufirma legt im Umweltreglement fest: Die Umweltfachstelle und die Umweltkontaktpersonen dürfen Arbeiten sofort stoppen, wenn eine unmittelbare Gefahr für Gewässer oder Boden besteht; der Entscheid über die Fortsetzung liegt bei der Bauführung, nach Behebung. Als ein Subunternehmer Zementschlämme in einen Schacht leitet, stoppt die Kontaktperson die Arbeit, informiert den Bauführer, und dieser veranlasst die Sanierung und Meldung.
 
@@ -528,7 +528,9 @@ Wie gehen Sie mit dem Widerstand um – und mit der Anweisung?` },
 Jede Stufe sachlich und dokumentiert. Eine Eskalation ist kein Angriff, sondern ein Teil der Organisation.
 
 ### Wenn die Führung selbst eine Pflicht missachten will
-Wenn Sie aufgefordert werden, eine Meldung an die Behörde zu unterlassen, Unterlagen zu ändern oder Kunden zu täuschen: Nicht mitmachen, Ihre Position schriftlich festhalten, auf der nächsthöheren Ebene eskalieren (bis Verwaltungsrat), wo vorhanden die interne Meldestelle nutzen. Holen Sie bei Bedarf rechtlichen Rat ein. Meldepflichten im Notfall (Modul 2 und 7) gehen jeder internen Anweisung vor.
+Wenn Sie aufgefordert werden, eine Meldung an die Behörde zu unterlassen, Unterlagen zu ändern oder Kunden zu täuschen: Nicht mitmachen, Ihre Position schriftlich festhalten, auf der nächsthöheren Ebene eskalieren (bis Verwaltungsrat), wo vorhanden die interne Meldestelle nutzen. Meldepflichten im Notfall (Modul 2 und 7) gehen jeder internen Anweisung vor.
+
+Unterscheiden Sie drei Wege: **gesetzliche Notfallmeldung** (z. B. Art. 22 Abs. 6 GSchG – sofort, ohne interne Freigabe), **interne Eskalation** (Dienstweg, Meldestelle) und **freiwillige externe Hinweise** an Behörden oder Medien ausserhalb einer Meldepflicht. Für den dritten Weg gibt es in der Schweiz nach heutigem Kenntnisstand keinen umfassenden gesetzlichen Schutz von Hinweisgebenden in der Privatwirtschaft; die arbeitsrechtliche Treuepflicht kann berührt sein. Lassen Sie sich vorher rechtlich beraten.
 
 §> Bewährte Praxis; arbeits- und strafrechtliche Fragen (z. B. Meldungen an Behörden durch Mitarbeitende) im Einzelfall rechtlich klären – nicht vertieft.` },
       { id: 'm12-l5-example', kind: 'example', title: 'Beispiel aus dem Hochbau: Der Bauführer aus der Kantine', context: 'Hochbau', text: `Im Fall aus dem Einstieg geht der Umweltbeauftragte noch am selben Tag auf die Baustelle. Der Abbau des Absetzbeckens wird gestoppt – Betonwasser darf nicht ungereinigt abgeleitet werden. Im Gespräch zeigt sich: Der Platz fehlt tatsächlich, weil der Kran versetzt wurde. Gemeinsam finden sie einen neuen Standort und eine kleinere Anlage. Später bittet der Umweltbeauftragte den Bauführer, an der nächsten Polierschulung zu zeigen, wie er das Platzproblem gelöst hat.

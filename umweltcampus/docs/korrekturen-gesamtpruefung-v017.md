@@ -2,7 +2,7 @@
 
 Grundlage: Prüfpaket «umweltcampus_gesamtpruefung_v017» (Durchgänge 1–10, Korrekturauftrag). Die Prüfberichte sind externes KI-Feedback, keine Rechtsfreigabe. Prüfstatus aller Inhalte bleibt **Entwurf**; es wurde keine fachliche oder betriebliche Freigabe gesetzt.
 
-Stand dieses Dokuments: **Phasen 1 und 2 umgesetzt** (Version 0.18: Phase 1, Bewertungsfassung 6; Version 0.19: Phase 2, keine Bewertungsänderung). Phase 3 folgt.
+Stand dieses Dokuments: **Phasen 1–3 umgesetzt** (Version 0.18: Phase 1, Bewertungsfassung 6; Version 0.19: Phase 2; Version 0.21: Phase 3, Bewertungsfassung 7). Version 0.20 ergänzte das kantonale Quellenregister (separat dokumentiert in `docs/kantonsregister.md`).
 
 ## Phase 1 – Sicherheit und fachlich gefährliche Bewertung
 
@@ -75,7 +75,69 @@ Alle 137 Optionen mit Teilpunkten (Abwägungen mit Gewicht zwischen 0 und 1, Sim
 | Quelle `klimabericht` | SR-Nummer der Verordnung «zu prüfen» | SR 221.434; Art. 964a–964l OR; Pflicht für Gesellschaften des öffentlichen Interesses mit mindestens 500 Vollzeitstellen und einer weiteren Grössengrenze | Durchgang 6 | OR, Fedlex 1.10.2026; V 221.434, Fassung 1.1.2024 | bestätigt | Laufende Revisionen |
 | Quellen `klg`, `co2g`, `uwg` | SR-Nummern «zu prüfen» | SR 814.310 (in Kraft 1.1.2025; Art. 3 Netto-Null 2050), SR 641.71 (Art. 29 Abgabe auf Brennstoffe), UWG Art. 3 Abs. 1 Bst. b | Durchgang 6 | Fedlex 1.1.2025 | bestätigt | – |
 
-## Offen (nächste Schritte)
+## Phase 3 – Bewertungsrubriken, Didaktik und übrige Befunde (Version 0.21)
 
-- **Phase 3**: wichtige und geringe Befunde je Modul (Durchgänge 1–9), u. a. m5-q11, m5-q21, m6-q02, m6-q05, m6-d01, m6-q19, m7-q12, m9-d01, m12-l1/l4/l5; offene Antworten nur über Raster.
-- **Phase 4**: Änderungsnachweis für Phasen 2 und 3 ergänzen.
+Grundlage: alle Befunde «wichtig» und «gering» aus den Durchgängen 1–9, die nach Phase 1 und 2 noch offen waren. Wo eine Aussage im Gesetz nachgeschlagen werden konnte, ist sie mit der Fedlex-Fassung verglichen (automatisierter Abgleich, keine menschliche Fachprüfung).
+
+### Geänderte Bewertungen (Bewertungsfassung 7)
+
+| ID | Alt | Neu | Begründung | Quelle | Prüfergebnis | Verbleibender Prüfbedarf |
+|---|---|---|---|---|---|---|
+| m6-d01 (c) | Zwei Hämmer in Zeitfenstern – 0,75 | 0,5; nur vertretbar, wenn Stufe, Bewilligung und Zeitvorschriften es zulassen | Durchgang 2: Spitzenbelastung | Baulärm-Richtlinie (Stand 2011) | Tests grün | – |
+| m9-d01 (d) | UBB durch ausführende Unternehmung mit Behördenzustimmung – 0,75 | 0,5; Interessenkonflikt nur gemildert | Durchgang 4 | BAFU UBB 2007 | Tests grün | – |
+| m10-d04 (c) | Echte Übung, im Audit verschweigen – 0,5 | 0,25; fehlende Transparenz und Ursachenanalyse | Durchgang 5 | Praxis | Tests grün | – |
+| m10-d04 (d) | «Hoffen, dass nicht gefragt wird» – 0,25 | 0 | Folge aus c: passives Verschweigen ohne Korrektur nicht besser bewerten als c | Praxis | Tests grün | – |
+| m12-d01 (c) | Verantwortung an Stab abgeben, zweite Stelle verlangen – 0,5 | 0,25; pauschale Abgabe bleibt unzulänglich | Durchgang 7 | OR Art. 716a | Tests grün | – |
+
+Frühere Antworten und Prüfungen dazu gelten als «frühere Bewertungsfassung» (`RESCORED_V7_*`); nichts wird neu benotet.
+
+### Präzisierte Texte
+
+| ID / Stelle | Änderung | Befund | Quelle und Fassung |
+|---|---|---|---|
+| m11-l1, m11-l2, m11-c02, m11-t1, Glossar | **Art. 5 Abs. 1 KlG**: Alle Unternehmen müssen spätestens 2050 Netto-Null-Emissionen aufweisen (mindestens direkte und indirekte). Die frühere Aussage «kaum direkte Pflichten für Bauunternehmen» war falsch und ist entfernt. Fahrpläne (Art. 5 Abs. 2–3) und Finanzhilfen (Art. 6) präzisiert. | Durchgang 6 (wichtig) | KlG, Fedlex 1.1.2025 – Wortlaut verglichen |
+| m11-q05 | Kriterien der Berichtspflicht nach Art. 964a OR (öffentliches Interesse, 500 Vollzeitstellen inkl. kontrollierter Unternehmen, weitere Grössengrenze) statt Mitarbeiterzahl allein | Durchgang 6 | OR, Fedlex 1.10.2026 |
+| m11-q12 | Recyclingbeton: CO₂-Wirkung «hängt vor allem von Zementmenge und -art ab», mit Deklarationen auf gleicher funktionaler Einheit belegen (statt absoluter Aussage) | Durchgang 6 | KBOB (sinngemäss) |
+| m11-l2 | Baustrom-Zuordnung nach Konsolidierungsmethode (operative/finanzielle Kontrolle) und vertraglichen Rollen, nicht nach Zahler | Durchgang 6 | GHG Protocol (sinngemäss) |
+| m5-q21 | «Zuständige Vollzugsbehörde – in der Regel im Baubewilligungsverfahren bzw. mit den Auflagen»; kantonale Zuständigkeit erwähnt | Durchgang 1 | BAFU Baurichtlinie Luft 2016 |
+| m5-q11 | Wortlaut Art. 19a Abs. 1 LRV («mehr als 18 kW», Kompressionszündung); unbelegte Angabe zu Übergangsregeln entfernt | Durchgang 1 | LRV, Fedlex 1.8.2026 |
+| m5-d04 (a) | Bewilligung bzw. Meldung für mobile Brecher hängt von Kanton, Gemeinde, Standort und Anlage ab – keine Pauschalaussage | Durchgang 1 | – |
+| m6-q02 | Art. 6 LSV und Verbindlichkeit der angeordneten Stufe direkt gegenübergestellt | Durchgang 2 | LSV, Fedlex 1.1.2025 |
+| m6-q05, **m6-q31 (neu)** | Bedingungen der –6-dB-Regel (Punktquelle, freies Schallfeld); Linienquelle etwa –3 dB; neue Frage zu Reflexion in einer Gasse | Durchgang 2 | Akustische Faustregeln (Praxis) |
+| m6-q19 | Normen (VSS, DIN): Nummer, Ausgabe, Geltungsbereich nicht am Original geprüft – durch Fachperson belegen | Durchgang 2 | – (kostenpflichtig) |
+| m6-l4, Glossar | Zustandsaufnahme = Beweissicherung, kein Nachweis für oder gegen eine Verursachung | Durchgang 2 | – |
+| m7-q12 | Begleitscheinpflicht nicht pauschal: abhängig von Abfallcode (LVA), Menge und Übergabe | Durchgang 3 | VeVA/LVA (sinngemäss) |
+| m7-l2 | Neuer Entscheidweg für Lager: Produkt → Lagerort → Menge → Rückhalt → kantonale Vorgabe | Durchgang 3 | – |
+| m10-d04 | «Jährliche Notfallübung» ausdrücklich als interne Vorgabe des eigenen Systems, nicht als Normforderung | Durchgang 5 | ISO 14001 (nicht verglichen) |
+| m10-d01 (a) | Einschränkung des Anwendungsbereichs nicht pauschal unzulässig; muss sachlich zutreffend, transparent und mit der Zertifizierungsstelle abgestimmt sein | Durchgang 5 | – |
+| m12-l1 | Art. 102 StGB genau (subsidiär, Busse bis 5 Mio. Fr., Abs. 2 ohne Umweltdelikte); keine Strafimmunität der Stabsstelle | Durchgang 7 | StGB, Fedlex 1.11.2026 |
+| m12-l5 | Drei Wege getrennt: gesetzliche Notfallmeldung – interne Eskalation – freiwillige externe Hinweise; kein umfassender gesetzlicher Schutz von Hinweisgebenden in der Privatwirtschaft (nach heutigem Kenntnisstand, nicht am Original geprüft), Treuepflicht, Rechtsberatung | Durchgang 7 | – |
+| m1-l3 | Rechtsnatur der Vollzugshilfen (an Behörden gerichtet, andere rechtskonforme Lösungen zulässig, verbindlich über Auflage) | Durchgang 8 | BAFU-PDFs (Stellenwert) |
+| m2-l3 | pH-Lernwert begründet keine Einleitbewilligung; massgebend ist die konkrete Bewilligung | Durchgang 8 | – |
+
+### Geprüft, keine Änderung nötig
+
+| Befund | Ergebnis |
+|---|---|
+| m8-l2 (kritisch): fehlende LV-Position ≠ Nachtragsanspruch | Bereits seit der Korrektur von Modul 8 so dargestellt (vier Fälle, «Anzeige ist nicht Anspruch»); m6-q15 übernimmt das. |
+| m3-l3: Ausbauasphalt-Stichtage | Bereits korrekt (Phase 2 mit Fedlex verglichen). |
+| m4-l2: Befahrbarkeit nicht pauschal | Text verlangt Beurteilung über Saugspannung bzw. Fachperson und nennt keine pauschale Freigabe. |
+| m5-l2/m5-d02: Wasserpfad bei Benetzung | Bereits Bestandteil von Lektion, Checkliste und m5-d02 (Phase 1 geschärft). |
+| m9-l1: interne Kontrolle vs. formelle UBB | Bereits mit Tabelle und Lernziel unterschieden; Phase 1 ergänzte die Befugnis-Tabelle. |
+| m9-l4: Datenschutz bei Fotos | Bereits Abschnitt mit Zweck, Zugriff, Aufbewahrung und Löschung. |
+| m9-l5: Umsetzungs- vs. Wirkungskontrolle | Bereits «umgesetzt ≠ wirksam» mit Nachkontrolle. |
+| m10-q24: Compliance-Bewertung ≠ behördliche Prüfung | Bereits so formuliert. |
+| m12-l3: Wirksamkeit nicht aus Teilnehmerliste | Bereits vier Ebenen, Verhalten und Ergebnis. |
+| m11-d01, m11-d03 | Bereits mit Bilanz-/Belegpflicht bzw. Freigabe und Nachweis; keine Änderung. |
+| Phase 3 Punkt 2: offene Antworten | Selbstbewertete offene Antworten werden nie als «richtig» verbucht und zählen nicht als Kompetenznachweis (`recordAnswer`, `self`); Prüfungen weisen den Anteil aus Selbstbewertung aus. |
+| Phase 3 Punkt 3: Synchronisierung | Karten, Glossar, Bibliothek und Fälle nach den geänderten Aussagen durchsucht («18 kW», Netto-Null, Notfallübung, Meldung); angepasst: m11-c02, m11-t1, Glossar «Kompensation» und «Zustandsaufnahme». |
+
+Tests: 240 Unit-Tests (neu: Block «Bewertungsfassung 7»), 186 Browser-Prüfungen, keine Konsolenfehler.
+
+## Offen
+
+- Fachliche Abnahme durch eine menschliche Fachperson (alle Module; Prüfstatus bleibt Entwurf).
+- ISO 14001:2026 und ISO 19011:2026 mit lizenziertem Normtext vergleichen.
+- Inhalt der SDR-Änderung (AS 2026 525, ab 1.1.2027) für Baustellentransporte auswerten.
+- Kantonale Quellen einzeln prüfen und mit Fundstelle als «geprüft» eintragen (siehe `docs/kantonsregister.md`).
+- VBBo und MaLV am Fedlex-Text abgleichen.

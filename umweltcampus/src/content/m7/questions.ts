@@ -118,7 +118,7 @@ export const M7_QUESTIONS: Question[] = [
       { id: 'b', text: 'Mit Öl verschmutztes Bindemittel und Lappen' },
       { id: 'c', text: 'Altöl und verschmutzter Verdünner' },
       { id: 'd', text: 'Sauberer, unverschmutzter Aushub' },
-    ], correct: ['a', 'b', 'c'], explanation: 'Einstufung im Einzelfall nach SDB Abschnitt 13 und Abfallklassierung; Sonderabfälle mit Begleitschein an berechtigte Entsorger.',
+    ], correct: ['a', 'b', 'c'], explanation: 'Einstufung im Einzelfall nach SDB Abschnitt 13 und Abfallcode (LVA). Ob ein Begleitschein nötig ist, hängt von Abfallart, Menge und Übergabe ab (z. B. Kleinmengen über Sammelstellen) – nicht pauschal; im Zweifel beim Entsorger bzw. Kanton nachfragen. Sonderabfälle gehören an berechtigte Entsorger.',
     commonErrors: ['Bindemittel in die Mulde werfen.'], sources: ['veva', 'vvea'] }),
   q({ id: 'm7-q13', topic: 'm7-chemikalien', level: 2, type: 'single', objective: 'Reste vermeiden',
     prompt: 'Auf einer Baustelle bleiben regelmässig halbvolle Gebinde von Grundierungen übrig. Was ist die wirksamste Massnahme?',

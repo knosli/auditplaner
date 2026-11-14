@@ -30,7 +30,7 @@ for (const mod of ['m3', 'm4', 'm5', 'm6', 'm7', 'm8', 'm9', 'm10', 'm11', 'm12'
       }
     });
     test('alle Fragen tragen eine gültige Bewertungsfassung', () => {
-      for (const q of QUESTIONS.filter((x) => x.moduleId === mod)) expect(['m5', 'm6', 'm7', 'm9', 'm10', 'm11', 'm12'].includes(mod) ? [5, 6] : mod === 'm8' ? [4, 5] : [3, 4]).toContain(q.rev);
+      for (const q of QUESTIONS.filter((x) => x.moduleId === mod)) expect(['m5', 'm6', 'm7', 'm9', 'm10', 'm11', 'm12'].includes(mod) ? [5, 6, 7] : mod === 'm8' ? [4, 5] : [3, 4]).toContain(q.rev);
     });
     test('kritische Optionen geben 0 Punkte', () => {
       for (const q of QUESTIONS.filter((x) => x.moduleId === mod && x.type === 'best')) {
@@ -444,12 +444,37 @@ describe('Bewertungsfassung 6 (Gesamtprüfung V0.17, 14.11.2026)', () => {
     const mk = (q: string, v: number) => ({ q, at: 1, score: 1, correct: true, conf: 2, ctx: 'lesson', v }) as never;
     expect(isLegacyAnswer(mk('m12-d05', 5))).toBe(true);
     expect(isLegacyAnswer(mk('m12-d05', 6))).toBe(false);
-    expect(isLegacyAnswer(mk('m12-d01', 5))).toBe(false);
+    expect(isLegacyAnswer(mk('m12-d02', 5))).toBe(false);
     const run = (v: number) => ({ at: 1, total: 1, objective: 1, byCriterion: {}, critical: 0, path: [], passed: true, v }) as never;
     expect(isLegacyRun('sim-k', run(5))).toBe(true);
     expect(isLegacyRun('sim-k', run(6))).toBe(false);
     const ex = (moduleId: string, v: number) => ({ id: 'x', kind: 'modul', moduleId, at: 1, score: 1, total: 1, byTopic: {}, passed: true, v }) as never;
     expect(isLegacyExam(ex('m7', 5))).toBe(true);
-    expect(isLegacyExam(ex('m10', 5))).toBe(false);
+    expect(isLegacyExam(ex('m11', 5))).toBe(false);
+  });
+});
+
+describe('Bewertungsfassung 7 (Gesamtprüfung V0.17, Phase 3)', () => {
+  const w = (qid: string, oid: string) => QUESTIONS.find((q) => q.id === qid)!.options!.find((o) => o.id === oid)!.weight;
+  test('Teilpunkte gesenkt', () => {
+    expect(w('m6-d01', 'c')).toBe(0.5);
+    expect(w('m9-d01', 'd')).toBe(0.5);
+    expect(w('m10-d04', 'c')).toBe(0.25);
+    expect(w('m10-d04', 'd')).toBe(0);
+    expect(w('m12-d01', 'c')).toBe(0.25);
+    for (const id of ['m6-d01', 'm9-d01', 'm10-d04', 'm12-d01']) expect(QUESTIONS.find((q) => q.id === id)!.rev).toBe(7);
+  });
+  test('frühere Ergebnisse gelten als frühere Fassung', () => {
+    const mk = (q: string, v: number) => ({ q, at: 1, score: 1, correct: true, conf: 2, ctx: 'lesson', v }) as never;
+    expect(isLegacyAnswer(mk('m9-d01', 6))).toBe(true);
+    expect(isLegacyAnswer(mk('m9-d01', 7))).toBe(false);
+    expect(isLegacyAnswer(mk('m9-d02', 6))).toBe(false);
+  });
+  test('Rechtliche Präzisierungen', () => {
+    const l = JSON.stringify(LESSONS.filter((x) => x.moduleId === 'm11'));
+    expect(l).toContain('Art. 5 Abs. 1');
+    expect(l).not.toContain('kaum direkte Pflichten');
+    expect(JSON.stringify(QUESTIONS.find((q) => q.id === 'm5-q11'))).toContain('mehr als 18 kW');
+    expect(QUESTIONS.find((q) => q.id === 'm6-q31')!.correct).toEqual(['b']);
   });
 });

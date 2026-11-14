@@ -293,15 +293,15 @@ export const M12_QUESTIONS: Question[] = [
     explanation: 'Kultur entsteht durch Verhalten der Führung, Anerkennung, Einbindung und Geduld.',
     commonErrors: ['Kultur mit Leitbild gleichsetzen.'], sources: ['praxis'] }),
   // ---------- Abwägungen ----------
-  q({ id: 'm12-d01', topic: 'm12-organisation', level: 3, type: 'best', objective: 'Die Rolle der Fachstelle festlegen',
+  q({ id: 'm12-d01', rev: 7, topic: 'm12-organisation', level: 3, type: 'best', objective: 'Die Rolle der Fachstelle festlegen',
     prompt: 'Die Geschäftsleitung schlägt vor: «Die Umweltfachstelle ist ab sofort für alle Umweltmassnahmen auf den Baustellen verantwortlich und erledigt sie selbst.» Was empfehlen Sie?',
     options: [
       { id: 'a', text: 'Annehmen – dann ist alles klar.', weight: 0.25,
         why: 'Wenig geeignet: Die Fachstelle hat weder Weisungsbefugnis noch Kapazität auf allen Baustellen; die Linie fühlt sich nicht mehr zuständig.', risks: 'Verantwortungsdiffusion, Überlastung, mehr Vorfälle.' },
       { id: 'b', text: 'Gegenvorschlag: Verantwortung bleibt in der Linie; die Fachstelle setzt Standards, schult, berät, kontrolliert und erhält eine Stopp-Kompetenz bei unmittelbarer Gefahr; alles in einem Reglement festhalten.', weight: 1,
         why: 'Am besten geeignet: klare Rollen, die zur Organisation passen.', prerequisites: 'Bereitschaft der GL, das Reglement in Kraft zu setzen.', risks: 'Diskussion mit der Linie.' },
-      { id: 'c', text: 'Annehmen, aber eine zweite Stelle verlangen.', weight: 0.5,
-        why: 'Teilweise geeignet: mehr Ressourcen, aber das Rollenproblem bleibt.', risks: 'Linie fühlt sich nicht zuständig.' },
+      { id: 'c', text: 'Annehmen, aber eine zweite Stelle verlangen.', weight: 0.25,
+        why: 'Wenig geeignet: mehr Ressourcen, aber die Verantwortung wird weiterhin pauschal an die Stabsstelle abgeschoben; Linienverantwortung, Weisungsbefugnis und Eskalation bleiben ungeregelt.', risks: 'Linie fühlt sich nicht zuständig.' },
       { id: 'd', text: 'Ablehnen, ohne Gegenvorschlag.', weight: 0.25,
         why: 'Wenig geeignet: Das Problem der unklaren Rollen bleibt ungelöst.', risks: 'Konflikt mit der GL.' },
     ], correct: ['b'], explanation: 'Linie verantwortet, Fachstelle unterstützt – schriftlich geregelt.',

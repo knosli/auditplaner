@@ -52,7 +52,7 @@ export const M11_QUESTIONS: Question[] = [
       { id: 'b', text: 'Die gesetzliche Berichtspflicht trifft grosse Unternehmen von öffentlichem Interesse; mittlere Firmen sind meist nicht direkt erfasst, können aber von Kunden um Daten gebeten werden.' },
       { id: 'c', text: 'Nein, in der Schweiz gibt es keine Berichtspflicht.' },
       { id: 'd', text: 'Nur, wenn sie Recyclingbeton verwendet.' },
-    ], correct: ['b'], explanation: 'Die Pflicht nach OR und Verordnung über die Klimaberichterstattung gilt für grosse Unternehmen von öffentlichem Interesse (Schwellenwerte im Gesetz prüfen). Indirekt erreichen Datenanfragen auch Lieferanten.',
+    ], correct: ['b'], explanation: 'Berichtspflichtig nach Art. 964a OR sind Gesellschaften des öffentlichen Interesses, die zusammen mit den von ihnen kontrollierten Unternehmen in zwei aufeinanderfolgenden Jahren mindestens 500 Vollzeitstellen haben und eine weitere Grössengrenze (Bilanzsumme oder Umsatz) überschreiten; massgebend sind alle Merkmale und die Konzernstruktur, nicht die Mitarbeiterzahl allein. Indirekt erreichen Datenanfragen auch Lieferanten.',
     commonErrors: ['Indirekte Anforderungen über Kunden unterschätzen.'], sources: ['klimabericht'] }),
   // ---------- L2 Bilanz ----------
   q({ id: 'm11-q06', topic: 'm11-bilanz', level: 1, type: 'single', objective: 'Scope 1 erkennen',
@@ -114,10 +114,10 @@ export const M11_QUESTIONS: Question[] = [
     prompt: 'Welche Aussage zu Recyclingbeton trifft zu?',
     options: [
       { id: 'a', text: 'Er ist immer CO₂-frei.' },
-      { id: 'b', text: 'Er schont Kies und Deponieraum; CO₂ spart er nur deutlich, wenn auch Zementmenge oder Zementart günstiger sind.' },
+      { id: 'b', text: 'Er schont Kies und Deponieraum; ob er auch CO₂ spart, hängt vor allem von Zementmenge und -art ab und ist mit Umweltproduktdeklarationen auf derselben funktionalen Einheit zu belegen.' },
       { id: 'c', text: 'Er hat immer höhere Emissionen als Primärbeton.' },
       { id: 'd', text: 'Er ist in der Schweiz verboten.' },
-    ], correct: ['b'], explanation: 'Ressourcenschonend und CO₂-reduziert sind zwei verschiedene Aussagen.',
+    ], correct: ['b'], explanation: 'Ressourcenschonend und CO₂-reduziert sind zwei verschiedene Aussagen. Den Ausschlag geben Rezeptur, Transport und Einbau – verglichen mit Ökobilanzdaten bzw. Deklarationen auf gleicher funktionaler Einheit.',
     commonErrors: ['«Recycling» mit «klimafreundlich» gleichsetzen.'], sources: ['bafu-mineral', 'kbob-oekobilanz'] }),
   q({ id: 'm11-q13', topic: 'm11-material', level: 2, type: 'single', objective: 'Eine Baustoffvariante sauber einbringen',
     prompt: 'Sie möchten für die Decken eines Wohnbaus eine Betonsorte mit klinkerärmerem Zement vorschlagen. Was ist der richtige Weg?',

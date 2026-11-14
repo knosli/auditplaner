@@ -173,6 +173,18 @@ Nur so viel auf der Baustelle, wie in absehbarer Zeit gebraucht wird. Grosse Men
 ### Bewilligungen und kantonale Vorgaben
 Lageranlagen für wassergefährdende Flüssigkeiten können in **besonders gefährdeten Bereichen** bewilligungspflichtig sein; in **Grundwasserschutzzonen** sind sie stark eingeschränkt. Rückhaltevolumen, Abstände und Ausnahmen für Kleinmengen regeln die Kantone in ihren Vorgaben – die App nennt bewusst keine Zahlen.
 
+### Entscheidweg für ein Lager
+
+| Schritt | Frage | Grundlage |
+|---|---|---|
+| 1 Produkt | Was ist es, wie wassergefährdend? | SDB, Kennzeichnung |
+| 2 Lagerort | Gewässerschutzbereich, Schutzzone, Nähe zu Schächten und Gewässern? | Gewässerschutzkarte, Entwässerungsplan |
+| 3 Menge | Wie viel gleichzeitig, wie lange? | Bedarfsplanung |
+| 4 Rückhalt | Wanne, Doppelwand, Dach, Abstand? | Herstellerangaben |
+| 5 Vorgabe | Was verlangen Kanton und Bewilligung (Volumen, Abstände, Bewilligung)? | kantonale Vorgabe, Auflagen |
+
+Die App nennt keine Rückhaltevolumen; diese stehen in den kantonalen Vorgaben. Ohne geklärte Vorgabe: beim Kanton nachfragen, nicht schätzen.
+
 ### Regenwasser in der Wanne
 Wasser in einer Auffangwanne ist ein häufiger Befund. Es darf nicht einfach ausgekippt werden, wenn es verschmutzt sein kann (Ölfilm, Geruch, Verfärbung): Es wird wie die Flüssigkeit selbst behandelt und entsorgt. Die Ursache wird behoben – mit einer Überdachung.
 
