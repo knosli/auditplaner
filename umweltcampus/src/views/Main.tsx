@@ -1,3 +1,4 @@
+import { LocalCheck } from '../components/LocalCheck';
 import { LESSONS, LEVEL_LABEL, LEVEL_SHORT, MODULES, SCENARIOS, TASKS } from '../content';
 import { useStore } from '../store';
 import { Bar, DevBadge, pct } from '../components/ui';
@@ -276,6 +277,8 @@ export function ModuleDetail({ id }: { id: string }) {
         </div>
       </section>
       <p className="trust"><Icon name="alert" size={16} /> <span><strong>Prüfstatus Entwurf.</strong> {['m1', 'm2', 'm3', 'm4', 'm8'].includes(id) ? 'Fachlich sorgfältig erstellt und nach einer externen KI-Fachprüfung korrigiert, aber nicht durch eine Fachperson am Originaltext freigegeben.' : 'Fachlich sorgfältig erstellt und extern KI-geprüft (14.11.2026); die Korrekturen werden schrittweise umgesetzt. Nicht durch eine Fachperson am Originaltext freigegeben.'} Kantone, Gemeinden und Bewilligungen können zusätzliche Anforderungen stellen.</span></p>
+
+      <LocalCheck moduleId={id} />
 
       <section className="section">
         <div className="section-head"><h2>Ihr Weg durch die vier Lernstufen</h2><span className="hint">{pct(moduleProgress(s, id))} des Modulabschlusses</span></div>

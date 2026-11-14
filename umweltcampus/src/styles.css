@@ -949,3 +949,20 @@ fieldset { min-width: 0; }
   .path-item { grid-template-columns: 1fr; padding: 18px; }
   .flashcard { padding: 20px; }
 }
+
+/* Kanton & Standort, Vor Ort prüfen */
+.badge.chk-ok { background: var(--ok-soft); color: var(--ok); border-color: transparent; }
+.badge.chk-open { background: var(--warn-soft); color: var(--warn); border-color: transparent; }
+.badge.chk-none { background: var(--surface-2); color: var(--muted); }
+.lc-rows { display: grid; gap: 14px; margin-top: 12px; }
+.lc-row { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; background: var(--surface); min-width: 0; }
+.lc-row h3 { font-size: 1rem; margin: 0 0 6px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.lc-sub { font: 700 .72rem/1.4 var(--font-body); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 10px 0 4px; }
+.lc-msg { margin: 4px 0 8px; font-size: .92rem; }
+.lc-msg.st-nicht_verifiziert { color: var(--muted); }
+.lc-msg.st-quelle_nicht_geprueft { color: var(--warn); }
+.fedlist { list-style: none; padding: 0; margin: 0; display: grid; gap: 4px; font-size: .9rem; }
+.fedlist li { overflow-wrap: anywhere; }
+.csrc .extlink, .lc-row a { overflow-wrap: anywhere; }
+.canton-pick { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.canton-pick input[type=text] { width: 100%; }

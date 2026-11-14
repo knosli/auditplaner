@@ -107,11 +107,22 @@ export interface HistoryEvent {
   detail: string;
 }
 
+/** Standort der Baustelle (optional; nur Kanton, Sprache und Gemeindename – keine Adresse). */
+export interface SiteSettings {
+  canton?: string;
+  lang?: 'de' | 'fr' | 'it' | 'rm';
+  municipality?: string;
+}
+
 export interface Settings {
   theme: 'system' | 'hell' | 'dunkel';
   coachMode: 'erklaeren' | 'trainieren' | 'pruefen';
   askConfidence: boolean;
   aiEnabled: boolean;
+  /** Standort der Baustelle für «Vor Ort prüfen» (fehlt bei älteren Lernständen) */
+  site?: SiteSettings;
+  /** Betrachtungsmodus: Schweizer Grundlagen oder kantonale Zusatzanforderungen */
+  localMode?: 'ch' | 'kanton';
 }
 
 export interface AppState {

@@ -8,6 +8,7 @@ import { ReviewView } from './views/Review';
 import { LibraryView, ToolsView } from './views/Library';
 import { ProgressView } from './views/Progress';
 import { SettingsView } from './views/Settings';
+import { CantonView } from './views/Canton';
 import { CoachPanel, GlossaryDrawer } from './components/Drawers';
 import { dueItems } from './lib/learning';
 import { Icon } from './components/Icons';
@@ -29,6 +30,7 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
   { label: 'Nachschlagen', items: [
     { id: 'bibliothek', label: 'Fachbibliothek', icon: 'library' },
     { id: 'quellen', label: 'Quellen', icon: 'sources' },
+    { id: 'kanton', label: 'Kanton & Standort', icon: 'site' },
   ] },
   { label: 'Persönlich', items: [
     { id: 'fortschritt', label: 'Lernfortschritt', icon: 'chart' },
@@ -82,6 +84,7 @@ function Shell() {
     case 'werkzeuge': view = <ToolsView />; break;
     case 'fortschritt': view = <ProgressView />; break;
     case 'einstellungen': view = <SettingsView />; break;
+    case 'kanton': view = <CantonView />; break;
     default: view = <Dashboard />;
   }
 

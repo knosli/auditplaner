@@ -184,6 +184,27 @@ const ok = (c, m) => { console.log((c ? 'OK   ' : 'FAIL ') + m); if (!c) process
     await mixBtn.click();
     ok((await page.locator('h1').first().textContent()).includes('Gemischte Prüfung'), 'Gemischte Prüfung gestartet');
     await page.getByRole('button', { name: 'Abbrechen' }).click();
+    // Kanton & Standort
+    await go('modul-m2');
+    ok((await page.locator('#vor-ort').count()) === 1 && (await page.locator('#vor-ort').textContent()).includes('Einstellungen'), 'Vor Ort prüfen: ohne Kanton Hinweis auf Einstellungen');
+    await go('einstellungen');
+    await page.selectOption('#site-canton', 'BE');
+    ok((await page.locator('#site-lang option').allTextContents()).includes('Französisch'), 'Mehrsprachiger Kanton (BE): Sprachwahl Deutsch/Französisch');
+    await page.selectOption('#site-canton', 'ZH');
+    ok((await page.locator('#site-lang').count()) === 0, 'Einsprachiger Kanton (ZH): keine Sprachwahl');
+    await page.fill('#site-muni', 'Musterdorf');
+    await go('modul-m2');
+    const vo = await page.locator('#vor-ort').textContent();
+    ok(vo.includes('Zusatzanforderungen ZH') && (await page.locator('#vor-ort a[href*="zh.ch"]').count()) > 0 && vo.includes('nicht geprüft') && vo.includes('Musterdorf'), 'Vor Ort prüfen (Modul 2, ZH): amtliche Links, Status «nicht geprüft», Gemeinde');
+    await page.locator('#vor-ort').getByText('Schweizer Grundlagen').click();
+    const vo2 = await page.locator('#vor-ort').textContent();
+    ok(vo2.includes('GSchG') && (await page.locator('#vor-ort a[href*="zh.ch"]').count()) === 0, 'Modus Schweizer Grundlagen: nur Bundesquellen, keine Vermischung');
+    await page.locator('#vor-ort').getByText('Zusatzanforderungen ZH').click();
+    await go('kanton');
+    ok(Number(await page.locator('#canton-count').textContent()) >= 2 && (await page.locator('.projectcheck').textContent()).includes('Kantonale Regelung nicht verifiziert'), 'Quellenkarte ZH und Projektcheck mit «nicht verifiziert»');
+    await page.selectOption('#canton-pick', 'AG');
+    ok((await page.locator('.csrc a[href*="ag.ch"]').count()) > 0 && (await page.locator('.csrc a[href*="zh.ch"]').count()) === 0, 'Kantonswechsel ZH → AG ändert die Quellen');
+    await page.selectOption('#canton-pick', '');
     // Bibliothek
     await go('bibliothek');
     for (const term of ['Betonwaschwasser', 'Bodenschutz', 'SIA 431', 'Entsorgungskonzept', 'Gewässerraum']) {
