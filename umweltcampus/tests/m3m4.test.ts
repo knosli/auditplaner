@@ -30,7 +30,7 @@ for (const mod of ['m3', 'm4', 'm5', 'm6', 'm7', 'm8', 'm9', 'm10', 'm11', 'm12'
       }
     });
     test('alle Fragen tragen eine gültige Bewertungsfassung', () => {
-      for (const q of QUESTIONS.filter((x) => x.moduleId === mod)) expect(['m5', 'm6', 'm7', 'm9', 'm10', 'm11', 'm12'].includes(mod) ? [5] : mod === 'm8' ? [4, 5] : [3, 4]).toContain(q.rev);
+      for (const q of QUESTIONS.filter((x) => x.moduleId === mod)) expect(['m5', 'm6', 'm7', 'm9', 'm10', 'm11', 'm12'].includes(mod) ? [5, 6] : mod === 'm8' ? [4, 5] : [3, 4]).toContain(q.rev);
     });
     test('kritische Optionen geben 0 Punkte', () => {
       for (const q of QUESTIONS.filter((x) => x.moduleId === mod && x.type === 'best')) {
@@ -120,7 +120,7 @@ describe('Bewertungsfassung 4 (externe Prüfung 13.11.2026)', () => {
     expect(w('m3-d05', 'c')).toBe(0); // Ausbau ohne Auftrag/Freigaben
     expect(w('m3-d03', 'c')).toBe(0.25); // Schnelltest nur Vorselektion
     for (const id of ['m4-d01', 'm3-d05', 'm3-d03']) expect(QUESTIONS.find((q) => q.id === id)!.rev).toBe(4);
-    expect(S.get('sim-g')!.rev).toBe(4);
+    expect(S.get('sim-g')!.rev).toBeGreaterThanOrEqual(4);
     expect(S.get('sim-h')!.rev).toBe(4);
   });
   test('frühere Ergebnisse zu neu gewichteten Inhalten gelten als frühere Fassung, andere bleiben gültig', () => {
@@ -212,7 +212,7 @@ describe('Modul 8: Planung und AVOR', () => {
     const ex = (moduleId: string, v: number) => ({ id: 'x', kind: 'modul', moduleId, at: 1, score: 1, total: 1, byTopic: {}, passed: true, v }) as never;
     expect(isLegacyExam(ex('m8', 4))).toBe(true);
     expect(isLegacyExam(ex('m8', 5))).toBe(false);
-    expect(isLegacyExam(ex('m3', 4))).toBe(false);
+    expect(isLegacyExam(ex('m4', 5))).toBe(false);
   });
   test('Prüfstatus bleibt Entwurf', () => {
     for (const l of LESSONS.filter((x) => x.moduleId === 'm8')) expect(l.review).toBe('entwurf');
@@ -420,5 +420,36 @@ describe('Modul 12: Führung und strategische Umweltverantwortung', () => {
   test('Alle zwölf Module verfügbar; Prüfstatus Entwurf', () => {
     expect(MODULES.filter((m) => m.status === 'verfuegbar').length).toBe(12);
     for (const l of LESSONS.filter((x) => x.moduleId === 'm12')) expect(l.review).toBe('entwurf');
+  });
+});
+
+describe('Bewertungsfassung 6 (Gesamtprüfung V0.17, 14.11.2026)', () => {
+  const w = (qid: string, oid: string) => QUESTIONS.find((q) => q.id === qid)!.options!.find((o) => o.id === oid)!;
+  test('Fortsetzen einer Gefährdung, unzulässige Einleitung und Meldeverzug bringen keine Punkte', () => {
+    for (const [q, o] of [['m5-d01', 'd'], ['m5-d02', 'a'], ['m6-d03', 'c'], ['m7-d01', 'a'], ['m7-d02', 'c'], ['m7-d02', 'd'], ['m7-d04', 'd'], ['m9-d03', 'c'], ['m12-d05', 'c'], ['m12-d05', 'd']]) expect(w(q, o).weight, `${q} ${o}`).toBe(0);
+    for (const [q, o] of [['m5-d01', 'd'], ['m6-d03', 'c'], ['m7-d01', 'a'], ['m7-d04', 'd'], ['m9-d03', 'c'], ['m12-d05', 'c'], ['m12-d05', 'd']]) expect(w(q, o).critical, `${q} ${o}`).toBe(true);
+    expect(w('m2-d05', 'e').weight).toBe(0.25);
+  });
+  test('Fall K: Weiterarbeiten bei hustenden Kindern ist kritisch; Fall G: ungeprüfter Rückbau ohne Punkte', () => {
+    const k1 = S.get('sim-k')!.stages.find((x) => x.id === 'k1')!;
+    expect(evaluateStage(k1, { stageId: 'k1', selected: ['o3'] })).toMatchObject({ score: 0, critical: true });
+    const g4 = S.get('sim-g')!.stages.find((x) => x.id === 'g4')!;
+    expect(evaluateStage(g4, { stageId: 'g4', selected: ['r3'] }).score).toBe(0);
+  });
+  test('Meldung an Behörden hängt nicht von interner Zustimmung ab', () => {
+    const txt = JSON.stringify(QUESTIONS.find((q) => q.id === 'm7-d05'));
+    expect(txt).not.toContain('mit ihrer Zustimmung');
+  });
+  test('frühere Ergebnisse zu geänderten Inhalten gelten als frühere Fassung', () => {
+    const mk = (q: string, v: number) => ({ q, at: 1, score: 1, correct: true, conf: 2, ctx: 'lesson', v }) as never;
+    expect(isLegacyAnswer(mk('m12-d05', 5))).toBe(true);
+    expect(isLegacyAnswer(mk('m12-d05', 6))).toBe(false);
+    expect(isLegacyAnswer(mk('m12-d01', 5))).toBe(false);
+    const run = (v: number) => ({ at: 1, total: 1, objective: 1, byCriterion: {}, critical: 0, path: [], passed: true, v }) as never;
+    expect(isLegacyRun('sim-k', run(5))).toBe(true);
+    expect(isLegacyRun('sim-k', run(6))).toBe(false);
+    const ex = (moduleId: string, v: number) => ({ id: 'x', kind: 'modul', moduleId, at: 1, score: 1, total: 1, byTopic: {}, passed: true, v }) as never;
+    expect(isLegacyExam(ex('m7', 5))).toBe(true);
+    expect(isLegacyExam(ex('m10', 5))).toBe(false);
   });
 });

@@ -228,7 +228,7 @@ export const M3_CARDS: Card[] = [
 
 // ---------- Baustellensimulation ----------
 export const M3_SCENARIO: Scenario = {
-  id: 'sim-g', code: 'G', moduleId: M, status: 'verfuegbar', rev: 4,
+  id: 'sim-g', code: 'G', moduleId: M, status: 'verfuegbar', rev: 6,
   title: 'Verdächtige Platten beim Rückbau',
   setting: 'Rückbau', level: 3, minutes: 15,
   topics: ['m3-rueckbau', 'm3-klassierung', 'm3-kreislauf'],
@@ -282,7 +282,7 @@ export const M3_SCENARIO: Scenario = {
       options: [
         { id: 'r1', points: 0, critical: true, text: 'Annehmen – er hat Erfahrung, und es spart Zeit.', feedback: 'Kritischer Fehler: Das Herausbrechen von Platten und die Reinigung eines kontaminierten Raums sind typischerweise Arbeiten mit erheblicher Faserfreisetzung – sie dürfen nur Suva-anerkannte Asbestsanierungsunternehmen ausführen (Art. 82 BauAV, laut Suva). Ohne Einstufung durch die Fachperson, Anerkennung und Meldung ist das Risiko nicht tragbar.', consequence: 'Bei einer Suva-Kontrolle werden die Arbeiten gestoppt.' },
         { id: 'r2', points: 2, text: 'Die Fachperson beurteilt Tätigkeit und Ausmass; für das Entfernen der Platten und die Reinigung des kontaminierten Raums und der Mulde eine Suva-anerkannte Firma beauftragen und der Suva melden; Freigabe nach der Sanierung; ergänzende Untersuchung des ganzen Bürotrakts; Terminplan anpassen.', feedback: 'Richtig: Einstufung, Sanierung, Freigabe und Untersuchung werden getrennt und vollständig geregelt; die ergänzende Untersuchung verhindert den nächsten Fund.' },
-        { id: 'r3', points: 1, text: 'Anerkannte Firma nur für den einen Raum beauftragen, den Rest des Bürotrakts normal rückbauen.', feedback: 'Teilweise: Der betroffene Raum ist geregelt, aber die übrigen Verkleidungen sind weiterhin nicht untersucht.' },
+        { id: 'r3', points: 0, text: 'Anerkannte Firma nur für den einen Raum beauftragen, den Rest des Bürotrakts normal rückbauen.', feedback: 'Falsch: Der betroffene Raum ist geregelt, aber die übrigen Verkleidungen sind nicht untersucht. Sie normal rückzubauen, setzt ein mögliches Asbestrisiko aktiv fort – erst untersuchen, dann rückbauen.' },
       ],
     },
     {

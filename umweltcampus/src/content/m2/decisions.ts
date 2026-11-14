@@ -111,7 +111,7 @@ export const M2_DECISIONS: Question[] = [
     sources: ['sia431', 'kanton-merkblatt', 'gschg'],
   },
   {
-    id: 'm2-d05', rev: 3, moduleId: M, topic: 'oel', level: 3, type: 'best', review: E,
+    id: 'm2-d05', rev: 6, moduleId: M, topic: 'oel', level: 3, type: 'best', review: E,
     objective: 'Bei einem Ölfilm im Baugrubenwasser richtig priorisieren und eine mittelfristige Lösung beurteilen',
     prompt: 'Die Wasserhaltung leitet Baugrubenwasser über zwei Absetzcontainer bewilligt in einen Bach. Am Morgen zeigt der zweite Container einen deutlichen Ölfilm. Ein Bagger steht in der Grube. Was tun Sie zuerst?',
     options: [
@@ -125,7 +125,7 @@ export const M2_DECISIONS: Question[] = [
       { id: 'c', text: 'Ölbindemittel-Granulat in den Container streuen und weiterpumpen.', weight: 0, critical: true,
         why: 'Ungeeignet als Lösung: Granulat ist für befestigte Flächen gedacht, auf Wasser wirkt es schlecht und kann mit dem Schlamm abgehen. Die Einleitung läuft weiter.',
         risks: 'Öl und Granulat gelangen in den Bach.' },
-      { id: 'e', text: 'Pumpen stoppen und die Quelle suchen; die Fachstelle erst informieren, wenn die Ursache geklärt ist.', weight: 0.5,
+      { id: 'e', text: 'Pumpen stoppen und die Quelle suchen; die Fachstelle erst informieren, wenn die Ursache geklärt ist.', weight: 0.25,
         why: 'Die Einleitung ist gestoppt – das Wichtigste stimmt. Die Meldung zurückzuhalten, bis die Ursache klar ist, ist aber nicht vertretbar, wenn die Bewilligung eine Meldung bei Ölfilm verlangt oder Öl bereits im Bach sein könnte.',
         prerequisites: 'Nur denkbar, wenn sicher ist, dass kein Öl die Container verlassen hat, und die Bewilligung keine sofortige Meldung verlangt.',
         risks: 'Verletzung der Meldepflicht, Vertrauensverlust bei der Behörde, verspätete Massnahmen am Gewässer.' },

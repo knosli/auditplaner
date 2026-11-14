@@ -51,7 +51,7 @@ Dazu kommen Fachbegleitungen mit eigenem Gebiet, z. B. die bodenkundliche Baubeg
 - Mitwirkung bei der Umweltbauabnahme und beim Schlussbericht
 
 ### Befugnisse
-Was die UBB anordnen darf, ergibt sich aus **Pflichtenheft und Bewilligung**. Häufig hat sie ein **Antragsrecht an die Bauleitung** und kein direktes Weisungsrecht gegenüber der Unternehmung; für Fälle unmittelbarer Umweltgefährdung ist oft geregelt, dass sie Arbeiten unterbrechen lassen kann. Verlassen Sie sich nicht auf Annahmen – klären Sie es an der Startsitzung.
+Was die UBB anordnen darf, ergibt sich aus **Pflichtenheft und Bewilligung**. Häufig hat sie ein **Antragsrecht an die Bauleitung** und kein direktes Weisungsrecht gegenüber der Unternehmung. Ein Recht, Arbeiten bei unmittelbarer Umweltgefährdung zu unterbrechen, kann im Pflichtenheft oder Werkvertrag geregelt sein – ein allgemeines Stopp-Recht der UBB lässt sich aus der Vollzugshilfe nicht ableiten. Verlassen Sie sich nicht auf Annahmen – klären Sie es an der Startsitzung.
 
 §> Aufgaben und Stellung der UBB sinngemäss nach der BAFU-Publikation «Umweltbaubegleitung mit integrierter Erfolgskontrolle» und der Praxis; die Publikation wurde nicht am Original geprüft. Verbindlich sind Bewilligung und Pflichtenheft des Projekts.` },
       { id: 'm9-l1-diagram', kind: 'diagram', title: 'Schema: Rollen bei Umweltkontrollen', diagram: 'ubb-rollen', caption: 'Vereinfachte Lernhilfe. Wer wem meldet und wer was anordnen darf, regeln Bewilligung, Pflichtenheft und Verträge.' },
@@ -276,7 +276,14 @@ Zwei Fragen genügen meistens: **Wie schwer wäre der Schaden** (Gewässer, Grun
 5. **Dokumentieren** – erst jetzt: Fotos, Zeiten, Mengen, wer informiert wurde.
 
 ### Wer darf stoppen?
-Anordnungen in der Linie gibt die Bauführung bzw. der Polier. Aber: **Bei unmittelbarer Gefahr soll jede Person die gefährdende Tätigkeit unterbrechen lassen und sofort die zuständige Person holen** – das ist in den meisten Firmen ausdrücklich so geregelt und entspricht der Sorgfaltspflicht. Klären Sie mit Ihrer Geschäftsleitung, wie Ihr Stopp-Recht formuliert ist, bevor Sie es brauchen.
+Anordnungen in der Linie gibt die Bauführung bzw. der Polier. Eine Stopp- oder Weisungsbefugnis der internen Fachperson oder der UBB ergibt sich nur aus **Vertrag, Pflichtenheft oder internem Reglement** – nicht automatisch aus der Funktion. Unabhängig davon gilt: **Bei unmittelbarer Gefahr die Personen vor Ort auffordern, die gefährdende Tätigkeit zu unterbrechen, und sofort die zuständige Person holen.** Technische Anlagen (Pumpen, Schieber, Steuerungen) bedienen nur Personen, die sie kennen und dafür zuständig sind. Klären Sie mit Ihrer Geschäftsleitung schriftlich, wie Ihr Stopp-Recht formuliert ist, bevor Sie es brauchen.
+
+| Rolle | Grundlage der Befugnisse | Typische Befugnis |
+|---|---|---|
+| Formelle UBB | Pflichtenheft der Bauherrschaft, Bewilligung | Antragsrecht an die Bauleitung; Unterbruch nur, wenn ausdrücklich geregelt |
+| Interne Umweltfachperson | Internes Reglement, Funktionsbeschreibung | Beraten, kontrollieren, melden; Stopp nur, wenn intern geregelt |
+| Bauleitung / Linie | Werkvertrag, Arbeitsvertrag | Anordnungen auf der Baustelle |
+| Jede Person | Allgemeine Sorgfalt | Bei unmittelbarer Gefahr auffordern zu unterbrechen, zuständige Person holen, alarmieren |
 
 ### Nicht verharmlosen, nicht dramatisieren
 «Nur ein bisschen» ist keine Einstufung. Umgekehrt ist nicht jede Pfütze ein Notfall. Halten Sie sich an das Beobachtete und an den Weg zum Schutzgut.

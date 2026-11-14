@@ -235,7 +235,7 @@ export const M5_CARDS: Card[] = [
 
 // ---------- Simulation ----------
 export const M5_SCENARIO: Scenario = {
-  id: 'sim-k', code: 'K', moduleId: M, status: 'verfuegbar', rev: 5,
+  id: 'sim-k', code: 'K', moduleId: M, status: 'verfuegbar', rev: 6,
   title: 'Staubwolke neben dem Schulhaus',
   setting: 'Rückbau', level: 3, minutes: 20,
   topics: ['m5-staub', 'm5-maschinen', 'm5-planung'],
@@ -254,7 +254,7 @@ export const M5_SCENARIO: Scenario = {
       options: [
         { id: 'o1', points: 2, text: 'Polier: Abbruch an der Schulseite sofort unterbrechen, Arbeiten an der abgewandten Seite oder ohne Staub vorziehen. Der Schulleiterin zusagen, dass die Arbeit ruht, und dass Sie in 10 Minuten vor Ort sind.', feedback: 'Richtig: Die Belastung wird an der Quelle sofort gestoppt; die Arbeit geht anderswo weiter.' },
         { id: 'o2', points: 0, critical: true, text: 'Polier: Mit dem Schlauch stärker benetzen und weitermachen, die Pause ist ja bald vorbei.', feedback: 'Kritischer Fehler: Die vorhandene Massnahme wirkt sichtbar nicht; Weiterarbeiten nimmt die Belastung der Kinder in Kauf.', consequence: 'Eltern beschweren sich bei der Gemeinde; die Behörde verfügt einen Baustopp für den Abbruch.' },
-        { id: 'o3', points: 1, text: 'Die Schulleiterin bitten, die Kinder hereinzuholen, und den Polier weiterarbeiten lassen, bis Sie da sind.', feedback: 'Teilweise: schützt die Kinder kurzfristig, setzt aber nicht an der Quelle an.' },
+        { id: 'o3', points: 0, critical: true, text: 'Die Schulleiterin bitten, die Kinder hereinzuholen, und den Polier weiterarbeiten lassen, bis Sie da sind.', feedback: 'Kritischer Fehler: Die Kinder husten bereits – die staubintensive Arbeit an der Schulseite muss sofort ruhen. Die Kinder hereinzuholen ist sinnvoll, ersetzt aber nicht die Unterbrechung an der Quelle; der Staub zieht weiter über Pausenplatz, Fenster und Lüftung.', consequence: 'Während Sie unterwegs sind, zieht der Staub weiter über das Schulhaus; die Schulleitung meldet den Vorfall der Gemeinde.' },
       ],
     },
     {
