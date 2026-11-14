@@ -113,7 +113,7 @@ Als Umweltbeauftragte/r sind Sie Architekt/in und Hüter/in des Systems: Sie hal
 ### 8. Verbindung zu den anderen Modulen
 Rechtskataster (Modul 1), Fachanforderungen (Module 2–7), AVOR und Massnahmenplan (Modul 8), Kontrolle und Korrekturmassnahmen (Modul 9) sind die Inhalte – ISO 14001 ist der Rahmen, der sie verbindet und am Leben hält.
 
-§> Sinngemäss nach ISO 14001:2015; kein Normtext. Aussagen zur Zertifizierung allgemein (Akkreditierung in der Schweiz durch die Schweizerische Akkreditierungsstelle SAS); Regeln der Zertifizierungsstellen nicht geprüft.` },
+§> Sinngemäss nach ISO 14001:2015 (Ausgabe 2026 nicht verglichen); kein Normtext. Aussagen zur Zertifizierung allgemein (Akkreditierung in der Schweiz durch die Schweizerische Akkreditierungsstelle SAS); Regeln der Zertifizierungsstellen nicht geprüft.` },
       { id: 'm10-l1-decision', kind: 'decision', title: 'Entscheidungsaufgabe', questionId: 'm10-q03' },
       { id: 'm10-l1-abw', kind: 'decision', title: 'Abwägung: Nur der Hauptsitz im Zertifikat?', questionId: 'm10-d01' },
       { id: 'm10-l1-task', kind: 'sitetask', title: 'Baustellenaufgabe: Umweltkarte für die Baustelle', taskId: 'm10-t1' },
@@ -395,7 +395,7 @@ Legt fest: Was wird wann auditiert, durch wen, mit welchem Schwerpunkt? Es berü
 ### Audit und Begehung
 Eine **Begehung** (Modul 9) fragt: Ist diese Baustelle in Ordnung? Ein **Audit** fragt: Funktioniert das System, das dafür sorgen soll? Ein offener Schacht ist in der Begehung ein Mangel der Baustelle – im Audit ein Hinweis darauf, dass AVOR, Instruktion oder Kontrolle nicht greifen.
 
-§> Sinngemäss nach ISO 14001:2015, Abschnitt 9.2, und dem Leitfaden ISO 19011 (Auditierung von Managementsystemen); kein Normtext, Ausgaben nicht geprüft.` },
+§> Sinngemäss nach ISO 14001:2015, Abschnitt 9.2, und dem Leitfaden ISO 19011 (Auditierung von Managementsystemen; laut externer Prüfung seit Mai 2026 Ausgabe 2026); kein Normtext, Ausgaben 2026 nicht verglichen.` },
       { id: 'm10-l4-explain-2', kind: 'explain', title: 'Zertifizierung und Umgang mit Abweichungen', text: `### Ablauf (üblich)
 - **Zertifizierungsaudit** in zwei Stufen: zuerst Bereitschaft und Dokumentation, dann die Umsetzung im Betrieb – mit Stichproben auf Baustellen.
 - **Überwachungsaudits**, in der Regel jährlich.
@@ -560,7 +560,7 @@ Je grösser die Organisation, desto wichtiger sind klare Ebenen: Was regelt die 
 ### 8. Das System schlank halten
 Jedes Jahr eine Frage an das eigene System: Was können wir weglassen? Formulare, die niemand auswertet; Kennzahlen, die nichts auslösen; Vorgaben, die niemand einhalten kann. Ein schlankes System, das gelebt wird, ist jedem umfangreichen System überlegen, das nur für das Audit existiert.
 
-§> Sinngemäss nach ISO 14001:2015, Kapitel 9 und 10; kein Normtext. Die Beispiele für Kennzahlen sind Vorschläge ohne Richtwerte.` },
+§> Sinngemäss nach ISO 14001:2015, Kapitel 9 und 10 (Ausgabe 2026 nicht verglichen); kein Normtext. Die Beispiele für Kennzahlen sind Vorschläge ohne Richtwerte.` },
       { id: 'm10-l5-decision', kind: 'decision', title: 'Entscheidungsaufgabe', questionId: 'm10-q23' },
       { id: 'm10-l5-abw', kind: 'decision', title: 'Abwägung: Welche Kennzahl?', questionId: 'm10-d05' },
       { id: 'm10-l5-task', kind: 'sitetask', title: 'Baustellenaufgabe: Vorlage für die Managementbewertung', taskId: 'm10-t5' },

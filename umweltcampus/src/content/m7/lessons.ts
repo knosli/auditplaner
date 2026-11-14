@@ -191,7 +191,7 @@ Treibstoffe und viele Bauchemikalien sind beim Transport **Gefahrgut**. Für den
 ### Mobile Tankanlagen
 Tankanhänger und Tankcontainer sind Lageranlagen auf Rädern: doppelwandig oder in Wanne, Zapfstelle mit Abtropfschutz, abschliessbar, mit Notfallmaterial. Bei längerer Standzeit gelten dieselben Anforderungen an Ort und Rückhalt wie für ein festes Lager.
 
-§> SDR (Gefahrgut Strasse) sinngemäss, Freistellungen nicht wiedergegeben und nicht geprüft. Anforderungen an mobile Tankanlagen gemäss Herstellerangaben und kantonalen Vorgaben.` },
+§> SDR (Gefahrgut Strasse) sinngemäss, Freistellungen nicht wiedergegeben und nicht geprüft. Eine Änderung der SDR vom 21.9.2026 (AS 2026 525) tritt am 1.1.2027 in Kraft; ihr Inhalt ist in der App nicht ausgewertet – für Transporte ab 2027 die neue Fassung prüfen. Anforderungen an mobile Tankanlagen gemäss Herstellerangaben und kantonalen Vorgaben.` },
       { id: 'm7-l2-example', kind: 'example', title: 'Beispiel aus dem Hochbau: Das Lager im Untergeschoss', context: 'Hochbau', text: `Auf einer engen Stadtbaustelle gibt es keinen Platz für ein Aussenlager. Die AVOR richtet im 2. Untergeschoss einen abschliessbaren Raum ein: Bodenabläufe abgedichtet, Regal mit Wannen, Bindemittel an der Tür, Liste der Produkte und SDB-Ordner an der Wand. Brennbares (Verdünner, Sprühdosen) steht in einem separaten Schrank. Abgefüllt wird nur über der Wanne.
 
 **Lernpunkt**: Auch ohne Aussenfläche lässt sich ein sicheres Lager einrichten – wenn es geplant wird.` },
@@ -391,8 +391,16 @@ Feuerwehr **118**, Polizei **117**, Sanität **144**, Tox Info Suisse **145** (V
       { id: 'm7-l4-explain-2', kind: 'explain', title: 'Alarmieren, melden, übergeben', text: `### Wann alarmieren?
 **Sofort**, sobald ein Stoff in ein Gewässer, die Kanalisation oder den Untergrund gelangt ist oder gelangen kann – unabhängig von der Menge. Wenige Liter Diesel in einem Meteorschacht können einen Bach auf einer langen Strecke schädigen. Ist das sicher ausgeschlossen (z. B. kleine Menge auf dichter Fläche, vollständig aufgenommen), wird intern gemeldet und dokumentiert.
 
-### Meldepflicht
-Inhaber und Betreiber von Anlagen mit wassergefährdenden Flüssigkeiten müssen einen festgestellten Flüssigkeitsverlust unverzüglich melden und zumutbare Abwehrmassnahmen treffen. Auf der Baustelle betrifft das die Unternehmung, die Tank und Maschinen betreibt. Die Meldepflicht hängt nicht davon ab, ob man den Schaden «selbst im Griff» hat.
+### Meldepflicht (Art. 22 Abs. 6 GSchG)
+Stellen der Inhaber einer Anlage mit wassergefährdenden Flüssigkeiten oder die **mit dem Betrieb oder der Wartung betrauten Personen** einen Flüssigkeitsverlust fest, melden sie dies **unverzüglich der Gewässerschutzpolizei**. Sie treffen von sich aus alle zumutbaren Massnahmen, um eine drohende Gewässerverunreinigung zu verhindern. Auf der Baustelle betrifft das die Unternehmung, die Tank und Maschinen betreibt, und ihre Leute vor Ort. Die Meldepflicht hängt nicht davon ab, ob man den Schaden «selbst im Griff» hat – und nicht von einer internen Freigabe.
+
+### Drei Ebenen – gleichzeitig, nicht nacheinander
+
+| Ebene | Wer | Wann |
+|---|---|---|
+| Notruf | Feuerwehr 118 bzw. Polizei 117 | Sofort, wenn Gewässer, Kanalisation oder Untergrund betroffen sind oder sein können; Einsatzkräfte bieten Ölwehr und Pikett auf |
+| Behörde | Gewässerschutzpolizei bzw. kantonale Fachstelle oder Pikett (Organisation kantonal, Nummern gemäss Bewilligung oder Merkblatt) | Unverzüglich bei jedem festgestellten Flüssigkeitsverlust an einer Anlage (Art. 22 Abs. 6 GSchG); weitere Meldungen nach Bewilligung |
+| Intern | Polier, Bauführung, Umweltfachperson, Geschäftsleitung | Parallel – informiert wird, gefragt wird nicht |
 
 ### Was beim Notruf sagen?
 1. **Wo**: Adresse, Baustelle, Zufahrt, Treffpunkt.
@@ -406,7 +414,7 @@ Eine Person empfängt die Einsatzkräfte an der Zufahrt, kennt die Lage, hat das
 
 !> Nicht mit Wasser verdünnen oder wegspülen, keine Reinigungsmittel ins Wasser geben, nicht abwarten «ob es reicht». Frühes Alarmieren ist professionell – Verschweigen verschlimmert Schaden und Folgen.
 
-§> Meldepflicht sinngemäss nach Art. 22 GSchG (in Modul 2 laut externer Prüfung Abs. 6; Wortlaut nicht selbst am Original geprüft). Kostentragung nach dem Verursacherprinzip (Art. 2 USG, Art. 54 GSchG, sinngemäss).` },
+§> Art. 22 Abs. 6 GSchG gesetzlich verbindlich; Wortlaut mit der Fedlex-Fassung vom 1.8.2025 verglichen. Organisation von Gewässerschutzpolizei und Pikett kantonal. Kostentragung nach dem Verursacherprinzip (Art. 2 USG; Art. 54 GSchG: Kosten von Massnahmen der Behörden zur Abwehr, Feststellung und Behebung werden dem Verursacher überbunden – beide verglichen).` },
       { id: 'm7-l4-example', kind: 'example', title: 'Beispiel aus dem Hochbau: Die Hydraulikleitung im Untergeschoss', context: 'Hochbau', text: `In der Baugrube platzt an einem Bohrgerät eine Hydraulikleitung; rund 30 Liter Öl laufen auf die Sauberkeitsschicht und in den Pumpensumpf der Wasserhaltung. Der Maschinist stellt ab, der Polier stoppt die Pumpe und alarmiert über 118, weil das Wasser der Wasserhaltung in die Kanalisation geleitet wird. Die Feuerwehr bindet das Öl, die Fachstelle lässt das Wasser im Sumpf abpumpen und entsorgen. Der verschmutzte Beton und das Bindemittel werden als Sonderabfall entsorgt; der Ereignisbericht geht an Bauleitung und Fachstelle.
 
 **Lernpunkt**: Die Pumpe der Wasserhaltung ist ein Weg nach draussen – im Havariekonzept muss sie vorkommen.` },

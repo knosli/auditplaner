@@ -2,7 +2,7 @@
 
 Grundlage: Prüfpaket «umweltcampus_gesamtpruefung_v017» (Durchgänge 1–10, Korrekturauftrag). Die Prüfberichte sind externes KI-Feedback, keine Rechtsfreigabe. Prüfstatus aller Inhalte bleibt **Entwurf**; es wurde keine fachliche oder betriebliche Freigabe gesetzt.
 
-Stand dieses Dokuments: **Phase 1 umgesetzt** (Version 0.18, Bewertungsfassung 6). Phasen 2–4 folgen.
+Stand dieses Dokuments: **Phasen 1 und 2 umgesetzt** (Version 0.18: Phase 1, Bewertungsfassung 6; Version 0.19: Phase 2, keine Bewertungsänderung). Phase 3 folgt.
 
 ## Phase 1 – Sicherheit und fachlich gefährliche Bewertung
 
@@ -52,8 +52,30 @@ Alle 137 Optionen mit Teilpunkten (Abwägungen mit Gewicht zwischen 0 und 1, Sim
 - Unit-Tests: 228 bestanden (neu: Block «Bewertungsfassung 6»).
 - Browser-Test (Desktop und Handy): 172 Prüfungen bestanden, keine Konsolenfehler.
 
+## Phase 2 – Aktuelle Quellen und rechtliche Präzisierung (Version 0.19)
+
+**Arbeitsweise**: Die 16 frei zugänglichen PDFs aus dem Quellenpaket des Nutzers wurden von den Originaladressen (BAFU, VSA, Kanton Zürich) geladen und als Text ausgewertet. Die geltenden Fassungen von 26 Bundeserlassen wurden über die offene Datenschnittstelle von Fedlex (fedlex.data.admin.ch) abgerufen (Stichtag 14.11.2026). Verglichen wurde der **Wortlaut** der in der App verwendeten Artikel. Das ist ein automatisierter Abgleich, **keine menschliche Fachprüfung**; `lastChecked` der Quellen bleibt deshalb leer, der Prüfstatus bleibt Entwurf. Kostenpflichtige Normen (SIA, VSS, ISO) bleiben «nicht überprüfbar». VBBo (SR 814.12) und MaLV (SR 814.412.2) wurden über die SR-Nummer nicht gefunden und sind nicht abgeglichen. iso.org sperrt automatische Abrufe; die ISO-Ausgaben 2026 sind daher nicht selbst bestätigt.
+
+| ID / Stelle | Alt | Neu | Begründung | Quelle und Fassung | Prüfergebnis | Verbleibender Prüfbedarf |
+|---|---|---|---|---|---|---|
+| Quelle `gschg`, m2-l5, m7-l4 | Meldepflicht «laut externem Prüfbericht Art. 22 Abs. 6 – nicht selbst verifiziert» | Wortlaut sinngemäss zitiert: unverzügliche Meldung an die **Gewässerschutzpolizei**, zumutbare Abwehrmassnahmen; Meldung nie von interner Freigabe abhängig | Durchgang 3, 10 (kritisch); Korrekturauftrag Phase 2 Punkt 2 | GSchG Art. 22 Abs. 6, Fedlex-Fassung 1.8.2025 | **Wortlaut bestätigt** | Kantonale Gewässerschutzpolizei und Pikettnummern je Standort |
+| m7-l4 (neu) | – | Tabelle «Drei Ebenen»: Notruf 118/117 – Behörde (Gewässerschutzpolizei, kantonale Fachstelle/Pikett) – intern, gleichzeitig | Korrekturauftrag: Notruf und kantonale Meldestelle als getrennte Ebenen | wie oben | – | – |
+| Quelle `notruf` | «Gewässerverschmutzungen werden über Polizei oder Feuerwehr gemeldet» | Notruf als erster Kontakt; gesetzliche Meldestelle ist die Gewässerschutzpolizei, Organisation kantonal | Präzisierung | GSchG Art. 22 Abs. 6 | bestätigt | – |
+| Quelle `gschg` | Art. 54 sinngemäss | Art. 54 und 70–71 verglichen | Quellenabgleich | Fedlex 1.8.2025 | bestätigt | – |
+| Quelle `usg` | Art. 2 sinngemäss | verglichen | Quellenabgleich | Fedlex 1.8.2026 | bestätigt | – |
+| Quelle `lrv` (m5-q11, m8) | «über 18 kW» | Wortlaut «mehr als 18 kW», Motoren mit Kompressionszündung, Anhang 4 Ziff. 3 | Durchgang 1 | LRV Art. 19a Abs. 1, Fedlex 1.8.2026 | bestätigt | m5-q11-Text in Phase 3 schärfen |
+| Quellen `bafu-luft`, `bafu-baulaerm` | Rechtsnatur nur allgemein | Rechtsnatur zentral aus dem Abschnitt «Rechtlicher Stellenwert» der Original-PDFs: Vollzugshilfe des BAFU als Aufsichtsbehörde; andere rechtskonforme Lösungen zulässig; für die Baustelle verbindlich über Bewilligung bzw. Auflage. Ausgaben: Luft Februar 2016 (Erstausgabe 2009, UV-0901); Baulärm 2006, Stand 2011 (UV-0606); neue Links | Korrekturauftrag Phase 2 Punkt 3; Durchgang 10 | Original-PDFs BAFU | bestätigt | – |
+| Quelle `lsv` | Art. 6 «über Unterlagen bestätigt» | Art. 6 und Art. 43 im Wortlaut verglichen | Durchgang 2 (Teil A 1, 3) | LSV, Fedlex 1.1.2025 | bestätigt | – |
+| Quelle `vvea`, m3-l3 | Art. 52 bereits mit Daten | Keine Inhaltsänderung nötig: Verwertung über 250 mg PAK/kg nur bis 31.12.2025; Ablagerung Typ E (über 250) bzw. Typ B (bis 250) bis 31.12.2027 – stimmt mit der App überein | Korrekturauftrag Phase 2 Punkt 5 | VVEA Art. 20, 52, Fedlex 1.8.2026 | bestätigt | Entsorgungswege ab 2028 kantonal |
+| Quelle `sdr`, m7-l2 | «Geltende Fassung prüfen» | Änderung vom 21.9.2026 (AS 2026 525), in Kraft 1.1.2027, als Hinweis; Inhalt nicht ausgewertet | Korrekturauftrag Phase 2 Punkt 4 | Fedlex-Metadaten AS 2026 525 | Datum bestätigt | Inhalt der Änderung für Baustellentransporte auswerten |
+| Quelle `iso19011`, m10-l4 | «Ausgabe 2018 – aktuelle Ausgabe prüfen» | «laut externer Prüfung ISO 19011:2026 (27.05.2026)», nicht selbst geprüft | Korrekturauftrag Phase 2 Punkt 1 | Prüfbericht | nicht überprüfbar (Herausgeberseite gesperrt) | Ausgabe beim Herausgeber bzw. SNV bestätigen |
+| Quelle `iso14001`, m10-l1, m10-l5 | Abschnittsnummern 2015 teils ohne Vermerk | Überall «Ausgabe 2026 nicht verglichen»; Quelle: 2026 laut Zertifizierern und Prüfbericht | Korrekturauftrag Phase 2 Punkt 1; Durchgang 10 | Prüfbericht | nicht überprüfbar | Normtext 2026 mit Lizenz vergleichen |
+| Quelle `stgb` (Modul 12) | Art. 102 sinngemäss | Abs. 1 (subsidiär bei mangelhafter Organisation) und Abs. 2 (nur aufgezählte Delikte, keine Umweltdelikte) verglichen | Durchgang 7 (m12-l5) | StGB, Fedlex 1.11.2026 | bestätigt | Darstellung in m12-l1/l5 in Phase 3 |
+| Quelle `or-vr` | Art. 716a «zu prüfen» | verglichen (Oberleitung, Organisation, Oberaufsicht inkl. Befolgung der Gesetze) | Durchgang 7 | OR, Fedlex 1.10.2026 | bestätigt | – |
+| Quelle `klimabericht` | SR-Nummer der Verordnung «zu prüfen» | SR 221.434; Art. 964a–964l OR; Pflicht für Gesellschaften des öffentlichen Interesses mit mindestens 500 Vollzeitstellen und einer weiteren Grössengrenze | Durchgang 6 | OR, Fedlex 1.10.2026; V 221.434, Fassung 1.1.2024 | bestätigt | Laufende Revisionen |
+| Quellen `klg`, `co2g`, `uwg` | SR-Nummern «zu prüfen» | SR 814.310 (in Kraft 1.1.2025; Art. 3 Netto-Null 2050), SR 641.71 (Art. 29 Abgabe auf Brennstoffe), UWG Art. 3 Abs. 1 Bst. b | Durchgang 6 | Fedlex 1.1.2025 | bestätigt | – |
+
 ## Offen (nächste Schritte)
 
-- **Phase 2**: ISO 14001:2026 und ISO 19011:2026 als aktuelle Ausgaben; Art. 22 Abs. 6 GSchG und Notfall-Ebenen (Notruf / kantonale Fachstelle); Rechtsnatur der Baurichtlinie Luft (2016) und der Baulärm-Richtlinie (Stand 2011) zentral; SDR-Änderung (in Kraft 01.01.2027); VVEA-Stichtage Ausbauasphalt; Normdetails weiterhin «nicht überprüfbar».
 - **Phase 3**: wichtige und geringe Befunde je Modul (Durchgänge 1–9), u. a. m5-q11, m5-q21, m6-q02, m6-q05, m6-d01, m6-q19, m7-q12, m9-d01, m12-l1/l4/l5; offene Antworten nur über Raster.
 - **Phase 4**: Änderungsnachweis für Phasen 2 und 3 ergänzen.
