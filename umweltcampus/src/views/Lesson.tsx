@@ -14,7 +14,7 @@ import { Icon } from '../components/Icons';
 import { newItem } from '../lib/srs';
 import type { LessonProgress } from '../lib/state';
 import { lessonStatus } from '../lib/learning';
-import { StatusTrio, StatusTodo } from '../components/LessonStatus';
+import { StatusTrio, StatusTodo, TrioHelp } from '../components/LessonStatus';
 
 const STEP_LABEL: Record<Step['kind'], string> = {
   situation: 'Einstieg', quiz: 'Wissensabfrage', brief: 'Kurz erklärt', explain: 'Erklärung', diagram: 'Schema', example: 'Beispiel', deep: 'Vertiefung',
@@ -132,6 +132,7 @@ export function LessonView({ id }: { id: string }) {
           <ReviewBadge status={lesson.review} />
         </div>
         <StatusTrio st={lessonStatus(s, id)} />
+        <TrioHelp />
       </header>
 
       <div className="lesson-progress">

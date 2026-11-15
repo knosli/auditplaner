@@ -953,6 +953,7 @@ fieldset { min-width: 0; }
 /* Kanton & Standort, Vor Ort prüfen */
 .badge.chk-ok { background: var(--ok-soft); color: var(--ok); border-color: transparent; }
 .badge.chk-open { background: var(--warn-soft); color: var(--warn); border-color: transparent; }
+.badge.chk-link { background: var(--accent-soft); color: var(--accent); border-color: transparent; }
 .badge.chk-none { background: var(--surface-2); color: var(--muted); }
 .lc-rows { display: grid; gap: 14px; margin-top: 12px; }
 .lc-row { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; background: var(--surface); min-width: 0; }
@@ -1035,6 +1036,12 @@ fieldset { min-width: 0; }
 .scene-map { margin: 0; display: grid; gap: 10px; }
 .scene-map svg { width: 100%; height: auto; display: block; border-radius: 12px; border: 1px solid var(--line); }
 .scene-map.thumb svg { border: 0; border-radius: 0; }
+.sm-zoom-btn { justify-self: start; }
+.sm-zoom { position: fixed; inset: 0; z-index: 200; background: var(--bg); display: flex; flex-direction: column; }
+.sm-zoom-bar { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; justify-content: space-between; padding: 10px 16px; border-bottom: 1px solid var(--line); background: var(--surface); }
+.sm-zoom-ctl { display: inline-flex; gap: 8px; align-items: center; }
+.sm-zoom-body { flex: 1; overflow: auto; padding: 16px; -webkit-overflow-scrolling: touch; }
+.sm-zoom-body svg { display: block; border-radius: 12px; border: 1px solid var(--line); }
 .sm-bg { fill: #f6f7f4; }
 .sm-z { stroke-width: 1.5; }
 .sm-building { fill: #e4ebe6; stroke: #9db7b0; }
@@ -1078,3 +1085,9 @@ fieldset { min-width: 0; }
 .scene-peek[open] summary { margin-bottom: 10px; }
 .sim-banner .scene-map.thumb { width: 100%; }
 .main:focus { outline: none; }
+.layers-toggle { justify-self: start; margin-top: 4px; }
+.trio-help { font-size: 0.9rem; margin: 4px 0; }
+.trio-help summary { cursor: pointer; color: var(--accent); font-weight: 600; }
+.trio-help dl { margin: 8px 0; display: grid; gap: 6px; }
+.trio-help dt { font-weight: 600; }
+.trio-help dd { margin: 0 0 0 0; color: var(--ink-2, inherit); }

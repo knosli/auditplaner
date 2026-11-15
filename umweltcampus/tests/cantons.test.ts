@@ -1,6 +1,6 @@
 // Kantonales Quellenregister: Kantonswechsel, Mehrsprachigkeit, Gemeinde, Prüfstatus, Lernstand.
 import { describe, expect, test } from 'vitest';
-import { CANTONS, CANTON_SOURCES, CHECK_THEMES, MODULE_THEMES, cantonSources, isMultilingual, projectCheck } from '../src/content/cantons';
+import { CANTONS, CANTON_SOURCES, CHECK_THEMES, LINK_CHECKS, MODULE_THEMES, cantonSources, isMultilingual, projectCheck } from '../src/content/cantons';
 import { MODULES, SOURCES } from '../src/content';
 import { emptyState, normalizeState } from '../src/lib/state';
 
@@ -75,5 +75,23 @@ describe('Standort im Lernstand', () => {
     expect(b.answers.length).toBe(1);
     const switched = normalizeState({ ...b, settings: { ...b.settings, site: { canton: 'ZH' } } });
     expect(switched.answers).toEqual(b.answers);
+  });
+});
+
+describe('Linkprüfung (Prüfberichte V0.22)', () => {
+  test('jede kantonale Quelle hat ein Ergebnis der Linkprüfung, getrennt vom fachlichen Status', () => {
+    for (const x of CANTON_SOURCES) {
+      expect(LINK_CHECKS[x.id], x.id).toBeDefined();
+      expect(x.status, x.id).toBe('nicht_geprueft');
+    }
+    expect(Object.keys(LINK_CHECKS).every((id) => CANTON_SOURCES.some((x) => x.id === id))).toBe(true);
+  });
+  test('defekter AI-Link ersetzt, Ausgaben SZ und OW aus dem Dokument', () => {
+    const by = (id: string) => CANTON_SOURCES.find((x) => x.id === id)!;
+    expect(by('ai-merkblatt').url).not.toContain('.pdf');
+    expect(LINK_CHECKS['ai-merkblatt'].status).toBe('ersetzt');
+    expect(by('sz-einstieg').edition).toContain('Juni 2024');
+    expect(by('ow-einstieg').edition).toContain('März 2025');
+    expect(LINK_CHECKS['bl-einstieg'].status).toBe('nicht_pruefbar');
   });
 });

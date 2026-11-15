@@ -287,7 +287,7 @@ export const M7_SCENARIO: Scenario = {
       situation: 'Der Polier: «Der Hahn ist zu, aber es ist schon einiges ausgelaufen und läuft Richtung Strasse. Ich habe Bindemittel gestreut. Muss ich jetzt wirklich jemanden anrufen?»',
       prompt: 'Was sagen Sie?',
       options: [
-        { id: 'o1', points: 2, text: '«Ja, sofort 118 – es kann in die Schächte und in den Bach laufen. Der Maschinist soll gleichzeitig mit Brettern, Folie oder Erde die Schächte abdecken bzw. abdämmen, soweit es gefahrlos geht. Ich informiere den Bauführer und komme.»', feedback: 'Richtig: Der Weg des Stoffs entscheidet. Alarmieren und Eindämmen laufen gleichzeitig.' },
+        { id: 'o1', points: 2, text: '«Ja, sofort 118 – es kann in die Schächte und in den Bach laufen. Der Maschinist soll gleichzeitig mit Abdeckmatte, Folie oder Brettern die Schächte abdecken und davor abdämmen (kein Material in den Schacht), soweit es gefahrlos geht. Ich informiere den Bauführer und komme.»', feedback: 'Richtig: Der Weg des Stoffs entscheidet. Alarmieren und Eindämmen laufen gleichzeitig.' },
         { id: 'o2', points: 0, critical: true, text: '«Streu den Rest Bindemittel und schau, ob es reicht. Am Montag schauen wir es an.»', feedback: 'Kritischer Fehler: Diesel kann jetzt in die Schächte und in den Bach laufen. Abwarten vergrössert den Schaden und verletzt die Meldepflicht.', consequence: 'Über das Wochenende regnet es. Am Sonntag meldet ein Fischer einen Ölfilm am Bach; die Polizei ermittelt.' },
         { id: 'o3', points: 0, critical: true, text: '«Spül es mit dem Wasserschlauch zur Seite, damit es nicht auf die Strasse läuft.»', feedback: 'Kritischer Fehler: Wegspülen verteilt den Diesel und treibt ihn in die Schächte.', consequence: 'Der Diesel gelangt mit dem Spülwasser in zwei Einlaufschächte.' },
       ],
@@ -309,7 +309,7 @@ export const M7_SCENARIO: Scenario = {
       situation: 'Die Feuerwehr ist in etwa zehn Minuten da. Sie sind unterwegs.',
       prompt: 'Was soll vor Ort geschehen? (Alle sinnvollen wählen)',
       options: [
-        { id: 'm1', points: 2, text: 'Schächte in Fliessrichtung mit Folie, Brettern oder Erde abdecken bzw. abdämmen, soweit gefahrlos', feedback: 'Richtig.' },
+        { id: 'm1', points: 2, text: 'Schächte in Fliessrichtung mit Abdeckmatte, Folie oder Brettern abdecken und davor abdämmen (kein Material in den Schacht), soweit gefahrlos', feedback: 'Richtig.' },
         { id: 'm2', points: 2, text: 'Zündquellen fernhalten, Motoren aus, nicht rauchen', feedback: 'Richtig: Eigenschutz.' },
         { id: 'm3', points: 2, text: 'Verbleibendes Bindemittel auf die Fliessfront streuen, um die Ausbreitung zu bremsen', feedback: 'Richtig.' },
         { id: 'm4', points: 2, text: 'Zeiten notieren (Ereignis, Alarmierung), sobald es die Lage erlaubt', feedback: 'Richtig: Erleichtert Bericht und Abklärungen.' },

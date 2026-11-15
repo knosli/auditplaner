@@ -286,12 +286,12 @@ export const M1_SCENARIO: Scenario = {
     },
     {
       id: 'f3', title: 'Sofortmassnahmen', type: 'multi', criteria: ['fachlich', 'recht', 'prioritaet'],
-      situation: 'Die Kontrolleurin hält drei Mängel fest: gemischte Mulde, Maschine ohne Nachweis, Hinweis auf Arbeiten vor 7 Uhr. Sie fragt, was Sie sofort veranlassen.',
+      situation: 'Die Kontrolleurin hält drei Mängel fest: gemischte Mulde, Maschine ohne Nachweis, Hinweis eines Anwohners auf Arbeiten vor 7 Uhr (Auflage 12). Sie fragt, was Sie sofort veranlassen.',
       prompt: 'Welche Sofortmassnahmen veranlassen Sie? (Alle sinnvollen wählen)',
       options: [
         { id: 'm1', points: 2, text: 'Mulde heute sortieren lassen, Muldenkonzept beschriften, Gipsplatten separat', feedback: 'Richtig: Trennpflicht (Art. 17 VVEA) und Konzept umsetzen.' },
-        { id: 'm2', points: 2, text: 'Kompaktbagger stilllegen, bis der Nachweis vorliegt; sonst Ersatzmaschine', feedback: 'Richtig: Ohne Nachweis kein Einsatz.' },
-        { id: 'm3', points: 2, text: 'Arbeitszeiten heute mit allen Equipen inkl. Subunternehmer instruieren und kontrollieren', feedback: 'Richtig: Ursache der Beschwerde direkt angehen.' },
+        { id: 'm2', points: 2, text: 'Kompaktbagger stilllegen, bis der Nachweis vorliegt; sonst Ersatzmaschine', feedback: 'Richtig: Die fehlende Kennzeichnung allein belegt noch keinen Verstoss – aber solange der Nachweis fehlt, ist die Konformität nicht belegt, und die Maschine wird nicht eingesetzt.' },
+        { id: 'm3', points: 2, text: 'Arbeitszeiten heute mit allen Equipen inkl. Subunternehmer instruieren und kontrollieren', feedback: 'Richtig: Die Meldung mit der Auflage abgleichen (lärmintensive Arbeiten ab 7 Uhr) und die Ursache der Beschwerde direkt angehen.' },
         { id: 'm4', points: 2, text: 'Bauherrschaft über Kontrolle und Mängel informieren', feedback: 'Richtig: Sie ist Adressatin der Bewilligung.' },
         { id: 'm5', points: 0, critical: true, text: 'Bagger weiterlaufen lassen, weil der Abbruch sonst still steht', feedback: 'Kritischer Fehler: bewusster Einsatz einer nicht nachgewiesenen Maschine nach behördlicher Feststellung.', consequence: 'Die Fachstelle verfügt die Stilllegung und prüft eine Anzeige.' },
         { id: 'm6', points: 0, text: 'Die gemischte Mulde so lassen, die Sortieranlage trennt ja', feedback: 'Falsch: Trennung auf der Baustelle ist Pflicht, wo betrieblich möglich; das Konzept verlangt sie.' },

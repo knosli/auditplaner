@@ -114,7 +114,7 @@ Bei Bauvorhaben mit voraussichtlich mehr als 200 m³ Bauabfällen oder bei zu er
         'Deponietypen A–E; Ablagern ist der letzte Weg.',
         'Muldenkonzept, Instruktion, Kontrolle und Nachweise organisieren.',
       ] },
-      { id: 'm3-l1-sources', kind: 'sources', title: 'Quellen und weiterführende Informationen', sourceIds: ['usg', 'vvea', 'veva', 'lva', 'bafu-bauabfaelle'] },
+      { id: 'm3-l1-sources', kind: 'sources', title: 'Quellen und weiterführende Informationen', sourceIds: ['usg', 'vvea', 'veva', 'lva', 'bafu-bauabfaelle', 'bafu-entsorgungstabelle', 'bafu-schlaemme'] },
     ],
   },
   // =====================================================================

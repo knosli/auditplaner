@@ -153,7 +153,7 @@ export const SCENARIOS: Scenario[] = [
         situation: 'Sie haben die Lage erfasst. Der Polier fragt: «Was zuerst?»',
         prompt: 'Ordnen Sie die Massnahmen nach Priorität (oben = zuerst).',
         rankItems: [
-          { id: 'p1', text: 'Pumpe abstellen bzw. Einleitung in den Graben stoppen; Wasser in der Grube zurückhalten' },
+          { id: 'p1', text: 'Pumpe abstellen bzw. Einleitung in den Graben stoppen, sofern die Baugrube sicher bleibt; Wasser in der Grube zurückhalten' },
           { id: 'p2', text: 'Befahren des nassen, nicht abgetragenen Bodens einstellen; Maschinen auf Baupisten' },
           { id: 'p3', text: 'Melden: Der Bach ist sichtbar belastet – sofort Fachstelle gemäss Bewilligung bzw. 117; Bauleitung und BBB informieren (parallel durch zweite Person)' },
           { id: 'p4', text: 'Absetzcontainer entleeren und wieder in Betrieb nehmen' },

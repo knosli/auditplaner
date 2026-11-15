@@ -26,6 +26,19 @@ export function StatusTrio({ st, compact }: { st: LessonStatus; compact?: boolea
   );
 }
 
+/** Aufklappbare Erklärung der drei Stufen – funktioniert auch auf dem Handy (kein Mouseover nötig). */
+export function TrioHelp() {
+  return (
+    <details className="trio-help">
+      <summary>Was bedeuten die drei Stufen?</summary>
+      <dl>
+        {LABELS.map((x) => <div key={x.key}><dt>{x.label}</dt><dd>{x.title}.</dd></div>)}
+      </dl>
+      <p className="hint">Nur «Nachgewiesen» zählt als Kompetenznachweis. Offene Fragen mit Selbstbewertung helfen beim Lernen, sind aber nie ein Nachweis.</p>
+    </details>
+  );
+}
+
 /** Was fehlt noch? Für den Lektionsabschluss. */
 export function StatusTodo({ st }: { st: LessonStatus }) {
   const items: string[] = [];
@@ -36,6 +49,7 @@ export function StatusTodo({ st }: { st: LessonStatus }) {
     <div className="trio-todo">
       <StatusTrio st={st} />
       {items.length ? <ul className="plain hint">{items.map((i) => <li key={i}>{i}</li>)}</ul> : <p className="okline">Alle drei Stufen erfüllt.</p>}
+      <TrioHelp />
       {st.openOnly > 0 && <p className="hint">{st.openOnly} offene Frage{st.openOnly === 1 ? '' : 'n'} mit Selbstbewertung – hilfreich zum Lernen, aber kein Nachweis.</p>}
     </div>
   );

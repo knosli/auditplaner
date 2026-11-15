@@ -187,6 +187,8 @@ const ok = (c, m) => { console.log((c ? 'OK   ' : 'FAIL ') + m); if (!c) process
     // UX-Update: Lernstufen, Fachvertiefung, Fokusmodus, Tastatur, Simulator-Szenen, spezifisches Feedback
     await go('lektion-m2-l1');
     ok((await page.locator('.lesson-head .trio > li').count()) === 3, 'Lektion zeigt drei Stufen: gelesen, bearbeitet, nachgewiesen');
+    await page.locator('.lesson-head .trio-help summary').click(); await page.waitForTimeout(100);
+    ok((await page.locator('.lesson-head .trio-help dt').count()) === 3 && await page.locator('.lesson-head .trio-help dd').first().isVisible(), 'Stufen-Erklärung aufklappbar (ohne Mouseover, auch mobil)');
     { const lbl = await page.locator('.stepper button').allTextContents(); await page.locator('.stepper button').nth(lbl.findIndex((l) => l.includes('Vertiefung'))).click(); await page.waitForTimeout(150); }
     const tocN = await page.locator('.deep-toc li').count();
     await page.locator('.deep-toc li button').nth(2).click(); await page.waitForTimeout(150);
@@ -211,10 +213,21 @@ const ok = (c, m) => { console.log((c ? 'OK   ' : 'FAIL ') + m); if (!c) process
     await go('szenario-sim-a');
     ok(await page.evaluate(() => document.activeElement && document.activeElement.id === 'main'), 'Tastatur: nach Seitenwechsel steht der Fokus am Anfang des Inhalts');
     ok((await page.locator('.scene-map svg').count()) === 1 && (await page.locator('.sm-list li').count()) >= 3, 'Simulator: technische Szene mit Gefahren und Schutzgütern');
+    await page.getByRole('button', { name: 'Plan vergrössern' }).click(); await page.waitForTimeout(150);
+    { const dlg = page.locator('.sm-zoom'); const w0 = await dlg.locator('svg').evaluate((e) => e.getBoundingClientRect().width);
+      await dlg.getByRole('button', { name: 'Vergrössern' }).click(); await page.waitForTimeout(100);
+      const w1 = await dlg.locator('svg').evaluate((e) => e.getBoundingClientRect().width);
+      ok((await dlg.count()) === 1 && w1 > w0 && await page.evaluate(() => document.activeElement && document.activeElement.getAttribute('aria-label') === 'Vergrössern'), 'Plan vergrössern: Vollbild mit Zoom'); }
+    await page.keyboard.press('Escape'); await page.waitForTimeout(100);
+    ok((await page.locator('.sm-zoom').count()) === 0 && await page.evaluate(() => document.activeElement && document.activeElement.textContent === 'Plan vergrössern'), 'Vollbild mit Esc geschlossen, Fokus zurück');
     await page.getByRole('button', { name: 'Fall beginnen' }).click(); await page.waitForTimeout(150);
     ok((await page.locator('.infoboard').count()) === 1 && (await page.locator('.infoboard').textContent()).includes('Fehlt noch'), 'Simulator: Lagebild mit «Liegt vor» und «Fehlt noch»');
     { const fresh = await ctx.newPage(); await fresh.goto(url + '#dashboard'); await fresh.waitForTimeout(400); await fresh.keyboard.press('Tab');
       ok(await fresh.evaluate(() => document.activeElement && document.activeElement.classList.contains('skip')), 'Tastatur: erster Tab erreicht «Zum Inhalt springen»'); await fresh.close(); }
+    await go('dashboard');
+    ok((await page.locator('#dash-layers .layer-mod').count()) === 3, 'Dashboard: Fachentwicklung zeigt nur drei relevante Module');
+    await page.locator('.layers-toggle').click(); await page.waitForTimeout(100);
+    ok((await page.locator('#dash-layers .layer-mod').count()) === 12 && (await page.locator('.layers-toggle').getAttribute('aria-expanded')) === 'true', 'Dashboard: «Alle 12 anzeigen» klappt alle Module auf');
     // Kanton & Standort
     await go('modul-m2');
     ok((await page.locator('#vor-ort').count()) === 1 && (await page.locator('#vor-ort').textContent()).includes('Einstellungen'), 'Vor Ort prüfen: ohne Kanton Hinweis auf Einstellungen');
@@ -235,6 +248,7 @@ const ok = (c, m) => { console.log((c ? 'OK   ' : 'FAIL ') + m); if (!c) process
     ok(Number(await page.locator('#canton-count').textContent()) >= 2 && (await page.locator('.projectcheck').textContent()).includes('Kantonale Regelung nicht verifiziert'), 'Quellenkarte ZH und Projektcheck mit «nicht verifiziert»');
     await page.selectOption('#canton-pick', 'AG');
     ok((await page.locator('.csrc a[href*="ag.ch"]').count()) > 0 && (await page.locator('.csrc a[href*="zh.ch"]').count()) === 0, 'Kantonswechsel ZH → AG ändert die Quellen');
+    ok((await page.locator('.csrc .badge.chk-link').count()) > 0 && (await page.locator('.csrc').first().textContent()).includes('Linkprüfung'), 'Kantonsquellen: Linkstatus getrennt vom fachlichen Prüfstatus');
     await page.selectOption('#canton-pick', '');
     // Bibliothek
     await go('bibliothek');
@@ -279,7 +293,9 @@ const ok = (c, m) => { console.log((c ? 'OK   ' : 'FAIL ') + m); if (!c) process
     const heroHref = await page.locator('.hero-cta').getAttribute('href');
     ok(/^#(lektion-|pruefung)/.test(heroHref || ''), 'Hero: genau eine Weiterlernen-Aktion (' + heroHref + ')');
     ok((await page.locator('.hero-cta').count()) === 1, 'Hero hat genau eine primäre Aktion');
-    ok((await page.locator('.lb').count()) === 4 * 12, 'Fortschrittsebenen getrennt (4 Ebenen × 12 Module)');
+    { const n0 = await page.locator('.lb').count(); await page.locator('.layers-toggle').click(); await page.waitForTimeout(100);
+      const n1 = await page.locator('.lb').count(); await page.locator('.layers-toggle').click(); await page.waitForTimeout(100);
+      ok(n0 === 4 * 3 && n1 === 4 * 12, 'Fortschrittsebenen getrennt (4 Ebenen × 3 relevante, aufklappbar auf 12 Module)'); }
     ok((await page.locator('.shelf .mod-card').count()) === 3, 'Drei Module als Einstieg');
     await page.locator('.hero-cta').click(); await page.waitForTimeout(200);
     ok((await page.evaluate(() => location.hash)) === heroHref, 'Weiterlernen öffnet die Lektion');

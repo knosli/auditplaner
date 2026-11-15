@@ -37,6 +37,11 @@ export function Dashboard() {
 
   // Drei Module als Einstieg: aktuelles zuerst, dann Lernpfad-Reihenfolge
   const shelf = [...avail].sort((a, b) => (a.id === curMod ? -1 : b.id === curMod ? 1 : a.pathOrder - b.pathOrder)).slice(0, 3);
+  // Fachentwicklung: nur die drei gerade relevanten Module (aktuelles, zuletzt bearbeitete, dann Lernpfad)
+  const lastTouch = (mid: string) => Math.max(0, ...LESSONS.filter((l) => l.moduleId === mid).map((l) => s.lessons[l.id]?.startedAt ?? 0), ...s.answers.filter((a) => a.q.startsWith(mid + '-')).map((a) => a.at));
+  const relevant = [...avail].sort((a, b) => (a.id === curMod ? -1 : b.id === curMod ? 1 : (lastTouch(b.id) - lastTouch(a.id)) || a.pathOrder - b.pathOrder));
+  const [allLayers, setAllLayers] = useState(false);
+  const layerMods = allLayers ? avail : relevant.slice(0, 3);
 
   return (
     <div className="page dash">
@@ -89,15 +94,16 @@ export function Dashboard() {
           )}
         </section>
         <section className="panel">
-          <div className="panel-head"><div><h2>Ihre Fachentwicklung</h2><span className="hint">Vier Ebenen, getrennt gezählt – keine Gesamtnote</span></div><a href="#fortschritt" className="panel-link">Details <Icon name="arrow" size={16} /></a></div>
-          <div className="layers">
-            {avail.map((m) => (
+          <div className="panel-head"><div><h2>Ihre Fachentwicklung</h2><span className="hint">Vier Ebenen, getrennt gezählt – keine Gesamtnote{allLayers ? '' : ' · die drei aktuell relevanten Module'}</span></div><a href="#fortschritt" className="panel-link">Details <Icon name="arrow" size={16} /></a></div>
+          <div className="layers" id="dash-layers">
+            {layerMods.map((m) => (
               <div key={m.id} className="layer-mod">
                 <div className="layer-title"><span className={'mini-ico tone-' + metaOf(m.id).tone}><Icon name={metaOf(m.id).icon} size={15} /></span><strong>{m.short}</strong></div>
                 <LayerBars s={s} moduleId={m.id} />
               </div>
             ))}
           </div>
+          <button type="button" className="btn quiet layers-toggle" aria-expanded={allLayers} aria-controls="dash-layers" onClick={() => setAllLayers(!allLayers)}>{allLayers ? 'Nur die drei relevanten anzeigen' : `Alle ${avail.length} anzeigen`}</button>
           <p className="rule"><Icon name="eye" size={15} /> «Angesehen» ist kein Nachweis. Beherrschung zeigt sich in Antworten, Fällen und bestätigter Praxis.</p>
         </section>
       </div>

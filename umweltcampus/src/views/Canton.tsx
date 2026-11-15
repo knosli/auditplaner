@@ -52,7 +52,7 @@ export function CantonView() {
       {c && (
         <Section title={`Quellenkarte ${c.code} – ${c.name}`}>
           <dl className="src-meta">
-            <dt>Amtssprachen</dt><dd>{c.langs.map((l) => LANG_LABEL[l]).join(', ')}{c.langs.length > 1 ? ' – mehrsprachiger Kanton: Originaltexte in der Sprache des Standorts prüfen' : ''}{site?.lang ? ` · gewählt: ${LANG_LABEL[site.lang]}` : ''}</dd>
+            <dt>Amtssprachen</dt><dd>{c.langs.map((l) => LANG_LABEL[l]).join(', ')}{c.langs.length > 1 ? ' – mehrsprachiger Kanton: Originaltexte in der Sprache des Standorts prüfen; massgebend ist die amtlich veröffentlichte Fassung (z. B. französisch, italienisch oder rätoromanisch), deutsche Fassungen oder Übersetzungen können abweichen' : ''}{site?.lang ? ` · gewählt: ${LANG_LABEL[site.lang]}` : ''}</dd>
             <dt>Fachstelle</dt><dd>{c.office}</dd>
             <dt>Hinweis</dt><dd>{c.hint}</dd>
             <dt>Quellen im Register</dt><dd id="canton-count">{all.length}</dd>

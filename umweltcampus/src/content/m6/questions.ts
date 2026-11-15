@@ -52,7 +52,7 @@ export const M6_QUESTIONS: Question[] = [
       { id: 'b', text: 'Etwa 6 dB weniger am Wohnhaus' },
       { id: 'c', text: 'Halb so laut empfunden (–10 dB)' },
       { id: 'd', text: 'Lauter, weil er weiter weg ist' },
-    ], correct: ['b'], explanation: 'Faustregel nur für eine Punktquelle im freien Schallfeld (ohne Reflexion und Abschirmung): doppelter Abstand etwa –6 dB. Für eine Linienquelle (z. B. stetiger Verkehr auf einer Strasse) sind es etwa –3 dB; Hauswände und Gebäudeschluchten können den Pegel durch Reflexion wieder erhöhen.',
+    ], correct: ['b'], explanation: 'Faustregel unter idealisierten Bedingungen – nur für eine Punktquelle im freien Schallfeld (ohne Reflexion, Abschirmung, Boden- und Witterungseinflüsse): doppelter Abstand etwa –6 dB. Für eine Linienquelle (z. B. stetiger Verkehr auf einer Strasse) sind es unter denselben idealisierten Bedingungen etwa –3 dB; Hauswände und Gebäudeschluchten können den Pegel durch Reflexion wieder erhöhen.',
     commonErrors: ['Wirkung von Abstand unterschätzen.'], sources: ['praxis'] }),
   // ---------- L2 Massnahmen ----------
   q({ id: 'm6-q06', topic: 'm6-massnahmen', level: 1, type: 'multi', objective: 'Besonders lärmige Arbeiten erkennen',
@@ -294,7 +294,7 @@ export const M6_QUESTIONS: Question[] = [
     prompt: 'Ein Kompressor steht in einer engen Gasse zwischen zwei Häuserzeilen. Er wird 10 m weiter entlang der Gasse versetzt (von 10 m auf 20 m Abstand zum betroffenen Fenster). Was ist realistisch?',
     options: [
       { id: 'a', text: 'Sicher genau 6 dB weniger.' },
-      { id: 'b', text: 'Weniger als im freien Feld zu erwarten: Die Hauswände reflektieren den Schall; die –6-dB-Regel gilt nur für eine Punktquelle im freien Schallfeld. Wirksamer sind Abschirmung nah an der Quelle, ein leiserer Kompressor oder ein Standort ausserhalb der Gasse.' },
+      { id: 'b', text: 'Weniger als im freien Feld zu erwarten: Die Hauswände reflektieren den Schall; die –6-dB-Regel gilt nur unter idealisierten Bedingungen für eine Punktquelle im freien Schallfeld. Wirksamer sind Abschirmung nah an der Quelle, ein leiserer Kompressor oder ein Standort ausserhalb der Gasse.' },
       { id: 'c', text: 'Mehr als 10 dB weniger, weil der Schall in der Gasse «gefangen» ist.' },
       { id: 'd', text: 'Kein Unterschied, Abstand spielt nie eine Rolle.' },
     ], correct: ['b'], explanation: 'Faustregeln haben Bedingungen: Reflexionen in Gassen und Höfen verringern den Abstandsgewinn. Im Zweifel misst oder beurteilt eine Fachperson.',

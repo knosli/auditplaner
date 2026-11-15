@@ -30,7 +30,7 @@ for (const mod of ['m3', 'm4', 'm5', 'm6', 'm7', 'm8', 'm9', 'm10', 'm11', 'm12'
       }
     });
     test('alle Fragen tragen eine gültige Bewertungsfassung', () => {
-      for (const q of QUESTIONS.filter((x) => x.moduleId === mod)) expect(['m5', 'm6', 'm7', 'm9', 'm10', 'm11', 'm12'].includes(mod) ? [5, 6, 7] : mod === 'm8' ? [4, 5] : [3, 4]).toContain(q.rev);
+      for (const q of QUESTIONS.filter((x) => x.moduleId === mod)) expect(['m5', 'm6', 'm7', 'm9', 'm10', 'm11', 'm12'].includes(mod) ? [5, 6, 7, 8] : mod === 'm8' ? [4, 5] : [3, 4, 8]).toContain(q.rev);
     });
     test('kritische Optionen geben 0 Punkte', () => {
       for (const q of QUESTIONS.filter((x) => x.moduleId === mod && x.type === 'best')) {
@@ -428,7 +428,6 @@ describe('Bewertungsfassung 6 (Gesamtprüfung V0.17, 14.11.2026)', () => {
   test('Fortsetzen einer Gefährdung, unzulässige Einleitung und Meldeverzug bringen keine Punkte', () => {
     for (const [q, o] of [['m5-d01', 'd'], ['m5-d02', 'a'], ['m6-d03', 'c'], ['m7-d01', 'a'], ['m7-d02', 'c'], ['m7-d02', 'd'], ['m7-d04', 'd'], ['m9-d03', 'c'], ['m12-d05', 'c'], ['m12-d05', 'd']]) expect(w(q, o).weight, `${q} ${o}`).toBe(0);
     for (const [q, o] of [['m5-d01', 'd'], ['m6-d03', 'c'], ['m7-d01', 'a'], ['m7-d04', 'd'], ['m9-d03', 'c'], ['m12-d05', 'c'], ['m12-d05', 'd']]) expect(w(q, o).critical, `${q} ${o}`).toBe(true);
-    expect(w('m2-d05', 'e').weight).toBe(0.25);
   });
   test('Fall K: Weiterarbeiten bei hustenden Kindern ist kritisch; Fall G: ungeprüfter Rückbau ohne Punkte', () => {
     const k1 = S.get('sim-k')!.stages.find((x) => x.id === 'k1')!;
@@ -450,7 +449,39 @@ describe('Bewertungsfassung 6 (Gesamtprüfung V0.17, 14.11.2026)', () => {
     expect(isLegacyRun('sim-k', run(6))).toBe(false);
     const ex = (moduleId: string, v: number) => ({ id: 'x', kind: 'modul', moduleId, at: 1, score: 1, total: 1, byTopic: {}, passed: true, v }) as never;
     expect(isLegacyExam(ex('m7', 5))).toBe(true);
-    expect(isLegacyExam(ex('m11', 5))).toBe(false);
+    expect(isLegacyExam(ex('m4', 5))).toBe(false);
+  });
+});
+
+describe('Bewertungsfassung 8 (Prüfberichte V0.22, 15.11.2026)', () => {
+  const w = (qid: string, oid: string) => QUESTIONS.find((q) => q.id === qid)!.options!.find((o) => o.id === oid)!;
+  test('keine Teilpunkte für Meldeverzug, ungeprüftes Überdecken und ungeklärte Abgabe', () => {
+    for (const [q, o] of [['m2-d05', 'e'], ['m3-d02', 'c'], ['m11-d04', 'a'], ['m11-d04', 'd']]) expect(w(q, o).weight, `${q} ${o}`).toBe(0);
+    for (const [q, o] of [['m2-d05', 'e'], ['m11-d04', 'a'], ['m11-d04', 'd']]) expect(w(q, o).critical, `${q} ${o}`).toBe(true);
+    expect(w('m11-d05', 'd').weight).toBe(0.25);
+    expect(w('m2-d05', 'f').weight).toBe(0.5);
+    for (const id of ['m2-d05', 'm3-d02', 'm7-d04', 'm11-d04', 'm11-d05']) expect(QUESTIONS.find((q) => q.id === id)!.rev).toBe(8);
+  });
+  test('Benzinunfall: Teiloption ohne «weiterarbeiten wie bisher», Gefahrenquelle stillgelegt', () => {
+    const e = w('m7-d04', 'e');
+    expect(e.text).not.toContain('weiterarbeiten wie bisher');
+    expect(e.text).toContain('nicht mehr betanken');
+    expect(w('m7-d04', 'b').text).not.toContain('gespült');
+  });
+  test('Teilpunkte werden nicht als Empfehlung zum Verschweigen dargestellt', () => {
+    expect(w('m10-d04', 'c').why).toContain('keine Empfehlung');
+    expect(w('m2-d05', 'a').prerequisites).toContain('Baugrubensicherheit');
+  });
+  test('frühere Ergebnisse gelten als frühere Fassung, ohne Neubenotung', () => {
+    const mk = (q: string, v: number) => ({ q, at: 1, score: 1, correct: true, conf: 2, ctx: 'lesson', v }) as never;
+    for (const id of ['m2-d05', 'm3-d02', 'm7-d04', 'm11-d04', 'm11-d05']) {
+      expect(isLegacyAnswer(mk(id, 7)), id).toBe(true);
+      expect(isLegacyAnswer(mk(id, 8)), id).toBe(false);
+    }
+    expect(isLegacyAnswer(mk('m11-d01', 7))).toBe(false);
+    const ex = (moduleId: string, v: number) => ({ id: 'x', kind: 'modul', moduleId, at: 1, score: 1, total: 1, byTopic: {}, passed: true, v }) as never;
+    expect(isLegacyExam(ex('m11', 7))).toBe(true);
+    expect(isLegacyExam(ex('m4', 7))).toBe(false);
   });
 });
 
@@ -476,5 +507,16 @@ describe('Bewertungsfassung 7 (Gesamtprüfung V0.17, Phase 3)', () => {
     expect(l).not.toContain('kaum direkte Pflichten');
     expect(JSON.stringify(QUESTIONS.find((q) => q.id === 'm5-q11'))).toContain('mehr als 18 kW');
     expect(QUESTIONS.find((q) => q.id === 'm6-q31')!.correct).toEqual(['b']);
+  });
+});
+
+describe('Modulübergreifende Nullpunkt-Regeln (Prüfberichte V0.22, D10)', () => {
+  // Formulierungen, die eine Meldung verzögern, eine Gefährdung unverändert fortsetzen oder
+  // Material ohne Abklärung weitergeben bzw. verdecken – dafür gibt es nirgends Teilpunkte.
+  const RISKY = [/erst informieren, wenn/i, /weiterarbeiten wie bisher/i, /ohne abzuklären/i, /(abgeben|weitergeben|abholen)[^.]*ohne Rücksprache/i, /am Montag/i];
+  test('keine Teilpunkte für Meldeverzug, unverändertes Weiterarbeiten oder ungeklärte Weitergabe', () => {
+    for (const q of QUESTIONS.filter((x) => x.type === 'best')) {
+      for (const o of q.options!) if (RISKY.some((r) => r.test(o.text))) expect(o.weight, `${q.id}/${o.id}: ${o.text}`).toBe(0);
+    }
   });
 });

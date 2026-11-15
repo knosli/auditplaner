@@ -243,7 +243,7 @@ export const SOURCES: Source[] = [
     lastChecked: null,
     scope: 'Bauarbeiten und Bautransporte; Massnahmenstufen A, B, C (Transporte A, B); keine Grenzwerte',
     review: 'entwurf',
-    note: 'Richtlinie nach Art. 6 LSV. Rechtsnatur laut Publikation («Rechtlicher Stellenwert»): Vollzugshilfe des BAFU als Aufsichtsbehörde, richtet sich primär an die Vollzugsbehörden; andere rechtskonforme Lösungen sind zulässig. Für eine Baustelle verbindlich wird die Massnahmenstufe über Bewilligung bzw. Auflage. Keine Belastungsgrenzwerte für Baulärm. Titelseite und Stellenwert am Original-PDF verglichen (automatisierter Abgleich am 14.11.2026, keine menschliche Fachprüfung).',
+    note: 'Richtlinie nach Art. 6 LSV. Rechtsnatur laut Publikation («Rechtlicher Stellenwert»): Vollzugshilfe des BAFU als Aufsichtsbehörde, richtet sich primär an die Vollzugsbehörden; andere rechtskonforme Lösungen sind zulässig. Für eine Baustelle verbindlich wird die Massnahmenstufe über Bewilligung bzw. Auflage. Keine Belastungsgrenzwerte für Baulärm. Titelseite und Stellenwert am Original-PDF verglichen (automatisierter Abgleich am 14.11.2026, keine menschliche Fachprüfung). Fachseite des BAFU «Ermittlung und Beurteilung von Baulärm» (https://www.bafu.admin.ch/de/ermittlung-baulaerm, veröffentlicht 18.11.2025, abgerufen 15.11.2026): führt die Richtlinie weiterhin als «Stand 2011».',
   },
   {
     id: 'vvea',
@@ -353,7 +353,7 @@ export const SOURCES: Source[] = [
     lastChecked: null,
     scope: 'Zertifizierte Unternehmen',
     review: 'entwurf',
-    note: 'Kostenpflichtige Norm. Die in der App genannten Abschnittsnummern (6.1.3, 8.1, 8.2, 9.1.2, 10.2) stammen aus der Ausgabe 2015 und sind für die Ausgabe 2026 nicht verglichen – vor Verwendung an der aktuellen Norm prüfen. Laut Zertifizierern moderate Änderungen (u. a. Änderungsmanagement, Biodiversität, Ressourcen). Vertiefung in Modul 10. Ausgabe 2026 laut Zertifizierern und externer Prüfung (14.11.2026); beim Herausgeber nicht selbst geprüft (Website für automatische Abrufe gesperrt). Abschnittsnummern in der App stammen aus der Ausgabe 2015 und sind nicht mit 2026 verglichen.',
+    note: 'Kostenpflichtige Norm. Die in der App genannten Abschnittsnummern (6.1.3, 8.1, 8.2, 9.1.2, 10.2) stammen aus der Ausgabe 2015 und sind für die Ausgabe 2026 nicht verglichen – vor Verwendung an der aktuellen Norm prüfen. Laut Zertifizierern moderate Änderungen (u. a. Änderungsmanagement, Biodiversität, Ressourcen). Vertiefung in Modul 10. Ausgabe 2026 laut Zertifizierern und externer Prüfung (14.11.2026); beim Herausgeber nicht selbst geprüft (Website für automatische Abrufe gesperrt). Abschnittsnummern in der App stammen aus der Ausgabe 2015 und sind nicht mit 2026 verglichen. Prüfberichte V0.22: Ausgabe laut externen Prüfberichten beim Herausgeber bestätigt (iso.org/standard/14001, Abruf 15.11.2026); von der App nicht abrufbar. Bestätigt ist nur die Ausgabe, nicht der Norminhalt.',
   },
   {
     id: 'bafu-wasser',
@@ -429,7 +429,19 @@ export const SOURCES: Source[] = [
   {
     id: 'bafu-bauabfaelle', title: 'BAFU: Vollzugshilfe «Bauabfälle» / Informationen zu Bauabfällen und Bauschadstoffen', short: 'BAFU Bauabfälle', kind: 'vollzugshilfe',
     issuer: 'Bundesamt für Umwelt (BAFU)', url: 'https://www.bafu.admin.ch/bafu/de/home/themen/abfall.html', version: 'Modulare Vollzugshilfe zur VVEA – Stand prüfen', lastChecked: null, scope: 'Ganze Schweiz', review: 'entwurf',
-    note: 'Titel und Module der Vollzugshilfe zur VVEA auf der BAFU-Website prüfen; Inhalte in der App sinngemäss.',
+    note: 'Titel und Module der Vollzugshilfe zur VVEA auf der BAFU-Website prüfen; Inhalte in der App sinngemäss. Übersicht der Module und Anhänge: https://www.bafu.admin.ch/de/vollzugshilfen-abfall (abgerufen 15.11.2026); neuere Teile siehe «Entsorgungstabelle Bauabfälle» (Anhang A3, 10.12.2025) und «Schlämme aus der Bauwirtschaft» (Stand 03/2026).',
+  },
+  {
+    id: 'bafu-entsorgungstabelle', title: 'BAFU: Entsorgungstabelle Bauabfälle (Boden, Aushub, Rückbaumaterial) – Anhang A3 zum Modul «Bauabfälle» der Vollzugshilfe VVEA', short: 'BAFU Entsorgungstabelle', kind: 'vollzugshilfe',
+    issuer: 'Bundesamt für Umwelt (BAFU)', url: 'https://www.bafu.admin.ch/dam/de/sd-web/62GCupyeGKi7/UV-1826-02%20Bauabf%C3%A4lle_DE%20Anhang%2003%20Entsorgungstabelle.pdf',
+    version: 'Fassung vom 10.12.2025 laut BAFU-Übersicht «Abfall: Vollzugshilfen» (abgerufen 15.11.2026); Formular-Fusszeile «© BAFU 2020»', lastChecked: null, scope: 'Formular für Entsorgungskonzept (vor Baubeginn) und Entsorgungsnachweis (nach Abschluss)', review: 'entwurf',
+    note: 'Datum und Umfang (11 Seiten) am Original-PDF und an der BAFU-Übersicht verglichen (automatisierter Abgleich am 15.11.2026, keine menschliche Fachprüfung). Laut Formular reicht es bei kleineren, wenig komplexen Projekten als Entsorgungskonzept; bei grösseren ist ein Bericht nötig, das Formular dient dann als Zusammenfassung. Keine Werte aus der Tabelle in die App übernommen. Rechtsnatur: Vollzugshilfe – verbindlich wird sie über Bewilligung bzw. kantonalen Vollzug.',
+  },
+  {
+    id: 'bafu-schlaemme', title: 'BAFU: Bauabfälle – Schlämme aus der Bauwirtschaft (Teil des Moduls «Bauabfälle» der Vollzugshilfe VVEA, UV-1826/02/04)', short: 'BAFU Schlämme', kind: 'vollzugshilfe',
+    issuer: 'Bundesamt für Umwelt (BAFU)', url: 'https://www.bafu.admin.ch/dam/de/sd-web/46v0Hkz8cd4t/UV-1826-02-04%20Schl%C3%A4mme%20aus%20der%20Bauwirtschaft_DE.pdf',
+    version: 'Stand 03/2026, gültig ab 1. Mai 2025 (Vorversion 05/2025) – laut Titelseite des PDF', lastChecked: null, scope: 'Entsorgung von Schlämmen aus der Bauwirtschaft; rechtliche Grundlagen USG Art. 30–30h und VVEA', review: 'entwurf',
+    note: 'Titelseite (Stand, Gültigkeit, Grundlagen) am Original-PDF verglichen (automatisierter Abgleich am 15.11.2026, keine menschliche Fachprüfung). In der App nur als weiterführende Quelle genannt; Inhalte nicht im Einzelnen übernommen oder geprüft.',
   },
   {
     id: 'bafu-mineral', title: 'BAFU: Vollzugshilfe «Verwertung mineralischer Rückbaumaterialien» (Modul der Vollzugshilfe zur VVEA)', short: 'BAFU Rückbaumaterialien', kind: 'vollzugshilfe',
@@ -505,8 +517,8 @@ export const SOURCES: Source[] = [
   },
   {
     id: 'iso19011', title: 'ISO 19011 «Leitfaden zur Auditierung von Managementsystemen»', short: 'ISO 19011', kind: 'norm',
-    issuer: 'ISO / SNV', version: 'Laut externer Prüfung vom 14.11.2026 aktuelle Ausgabe ISO 19011:2026 (veröffentlicht 27.05.2026), ersetzt ISO 19011:2018 – von der App nicht beim Herausgeber geprüft (Website für automatische Abrufe gesperrt).', lastChecked: null, scope: 'Leitfaden (Empfehlung) für interne und externe Audits', review: 'entwurf',
-    note: 'Kostenpflichtige Norm; in der App nur Grundsätze sinngemäss (Auditprogramm, Unparteilichkeit, Nachweise, Feststellungen). Kein Normtext, Ausgabe nicht geprüft.',
+    issuer: 'ISO / SNV', version: 'Laut externer Prüfung vom 14.11.2026 aktuelle Ausgabe ISO 19011:2026 (veröffentlicht 27.05.2026), ersetzt ISO 19011:2018 – laut externen Prüfberichten beim Herausgeber bestätigt (iso.org/standard/19011, Abruf 15.11.2026); von der App nicht abrufbar (Website für automatische Abrufe gesperrt).', lastChecked: null, scope: 'Leitfaden (Empfehlung) für interne und externe Audits', review: 'entwurf',
+    note: 'Kostenpflichtige Norm; in der App nur Grundsätze sinngemäss (Auditprogramm, Unparteilichkeit, Nachweise, Feststellungen). Kein Normtext. Bestätigt ist nur die Ausgabe (durch externe Prüfberichte), nicht der Inhalt einzelner Abschnitte.',
   },
   {
     id: 'iso9001', title: 'ISO 9001 «Qualitätsmanagementsysteme – Anforderungen»', short: 'ISO 9001', kind: 'norm',
