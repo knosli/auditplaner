@@ -69,7 +69,7 @@ describe('Modulübergreifend', () => {
   });
   test('Modulanforderungen sind je Modul getrennt', () => {
     const s = emptyState();
-    s.exams.push({ id: 'x', kind: 'modul', moduleId: 'm2', at: 1, score: 0.9, total: 18, byTopic: {}, passed: true, v: 8 });
+    s.exams.push({ id: 'x', kind: 'modul', moduleId: 'm2', at: 1, score: 0.9, total: 18, byTopic: {}, passed: true, v: 9 });
     expect(moduleRequirements(s, 'm2').find((r) => r.label.startsWith('Modulprüfung'))!.done).toBe(true);
     expect(moduleRequirements(s, 'm1').find((r) => r.label.startsWith('Modulprüfung'))!.done).toBe(false);
   });

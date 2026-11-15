@@ -1,4 +1,6 @@
-# Korrekturen nach den Prüfberichten zu Version 0.22 (→ Version 0.23)
+# Korrekturen nach den Prüfberichten zu Version 0.22 (→ Version 0.23, Nachprüfung → 0.24)
+
+> **Hinweis:** Drei Entscheide dieses Berichts wurden nach einer externen Nachprüfung in Version 0.24 (Bewertungsfassung 9) geändert: `m2-d05 f`, `m11-d05 d`, `m10-d04 c`. Siehe Abschnitt 9; die Angaben in den Abschnitten 2 und 7 gelten für diese drei Optionen nicht mehr.
 
 Grundlage: Prüfpaket «UmweltCampus_v022_Pruefberichte_NEU» mit zehn externen KI-Prüfberichten (D1–D10, README, Strukturprüfung der Fragen), alle vollständig gelesen. Umgesetzt am 15.11.2026 in der bestehenden App (keine Neuentwicklung).
 
@@ -109,9 +111,9 @@ Ausgaben aus den Dokumenten übernommen: SZ «Juni 2024», OW «Stand März 2025
 
 | Empfehlung | Entscheid | Grund |
 |---|---|---|
-| `m10-d04 c` auf 0 setzen (sinngemäss D4) | nicht übernommen | Bereits in Fassung 7 gesenkt; der echte Nachweis ist richtig, nur das Verschweigen falsch – die Begründung sagt das jetzt unmissverständlich. |
+| `m10-d04 c` auf 0 setzen (sinngemäss D4) | in 0.23 nicht übernommen – **in 0.24 umgesetzt** (Abschnitt 9) | Bereits in Fassung 7 gesenkt; der echte Nachweis ist richtig, nur das Verschweigen falsch – die Begründung sagt das jetzt unmissverständlich. |
 | `m3-d02 c` als «kritisch» markieren | nicht übernommen | 0 Punkte ja; «kritisch» ist in der App für unmittelbar gefährdende Handlungen reserviert. Überdecken setzt jetzt keine Fasern frei. |
-| `m11-d05 d` auf 0 | nicht übernommen (0,25) | Die Option verhindert eine unzutreffende Veröffentlichung; der Aufschub wird mit «wenig geeignet» klar abgewertet. |
+| `m11-d05 d` auf 0 | in 0.23 nicht übernommen (0,25) – **in 0.24 umgesetzt** (Abschnitt 9) | Die Option verhindert eine unzutreffende Veröffentlichung; der Aufschub wird mit «wenig geeignet» klar abgewertet. |
 | Datum «1.05.2025» für Schlämme-Modul (D6) | präzisiert | Laut Titelseite gilt das Modul ab 1. Mai 2025, die aktuelle Fassung ist aber «Stand 03/2026». |
 | Entsorgungstabelle als «2025» ohne Vorbehalt | präzisiert | Die BAFU-Übersicht nennt 10.12.2025; das Formular selbst trägt «© BAFU 2020». Beides angegeben. |
 | KlG Art. 5 ändern (D2) | nicht nötig | D2 bestätigt den Wortlaut von Abs. 1; Abs. 2–3 sind in der Lektion bereits als «können» formuliert. |
@@ -126,3 +128,21 @@ Ausgaben aus den Dokumenten übernommen: SZ «Juni 2024», OW «Stand März 2025
 - **UWG Art. 3** (`m11-d05`) und **OR Art. 716a** nicht am Original geprüft.
 - **Rückverfolgbarkeit der Szenen** (D7: jede Gefahr/Massnahme auf eine Falltext-ID zurückführen) – derzeit nur inhaltlich aus dem Fall übernommen, nicht technisch verknüpft.
 - **Screenreader-Test** mit echten Hilfsmitteln (D9) steht weiter aus.
+
+## 9. Nachprüfung des Korrekturberichts (Version 0.24, Bewertungsfassung 9)
+
+Auftrag: drei Punkte aus einer externen Nachprüfung im Kontext der vollständigen Aufgabenstellungen kontrollieren. Alle drei Befunde haben sich bestätigt. Geändert wurden Texte, Gewichte und Erklärungen. Neue `SCORING_VERSION = 9`, `RESCORED_V9_QUESTIONS = m2-d05, m10-d04, m11-d05`; die drei Fragen tragen `rev: 9`. Frühere Antworten (auch solche aus Fassung 8) und frühere Modulprüfungen der Module 2, 10, 11 sowie gemischte Prüfungen werden **nicht umbenotet**, sondern als «frühere Bewertungsfassung» gekennzeichnet und nicht mehr als Nachweis gezählt. Lernstände bleiben unverändert gespeichert. Prüfstatus bleibt «Entwurf».
+
+| ID | alt (0.23) | neu (0.24) | Begründung im Kontext der ganzen Aufgabe |
+|---|---|---|---|
+| `m2-d05 f` | «Pumpen stoppen und sofort … informieren; Rückhalt mit Bindevlies und Ursachensuche überlässt man …» – 0,5 | «Pumpen stoppen, **soweit die Baugrube standsicher bleibt**, und sofort … informieren; eigene Sofortmassnahmen – Öl mit Bindevlies zurückhalten, belastetes Wasser in Grube und Containern sichern, Quelle suchen – überlässt man …» – **0,25** | Fall: Wasserhaltung einer Baugrube, Ölfilm im zweiten Container, Bagger in der Grube. (1) Ein bedingungsloser Pumpenstopp kann die Grube gefährden (Wasseranstieg, Auftrieb) – die Option bewertete damit eine potenziell gefährliche Handlung positiv. Bedingung jetzt im Optionstext, nicht nur in den Voraussetzungen. (2) Ohne eigenen Rückhalt breitet sich das Öl bis zum Eintreffen der Einsatzkräfte in der Grube aus und kann ins Grundwasser gelangen; Rückhalt und Quellenstopp sind, soweit gefahrlos, Aufgabe der Baustelle. Das ist mehr als eine kleine Lücke → «wenig geeignet». Die Teilpunkte bleiben nur für den gefahrlosen Stopp und die sofortige Meldung. |
+| `m2-d05 a` | «Pumpen stoppen, Bindevlies …» (Bedingung nur in den Voraussetzungen) | «Pumpen stoppen, soweit die Baugrube standsicher bleibt (sonst mit der Fachperson Wasserhaltung zurückhalten bzw. umleiten), Bindevlies …» – Gewicht 1 unverändert | Einheitlichkeit: Keine Option mit Punkten verlangt einen bedingungslosen Pumpenstopp (per Test abgesichert). |
+| `m11-d05 d` | «Artikel umformulieren, Abweichungen aber erst nach Bauende ansprechen» – 0,25 | «Artikel umformulieren **und veröffentlichen**, die Abweichungen **gegenüber Bauleitung und Bauherrschaft** aber erst nach Bauende ansprechen» – **0** | Fall: Offerte verspricht Baustrom, Akku-Geräte, CO₂-reduzierten Beton; tatsächlich laufen Dieselaggregate. Die Option bedeutet: Abweichungen kennen, sie der Bauherrschaft während der ganzen Bauzeit bewusst verschweigen und gleichzeitig öffentlich berichten. Die Bauherrschaft bezahlt nicht erbrachte Zusagen und kann nicht reagieren – das widerspricht der Lektion `m11-l5` («Zusagen sind Vertrag … nicht stillschweigend abgewichen»). Ein umformulierter Artikel heilt das nicht. Optionstext präzisiert, damit eindeutig ist, was bewertet wird. Teiloption bleibt `c` (Artikel absagen, 0,25): Dort wird weder öffentlich noch gegenüber der Bauherrschaft etwas Falsches behauptet. Ob `c` ebenfalls auf 0 gehört, ist eine offene didaktische Frage (siehe unten). |
+| `m10-d04 c` | «Rasch eine echte Übung durchführen, mit richtigem Datum protokollieren und im Audit nichts weiter dazu sagen» – 0,25 | unverändert im Text – **0** | Fall: Die jährliche Notfallübung (interne Vorgabe) fehlt, das Audit ist in zwei Tagen. Ein echtes Protokoll mit Datum kurz vor dem Audit, zu dem bewusst geschwiegen wird, soll den Eindruck erwecken, die jährliche Vorgabe sei erfüllt – eine wesentliche Verschleierung gegenüber der Auditorin. Ausserdem fehlt die eigene Behandlung der Abweichung (Ursache, Korrekturmassnahme), die das Managementsystem unabhängig vom Audit verlangt (sinngemäss ISO 14001, 10.2 der Ausgabe 2015; Ausgabe 2026 nicht verglichen). Lernziel der Aufgabe ist «integer mit einer Lücke umgehen» – dafür verdient die Option nichts. Nicht «kritisch» markiert, weil kein gefälschter Nachweis vorliegt (das bleibt Option `a`). |
+| `m10-d04 e` (neu) | – | «Ablehnen und die Lücke im Audit offenlegen; die Übung und die Ursachenklärung erst nach dem Audit in Angriff nehmen» – 0,5 | Nötig, damit die Frage eine Teiloption behält (Teststruktur). Teilpunkte nur für Offenheit; abgezogen wird für die unnötig aufgeschobene Korrektur. |
+
+Erklärungen und typische Fehler der drei Fragen sind angepasst. Lektionen `m2-l5`, `m10-l4` und `m11-l5` wurden auf Widersprüche geprüft: Sie stützen die neuen Bewertungen (u. a. `m10-l4`: «Legen Sie offen, was Sie selbst gefunden haben»; `m11-l5`: «nicht stillschweigend abgewichen»). Keine Wiederholungskarte und keine Simulation verwendet diese Optionen.
+
+**Regressionstests:** neue Testgruppe «Bewertungsfassung 9» (Gewichte, Standsicherheit in jeder Punkte-Option mit Pumpenstopp, Teiloptionen, `rev: 9`, Kennzeichnung früherer Antworten und Prüfungen); die modulübergreifende Nullpunkt-Regel erfasst jetzt auch «im Audit nichts» und «erst nach Bauende». Unit-Tests: 264 bestanden. Browser-Test (Desktop, Tablet, Smartphone): 330 Prüfungen bestanden, keine Konsolenfehler.
+
+**Offen:** Ob `m11-d05 c` (Artikel absagen, Abweichungen nicht weiter verfolgen, 0,25) ebenfalls auf 0 gehört, sollte eine Fachperson entscheiden – die Option täuscht niemanden aktiv, lässt aber die Vertragsabweichung bewusst bestehen.

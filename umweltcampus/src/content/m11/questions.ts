@@ -346,7 +346,7 @@ export const M11_QUESTIONS: Question[] = [
         why: 'Kritisch: Das Material gehört der Bauherrschaft, und auch Stahlträger können belastete Beschichtungen tragen (z. B. blei- oder PCB-haltige Anstriche). Ohne Zustimmung und Schadstoffabklärung keine Abgabe.', risks: 'Konflikt mit der Bauherrschaft, Weitergabe belasteter Bauteile.' },
     ], correct: ['b'], explanation: 'Wiederverwendung ja – aber mit Eigentümerin, Schadstoffabklärung und Dokumentation.',
     commonErrors: ['Eigentum am Material übersehen.'], sources: ['vvea', 'praxis'] }),
-  q({ id: 'm11-d05', rev: 8, topic: 'm11-umsetzung', level: 3, type: 'best', objective: 'Über einen Artikel zur «grünen Baustelle» entscheiden',
+  q({ id: 'm11-d05', rev: 9, topic: 'm11-umsetzung', level: 3, type: 'best', objective: 'Über einen Artikel zur «grünen Baustelle» entscheiden',
     prompt: 'Die Baustelle sollte laut Offerte mit Baustrom, Akku-Geräten und CO₂-reduziertem Beton arbeiten. Tatsächlich laufen zwei Dieselaggregate, und der Beton wird nur zeitweise geliefert. Das Marketing plant einen Artikel über «unsere grüne Baustelle». Was empfehlen Sie?',
     options: [
       { id: 'a', text: 'Artikel wie geplant veröffentlichen.', weight: 0, critical: true,
@@ -355,8 +355,8 @@ export const M11_QUESTIONS: Question[] = [
         why: 'Am besten geeignet: erst einlösen, dann berichten – glaubwürdig.', prerequisites: 'Unterstützung von Bauleitung und Einkauf.', risks: 'Artikel erscheint später.' },
       { id: 'c', text: 'Artikel absagen und die Abweichungen nicht weiter verfolgen.', weight: 0.25,
         why: 'Wenig geeignet: verhindert die Fehlaussage, aber die Zusagen bleiben unerfüllt.', risks: 'Vertragsverletzung bleibt.' },
-      { id: 'd', text: 'Artikel umformulieren, Abweichungen aber erst nach Bauende ansprechen.', weight: 0.25,
-        why: 'Wenig geeignet: Die Kommunikation wird ehrlicher, aber die vertraglichen Zusagen bleiben bis Bauende unerfüllt. Abweichungen werden zeitnah angegangen, nicht aufgeschoben; Teilpunkte nur, weil keine unzutreffende Aussage veröffentlicht wird.', risks: 'Vertragsverletzung über die ganze Bauzeit, Konflikt mit der Bauherrschaft.' },
-    ], correct: ['b'], explanation: 'Glaubwürdigkeit entsteht durch eingelöste Zusagen.',
-    commonErrors: ['Kommunikation vor Umsetzung.'], sources: ['uwg', 'boeb', 'praxis'] }),
+      { id: 'd', text: 'Artikel umformulieren und veröffentlichen, die Abweichungen gegenüber Bauleitung und Bauherrschaft aber erst nach Bauende ansprechen.', weight: 0,
+        why: 'Ungeeignet: Wer die Abweichungen kennt, sie der Bauherrschaft bis Bauende bewusst verschweigt und gleichzeitig öffentlich über die Baustelle berichtet, weicht stillschweigend vom Vertrag ab. Die Bauherrschaft bezahlt Zusagen, die nicht erbracht werden, und kann nicht reagieren. Eine umformulierte Pressemeldung ändert daran nichts. Zusagen sind Vertrag: Abweichungen werden sofort gemeldet und behoben oder als Ausnahme vereinbart.', risks: 'Vertragsverletzung über die ganze Bauzeit, Täuschung der Bauherrschaft, Vertrauensverlust bei Bekanntwerden.' },
+    ], correct: ['b'], explanation: 'Glaubwürdigkeit entsteht durch eingelöste Zusagen. Abweichungen werden der Bauleitung und der Bauherrschaft sofort gemeldet – nicht stillschweigend bis Bauende mitgetragen. Teilpunkte gibt es nur für das Absagen des unzutreffenden Artikels (c), weil dort weder öffentlich noch gegenüber der Bauherrschaft etwas Falsches behauptet wird.',
+    commonErrors: ['Kommunikation vor Umsetzung.', 'Vertragsabweichungen bis Bauende stillschweigend mittragen.'], sources: ['uwg', 'boeb', 'praxis'] }),
 ];
