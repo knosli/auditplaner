@@ -27,3 +27,16 @@ describe('Artikel-Links', () => {
     for (const s of SOURCES.filter((x) => x.url?.includes('fedlex.admin.ch/eli'))) expect(s.url, s.id).toMatch(/^https:\/\/www\.fedlex\.admin\.ch\/eli\/cc\/[^?#]+\/de$/);
   });
 });
+
+describe('BauAV und ChemRRV (16.11.2026)', () => {
+  test('als Quellen mit Fedlex-Adresse; Artikelzitate verlinkt', () => {
+    expect(LAW_URLS.BauAV).toBe('https://www.fedlex.admin.ch/eli/cc/2021/384/de');
+    expect(LAW_URLS.ChemRRV).toBe('https://www.fedlex.admin.ch/eli/cc/2005/478/de');
+    expect(find('(Art. 82 BauAV)')).toEqual([LAW_URLS.BauAV + '#art_82']);
+    expect(find('Art. 3 Abs. 2 BauAV')).toEqual([LAW_URLS.BauAV + '#art_3']);
+  });
+  test('keine «laut Suva»-Vorbehalte mehr bei den verglichenen BauAV-Artikeln', () => {
+    const s = JSON.stringify(SOURCES.find((x) => x.id === 'bauav'));
+    for (const a of ['Art. 3 Abs. 2', 'Art. 82', 'Art. 86']) expect(s).toContain(a);
+  });
+});

@@ -424,7 +424,7 @@ export const SOURCES: Source[] = [
   {
     id: 'suva-asbest', title: 'Suva: Asbest – Informationen, anerkannte Asbestsanierungsunternehmen, Meldung von Sanierungen', short: 'Suva Asbest', kind: 'vollzugshilfe',
     issuer: 'Suva', url: 'https://www.suva.ch/asbest', version: 'Webinformation, abgerufen 2026-11', lastChecked: null, scope: 'Ganze Schweiz (Arbeitssicherheit)', review: 'entwurf',
-    note: 'Bestätigt (Suva-Website, externe Prüfung 13.11.2026): Asbestverbot 1990 (ChemRRV); Arbeiten mit erheblicher Faserfreisetzung nur durch Suva-anerkannte Unternehmen (Art. 82 BauAV); Meldung mind. 14 Tage vor Beginn (laut Suva Art. 86 BauAV – Zuordnung in den Quellen uneinheitlich); Ermittlung bei Verdacht Art. 3 BauAV. Artikelwortlaut nicht am Fedlex-Volltext geprüft.',
+    note: 'Bestätigt (Suva-Website, externe Prüfung 13.11.2026): Asbestverbot 1990 (ChemRRV, Anhang 1.6); Arbeiten mit erheblicher Faserfreisetzung nur durch Suva-anerkannte Unternehmen (Art. 82 BauAV); Meldung mind. 14 Tage vor Beginn (Art. 86 BauAV – am 16.11.2026 mit Fedlex verglichen, siehe Quelle BauAV); Ermittlung bei Verdacht Art. 3 BauAV. Artikelwortlaut nicht am Fedlex-Volltext geprüft.',
   },
   {
     id: 'bafu-bauabfaelle', title: 'BAFU: Vollzugshilfe «Bauabfälle» / Informationen zu Bauabfällen und Bauschadstoffen', short: 'BAFU Bauabfälle', kind: 'vollzugshilfe',
@@ -539,6 +539,16 @@ export const SOURCES: Source[] = [
     id: 'chemv', title: 'Verordnung über den Schutz vor gefährlichen Stoffen und Zubereitungen (Chemikalienverordnung, ChemV)', short: 'ChemV', kind: 'gesetz', sr: 'SR 813.11', url: 'https://www.fedlex.admin.ch/eli/cc/2015/366/de',
     issuer: 'Bundesrat', version: 'Geltende Fassung gemäss Fedlex – prüfen', lastChecked: null, scope: 'Ganze Schweiz; Kennzeichnung nach GHS, abgestimmt auf die EU-Regeln (CLP)', review: 'entwurf',
     note: 'In der App sinngemäss: Kennzeichnung mit GHS-Piktogrammen und H-Sätzen; Abgabe des Sicherheitsdatenblatts an berufliche Verwender; SDB mit 16 Abschnitten. Artikel nicht genannt und nicht am Original geprüft.',
+  },
+  {
+    id: 'chemrrv', title: 'Verordnung zur Reduktion von Risiken beim Umgang mit bestimmten besonders gefährlichen Stoffen, Zubereitungen und Gegenständen (Chemikalien-Risikoreduktions-Verordnung, ChemRRV)', short: 'ChemRRV', kind: 'gesetz', sr: 'SR 814.81', url: 'https://www.fedlex.admin.ch/eli/cc/2005/478/de',
+    issuer: 'Bundesrat', version: 'Fedlex-Fassung vom 16.7.2026 (bei Nutzung aktuelle Fassung prüfen)', lastChecked: null, scope: 'Ganze Schweiz; Verbote und Beschränkungen für bestimmte Stoffe, Zubereitungen und Gegenstände', review: 'entwurf',
+    note: 'Für Baustellen relevante Anhänge (Titel mit der Fedlex-Fassung vom 16.7.2026 verglichen, automatisierter Abgleich am 16.11.2026, keine menschliche Fachprüfung): 1.1 Persistente organische Schadstoffe (u. a. PCB), 1.6 Asbest (Verbot der Verwendung von Asbest sowie des Inverkehrbringens und der Verwendung asbesthaltiger Zubereitungen und Gegenstände – Wortlaut geprüft), 1.16 Per- und polyfluorierte Alkylverbindungen (u. a. Verbot von PFOS), 2.4 Biozidprodukte, 2.7 Auftaumittel, 2.8 Anstrichfarben und Lacke (Inverkehrbringen blei- und cadmiumhaltiger Anstriche verboten – Wortlaut geprüft), 2.11 Löschmittel, 2.14 Kondensatoren und Transformatoren (Kondensatoren mit Baujahr 1982 oder älter gelten als schadstoffhaltig, solange das Gegenteil nicht belegt ist – Wortlaut geprüft). Ausnahmen, Fristen und Grenzwerte im Einzelfall am Original prüfen.',
+  },
+  {
+    id: 'bauav', title: 'Verordnung über die Sicherheit und den Gesundheitsschutz der Arbeitnehmerinnen und Arbeitnehmer bei Bauarbeiten (Bauarbeitenverordnung, BauAV)', short: 'BauAV', kind: 'gesetz', sr: 'SR 832.311.141', url: 'https://www.fedlex.admin.ch/eli/cc/2021/384/de',
+    issuer: 'Bundesrat', version: 'Fedlex-Fassung vom 1.1.2024 (bei Nutzung aktuelle Fassung prüfen)', lastChecked: null, scope: 'Ganze Schweiz (Arbeitssicherheit auf Baustellen)', review: 'entwurf',
+    note: 'Arbeitssicherheit, nicht Umweltrecht – in der App nur dort verwendet, wo sie die Umweltarbeit direkt bestimmt (Schadstoffe beim Rückbau). Mit der Fedlex-Fassung vom 1.1.2024 verglichen (automatisierter Abgleich am 16.11.2026, keine menschliche Fachprüfung): Art. 3 Abs. 2 (bei Verdacht auf besonders gesundheitsgefährdende Stoffe wie Asbest oder PCB muss der Arbeitgeber die Gefährdungen eingehend ermitteln und beurteilen und die Massnahmen darauf abstützen), Art. 82 (Asbestsanierungsarbeiten mit möglicher Freisetzung erheblicher Mengen Asbestfasern nur durch Suva-anerkannte Unternehmen; Abs. 2 nennt u. a. Spritzbeläge, Boden-, Decken- und Wandbeläge, Fliesenkleber, Leichtbauplatten), Art. 86 (Asbestsanierungsunternehmen melden die Arbeiten mindestens 14 Tage vor der Ausführung der Suva). Weitere Bestimmungen (z. B. Baugruben) nicht wiedergegeben.',
   },
   {
     id: 'sdr', title: 'Verordnung über die Beförderung gefährlicher Güter auf der Strasse (SDR)', short: 'SDR', kind: 'gesetz', sr: 'SR 741.621',

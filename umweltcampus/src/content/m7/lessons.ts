@@ -127,7 +127,7 @@ Sie müssen nicht jedes Produkt chemisch beurteilen können. Sie sorgen dafür, 
         'Umgefülltes kennzeichnen; unbekannte Stoffe sichern und klären, nicht verwenden.',
         'Substitution prüfen – «biologisch abbaubar» bleibt wassergefährdend.',
       ] },
-      { id: 'm7-l1-sources', kind: 'sources', title: 'Quellen und weiterführende Informationen', sourceIds: ['chemg', 'chemv', 'gschg', 'praxis'] },
+      { id: 'm7-l1-sources', kind: 'sources', title: 'Quellen und weiterführende Informationen', sourceIds: ['chemg', 'chemv', 'chemrrv', 'gschg', 'praxis'] },
     ],
   },
   // =====================================================================

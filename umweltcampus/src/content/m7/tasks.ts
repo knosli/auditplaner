@@ -265,6 +265,7 @@ export const M7_CARDS: Card[] = [
   { id: 'm7-c16', moduleId: M, topic: 'm7-havarie', level: 2, front: 'Wasserhaltung bei Ölaustritt in der Baugrube?', back: '**Pumpe stoppen** – sonst wird das Öl weitergepumpt.', sources: ['praxis'] },
   { id: 'm7-c17', moduleId: M, topic: 'm7-werkhof', level: 1, front: 'Werkhof vs. Baustelle?', back: 'Werkhof = **dauerhafte Anlage** mit eigener Bewilligung, Auflagen und Inhaberpflichten.', sources: ['gschg'] },
   { id: 'm7-c18', moduleId: M, topic: 'm7-werkhof', level: 2, front: 'Wann wirkt ein Ölabscheider nicht?', back: 'Wenn er **nicht geleert/gewartet** ist oder **Reiniger das Öl emulgieren**.', sources: ['praxis'] },
+  { id: 'm7-c20', moduleId: M, topic: 'm7-stoffe', level: 2, front: 'ChemRRV – was davon betrifft die Baustelle?', back: 'Verbote und Beschränkungen u. a. für **Asbest** (Anhang 1.6), **PCB** (1.1; Kondensatoren 2.14), **PFAS/PFOS** (1.16, z. B. alte Löschschäume), **blei- und cadmiumhaltige Anstriche** (2.8), **Auftaumittel** (2.7), **Löschmittel** (2.11), **Biozide** (2.4). Einzelheiten und Ausnahmen am Original prüfen.', sources: ['chemrrv'] },
   { id: 'm7-c19', moduleId: M, topic: 'm7-werkhof', level: 2, front: 'Versäumte Pflicht im Werkhof entdeckt?', back: 'Sofort beheben, **Geschäftsleitung** informieren, **offen** bereinigen – **nie rückdatieren**.', sources: ['praxis'] },
 ];
 

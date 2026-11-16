@@ -393,7 +393,7 @@ Typische Rollen: **Bauherrschaft** (Gesuch, Konzepte, Beizug von Fachpersonen wi
 - Einleitungen: Zustimmung bzw. Bewilligung **vor** der ersten Einleitung.
 - Weitere Meldungen gemäss Auflage (z. B. Baubeginn an die Fachstelle, Beginn Bodenarbeiten an die BBB, Abschluss für Abnahme).
 
-§> Meldefrist und Anerkennungspflicht gemäss Suva für Arbeiten mit erheblicher Faserfreisetzung (siehe Modul 3; Artikelwortlaut der BauAV nicht am Original geprüft). Weitere Meldepflichten und ihr Adressat ergeben sich aus der Bewilligung und kantonalem Recht.` },
+§> Meldefrist und Anerkennungspflicht gemäss Suva für Arbeiten mit erheblicher Faserfreisetzung (Art. 82 und 86 BauAV, mit der Fedlex-Fassung vom 1.1.2024 verglichen; siehe Modul 3). Weitere Meldepflichten und ihr Adressat ergeben sich aus der Bewilligung und kantonalem Recht.` },
       { id: 'm8-l4-diagram', kind: 'diagram', title: 'Schema: Von der Anforderung zum Nachweis', diagram: 'auflagenkette', caption: 'Jede Anforderung braucht alle sechs Glieder – fehlt eines, bleibt sie Papier. Vereinfachte Lernhilfe.' },
       { id: 'm8-l4-example', kind: 'example', title: 'Beispiel aus dem Hochbau: Umbau eines Geschäftshauses', context: 'Hochbau', text: `Der Schadstoffbericht zeigt asbesthaltige Bodenbeläge und PCB-haltige Fugen. Der Bericht legt Verfahren und Bereiche fest; die Bodenbeläge müssen mit erheblicher Faserfreisetzung entfernt werden. Der Massnahmenplan enthält deshalb: Sanierung durch Suva-anerkannte Firma (Verantwortlich: Bauherrschaft beauftragt, Bauleitung koordiniert), Meldung an die Suva (Sanierungsfirma, mind. 14 Tage vorher), die für das Verfahren verlangte Kontrolle bzw. Freimessung (Fachperson), Entsorgung mit Begleitscheinen (Bauführung sammelt) und als **No-Go-Punkt**: Rückbau im Bereich erst nach schriftlicher Freigabe (Bauleitung). Im Terminplan stehen die 14 Tage und die Abnahme als Meilensteine.
 
@@ -439,7 +439,7 @@ Am Projektende: Nachweise vollständig übergeben, Entsorgungsbilanz gegen Konze
         'Plan in Startsitzung, Baustellensitzungen und Begehungen nutzen.',
         'Am Ende: Nachweise vollständig, Bilanz gegen Konzept, Erfahrungen in die Vorlagen.',
       ] },
-      { id: 'm8-l4-sources', kind: 'sources', title: 'Quellen und weiterführende Informationen', sourceIds: ['vvea', 'suva-asbest', 'sia431', 'praxis'] },
+      { id: 'm8-l4-sources', kind: 'sources', title: 'Quellen und weiterführende Informationen', sourceIds: ['vvea', 'bauav', 'suva-asbest', 'sia431', 'praxis'] },
     ],
   },
   // =====================================================================

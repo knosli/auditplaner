@@ -238,7 +238,7 @@ Die Verordnung über Belastungen des Bodens verlangt, Boden so zu behandeln, das
 Siehe Modul 2: Verunreinigungsverbot, Abwasser, Gewässerschutzbereiche, SIA 431.
 
 ### Chemikalien: ChemRRV und Chemikalienrecht
-Für Stoffe und Produkte mit Umweltrisiken gibt es Verwendungsbeschränkungen (ChemRRV) und Kennzeichnungs- sowie Informationspflichten (Sicherheitsdatenblätter). Vertiefung in Modul 7.
+Für Stoffe und Produkte mit Umweltrisiken gibt es Verbote und Verwendungsbeschränkungen (Chemikalien-Risikoreduktions-Verordnung, ChemRRV – z. B. Asbest, PCB, PFAS, blei- und cadmiumhaltige Anstriche) und Kennzeichnungs- sowie Informationspflichten (Sicherheitsdatenblätter). Vertiefung in Modul 7.
 
 !> Für die Offerte zählt: Massnahmenstufen, Entsorgungskonzept, Maschinenanforderungen und Bodenschutz kosten Geld und Zeit. Sie gehören in die Kalkulation und AVOR – nicht erst auf die Baustelle.` },
       { id: 'm1-l3-example', kind: 'example', title: 'Beispiel aus dem Hochbau: Schulhaus aus den 1970er-Jahren', context: 'Hochbau', text: `Für den Umbau verlangt die Gemeinde mit der Baueingabe ein Entsorgungskonzept, weil mehr als 200 m³ Abbruchmaterial anfallen und das Baujahr Bauschadstoffe erwarten lässt. Die Schadstoffermittlung findet asbesthaltige Bodenbeläge und PCB-haltige Fugen.
@@ -287,7 +287,7 @@ Umweltmassnahmen werden dann teuer, wenn sie spät kommen: Ein Partikelfilter na
         'VBBo (Boden) und GSchG/GSchV (Wasser) ergänzen; Chemikalien in Modul 7.',
         'Grösste Wirkung in Offerte und AVOR; Nachweise pro Baustelle griffbereit.',
       ] },
-      { id: 'm1-l3-sources', kind: 'sources', title: 'Quellen und weiterführende Informationen', sourceIds: ['lrv', 'bafu-luft', 'lsv', 'bafu-baulaerm', 'vvea', 'vbbo'] },
+      { id: 'm1-l3-sources', kind: 'sources', title: 'Quellen und weiterführende Informationen', sourceIds: ['lrv', 'bafu-luft', 'lsv', 'bafu-baulaerm', 'vvea', 'vbbo', 'chemrrv'] },
     ],
   },
 ];

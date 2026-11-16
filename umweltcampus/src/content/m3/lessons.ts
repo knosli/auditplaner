@@ -154,8 +154,8 @@ Bleihaltige Farben und Rostschutz, Bleirohre; dazu z. B. künstliche Mineralfase
 
 ### Pflichten im Überblick
 - **Abfallrecht**: Bei zu erwartenden Bauschadstoffen verlangt die Behörde Angaben zur Entsorgung (Art. 16 VVEA, bestätigt). Kantonale Checklisten raten bei älteren Gebäuden grundsätzlich zur Schadstoffermittlung.
-- **Arbeitssicherheit**: Besteht Verdacht auf besonders gesundheitsgefährdende Stoffe wie Asbest oder PCB, sind die Gefahren vor Beginn der Arbeiten zu ermitteln und die Schutzmassnahmen festzulegen (Art. 3 Bauarbeitenverordnung, BauAV – laut Suva und Fachunterlagen). Wer die Kosten der Ermittlung trägt, richtet sich nach Werkvertrag und Verfahren; in der Praxis beauftragt meist die Bauherrschaft die Schadstoffermittlung. Für Asbest gilt die **EKAS-Richtlinie 6503** (Fassung vom 27. Juni 2025, bestätigt).
-- **Suva-anerkannte Firmen**: Arbeiten, bei denen erheblich Asbestfasern freigesetzt werden können, dürfen nur von der Suva anerkannte Asbestsanierungsunternehmen ausführen (Art. 82 BauAV). Solche Sanierungen sind der Suva mindestens 14 Tage vor Beginn zu melden (laut Suva; die Quellen ordnen die Meldepflicht Art. 86 BauAV zu – Artikel am Original prüfen). Nicht jede Tätigkeit an asbesthaltigem Material fällt darunter – welche Arbeiten mit welchen Schutzmassnahmen zulässig sind, regelt die EKAS-Richtlinie 6503.
+- **Arbeitssicherheit**: Besteht Verdacht auf besonders gesundheitsgefährdende Stoffe wie Asbest oder PCB, sind die Gefahren vor Beginn der Arbeiten zu ermitteln und die Schutzmassnahmen festzulegen (Art. 3 Abs. 2 Bauarbeitenverordnung, BauAV – Pflicht des Arbeitgebers). Wer die Kosten der Ermittlung trägt, richtet sich nach Werkvertrag und Verfahren; in der Praxis beauftragt meist die Bauherrschaft die Schadstoffermittlung. Für Asbest gilt die **EKAS-Richtlinie 6503** (Fassung vom 27. Juni 2025, bestätigt).
+- **Suva-anerkannte Firmen**: Arbeiten, bei denen erheblich Asbestfasern freigesetzt werden können, dürfen nur von der Suva anerkannte Asbestsanierungsunternehmen ausführen (Art. 82 BauAV). Das Sanierungsunternehmen meldet die Arbeiten der Suva mindestens 14 Tage vor der Ausführung (Art. 86 BauAV). Nicht jede Tätigkeit an asbesthaltigem Material fällt darunter – welche Arbeiten mit welchen Schutzmassnahmen zulässig sind, regelt die EKAS-Richtlinie 6503.
 
 ### Entscheidungsweg bei Asbestverdacht
 1. **Abklären**: Ist das Material untersucht? Baujahr vor 1990 ist ein Verdachtsindikator, kein Befund.
@@ -213,7 +213,7 @@ Die Schadstoffsanierung ist oft der kritische Pfad eines Umbaus: Ermittlung, Off
 ### 7. Kommunikation
 Mitarbeitende und Anwohnende reagieren auf das Wort «Asbest» oft mit Angst. Sachliche Information (was wurde gefunden, wie wird geschützt, wer ist Ansprechperson) schafft Vertrauen. Betroffene Mitarbeitende nach einer möglichen Exposition nicht allein lassen: informieren, dokumentieren, bei Bedarf arbeitsmedizinisch abklären lassen.
 
-§> EKAS 6503 (Fassung vom 27.6.2025), Suva-Anerkennung (Art. 82 BauAV) und Meldung 14 Tage bestätigt (Suva/EKAS); Ermittlungspflicht Art. 3 BauAV laut Suva/Fachunterlagen. Verbot 1990 bestätigt. Einzelfragen zum Arbeitsschutz nach der aktuellen Richtlinie bzw. mit der Suva klären.` },
+§> EKAS 6503 (Fassung vom 27.6.2025), Suva-Anerkennung (Art. 82 BauAV) und Meldung 14 Tage bestätigt (Suva/EKAS); Art. 3 Abs. 2, 82 und 86 BauAV mit der Fedlex-Fassung vom 1.1.2024 verglichen; Asbestverbot (ChemRRV Anhang 1.6) mit der Fedlex-Fassung vom 16.7.2026 verglichen (automatisierter Abgleich am 16.11.2026). Verbot 1990 bestätigt. Einzelfragen zum Arbeitsschutz nach der aktuellen Richtlinie bzw. mit der Suva klären.` },
       { id: 'm3-l2-decision', kind: 'decision', title: 'Entscheidungsaufgabe', questionId: 'm3-q08' },
       { id: 'm3-l2-abw', kind: 'decision', title: 'Abwägung: Schwarzer Kleber unter dem Boden', questionId: 'm3-d02' },
       { id: 'm3-l2-task', kind: 'sitetask', title: 'Baustellenaufgabe: Schadstoffbericht lesen', taskId: 'm3-t2' },
@@ -226,7 +226,7 @@ Mitarbeitende und Anwohnende reagieren auf das Wort «Asbest» oft mit Angst. Sa
         'Reihenfolge: ermitteln – Konzept – sanieren – entkernen – Tragstruktur – Nachweise.',
         'Unerwarteter Fund: stoppen, sperren, melden, beproben.',
       ] },
-      { id: 'm3-l2-sources', kind: 'sources', title: 'Quellen und weiterführende Informationen', sourceIds: ['vvea', 'ekas6503', 'suva-asbest', 'bafu-bauabfaelle'] },
+      { id: 'm3-l2-sources', kind: 'sources', title: 'Quellen und weiterführende Informationen', sourceIds: ['vvea', 'bauav', 'chemrrv', 'ekas6503', 'suva-asbest', 'bafu-bauabfaelle'] },
     ],
   },
   // =====================================================================

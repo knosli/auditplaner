@@ -88,7 +88,7 @@ export const M3_QUESTIONS: Question[] = [
       { id: 'c', text: 'Die Bauherrschaft selbst' },
       { id: 'd', text: 'Jede Firma, wenn die Gemeinde zustimmt' },
     ], correct: ['b'], explanation: 'Arbeiten mit erheblicher Faserfreisetzung dürfen nur Suva-anerkannte Asbestsanierungsunternehmen ausführen (Art. 82 BauAV, laut Suva); sie sind der Suva mindestens 14 Tage vor Beginn zu melden. Nicht jede Tätigkeit an asbesthaltigem Material gehört in diese Kategorie – welche Arbeiten mit welchen Schutzmassnahmen auch andere ausführen dürfen, regelt die EKAS-Richtlinie 6503.',
-    commonErrors: ['Asbest als «normale Abbrucharbeit» vergeben.'], sources: ['suva-asbest', 'ekas6503'] }),
+    commonErrors: ['Asbest als «normale Abbrucharbeit» vergeben.'], sources: ['bauav', 'suva-asbest', 'ekas6503'] }),
   q({ id: 'm3-q10', topic: 'm3-rueckbau', level: 2, type: 'multi', objective: 'Bei einem unerwarteten Fund richtig handeln',
     prompt: 'Beim Ausbau einer Wand stösst ein Elektriker auf eine graue, faserige Platte, die im Schadstoffbericht nicht erwähnt ist. Was ist richtig? (Mehrere Antworten)',
     options: [
@@ -97,7 +97,7 @@ export const M3_QUESTIONS: Question[] = [
       { id: 'c', text: 'Die Platte vorsichtig herausbrechen und in die Mischmulde legen' },
       { id: 'd', text: 'Prüfen, ob der Bereich im Bericht als «nicht untersucht» aufgeführt ist, und die Lücke melden' },
     ], correct: ['a', 'b', 'd'], explanation: 'Stopp – sperren – melden – beproben – entscheiden. Wer weiterarbeitet, setzt möglicherweise Fasern frei und macht Material zu Sonderabfall.',
-    commonErrors: ['Verdächtiges Material «schnell weg» machen.'], sources: ['suva-asbest', 'ekas6503'] }),
+    commonErrors: ['Verdächtiges Material «schnell weg» machen.'], sources: ['bauav', 'suva-asbest', 'ekas6503'] }),
   // ---------- L3 Mineralisch ----------
   q({ id: 'm3-q11', topic: 'm3-mineralisch', level: 1, type: 'single', objective: 'Die PAK-Grenze für Ausbauasphalt kennen',
     prompt: 'Ab welchem PAK-Gehalt darf Ausbauasphalt nach Art. 20 VVEA nicht mehr verwertet werden?',
@@ -273,7 +273,7 @@ export const M3_QUESTIONS: Question[] = [
       { id: 'c', text: 'Die Suva' },
       { id: 'd', text: 'Die Gemeinde' },
     ], correct: ['b'], explanation: 'Drei Ebenen auseinanderhalten: Abfallrecht (Angaben zur Entsorgung im Baubewilligungsverfahren, Art. 16 VVEA – Sache der Bauherrschaft), Arbeitnehmerschutz (Gefahrenermittlung bei Verdacht, Art. 3 BauAV) und Vertrag (wer was bezahlt). Die Pflichten ergänzen sich; eine allgemeine Kostenregel für alle Fälle gibt es nicht.',
-    commonErrors: ['Annehmen, der Unternehmer müsse nichts tun, weil es einen Bericht gibt.'], sources: ['suva-asbest', 'vvea'] }),
+    commonErrors: ['Annehmen, der Unternehmer müsse nichts tun, weil es einen Bericht gibt.'], sources: ['bauav', 'suva-asbest', 'vvea'] }),
   q({ id: 'm3-q30', topic: 'm3-rueckbau', level: 4, type: 'open', objective: 'Eine Instruktion zu Bauschadstoffen gestalten',
     prompt: 'Sie instruieren die Subunternehmer eines Umbaus (Baujahr 1965) vor Arbeitsbeginn. Was gehört in 6–8 Sätzen in diese Instruktion?',
     rubric: [
