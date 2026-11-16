@@ -45,8 +45,8 @@ export function RichText({ text }: { text: string }) {
           const rows = lines.filter((l) => !/^\|\s*-{2,}/.test(l.trim())).map((l) => l.trim().replace(/^\||\|$/g, '').split('|').map((c) => c.trim()));
           return (
             <div className="tablewrap" key={bi}>
-              <table className="table"><thead><tr>{rows[0].map((c, i) => <th key={i}><Inline text={c} /></th>)}</tr></thead>
-                <tbody>{rows.slice(1).map((r, ri) => <tr key={ri}>{r.map((c, i) => <td key={i}><Inline text={c} /></td>)}</tr>)}</tbody></table>
+              <table className={'table' + (rows[0].length >= 3 ? ' cards-sm' : '')}><thead><tr>{rows[0].map((c, i) => <th key={i}><Inline text={c} /></th>)}</tr></thead>
+                <tbody>{rows.slice(1).map((r, ri) => <tr key={ri}>{r.map((c, i) => <td key={i} data-label={rows[0][i]?.replace(/\*\*/g, '')}><Inline text={c} /></td>)}</tr>)}</tbody></table>
             </div>
           );
         }

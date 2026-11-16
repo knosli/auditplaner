@@ -1093,3 +1093,15 @@ fieldset { min-width: 0; }
 .trio-help dd { margin: 0 0 0 0; color: var(--ink-2, inherit); }
 .lawlink { color: var(--accent); text-decoration: underline dotted; text-underline-offset: 2px; }
 .lawlink::after { content: ' ↗'; font-size: 0.8em; }
+
+/* Tabellen ab drei Spalten: auf schmalen Bildschirmen als Karten (eine Karte pro Zeile, Wert mit Spaltentitel) */
+@media (max-width: 700px) {
+  .table.cards-sm, .table.cards-sm tbody, .table.cards-sm tr, .table.cards-sm td { display: block; width: 100%; }
+  .table.cards-sm thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .table.cards-sm tr { border: 1px solid var(--line); border-radius: 12px; padding: 4px 12px; margin: 0 0 10px; background: var(--surface); }
+  .table.cards-sm td { border: 0; padding: 6px 0; word-break: normal; overflow-wrap: break-word; hyphens: auto; }
+  .table.cards-sm td + td { border-top: 1px dashed var(--line); }
+  .table.cards-sm td:first-child { font-weight: 700; font-size: 1rem; }
+  .table.cards-sm td:not(:first-child)::before { content: attr(data-label); display: block; font: 700 .7rem var(--font-body); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 2px; }
+  .tablewrap:has(.cards-sm) { overflow: visible; }
+}
