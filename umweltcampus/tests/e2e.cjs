@@ -279,6 +279,16 @@ const ok = (c, m) => { console.log((c ? 'OK   ' : 'FAIL ') + m); if (!c) process
     await page.selectOption('#canton-pick', 'AG');
     ok((await page.locator('.csrc a[href*="ag.ch"]').count()) > 0 && (await page.locator('.csrc a[href*="zh.ch"]').count()) === 0, 'Kantonswechsel ZH → AG ändert die Quellen');
     ok((await page.locator('.csrc .badge.chk-link').count()) > 0 && (await page.locator('.csrc').first().textContent()).includes('Linkprüfung'), 'Kantonsquellen: Linkstatus getrennt vom fachlichen Prüfstatus');
+    // Mehrere Baustellen: merken und wechseln
+    await page.getByRole('button', { name: /AG merken/ }).click(); await page.waitForTimeout(100);
+    await page.selectOption('#canton-pick', 'BE'); await page.waitForTimeout(100);
+    await page.getByRole('button', { name: /BE merken/ }).click(); await page.waitForTimeout(100);
+    await go('modul-m3');
+    { const chips = page.locator('#vor-ort .site-chips .chip');
+      ok((await chips.count()) === 2, 'Vor Ort prüfen: gemerkte Baustellen als Auswahl (AG, BE)');
+      await chips.filter({ hasText: 'AG' }).click(); await page.waitForTimeout(150);
+      ok((await page.locator('#vor-ort').textContent()).includes('Zusatzanforderungen AG'), 'Baustelle wechseln: «Vor Ort prüfen» zeigt sofort den anderen Kanton'); }
+    await go('kanton');
     await page.selectOption('#canton-pick', '');
     // Bibliothek
     await go('bibliothek');

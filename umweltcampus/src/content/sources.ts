@@ -353,7 +353,7 @@ export const SOURCES: Source[] = [
     lastChecked: null,
     scope: 'Zertifizierte Unternehmen',
     review: 'entwurf',
-    note: 'Kostenpflichtige Norm. Die in der App genannten Abschnittsnummern (6.1.3, 8.1, 8.2, 9.1.2, 10.2) stammen aus der Ausgabe 2015 und sind für die Ausgabe 2026 nicht verglichen – vor Verwendung an der aktuellen Norm prüfen. Laut Zertifizierern moderate Änderungen (u. a. Änderungsmanagement, Biodiversität, Ressourcen). Vertiefung in Modul 10. Ausgabe 2026 laut Zertifizierern und externer Prüfung (14.11.2026); beim Herausgeber nicht selbst geprüft (Website für automatische Abrufe gesperrt). Abschnittsnummern in der App stammen aus der Ausgabe 2015 und sind nicht mit 2026 verglichen. Prüfberichte V0.22: Ausgabe laut externen Prüfberichten beim Herausgeber bestätigt (iso.org/standard/14001, Abruf 15.11.2026); von der App nicht abrufbar. Bestätigt ist nur die Ausgabe, nicht der Norminhalt.',
+    note: 'Kostenpflichtige Norm. Die in der App genannten Abschnittsnummern (6.1.3, 8.1, 8.2, 9.1.2, 10.2) stammen aus der Ausgabe 2015 und sind für die Ausgabe 2026 nicht verglichen – vor Verwendung an der aktuellen Norm prüfen. Laut Zertifizierern moderate Änderungen (u. a. Änderungsmanagement, Biodiversität, Ressourcen). Vertiefung in Modul 10. Ausgabe 2026 laut Zertifizierern und externer Prüfung (14.11.2026); beim Herausgeber nicht selbst geprüft (Website für automatische Abrufe gesperrt). Abschnittsnummern in der App stammen aus der Ausgabe 2015 und sind nicht mit 2026 verglichen. Prüfberichte V0.22: Ausgabe laut externen Prüfberichten beim Herausgeber bestätigt (iso.org/standard/14001, Abruf 15.11.2026); von der App nicht abrufbar. Bestätigt ist nur die Ausgabe, nicht der Norminhalt. Ausgabe 2015: Alle in der App genannten Abschnittsnummern und -titel (4–10, u. a. 6.1.1, 6.1.2, 6.1.3 «Bindende Verpflichtungen», 6.2, 8.1, 8.2, 9.1.1, 9.1.2, 9.2, 9.3, 10.2, 10.3) am 16.11.2026 mit der Gliederung der «Kurzfassung ISO 14001:2015» der SAQ-QUALICON AG (V1.2, beruht auf ISO 14001:2015 (D); Kapitelüberschriften laut Herausgeberin wörtlich aus der Norm) verglichen – stimmen überein. Sekundärquelle, nicht der Normtext.',
   },
   {
     id: 'bafu-wasser',
@@ -523,7 +523,7 @@ export const SOURCES: Source[] = [
   {
     id: 'iso9001', title: 'ISO 9001 «Qualitätsmanagementsysteme – Anforderungen»', short: 'ISO 9001', kind: 'norm',
     issuer: 'ISO / SNV', version: 'Ausgabe 2015; Revision angekündigt – aktuelle Ausgabe prüfen', lastChecked: null, scope: 'Zertifizierte Unternehmen', review: 'entwurf',
-    note: 'In der App nur als Teil des integrierten Managementsystems erwähnt (gemeinsame Grundstruktur). Kein Normtext.',
+    note: 'In der App nur als Teil des integrierten Managementsystems erwähnt (gemeinsame Grundstruktur). Kein Normtext. Gemeinsame Kapitelstruktur 4–10 der Ausgabe 2015 am 16.11.2026 mit der «Kurzfassung ISO 9001:2015» der SAQ-QUALICON AG (V1.0, beruht auf EN ISO 9001:2015 (D)) verglichen – bestätigt; ISO 9001 enthält zusätzlich u. a. Abschnitt 6.3 «Planung von Änderungen». Sekundärquelle, nicht der Normtext.',
   },
   {
     id: 'iso45001', title: 'ISO 45001 «Managementsysteme für Sicherheit und Gesundheit bei der Arbeit»', short: 'ISO 45001', kind: 'norm',

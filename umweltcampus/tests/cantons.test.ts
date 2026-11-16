@@ -95,3 +95,20 @@ describe('Linkprüfung (Prüfberichte V0.22)', () => {
     expect(LINK_CHECKS['bl-einstieg'].status).toBe('nicht_pruefbar');
   });
 });
+
+describe('Mehrere Baustellenstandorte (16.11.2026)', () => {
+  test('ältere Lernstände: bisheriger Kanton wird als gemerkter Standort übernommen, Lernstand bleibt', () => {
+    const b = emptyState();
+    const old = normalizeState({ ...b, settings: { ...b.settings, site: { canton: 'BE', municipality: 'Thun' } } });
+    expect(old.settings.sites).toEqual([{ canton: 'BE', municipality: 'Thun' }]);
+    expect(old.settings.site).toEqual({ canton: 'BE', municipality: 'Thun' });
+    expect(normalizeState(b).settings.sites).toBeUndefined();
+  });
+  test('Liste wird bereinigt: ohne Kanton, Doppel und Übergrösse entfernt', () => {
+    const b = emptyState();
+    const raw = [{ canton: 'ZH' }, { canton: 'ZH' }, { municipality: 'x' }, 7, { canton: 'AG', municipality: 'Baden' }, ...Array.from({ length: 40 }, (_, i) => ({ canton: 'SG', municipality: 'G' + i }))];
+    const st = normalizeState({ ...b, settings: { ...b.settings, sites: raw as never } });
+    expect(st.settings.sites!.length).toBe(30);
+    expect(st.settings.sites!.slice(0, 2)).toEqual([{ canton: 'ZH' }, { canton: 'AG', municipality: 'Baden' }]);
+  });
+});

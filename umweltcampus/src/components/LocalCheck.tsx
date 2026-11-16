@@ -1,3 +1,4 @@
+import { SiteSwitcher } from './SiteSwitcher';
 import { useStore } from '../store';
 import { cantonOf, MODULE_THEMES, projectCheck } from '../content/cantons';
 import { CantonSourceItem, CheckBadge, FederalItems } from './CantonParts';
@@ -15,6 +16,7 @@ export function LocalCheck({ moduleId }: { moduleId: string }) {
   return (
     <section className="section localcheck" id="vor-ort">
       <div className="section-head"><h2>Vor Ort prüfen</h2><a className="hint" href="#kanton">Kanton &amp; Standort →</a></div>
+      <SiteSwitcher compact />
       {!c ? (
         <p className="hint">Die Lerninhalte beschreiben die Schweizer Grundlagen. Kantone und Gemeinden können zusätzliche Anforderungen stellen. Wählen Sie in den <a href="#einstellungen">Einstellungen</a> den Kanton der Baustelle, um die amtlichen kantonalen Quellen zu sehen.</p>
       ) : (

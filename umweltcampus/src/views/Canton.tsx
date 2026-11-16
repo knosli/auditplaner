@@ -1,3 +1,4 @@
+import { SiteSwitcher } from '../components/SiteSwitcher';
 import { useStore } from '../store';
 import { Section } from '../components/ui';
 import { CANTONS, cantonOf, cantonSources, CHECK_THEMES, LANG_LABEL, projectCheck } from '../content/cantons';
@@ -27,6 +28,7 @@ export function CantonView() {
       <header className="page-head"><span className="eyebrow">Nachschlagen</span><h1>Kanton &amp; Standort.</h1><p className="lead">Quellenkarte und Projektcheck für eine Baustelle – Schweizer Grundlagen und kantonale Quellen getrennt.</p></header>
       <p className="trust"><span><strong>Quellenhinweise, keine geprüften Vorschriften.</strong> Das Register verlinkt amtliche Websites und Dokumente von 21 Kantonen (Link-Recherche 14.11.2026). Daraus abgeleitete Pflichten sind nicht fachlich geprüft. Massgebend sind die aktuelle Fassung, die Bewilligung mit ihren Auflagen und die Auskunft der zuständigen Stellen.</span></p>
       <Section title="Standort">
+        <SiteSwitcher manage compact />
         <div className="canton-pick">
           <label className="field"><span>Kanton</span>
             <select id="canton-pick" value={site?.canton ?? ''} onChange={(e) => setSite({ canton: e.target.value || undefined, lang: undefined, municipality: undefined })}>

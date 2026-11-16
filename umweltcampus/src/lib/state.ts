@@ -121,6 +121,8 @@ export interface Settings {
   aiEnabled: boolean;
   /** Standort der Baustelle für «Vor Ort prüfen» (fehlt bei älteren Lernständen) */
   site?: SiteSettings;
+  /** Gemerkte Baustellenstandorte (mehrere Kantone); «site» ist der aktuell gewählte */
+  sites?: SiteSettings[];
   /** Betrachtungsmodus: Schweizer Grundlagen oder kantonale Zusatzanforderungen */
   localMode?: 'ch' | 'kanton';
 }
@@ -177,7 +179,7 @@ export function normalizeState(raw: unknown): AppState {
   const s: AppState = {
     ...base,
     updatedAt: typeof src.updatedAt === 'number' ? src.updatedAt : base.updatedAt,
-    settings: { ...base.settings, ...(isObj(src.settings) ? (src.settings as Partial<Settings>) : {}) },
+    settings: normSettings({ ...base.settings, ...(isObj(src.settings) ? (src.settings as Partial<Settings>) : {}) }),
     lessons: isObj(src.lessons) ? (src.lessons as AppState['lessons']) : {},
     answers: Array.isArray(src.answers) ? (src.answers as AnswerRecord[]).filter((a) => isObj(a) && typeof a.q === 'string') : [],
     sr: isObj(src.sr) ? (src.sr as AppState['sr']) : {},
@@ -246,3 +248,15 @@ export function trimState(s: AppState): AppState {
     history: s.history.length > MAX_HIST ? s.history.slice(-MAX_HIST) : s.history,
   };
 }
+
+/** Standorte bereinigen: nur Einträge mit Kanton, ohne Doppel, höchstens 30. Fehlt die Liste, bleibt sie leer (ältere Lernstände). */
+function normSettings(st: Settings): Settings {
+  const ok = (x: unknown): x is SiteSettings => isObj(x) && typeof (x as SiteSettings).canton === 'string' && !!(x as SiteSettings).canton;
+  // Ältere Lernstände: der bisher gewählte Kanton wird als erster gemerkter Standort übernommen.
+  if (!Array.isArray(st.sites)) return { ...st, sites: ok(st.site) ? [{ ...st.site }] : undefined };
+  const seen = new Set<string>();
+  const sites = st.sites.filter(ok).filter((x) => { const k = siteKey(x); if (seen.has(k)) return false; seen.add(k); return true; }).slice(0, 30)
+    .map((x) => ({ canton: x.canton, ...(x.lang ? { lang: x.lang } : {}), ...(x.municipality ? { municipality: String(x.municipality).slice(0, 60) } : {}) }));
+  return { ...st, sites: sites.length ? sites : undefined };
+}
+export const siteKey = (x?: SiteSettings) => (x?.canton ?? '') + '|' + (x?.municipality ?? '').trim().toLowerCase();

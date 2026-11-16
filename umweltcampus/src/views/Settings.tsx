@@ -1,3 +1,4 @@
+import { SiteSwitcher } from '../components/SiteSwitcher';
 import { useStore } from '../store';
 import { Section } from '../components/ui';
 import { DataPanel } from './Progress';
@@ -19,9 +20,9 @@ export function SettingsView() {
           ))}
         </div>
       </Section>
-      <Section title="Baustellenstandort">
+      <Section title="Baustellenstandorte">
         <p className="hint">Für den Bereich «Vor Ort prüfen» in den Modulen und den Projektcheck. Gespeichert werden nur Kanton, Sprache und Gemeindename – keine Adresse. Die Lerninhalte bleiben beim Wechsel unverändert.</p>
-        <label className="field"><span>Kanton der Baustelle</span>
+        <label className="field"><span>Kanton der Baustelle (aktuell gewählt)</span>
           <select id="site-canton" value={s.settings.site?.canton ?? ''} onChange={(e) => setSite({ canton: e.target.value || undefined, lang: undefined, municipality: undefined })}>
             <option value="">– kein Kanton (nur Schweizer Grundlagen) –</option>
             {CANTONS.map((c) => <option key={c.code} value={c.code}>{c.code} – {c.name}</option>)}
@@ -40,6 +41,7 @@ export function SettingsView() {
             <input id="site-muni" type="text" maxLength={60} value={s.settings.site?.municipality ?? ''} placeholder="z. B. Gemeindename" onChange={(e) => setSite({ municipality: e.target.value || undefined })} />
           </label>
         )}
+        <SiteSwitcher manage />
         <p><a href="#kanton">Quellenkarte und Projektcheck öffnen →</a></p>
       </Section>
       <Section title="Lernen">
@@ -67,7 +69,7 @@ export function SettingsView() {
       </Section>
       <DataPanel />
       <Section title="Über diese App">
-        <p>UmweltCampus Bau CH · Academy, Version 0.28 (Bewertungsfassung 9). Verfügbar: alle 12 Module. Modul 1–4 und 8 wurden nach einer ersten externen KI-Fachprüfung (13.11.2026) korrigiert. Am 14.11.2026 wurden alle 12 Module in einer externen KI-Gesamtprüfung erneut geprüft; die Korrekturen werden schrittweise umgesetzt (umgesetzt: kritische Bewertungsfehler, ein automatisierter Abgleich der wichtigsten Rechtsangaben mit Fedlex und den BAFU-Originalen vom 14.11.2026 sowie die übrigen Befunde in Bewertungsfassung 7). Am 15.11.2026 folgten zehn externe KI-Prüfberichte zur Version 0.22; die Korrekturen sind in Bewertungsfassung 8 umgesetzt (keine Teilpunkte mehr für gefährliche Optionen, präzisere Fallszenen, Linkprüfung der kantonalen Quellen). Eine Nachprüfung dieser Korrekturen führte zu Bewertungsfassung 9 (drei Abwägungsfragen strenger bewertet). Neu: kantonales Quellenregister für 21 Kantone («Kanton & Standort») – Quellenhinweise, keine geprüften kantonalen Pflichten. Keines ist durch eine menschliche Fachperson freigegeben. Prüfstatus Entwurf – keine fachliche oder betriebliche Freigabe. Die Kompetenzstufen der App sind interne Lernstände und keine staatlich oder offiziell anerkannten Qualifikationen.</p>
+        <p>UmweltCampus Bau CH · Academy, Version 0.29 (Bewertungsfassung 9). Verfügbar: alle 12 Module. Modul 1–4 und 8 wurden nach einer ersten externen KI-Fachprüfung (13.11.2026) korrigiert. Am 14.11.2026 wurden alle 12 Module in einer externen KI-Gesamtprüfung erneut geprüft; die Korrekturen werden schrittweise umgesetzt (umgesetzt: kritische Bewertungsfehler, ein automatisierter Abgleich der wichtigsten Rechtsangaben mit Fedlex und den BAFU-Originalen vom 14.11.2026 sowie die übrigen Befunde in Bewertungsfassung 7). Am 15.11.2026 folgten zehn externe KI-Prüfberichte zur Version 0.22; die Korrekturen sind in Bewertungsfassung 8 umgesetzt (keine Teilpunkte mehr für gefährliche Optionen, präzisere Fallszenen, Linkprüfung der kantonalen Quellen). Eine Nachprüfung dieser Korrekturen führte zu Bewertungsfassung 9 (drei Abwägungsfragen strenger bewertet). Neu: kantonales Quellenregister für 21 Kantone («Kanton & Standort») – Quellenhinweise, keine geprüften kantonalen Pflichten. Keines ist durch eine menschliche Fachperson freigegeben. Prüfstatus Entwurf – keine fachliche oder betriebliche Freigabe. Die Kompetenzstufen der App sind interne Lernstände und keine staatlich oder offiziell anerkannten Qualifikationen.</p>
         <p className="hint">Vorbereitet für eine spätere Unternehmensversion (in Entwicklung): Benutzerrollen, Lernpfade für Poliere, Bauführer, Projektleiter und Umweltkontaktpersonen, Pflichtschulungen, Lernnachweise, firmeninterne Standards, Auswertungen pro Niederlassung, Inhaltsverwaltung durch Fachverantwortliche.</p>
       </Section>
     </div>
