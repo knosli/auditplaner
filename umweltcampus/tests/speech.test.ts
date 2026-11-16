@@ -68,3 +68,13 @@ describe('Stimmenwahl', () => {
     expect(vs.indexOf('Google Deutsch')).toBeLessThan(vs.indexOf('Anna'));
   });
 });
+
+describe('Audio-Prüfsumme', () => {
+  test('stabil für gleichen Text, ändert sich bei Textänderung', async () => {
+    const { audioHash } = await import('../src/lib/speech');
+    const l = LESSONS.find((x) => x.id === 'm0-l1')!;
+    const a = lessonSegments(l, 'inhalt+quiz');
+    expect(audioHash(a)).toBe(audioHash(lessonSegments(l, 'inhalt+quiz')));
+    expect(audioHash([{ ...a[0], text: a[0].text + ' x' }, ...a.slice(1)])).not.toBe(audioHash(a));
+  });
+});

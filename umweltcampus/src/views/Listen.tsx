@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { LESSONS, MODULES } from '../content';
 import { Icon } from '../components/Icons';
-import { chunks, lessonSegments, minutesOf, moduleSegments, voiceScore, type ListenMode, type Segment } from '../lib/speech';
+import { audioHash, chunks, lessonSegments, minutesOf, moduleSegments, voiceScore, type ListenMode, type Segment } from '../lib/speech';
+import { AudioPlayer, loadAudioManifest, type AudioManifest, type AudioTrack } from '../components/AudioPlayer';
 
 const POS_KEY = 'umweltcampus.hoeren';
 const savePos = (key: string, idx: number) => { try { localStorage.setItem(POS_KEY, JSON.stringify({ key, idx })); } catch { /* egal */ } };
@@ -26,6 +27,24 @@ export function ListenView({ target }: { target?: string }) {
   const [voiceUri, setVoiceUri] = useState('');
   const [voicesChecked, setVoicesChecked] = useState(false);
   useEffect(() => { const t = window.setTimeout(() => setVoicesChecked(true), 2000); return () => window.clearTimeout(t); }, []);
+
+  // Vorab erzeugte Audios (natürliche Stimme) – nur für «Inhalte mit Hör-Quiz» ohne Vertiefung
+  const [manifest, setManifest] = useState<AudioManifest | null>(null);
+  const [useDevice, setUseDevice] = useState(false);
+  useEffect(() => { void loadAudioManifest().then(setManifest); }, []);
+  const tracks: AudioTrack[] | null = useMemo(() => {
+    if (!manifest || useDevice || mode !== 'inhalt+quiz' || deep) return null;
+    const ls = lesson ? LESSONS.filter((l) => l.id === lesson) : LESSONS.filter((l) => l.moduleId === mod);
+    const out: AudioTrack[] = [];
+    for (const l of ls) {
+      const e = manifest.lessons[l.id];
+      // Prüfsumme: Audio passt nur, wenn es aus dem aktuellen Text erzeugt wurde
+      if (!e || e.hash !== audioHash(lessonSegments(l, 'inhalt+quiz'))) return null;
+      out.push({ lessonId: l.id, title: `Lektion ${l.order}: ${l.title}`, src: 'audio/' + e.file, dur: e.dur, marks: e.marks });
+    }
+    return out.length ? out : null;
+  }, [manifest, useDevice, mode, deep, lesson, mod]);
+  const modTitle = MODULES.find((m) => m.id === mod)?.title ?? '';
 
   const segs: Segment[] = useMemo(() => {
     if (lesson) { const l = LESSONS.find((x) => x.id === lesson); return l ? lessonSegments(l, mode, deep) : []; }
@@ -139,9 +158,9 @@ export function ListenView({ target }: { target?: string }) {
         <h1>Hörmodus.</h1>
         <p className="lead">Die App liest Lektionen vor und stellt danach Hör-Quizfragen – mit Denkpause und Lösung, ohne dass Sie etwas antippen müssen.</p>
       </header>
-      <p className="trust"><Icon name="alert" size={16} /> <span><strong>Im Auto nur im Stand einstellen.</strong> Einmal starten, dann läuft das Modul von selbst durch. Damit die Wiedergabe nicht abbricht, bleibt der Bildschirm eingeschaltet (Gerät in der Halterung lassen).</span></p>
+      <p className="trust"><Icon name="alert" size={16} /> <span><strong>Im Auto nur im Stand einstellen.</strong> Einmal starten, dann läuft das Modul von selbst durch. {tracks ? 'Mit der natürlichen Stimme läuft die Wiedergabe auch bei gesperrtem Bildschirm.' : 'Mit der Gerätestimme bleibt der Bildschirm eingeschaltet, damit die Wiedergabe nicht abbricht (Gerät in der Halterung lassen).'}</span></p>
 
-      {!synth ? (
+      {!synth && !tracks ? (
         <section className="section"><p>Dieses Gerät bzw. dieser Browser unterstützt keine Sprachausgabe. Bitte einen aktuellen Browser verwenden (Safari, Chrome, Edge).</p></section>
       ) : (
         <>
@@ -169,17 +188,19 @@ export function ListenView({ target }: { target?: string }) {
                   {[0.85, 1, 1.15, 1.3].map((r) => <option key={r} value={r}>{r === 1 ? 'normal' : r < 1 ? 'langsamer' : r < 1.2 ? 'etwas schneller' : 'schnell'}</option>)}
                 </select>
               </label>
-              {voices.length > 0 && (
+              {manifest && (mode !== 'inhalt+quiz' || deep) && <p className="hint">Die natürliche Stimme gibt es für «Inhalte mit Hör-Quiz» ohne Vertiefung; hier liest die Gerätestimme.</p>}
+              {manifest && mode === 'inhalt+quiz' && !deep && <label className="switch"><input type="checkbox" id="ls-device" checked={useDevice} onChange={(e) => setUseDevice(e.target.checked)} /> Gerätestimme statt natürlicher Stimme</label>}
+              {!tracks && voices.length > 0 && (
                 <label className="field inline"><span>Stimme</span>
                   <select id="ls-voice" value={voiceUri} onChange={(e) => { const v = e.target.value; badVoices.current.delete(v); setVoiceNote(''); setVoiceUri(v); try { localStorage.setItem('umweltcampus.stimme', v); } catch { /* egal */ } if (playing) stop(); }}>
                     {voices.map((v) => <option key={v.voiceURI} value={v.voiceURI}>{v.name} ({v.lang}){voiceScore(v) >= 10 ? ' ★' : ''}</option>)}
                   </select>
                 </label>
               )}
-              <button type="button" className="btn small" id="ls-sample" onClick={sample}>Hörprobe</button>
+              {!tracks && <button type="button" className="btn small" id="ls-sample" onClick={sample}>Hörprobe</button>}
             </div>
-            {voiceNote && <p className="hint need" role="status">{voiceNote}</p>}
-            <details className="voice-help">
+            {voiceNote && !tracks && <p className="hint need" role="status">{voiceNote}</p>}
+            {!tracks && <details className="voice-help">
               <summary>Stimme klingt roboterhaft? So wird sie natürlicher – gratis</summary>
               <p>Die App nutzt die Vorlesestimmen Ihres Geräts. Fast alle Geräte haben bessere Stimmen, die man einmal kostenlos herunterlädt (einige hundert MB, am besten im WLAN). Danach wählt die App sie automatisch (mit ★ markiert).</p>
               <ul className="plain">
@@ -187,10 +208,11 @@ export function ListenView({ target }: { target?: string }) {
                 <li><strong>Android:</strong> Einstellungen → Bedienungshilfen bzw. System → Sprachausgabe (Text-in-Sprache) → Google-Sprachausgabe → Sprachdaten installieren → Deutsch → eine Stimme in hoher Qualität wählen.</li>
                 <li><strong>Computer:</strong> In Microsoft Edge stehen sehr natürliche «Natural»-Stimmen bereit (z. B. Katja, Conrad), in Chrome die «Google Deutsch»-Stimme. Beide brauchen eine Internetverbindung.</li>
               </ul>
-            </details>
-            {voicesChecked && voices.length === 0 && <p className="hint">Keine deutsche Stimme gemeldet – vorgelesen wird mit der Standardstimme. Klingt sie nicht deutsch: auf dem Handy unter Einstellungen → Bedienungshilfen → Gesprochene Inhalte bzw. Sprachausgabe eine deutsche Stimme laden.</p>}
+            </details>}
+            {!tracks && voicesChecked && voices.length === 0 && <p className="hint">Keine deutsche Stimme gemeldet – vorgelesen wird mit der Standardstimme. Klingt sie nicht deutsch: auf dem Handy unter Einstellungen → Bedienungshilfen → Gesprochene Inhalte bzw. Sprachausgabe eine deutsche Stimme laden.</p>}
           </section>
 
+          {tracks ? <AudioPlayer key={key} tracks={tracks} rate={rate} album={modTitle} posKey={key} /> : (
           <section className="section listen-player" aria-live="polite">
             <div className="lp-now">
               <span className="eyebrow">Abschnitt {Math.min(idx + 1, segs.length)} von {segs.length} · ca. {minutesOf(segs.slice(idx), rate)} Min. verbleibend</span>
@@ -207,6 +229,7 @@ export function ListenView({ target }: { target?: string }) {
             </div>
             <p className="hint">Position wird auf diesem Gerät gemerkt. Das Zuhören zählt nicht als «gelesen» und verändert Ihren Lernstand nicht.</p>
           </section>
+          )}
         </>
       )}
     </div>

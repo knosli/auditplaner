@@ -1,6 +1,6 @@
 import { LESSONS, MODULES, Q } from '../content';
 import type { Lesson, Question } from '../content/types';
-import { displayOrder } from './exam';
+import { displayOrder, hashStr } from './exam';
 
 /**
  * Hörmodus: Lerninhalte als vorlesbare Abschnitte (Sprachausgabe des Geräts, Web Speech API).
@@ -170,4 +170,9 @@ export function voiceScore(v: { name: string; lang: string; localService?: boole
   if (v.lang === 'de-CH') s += 2;
   else if (v.lang === 'de-DE') s += 1;
   return s;
+}
+
+/** Prüfsumme der vorzulesenden Texte – stimmt sie nicht mit dem Audio-Verzeichnis überein, wird die Gerätestimme verwendet. */
+export function audioHash(segs: Segment[]): string {
+  return hashStr(segs.map((s) => s.title + '\u0001' + s.text + '\u0001' + (s.pauseAfter ?? 0)).join('\u0002')).toString(36);
 }
