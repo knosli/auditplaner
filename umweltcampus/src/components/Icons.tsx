@@ -1,5 +1,11 @@
 // Einheitlicher Icon-Satz (24×24, Strich 1.8). Keine Emoji-Navigation.
 const P: Record<string, string> = {
+  listen: 'M4 14v-2a8 8 0 0 1 16 0v2M4 14h3v6H5a1 1 0 0 1-1-1v-5Zm16 0h-3v6h2a1 1 0 0 0 1-1v-5Z',
+  play: 'M7 4.5v15l12-7.5-12-7.5Z',
+  pause: 'M8 5v14M16 5v14',
+  prev: 'M6 5v14M18 5 9 12l9 7V5Z',
+  next: 'M18 5v14M6 5l9 7-9 7V5Z',
+  stop: 'M6 6h12v12H6z',
   home: 'M3 11 12 3l9 8v10H3V11Zm6 10v-8h6v8',
   book: 'M3 5c3-1 6-1 9 1 3-2 6-2 9-1v15c-3-1-6-1-9 1-3-2-6-2-9-1V5Zm9 1v15',
   path: 'M5 20a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm14-12a2 2 0 1 0 0-4 2 2 0 0 0 0 4ZM5 16V9a3 3 0 0 1 3-3h4m2 12h3a3 3 0 0 0 3-3v-5',

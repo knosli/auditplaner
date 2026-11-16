@@ -63,3 +63,19 @@ export function interleave<T extends { topic: string }>(qs: T[]): T[] {
 }
 
 export const PASS = { modul: 0.75, open: 0.5, check: 0.7 };
+
+/** Einfacher, stabiler Text-Hash (für reproduzierbare Reihenfolgen). */
+export function hashStr(x: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < x.length; i++) { h ^= x.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return h >>> 0;
+}
+
+/**
+ * Anzeigereihenfolge von Antwortmöglichkeiten: zufällig je Lernende(r) und Frage, aber stabil
+ * (gleiche Person, gleiche Frage → gleiche Reihenfolge). Bewertung und Lernstand hängen an den IDs,
+ * nicht an der Position – damit ist das Mischen ohne Neubewertung möglich.
+ */
+export function displayOrder<T extends { id: string }>(items: T[], key: string, salt: number): T[] {
+  return shuffle(items, rng(hashStr(key + '|' + salt)));
+}

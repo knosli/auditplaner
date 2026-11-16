@@ -1198,3 +1198,15 @@ details.trust-fold p { margin: 8px 0 0 26px; }
 .pl-row .pl-t { display: grid; gap: 2px; min-width: 0; }
 .pl-miss { border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; margin: 6px 0; background: var(--surface); }
 .pl-miss summary { cursor: pointer; font-weight: 600; }
+
+/* Hörmodus */
+.listen-setup { display: grid; gap: 12px; }
+.listen-opts { display: flex; flex-wrap: wrap; gap: 10px 20px; align-items: center; }
+.field.inline { display: inline-flex; gap: 8px; align-items: center; }
+.listen-player { display: grid; gap: 14px; text-align: center; }
+.listen-player .lp-now h2 { margin: 6px 0; font-size: 1.35rem; }
+.lp-pause { font-size: 1.2rem; font-weight: 700; color: var(--accent); margin: 0; }
+.lp-ctl { display: flex; justify-content: center; align-items: center; gap: 18px; }
+.lp-btn { width: 64px; height: 64px; border-radius: 50%; justify-content: center; padding: 0; }
+.lp-main { width: 96px; height: 96px; border-radius: 50%; justify-content: center; padding: 0; }
+.lesson-top .btn-listen { margin-left: auto; }

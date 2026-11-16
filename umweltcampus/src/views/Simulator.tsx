@@ -13,6 +13,7 @@ import { Bar, DevBadge, SourceList, fmtDateTime, pct } from '../components/ui';
 import { RubricRating } from '../components/Question';
 import { evaluateStage, nextStageId, summarize, type StageAnswer, type StageResult } from '../lib/scenario';
 import { isLegacyRun } from '../lib/versioning';
+import { displayOrder } from '../lib/exam';
 
 export function SimulatorView() {
   const { s } = useStore();
@@ -318,6 +319,8 @@ function canConfirm(stage: ScenarioStage, a: StageAnswer) {
 }
 
 function StageInput({ stage, a, setA, revealed }: { sc: Scenario; stage: ScenarioStage; a: StageAnswer; setA: (p: Partial<StageAnswer> & { rated?: boolean }) => void; revealed: boolean }) {
+  const { s } = useStore();
+  const shownOpts = useMemo(() => displayOrder(stage.options ?? [], stage.id, s.createdAt), [stage.id, stage.options, s.createdAt]);
   const [phase, setPhase] = useState<'write' | 'rate'>('write');
   const toggle = (id: string, max?: number) => {
     if (revealed) return;
@@ -340,10 +343,10 @@ function StageInput({ stage, a, setA, revealed }: { sc: Scenario; stage: Scenari
       <p className="q-prompt"><InlineText text={stage.prompt} /></p>
       {(stage.type === 'single' || stage.type === 'multi' || stage.type === 'ask') && (
         <div className="options">
-          {stage.options!.map((o) => {
+          {shownOpts.map((o) => {
             const chosen = a.selected.includes(o.id);
             return (
-              <label key={o.id} className={'opt' + (chosen ? ' chosen' : '') + (revealed && o.points === 2 ? ' correct' : '') + (revealed && chosen && o.points === 0 ? ' wrong' : '')}>
+              <label key={o.id} data-opt={o.id} className={'opt' + (chosen ? ' chosen' : '') + (revealed && o.points === 2 ? ' correct' : '') + (revealed && chosen && o.points === 0 ? ' wrong' : '')}>
                 <input type={stage.type === 'single' ? 'radio' : 'checkbox'} name={'st-' + stage.id} checked={chosen} disabled={revealed} onChange={() => toggle(o.id, stage.type === 'ask' ? stage.pick : undefined)} />
                 <span>{o.text}</span>
               </label>

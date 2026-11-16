@@ -132,6 +132,7 @@ export function LessonView({ id }: { id: string }) {
     <div className="page lesson" ref={top}>
       <div className="lesson-top">
         <a className="back-link" href={'#modul-' + mod.id}><Icon name="back" size={16} /> Modul {mod.no}: {mod.short}</a>
+        <a href={'#hoeren-' + lesson.id} className="btn small quiet btn-listen" id="lesson-listen"><Icon name="listen" size={16} /> Anhören</a>
         <button type="button" id="focus-toggle" className="btn small quiet" aria-pressed={focus} onClick={() => setFocus(!focus)} title="Navigation und Seitenleiste ausblenden (Esc beendet, Pfeiltasten wechseln den Schritt)">{focus ? 'Fokus beenden' : 'Fokusmodus'}</button>
       </div>
       <header className="lesson-head">

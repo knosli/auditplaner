@@ -300,6 +300,7 @@ export function ModuleDetail({ id }: { id: string }) {
               ? <a className="btn primary" href={'#lektion-' + nextL.id}>{nextStarted ? 'Weiterlernen' : doneN ? 'Weiter' : 'Starten'} mit Lektion {nextL.order}: {nextL.title.length > 42 ? nextL.title.slice(0, 40) + '…' : nextL.title} <Icon name="arrow" size={16} /></a>
               : <a className="btn primary" href="#pruefung">Alle Lektionen abgeschlossen – zur Modulprüfung <Icon name="arrow" size={16} /></a>}
             <button type="button" className="btn quiet" onClick={() => document.getElementById('mod-lessons')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>Alle {lessons.length} Lektionen ansehen</button>
+            <a className="btn quiet" id="mod-listen" href={'#hoeren-' + id}><Icon name="listen" size={16} /> Modul anhören</a>
           </div>
         </div>
       </section>

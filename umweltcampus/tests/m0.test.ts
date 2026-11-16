@@ -87,3 +87,19 @@ describe('Einstufungstest', () => {
     expect(normalizeState(b).placement).toBeUndefined();
   });
 });
+
+describe('Antworten gemischt anzeigen', () => {
+  test('stabil je Person und Frage, unterschiedlich zwischen Personen, IDs bleiben erhalten', async () => {
+    const { displayOrder } = await import('../src/lib/exam');
+    const opts = ['a', 'b', 'c', 'd'].map((id) => ({ id }));
+    const one = displayOrder(opts, 'm5-q01', 111).map((o) => o.id).join('');
+    expect(displayOrder(opts, 'm5-q01', 111).map((o) => o.id).join('')).toBe(one);
+    expect([...one].sort().join('')).toBe('abcd');
+    // Über viele Fragen landet die ursprünglich zweite Antwort nicht fast immer an Position 2
+    let atB = 0;
+    for (let i = 0; i < 400; i++) if (displayOrder(opts, 'q' + i, 111)[1].id === 'b') atB++;
+    expect(atB).toBeLessThan(160);
+    const others = new Set(Array.from({ length: 20 }, (_, k) => displayOrder(opts, 'm5-q01', k).map((o) => o.id).join('')));
+    expect(others.size).toBeGreaterThan(5);
+  });
+});

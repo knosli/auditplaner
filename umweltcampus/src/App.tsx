@@ -10,6 +10,7 @@ import { ProgressView } from './views/Progress';
 import { SettingsView } from './views/Settings';
 import { CantonView } from './views/Canton';
 import { PlacementView } from './views/Placement';
+import { ListenView } from './views/Listen';
 import { CoachPanel, GlossaryDrawer } from './components/Drawers';
 import { dueItems, recommendations } from './lib/learning';
 import { loadNavOpen, saveNavOpen, useFocus } from './lib/focus';
@@ -23,6 +24,7 @@ const NAV_GROUPS: { label: string; items: NavItem[]; fold?: boolean }[] = [
     { id: 'dashboard', label: 'Dashboard', icon: 'home' },
     { id: 'module', label: 'Fachmodule', icon: 'book' },
     { id: 'lernpfad', label: 'Lernpfad', icon: 'path' },
+    { id: 'hoeren', label: 'Hörmodus', icon: 'listen' },
   ] },
   { label: 'Praxis & Training', items: [
     { id: 'simulator', label: 'Baustellensimulator', icon: 'sim' },
@@ -57,6 +59,7 @@ function navOf(route: string): string {
   if (route.startsWith('lektion-') || route.startsWith('modul-')) return 'module';
   if (route.startsWith('szenario-')) return 'simulator';
   if (route === 'einstufung') return 'module';
+  if (route.startsWith('hoeren')) return 'hoeren';
   return route;
 }
 
@@ -84,6 +87,7 @@ function Shell() {
   if (route.startsWith('lektion-')) view = <LessonView id={route.slice(8)} />;
   else if (route.startsWith('modul-')) view = <ModuleDetail id={route.slice(6)} />;
   else if (route.startsWith('szenario-')) view = <ScenarioPlayer key={route} id={route.slice(9)} />;
+  else if (route === 'hoeren' || route.startsWith('hoeren-')) view = <ListenView key={route} target={route.slice(7) || undefined} />;
   else switch (route) {
     case 'lernpfad': view = <LearningPath />; break;
     case 'module': view = <ModulesView />; break;
@@ -107,6 +111,7 @@ function Shell() {
     if (route.startsWith('lektion-')) { const l = L.get(route.slice(8)); const m = MODULES.find((x) => x.id === l?.moduleId); return [{ href: '#module', label: 'Fachmodule' }, ...(m ? [{ href: '#modul-' + m.id, label: 'Modul ' + m.no }] : []), { label: l ? 'Lektion ' + l.order : 'Lektion' }]; }
     if (route.startsWith('modul-')) { const m = MODULES.find((x) => x.id === route.slice(6)); return [{ href: '#module', label: 'Fachmodule' }, { label: m ? 'Modul ' + m.no : 'Modul' }]; }
     if (route.startsWith('szenario-')) { const sc = S.get(route.slice(9)); return [{ href: '#simulator', label: 'Baustellensimulator' }, { label: sc ? 'Fall ' + sc.code : 'Fall' }]; }
+    if (route.startsWith('hoeren')) return [{ href: '#hoeren', label: 'Hörmodus' }];
     return [{ label: NAV_LABEL[route] ?? 'Dashboard' }];
   })();
 
@@ -193,7 +198,7 @@ function Shell() {
 /** Wichtigste nächste Lernhandlung – immer in der Kopfzeile erreichbar (nicht in Lektion und Fall). */
 function NextAction({ route }: { route: string }) {
   const { s } = useStore();
-  if (/^(lektion-|szenario-|pruefung|einstufung|dashboard$)/.test(route) || route === '' ) return null;
+  if (/^(lektion-|szenario-|pruefung|einstufung|hoeren|dashboard$)/.test(route) || route === '' ) return null;
   const r = recommendations(s)[0];
   if (!r) return null;
   return (

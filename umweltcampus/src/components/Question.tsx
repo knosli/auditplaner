@@ -1,5 +1,6 @@
 import { Need } from './ui';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import { displayOrder } from '../lib/exam';
 import type { Question, RubricPoint } from '../content/types';
 import { criticalChoice, recordAnswer, rubricHints, scoreQuestion } from '../lib/learning';
 import type { AnswerRecord, Confidence } from '../lib/state';
@@ -48,6 +49,7 @@ function ClosedQuestion({ q, ctx, initial, onAnswered, silent, label }: Props) {
   };
   const canCheck = sel.length > 0 && (!askConf || conf !== undefined);
   const name = `q-${q.id}-${ctx}`;
+  const shown = useMemo(() => displayOrder(q.options ?? [], q.id, s.createdAt), [q.id, q.options, s.createdAt]);
 
   return (
     <div className={'question' + (done && !silent ? (score === 1 ? ' is-ok' : score > 0 ? ' is-part' : ' is-wrong') : '')}>
@@ -58,7 +60,7 @@ function ClosedQuestion({ q, ctx, initial, onAnswered, silent, label }: Props) {
       </div>
       <p className="q-prompt"><InlineText text={q.prompt} /></p>
       <div className="options" role={q.type === 'multi' ? 'group' : 'radiogroup'}>
-        {q.options?.map((o) => {
+        {shown.map((o) => {
           const chosen = sel.includes(o.id);
           const isCorrect = q.correct?.includes(o.id);
           const best = q.type === 'best';
@@ -66,7 +68,7 @@ function ClosedQuestion({ q, ctx, initial, onAnswered, silent, label }: Props) {
           const good = best ? w >= 0.999 : isCorrect;
           const cls = ['opt', chosen ? 'chosen' : '', done && !silent && good ? 'correct' : '', done && !silent && best && !good && w >= 0.5 ? 'partial' : '', done && !silent && chosen && !good && (!best || w < 0.5) ? 'wrong' : ''].join(' ');
           return (
-            <label key={o.id} className={cls}>
+            <label key={o.id} className={cls} data-opt={o.id}>
               <input type={q.type === 'multi' ? 'checkbox' : 'radio'} name={name} checked={chosen} disabled={done} onChange={() => toggle(o.id)} />
               <span><InlineText text={o.text} /></span>
               {done && !silent && (best ? <span className={'opt-mark ' + weightClass(w)}>{weightLabel(w, o.critical)}</span> : isCorrect && <span className="opt-mark">richtig</span>)}

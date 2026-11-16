@@ -204,7 +204,7 @@ const ok = (c, m) => { console.log((c ? 'OK   ' : 'FAIL ') + m); if (!c) process
     ok((await page.locator('.app.focus').count()) === 0, 'Fokusmodus mit Esc beendet');
     await go('lektion-m12-l5');
     { const lbl = await page.locator('.stepper button').evaluateAll((es) => es.map((e) => e.dataset.kind)); await page.locator('.stepper button').nth(lbl.findIndex((l) => l.includes('Abwägung'))).evaluate((e) => e.click()); await page.waitForTimeout(150); }
-    await page.locator('.question .opt').first().click();
+    await page.locator('.question .opt[data-opt="a"]').click(); // kritische Option (nach dem Mischen nicht mehr zwingend die erste)
     await page.locator('.question .conf label').last().click();
     await page.getByRole('button', { name: 'Antwort prüfen' }).click(); await page.waitForTimeout(150);
     const cf = (await page.locator('.crit-fb').textContent()) || '';
@@ -255,6 +255,25 @@ const ok = (c, m) => { console.log((c ? 'OK   ' : 'FAIL ') + m); if (!c) process
     await go('wiederholung');
     ok(name === 'desktop' ? !(await page.locator('.tabbar').isVisible()) : (await page.locator('.tabbar a.cur').textContent()).includes('Wiederholen'), name === 'desktop' ? 'Desktop: Seitennavigation statt Schnellleiste' : 'Handy/Tablet: Schnellleiste unten mit aktuellem Bereich');
     // Modul 0 und Einstufungstest
+    // Antworten werden gemischt angezeigt, stabil für dieselbe Person
+    await go('lektion-m5-l1');
+    { const lbl = await page.locator('.stepper button').evaluateAll((es) => es.map((e) => e.dataset.kind)); await page.locator('.stepper button').nth(lbl.findIndex((l) => l === 'Wissensabfrage')).evaluate((e) => e.click()); await page.waitForTimeout(150); }
+    { const o1 = await page.locator('.question').first().locator('.opt').evaluateAll((es) => es.map((e) => e.dataset.opt).join(''));
+      await page.reload(); await page.waitForTimeout(400);
+      const o2 = await page.locator('.question').first().locator('.opt').evaluateAll((es) => es.map((e) => e.dataset.opt).join(''));
+      ok(o1.length >= 3 && o1 === o2, 'Antwortreihenfolge stabil für dieselbe Person (' + o1 + ')'); }
+    // Hörmodus
+    await go('lektion-m0-l2');
+    ok((await page.locator('#lesson-listen').getAttribute('href')) === '#hoeren-m0-l2', 'Lektion: «Anhören» führt in den Hörmodus');
+    await go('hoeren-m0-l2');
+    { const t0 = await page.locator('#ls-title').textContent();
+      ok((await page.locator('#ls-lesson').inputValue()) === 'm0-l2' && t0.length > 3, 'Hörmodus: Lektion vorgewählt, erster Abschnitt angezeigt');
+      await page.click('#ls-play'); await page.waitForTimeout(200);
+      ok((await page.locator('#ls-pause').count()) === 1, 'Hörmodus: Wiedergabe startet (Pause-Knopf sichtbar)');
+      await page.getByRole('button', { name: 'Abschnitt vor' }).click(); await page.waitForTimeout(200);
+      ok((await page.locator('#ls-title').textContent()) !== t0, 'Hörmodus: Abschnitt vor springt weiter');
+      await page.click('#ls-pause'); await page.waitForTimeout(100);
+      ok((await page.locator('#ls-play').count()) === 1, 'Hörmodus: Pause hält an'); }
     await go('modul-m0');
     ok((await page.locator('#einstufung-box').count()) === 1 && (await page.locator('.lessonlist > li').count()) === 7, 'Modul 0: Einstufungstest-Kasten und 7 Grundlagen-Lektionen');
     await go('einstufung');

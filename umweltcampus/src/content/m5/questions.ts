@@ -325,7 +325,7 @@ export const M5_QUESTIONS: Question[] = [
       { id: 'b', text: 'Nachweis heute beim Vermieter einfordern; wenn er bis Arbeitsbeginn nicht vorliegt, Arbeiten ohne diese Maschine vorziehen und den Ersatzbagger bestellen; Anforderung in künftigen Mietbestellungen festhalten.', weight: 1,
         why: 'Am besten geeignet: keine unzulässige Maschine im Einsatz, Termin bestmöglich gehalten, Ursache angegangen.', prerequisites: 'Ausweicharbeiten oder Ersatz verfügbar.', risks: 'Bis zu zwei Tage Verzug für diese Arbeit.' },
       { id: 'c', text: 'Bagger nur kurz und nur am Morgen einsetzen.', weight: 0,
-        why: 'Ungeeignet: Die Dauer ändert nichts an der Anforderung.', risks: 'Wie a.' },
+        why: 'Ungeeignet: Die Dauer ändert nichts an der Anforderung.', risks: 'Verbot des Einsatzes, Verzug, Verfahren.' },
       { id: 'd', text: 'Auf den Ersatzbagger warten, ohne den Vermieter zu kontaktieren.', weight: 0.5,
         why: 'Teilweise geeignet: rechtlich sicher, aber unnötiger Verzug, wenn der Nachweis vielleicht doch vorhanden ist.', risks: 'Verzug.' },
     ], correct: ['b'], explanation: 'Nachweis vor dem Einsatz – mit vorausschauender Planung lassen sich Termine trotzdem halten.',
