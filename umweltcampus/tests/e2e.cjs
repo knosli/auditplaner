@@ -224,6 +224,10 @@ const ok = (c, m) => { console.log((c ? 'OK   ' : 'FAIL ') + m); if (!c) process
     ok((await page.locator('.infoboard').count()) === 1 && (await page.locator('.infoboard').textContent()).includes('Fehlt noch'), 'Simulator: Lagebild mit «Liegt vor» und «Fehlt noch»');
     { const fresh = await ctx.newPage(); await fresh.goto(url + '#dashboard'); await fresh.waitForTimeout(400); await fresh.keyboard.press('Tab');
       ok(await fresh.evaluate(() => document.activeElement && document.activeElement.classList.contains('skip')), 'Tastatur: erster Tab erreicht «Zum Inhalt springen»'); await fresh.close(); }
+    await go('lektion-m1-l1');
+    { const lbl = await page.locator('.stepper button').allTextContents(); await page.locator('.stepper button').nth(lbl.findLastIndex((l) => l.includes('Erklärung'))).click(); await page.waitForTimeout(150); }
+    { const a = page.locator('a.lawlink', { hasText: 'Art. 2 USG' }).first();
+      ok((await a.getAttribute('href')) === 'https://www.fedlex.admin.ch/eli/cc/1984/1122_1122_1122/de#art_2' && (await a.getAttribute('target')) === '_blank', 'Artikelzitat «Art. 2 USG» verlinkt direkt auf den Artikel in Fedlex'); }
     await go('dashboard');
     ok((await page.locator('#dash-layers .layer-mod').count()) === 3, 'Dashboard: Fachentwicklung zeigt nur drei relevante Module');
     await page.locator('.layers-toggle').click(); await page.waitForTimeout(100);

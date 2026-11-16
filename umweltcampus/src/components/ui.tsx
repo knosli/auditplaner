@@ -30,7 +30,9 @@ export function SourceList({ ids, compact }: { ids: string[]; compact?: boolean 
   if (compact)
     return (
       <p className="src-compact">
-        Quellen: {list.map((s, i) => <span key={s.id}>{i > 0 && ' · '}<span className="mono">{s.short}</span></span>)}
+        Quellen: {list.map((s, i) => <span key={s.id}>{i > 0 && ' · '}{s.url
+          ? <a href={s.url} target="_blank" rel="noopener noreferrer" className="mono extlink" title={s.title + ' – ' + (/fedlex/.test(s.url) ? 'auf Fedlex öffnen (geltende Fassung)' : 'Quelle öffnen')}>{s.short} ↗</a>
+          : <span className="mono">{s.short}</span>}</span>)}
       </p>
     );
   return (

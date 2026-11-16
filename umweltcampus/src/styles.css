@@ -1091,3 +1091,5 @@ fieldset { min-width: 0; }
 .trio-help dl { margin: 8px 0; display: grid; gap: 6px; }
 .trio-help dt { font-weight: 600; }
 .trio-help dd { margin: 0 0 0 0; color: var(--ink-2, inherit); }
+.lawlink { color: var(--accent); text-decoration: underline dotted; text-underline-offset: 2px; }
+.lawlink::after { content: ' ↗'; font-size: 0.8em; }

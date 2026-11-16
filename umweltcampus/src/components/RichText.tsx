@@ -1,5 +1,6 @@
 import { Fragment, type ReactNode } from 'react';
 import { useStore } from '../store';
+import { LAW_RE_SRC, lawLink } from '../lib/lawlinks';
 
 // Kleiner, sicherer Renderer für das Inhalts-Markup (kein innerHTML).
 // Unterstützt: Absätze, "- " und "1. " Listen, "### " Titel, **fett**,
@@ -8,14 +9,19 @@ import { useStore } from '../store';
 function Inline({ text }: { text: string }) {
   const { openTerm } = useStore();
   const parts: ReactNode[] = [];
-  const re = /\*\*(.+?)\*\*|\[\[([a-z0-9-]+)(?:\|(.+?))?\]\]/g;
+  const re = new RegExp('\\*\\*(.+?)\\*\\*|\\[\\[([a-z0-9-]+)(?:\\|(.+?))?\\]\\]|(' + LAW_RE_SRC + ')', 'g');
   let last = 0;
   let m: RegExpExecArray | null;
   let i = 0;
   while ((m = re.exec(text))) {
     if (m.index > last) parts.push(text.slice(last, m.index));
     if (m[1]) parts.push(<strong key={i++}>{m[1]}</strong>);
-    else {
+    else if (m[4]) {
+      const href = lawLink(m[5], m[6], m[7], m[8]);
+      parts.push(href
+        ? <a key={i++} href={href} target="_blank" rel="noopener noreferrer" className="lawlink" title={'Artikel auf Fedlex öffnen (geltende Fassung, neues Fenster)'}>{m[4]}</a>
+        : m[4]);
+    } else {
       const id = m[2];
       parts.push(
         <button key={i++} type="button" className="termlink" onClick={() => openTerm(id)} title="Fachbegriff nachschlagen">
