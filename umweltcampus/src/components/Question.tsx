@@ -1,3 +1,4 @@
+import { Need } from './ui';
 import { useState } from 'react';
 import type { Question, RubricPoint } from '../content/types';
 import { criticalChoice, recordAnswer, rubricHints, scoreQuestion } from '../lib/learning';
@@ -77,7 +78,8 @@ function ClosedQuestion({ q, ctx, initial, onAnswered, silent, label }: Props) {
         <div className="q-actions">
           {askConf && <ConfidencePicker value={conf} onChange={setConf} name={name + '-conf'} />}
           <button type="button" className="btn primary" disabled={!canCheck} onClick={check}>{silent ? 'Antwort speichern' : 'Antwort prüfen'}</button>
-          {askConf && sel.length > 0 && conf === undefined && <span className="hint">Bitte zuerst Ihre Sicherheit angeben.</span>}
+          {sel.length === 0 && <span className="hint need">Wählen Sie zuerst eine Antwort{askConf ? ' und dann, wie sicher Sie sind' : ''}.</span>}
+          {askConf && sel.length > 0 && conf === undefined && <span className="hint need">Noch angeben: Wie sicher sind Sie?</span>}
         </div>
       )}
       {done && silent && <p className="hint">Antwort gespeichert. Die Auswertung folgt am Ende.</p>}
@@ -181,7 +183,7 @@ function OpenQuestion({ q, ctx, initialText, onAnswered, silent, label }: Props)
       {phase === 'write' && (
         <div className="q-actions">
           <button type="button" className="btn primary" disabled={text.trim().length < 40} onClick={() => setPhase('rate')}>Antwort abschliessen und bewerten</button>
-          {text.trim().length < 40 && <span className="hint">Mindestens einige Sätze schreiben.</span>}
+          <Need text={text} min={40} what="dann können Sie die Antwort abschliessen und mit der Musterlösung vergleichen." />
         </div>
       )}
       {phase === 'rate' && <RubricRating rubric={rubric} text={text} ticks={ticks} setTicks={setTicks} onDone={finish} task={q.prompt} noAI={silent} />}

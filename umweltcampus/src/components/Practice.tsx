@@ -1,3 +1,4 @@
+import { Need } from './ui';
 import { useState } from 'react';
 import { F, T } from '../content';
 import type { PracticeRecord, PracticeStatus } from '../lib/state';
@@ -68,7 +69,7 @@ export function PracticeCard({ taskId, compact }: { taskId: string; compact?: bo
               {rec.status === 'in_arbeit' && (
                 <div className="q-actions">
                   <button type="button" className="btn primary" disabled={!reflOk} onClick={() => { set({ status: 'eingereicht', submittedAt: Date.now() }); log('praxis', taskId, 'eingereicht'); toast('Praxisauftrag eingereicht.'); }}>Als eingereicht markieren</button>
-                  {!reflOk && <span className="hint">Für jedes Kriterium eine Begründung schreiben.</span>}
+                  {!reflOk && <span className="hint need">Noch offen: {t.criteria.filter((c) => (rec.reflection[c] ?? '').trim().length < 15).length} von {t.criteria.length} Kriterien – je mindestens ein kurzer Satz (15 Zeichen).</span>}
                 </div>
               )}
               {rec.status === 'eingereicht' && (
@@ -79,6 +80,7 @@ export function PracticeCard({ taskId, compact }: { taskId: string; compact?: bo
                   <label className="field"><span>Datum der Bestätigung</span><input id={`pt-date-${taskId}`} type="date" value={conf.date} onChange={(e) => setConf({ ...conf, date: e.target.value })} /></label>
                   <label className="field"><span>Nachweis (wo abgelegt, was bestätigt wurde)</span><textarea id={`pt-ev-${taskId}`} rows={2} value={conf.evidence} onChange={(e) => setConf({ ...conf, evidence: e.target.value })} /></label>
                   <button type="button" className="btn primary" disabled={!confOk} onClick={() => { set({ status: 'bestaetigt', confirm: conf }); log('praxis', taskId, 'bestätigt durch ' + conf.role); toast('Praxisbestätigung erfasst.'); }}>Bestätigung erfassen</button>
+                  {!confOk && <span className="hint need">Noch angeben: {[conf.role.trim().length < 3 && 'Funktion', !/^\d{4}-\d{2}-\d{2}$/.test(conf.date) && 'Datum', conf.evidence.trim().length < 15 && 'Nachweis (mind. 15 Zeichen)'].filter(Boolean).join(', ')}.</span>}
                 </fieldset>
               )}
               {rec.status === 'bestaetigt' && rec.confirm && <p className="okline">Bestätigt durch {rec.confirm.role} am {fmtDate(new Date(rec.confirm.date).getTime())}. Nachweis: {rec.confirm.evidence}</p>}
@@ -103,7 +105,7 @@ export function FeynmanBlock({ id }: { id: string }) {
       <p className="eyebrow">Zielpublikum: {f.audience}</p>
       <p className="q-prompt">{f.prompt}</p>
       <textarea id={`feyn-${id}`} rows={7} value={text} onChange={(e) => setText(e.target.value)} disabled={phase !== 'write'} placeholder="So würde ich es auf der Baustelle sagen …" />
-      {phase === 'write' && <button type="button" className="btn primary" disabled={text.trim().length < 80} onClick={() => setPhase('rate')}>Erklärung prüfen</button>}
+      {phase === 'write' && <div className="q-actions"><button type="button" className="btn primary" disabled={text.trim().length < 80} onClick={() => setPhase('rate')}>Erklärung prüfen</button><Need text={text} min={80} what="dann können Sie Ihre Erklärung prüfen." /></div>}
       {phase === 'rate' && (
         <RubricRating rubric={f.rubric} text={text} ticks={ticks} setTicks={setTicks} task={f.prompt} audience={f.audience} onDone={() => {
           update((x) => ({ ...x, feynman: { ...x.feynman, [id]: { text, at: Date.now(), self: ticks } } }));

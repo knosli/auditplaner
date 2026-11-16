@@ -111,7 +111,7 @@ export function ReviewView() {
           <span className="eyebrow">Gemischte Übung</span>
           <p className="big mono">{Math.min(8, mixPool.length)}</p>
           <button type="button" className="btn" disabled={mixPool.length < 4} onClick={() => start(interleave(shuffle(mixPool, rng(Date.now())).slice(0, 8)).map((q) => ({ kind: 'frage', id: q.id })), 'Gemischte Übung')}>Themen mischen</button>
-          <p className="hint">Fragen aus bereits bearbeiteten Themen, abwechselnd gemischt (Interleaving).</p>
+          <p className="hint">{mixPool.length < 4 ? 'Noch gesperrt: Beantworten Sie zuerst Fragen in einer Lektion – danach werden Übungsfragen aus diesen Themen gemischt.' : 'Fragen aus bereits bearbeiteten Themen, abwechselnd gemischt (Interleaving).'}</p>
         </article>
       </div>
       {gaps.length > 0 && (

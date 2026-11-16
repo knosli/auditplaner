@@ -111,3 +111,10 @@ export function fmtDate(t: number) {
 export function fmtDateTime(t: number) {
   return new Date(t).toLocaleString('de-CH', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' });
 }
+
+/** Sichtbarer Grund, warum ein Knopf noch gesperrt ist – mit Zeichenzähler. */
+export function Need({ text, min, what }: { text: string; min: number; what: string }) {
+  const n = text.trim().length;
+  if (n >= min) return null;
+  return <span className="hint need" aria-live="polite">Noch {min - n} Zeichen{n === 0 ? ` (mindestens ${min})` : ''} – {what}</span>;
+}

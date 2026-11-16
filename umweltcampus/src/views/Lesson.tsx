@@ -1,3 +1,4 @@
+import { Fragment } from 'react';
 import { useEffect, useRef } from 'react';
 import { DeepText } from '../components/DeepText';
 import { useFocus } from '../lib/focus';
@@ -26,6 +27,15 @@ function stepLabel(st: Step): string {
   if (st.kind === 'example') return st.context === 'Hoch- und Tiefbau' ? 'Beispiel' : 'Beispiel ' + st.context;
   return STEP_LABEL[st.kind];
 }
+
+/** Vier Teile einer Lektion – zur Orientierung in den bis zu 16 Schritten. */
+const PHASES = [
+  { id: 'verstehen', label: 'Verstehen', kinds: ['situation', 'quiz', 'brief', 'explain', 'diagram', 'example'] },
+  { id: 'vertiefen', label: 'Vertiefen', kinds: ['deep', 'feynman'] },
+  { id: 'anwenden', label: 'Anwenden', kinds: ['decision', 'sitetask'] },
+  { id: 'abschliessen', label: 'Abschliessen', kinds: ['review', 'practice', 'summary', 'sources'] },
+] as const;
+const phaseOf = (st: Step) => Math.max(0, PHASES.findIndex((p) => (p.kinds as readonly string[]).includes(st.kind)));
 
 const fresh = (firstId: string): LessonProgress => ({ cur: firstId, seen: [firstId], startedAt: Date.now(), answers: {}, open: {} });
 
@@ -136,10 +146,20 @@ export function LessonView({ id }: { id: string }) {
       </header>
 
       <div className="lesson-progress">
-        <div className="seg-bar" aria-hidden="true">
-          {lesson.steps.map((st, i) => <span key={st.id} className={(i === idx ? 'cur' : seen.has(st.id) ? 'seen' : '')} />)}
+        <div className="phase-bar" aria-label="Teile der Lektion">
+          {PHASES.map((ph, pi) => {
+            const ids = lesson.steps.map((st, i) => ({ st, i })).filter((x) => phaseOf(x.st) === pi);
+            if (!ids.length) return null;
+            const nSeen = ids.filter((x) => seen.has(x.st.id)).length;
+            const isCur = phaseOf(cur) === pi;
+            return (
+              <button key={ph.id} type="button" className={'ph' + (isCur ? ' cur' : nSeen === ids.length ? ' done' : '')} aria-current={isCur ? 'step' : undefined} onClick={() => go(ids[0].i)} title={`${ph.label}: ${ids.length} Schritte, ${nSeen} angesehen`}>
+                <span className="ph-n">{pi + 1}</span><span className="ph-l">{ph.label}</span><span className="ph-c mono">{nSeen}/{ids.length}</span>
+              </button>
+            );
+          })}
         </div>
-        <span className="lp-label"><strong>Schritt {idx + 1} von {lesson.steps.length}</strong> · {stepLabel(cur)}</span>
+        <span className="lp-label"><strong>Teil {phaseOf(cur) + 1} von 4: {PHASES[phaseOf(cur)].label}</strong> · Schritt {idx + 1} von {lesson.steps.length} · {stepLabel(cur)}</span>
         <Bar value={lesson.steps.filter((st) => seen.has(st.id)).length / lesson.steps.length} label="Fortschritt der Lektion" small />
       </div>
 
@@ -174,13 +194,21 @@ export function LessonView({ id }: { id: string }) {
           <div className="side-box steps-box">
             <span className="side-title">Schritte</span>
             <ol className="stepper" aria-label="Schritte der Lektion">
-              {lesson.steps.map((st, i) => (
-                <li key={st.id}>
-                  <button type="button" className={(i === idx ? 'cur ' : '') + (seen.has(st.id) ? 'seen' : '')} onClick={() => go(i)} aria-current={i === idx ? 'step' : undefined} title={st.title}>
-                    <span className="mono">{i + 1}</span><span className="st-l">{stepLabel(st)}</span>
-                  </button>
-                </li>
-              ))}
+              {lesson.steps.map((st, i) => {
+                const ph = phaseOf(st);
+                const head = i === 0 || phaseOf(lesson.steps[i - 1]) !== ph;
+                const other = ph !== phaseOf(cur);
+                return (
+                  <Fragment key={st.id}>
+                    {head && <li className="st-phase" aria-hidden="true">{ph + 1} · {PHASES[ph].label}</li>}
+                    <li className={other ? 'other-phase' : undefined}>
+                      <button type="button" className={(i === idx ? 'cur ' : '') + (seen.has(st.id) ? 'seen' : '')} onClick={() => go(i)} aria-current={i === idx ? 'step' : undefined} title={st.title} data-kind={stepLabel(st)}>
+                        <span className="mono">{i + 1}</span><span className="st-l">{stepLabel(st)}<span className="st-t">{st.title}</span></span>
+                      </button>
+                    </li>
+                  </Fragment>
+                );
+              })}
             </ol>
           </div>
           {srcStep && srcStep.kind === 'sources' && (

@@ -1,3 +1,4 @@
+import { Need } from './ui';
 import { useState } from 'react';
 import { ST } from '../content';
 import { useStore } from '../store';
@@ -35,7 +36,7 @@ export function SiteTaskBlock({ id }: { id: string }) {
       {phase === 'write' && (
         <div className="q-actions">
           <button type="button" className="btn primary" disabled={text.trim().length < 80} onClick={() => setPhase('rate')}>Lösung abschliessen und bewerten</button>
-          {text.trim().length < 80 && <span className="hint">Schreiben Sie zuerst Ihre Lösung (mindestens einige Zeilen). Die Musterlösung erscheint danach.</span>}
+          <Need text={text} min={80} what="dann können Sie abschliessen. Stichworte genügen; die Musterlösung erscheint danach." />
         </div>
       )}
       {phase === 'rate' && <RubricRating rubric={t.rubric} text={text} ticks={ticks} setTicks={setTicks} task={`${t.situation}\n${t.data.join('\n')}\nAuftrag: ${t.assignment}`} onDone={save} />}

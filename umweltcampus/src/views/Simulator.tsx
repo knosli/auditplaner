@@ -1,3 +1,4 @@
+import { Need } from '../components/ui';
 import { useEffect, useMemo, useState } from 'react';
 import { CRITERION_LABEL, MODULES, S, SCENARIOS, TOPICS } from '../content';
 import { Icon } from '../components/Icons';
@@ -251,7 +252,9 @@ export function ScenarioPlayer({ id }: { id: string }) {
           {!revealed ? (
             <div className="q-actions">
               <button type="button" className="btn primary" disabled={!canConfirm(stage, a)} onClick={confirm}>Entscheid bestätigen</button>
-              {stage.type === 'ask' && <span className="hint">{a.selected.length} von {stage.pick} Fragen gewählt</span>}
+              {stage.type === 'ask' && <span className="hint need">{a.selected.length} von {stage.pick} Fragen gewählt{a.selected.length !== (stage.pick ?? 3) ? ` – wählen Sie genau ${stage.pick ?? 3}` : ''}</span>}
+              {(stage.type === 'single' || stage.type === 'multi') && a.selected.length === 0 && <span className="hint need">Wählen Sie zuerst {stage.type === 'single' ? 'eine Option' : 'mindestens eine Option'}.</span>}
+              {stage.type === 'justify' && !canConfirm(stage, a) && <span className="hint need">{(a.text ?? '').trim().length < 60 ? 'Zuerst die Begründung schreiben (mind. 60 Zeichen).' : 'Zuerst den Text abschliessen und selbst bewerten.'}</span>}
             </div>
           ) : (
             <>
@@ -367,7 +370,7 @@ function StageInput({ stage, a, setA, revealed }: { sc: Scenario; stage: Scenari
       {stage.type === 'justify' && (
         <>
           <textarea id={'just-' + stage.id} rows={7} value={a.text ?? ''} disabled={revealed || phase === 'rate'} onChange={(e) => setA({ text: e.target.value })} placeholder="Ihre Begründung …" />
-          {phase === 'write' && !revealed && <button type="button" className="btn" disabled={(a.text ?? '').trim().length < 60} onClick={() => setPhase('rate')}>Text abschliessen und selbst bewerten</button>}
+          {phase === 'write' && !revealed && <div className="q-actions"><button type="button" className="btn" disabled={(a.text ?? '').trim().length < 60} onClick={() => setPhase('rate')}>Text abschliessen und selbst bewerten</button><Need text={a.text ?? ''} min={60} what="dann können Sie den Text selbst bewerten." /></div>}
           {phase === 'rate' && !revealed && (
             <RubricRating rubric={stage.rubric ?? []} text={a.text ?? ''} ticks={a.selected} setTicks={(t) => setA({ selected: t })} task={stage.prompt} onDone={() => setA({ rated: true } as any)} />
           )}

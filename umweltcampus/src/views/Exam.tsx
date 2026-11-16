@@ -217,6 +217,7 @@ function ExamRunner({ kind, qs, moduleId, onExit }: { kind: ExamKind; qs: Questi
         ) : (
           <button type="button" className="btn primary" disabled={!answeredCur} onClick={finish}>Prüfung abgeben</button>
         )}
+        {!answeredCur && <span className="hint need">Beantworten Sie zuerst diese Frage.</span>}
       </div>
     </div>
   );

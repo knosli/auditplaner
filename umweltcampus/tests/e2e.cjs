@@ -56,10 +56,10 @@ const ok = (c, m) => { console.log((c ? 'OK   ' : 'FAIL ') + m); if (!c) process
     // Lesson 1: brief, Abwägung, Baustellenaufgabe
     await go('lektion-m2-l1');
     const steps = page.locator('.stepper button');
-    const labels = await steps.allTextContents();
+    const labels = await steps.evaluateAll((es) => es.map((e) => e.dataset.kind));
     ok(labels.some((l) => l.includes('Kurz erklärt')) && labels.some((l) => l.includes('Baustellenaufgabe')), 'Stepper zeigt Kurz erklärt und Baustellenaufgabe (' + labels.length + ' Schritte)');
     const idxOf = (t) => labels.findIndex((l) => l.includes(t));
-    await steps.nth(idxOf('Abwägung')).click();
+    await steps.nth(idxOf('Abwägung')).evaluate((e) => e.click());
     await page.waitForTimeout(150);
     ok((await page.locator('.step h2').textContent()).includes('Abwägung'), 'Abwägungsschritt erreicht');
     await page.locator('.opt').nth(2).click();
@@ -68,7 +68,7 @@ const ok = (c, m) => { console.log((c ? 'OK   ' : 'FAIL ') + m); if (!c) process
     ok((await page.locator('.ana').count()) === 4, 'Analyse aller 4 Optionen angezeigt');
     ok((await page.locator('.analysis').textContent()).includes('Voraussetzungen'), 'Voraussetzungen und Risiken sichtbar');
     if (name === 'desktop') await page.screenshot({ path: out + '/abwaegung.png', fullPage: false });
-    await steps.nth(idxOf('Baustellenaufgabe')).click(); await page.waitForTimeout(150);
+    await steps.nth(idxOf('Baustellenaufgabe')).evaluate((e) => e.click()); await page.waitForTimeout(150);
     await page.locator('.sitetask textarea').fill('Ziff. 4.1 bis 4.5 sind verbindliche Auflagen, 4.6 nur Empfehlung. Konzept vor Baubeginn einreichen, pH-Protokoll und Neutralisation, Gemeinde Zustimmung, Absenkung mit Geologe abklären, Notfallkarte 117 und Instruktion.');
     await page.getByRole('button', { name: /Lösung abschliessen/ }).click();
     ok((await page.locator('.hintchip').count()) >= 3, 'Stichwort-Vorprüfung markiert Rasterpunkte');
@@ -76,18 +76,18 @@ const ok = (c, m) => { console.log((c ? 'OK   ' : 'FAIL ') + m); if (!c) process
     await page.getByRole('button', { name: /Bewertung speichern/ }).click();
     ok((await page.locator('.sitetask .feedback').textContent()).includes('Musterlösung'), 'Musterlösung nach Bearbeitung sichtbar');
     // Kurz erklärt + Glossar
-    await steps.nth(idxOf('Kurz erklärt')).click(); await page.waitForTimeout(100);
+    await steps.nth(idxOf('Kurz erklärt')).evaluate((e) => e.click()); await page.waitForTimeout(100);
     ok((await page.locator('.brief').count()) === 1, 'Kurz erklärt wird angezeigt');
     // Lesson 4 Rechner
     await go('lektion-m2-l4');
-    const l4 = await page.locator('.stepper button').allTextContents();
-    await page.locator('.stepper button').nth(l4.findIndex((l) => l.includes('Schema'))).click(); await page.waitForTimeout(100);
+    const l4 = await page.locator('.stepper button').evaluateAll((es) => es.map((e) => e.dataset.kind));
+    await page.locator('.stepper button').nth(l4.findIndex((l) => l.includes('Schema'))).evaluate((e) => e.click()); await page.waitForTimeout(100);
     const area = await page.locator('.calc-out .strong').textContent();
     ok(/5[5-9]/.test(area), 'Rechner: 8 l/s Mittelsilt → ' + area.trim());
     await page.locator('#calc-grain').selectOption('ton');
     ok((await page.locator('.calc-out .strong').textContent()).length > 3, 'Rechner reagiert auf Kornwahl');
     // Lektion abschliessen → Karten
-    await page.locator('.stepper button').last().click(); await page.waitForTimeout(100);
+    await page.locator('.stepper button').last().evaluate((e) => e.click()); await page.waitForTimeout(100);
     await page.getByRole('button', { name: /Lektion abschliessen/ }).click(); await page.waitForTimeout(200);
     ok((await page.evaluate(() => location.hash)) === '#lektion-m2-l5', 'Abschluss führt zur nächsten Lektion');
     // Szenario A guter Pfad
@@ -147,11 +147,11 @@ const ok = (c, m) => { console.log((c ? 'OK   ' : 'FAIL ') + m); if (!c) process
     await go('modul-m1');
     ok((await page.locator('.lessonlist > li').count()) === 6, 'Modul 1: 6 Lektionen');
     await go('lektion-m1-l3');
-    const m1steps = await page.locator('.stepper button').allTextContents();
-    await page.locator('.stepper button').nth(m1steps.findIndex((l) => l.includes('Schema'))).click(); await page.waitForTimeout(100);
+    const m1steps = await page.locator('.stepper button').evaluateAll((es) => es.map((e) => e.dataset.kind));
+    await page.locator('.stepper button').nth(m1steps.findIndex((l) => l.includes('Schema'))).evaluate((e) => e.click()); await page.waitForTimeout(100);
     await page.getByRole('tab', { name: 'Abfall' }).click();
     ok((await page.locator('.vo').textContent()).includes('VVEA'), 'Modul 1: interaktive Verordnungsübersicht');
-    await page.locator('.stepper button').nth(m1steps.findIndex((l) => l.includes('Abwägung'))).click(); await page.waitForTimeout(100);
+    await page.locator('.stepper button').nth(m1steps.findIndex((l) => l.includes('Abwägung'))).evaluate((e) => e.click()); await page.waitForTimeout(100);
     await page.getByText('Einsetzen lassen und auf das Papier warten').click();
     await page.getByText('Eher sicher').first().click();
     await page.getByRole('button', { name: 'Antwort prüfen' }).click();
@@ -166,8 +166,8 @@ const ok = (c, m) => { console.log((c ? 'OK   ' : 'FAIL ') + m); if (!c) process
       await go('modul-' + mod);
       ok((await page.locator('.lessonlist > li').count()) === n, `Modul ${mod.slice(1)}: ${n} Lektionen`);
       await go('lektion-' + mod + '-l1');
-      const st = await page.locator('.stepper button').allTextContents();
-      await page.locator('.stepper button').nth(st.findIndex((l) => l.includes('Schema'))).click(); await page.waitForTimeout(100);
+      const st = await page.locator('.stepper button').evaluateAll((es) => es.map((e) => e.dataset.kind));
+      await page.locator('.stepper button').nth(st.findIndex((l) => l.includes('Schema'))).evaluate((e) => e.click()); await page.waitForTimeout(100);
       ok((await page.locator('.diagram.kette li').count()) >= 3, `Modul ${mod.slice(1)}: Schema sichtbar`);
       await go('szenario-' + sim);
       await page.getByRole('button', { name: 'Fall beginnen' }).click();
@@ -189,7 +189,7 @@ const ok = (c, m) => { console.log((c ? 'OK   ' : 'FAIL ') + m); if (!c) process
     ok((await page.locator('.lesson-head .trio > li').count()) === 3, 'Lektion zeigt drei Stufen: gelesen, bearbeitet, nachgewiesen');
     await page.locator('.lesson-head .trio-help summary').click(); await page.waitForTimeout(100);
     ok((await page.locator('.lesson-head .trio-help dt').count()) === 3 && await page.locator('.lesson-head .trio-help dd').first().isVisible(), 'Stufen-Erklärung aufklappbar (ohne Mouseover, auch mobil)');
-    { const lbl = await page.locator('.stepper button').allTextContents(); await page.locator('.stepper button').nth(lbl.findIndex((l) => l.includes('Vertiefung'))).click(); await page.waitForTimeout(150); }
+    { const lbl = await page.locator('.stepper button').evaluateAll((es) => es.map((e) => e.dataset.kind)); await page.locator('.stepper button').nth(lbl.findIndex((l) => l.includes('Vertiefung'))).evaluate((e) => e.click()); await page.waitForTimeout(150); }
     const tocN = await page.locator('.deep-toc li').count();
     await page.locator('.deep-toc li button').nth(2).click(); await page.waitForTimeout(150);
     ok(tocN >= 3 && (await page.locator('.deep-sec h3 button[aria-expanded="true"]').count()) >= 2, 'Fachvertiefung: Übersicht mit Kernsätzen, Abschnitte aufklappbar');
@@ -203,7 +203,7 @@ const ok = (c, m) => { console.log((c ? 'OK   ' : 'FAIL ') + m); if (!c) process
     await page.keyboard.press('Escape'); await page.waitForTimeout(100);
     ok((await page.locator('.app.focus').count()) === 0, 'Fokusmodus mit Esc beendet');
     await go('lektion-m12-l5');
-    { const lbl = await page.locator('.stepper button').allTextContents(); await page.locator('.stepper button').nth(lbl.findIndex((l) => l.includes('Abwägung'))).click(); await page.waitForTimeout(150); }
+    { const lbl = await page.locator('.stepper button').evaluateAll((es) => es.map((e) => e.dataset.kind)); await page.locator('.stepper button').nth(lbl.findIndex((l) => l.includes('Abwägung'))).evaluate((e) => e.click()); await page.waitForTimeout(150); }
     await page.locator('.question .opt').first().click();
     await page.locator('.question .conf label').last().click();
     await page.getByRole('button', { name: 'Antwort prüfen' }).click(); await page.waitForTimeout(150);
@@ -225,11 +225,11 @@ const ok = (c, m) => { console.log((c ? 'OK   ' : 'FAIL ') + m); if (!c) process
     { const fresh = await ctx.newPage(); await fresh.goto(url + '#dashboard'); await fresh.waitForTimeout(400); await fresh.keyboard.press('Tab');
       ok(await fresh.evaluate(() => document.activeElement && document.activeElement.classList.contains('skip')), 'Tastatur: erster Tab erreicht «Zum Inhalt springen»'); await fresh.close(); }
     await go('lektion-m1-l1');
-    { const lbl = await page.locator('.stepper button').allTextContents(); await page.locator('.stepper button').nth(lbl.findLastIndex((l) => l.includes('Erklärung'))).click(); await page.waitForTimeout(150); }
+    { const lbl = await page.locator('.stepper button').evaluateAll((es) => es.map((e) => e.dataset.kind)); await page.locator('.stepper button').nth(lbl.findLastIndex((l) => l.includes('Erklärung'))).evaluate((e) => e.click()); await page.waitForTimeout(150); }
     { const a = page.locator('a.lawlink', { hasText: 'Art. 2 USG' }).first();
       ok((await a.getAttribute('href')) === 'https://www.fedlex.admin.ch/eli/cc/1984/1122_1122_1122/de#art_2' && (await a.getAttribute('target')) === '_blank', 'Artikelzitat «Art. 2 USG» verlinkt direkt auf den Artikel in Fedlex'); }
     await go('lektion-m10-l1');
-    { const lbl = await page.locator('.stepper button').allTextContents(); await page.locator('.stepper button').nth(lbl.findIndex((l) => l.includes('Erklärung'))).click(); await page.waitForTimeout(150);
+    { const lbl = await page.locator('.stepper button').evaluateAll((es) => es.map((e) => e.dataset.kind)); await page.locator('.stepper button').nth(lbl.findIndex((l) => l.includes('Erklärung'))).evaluate((e) => e.click()); await page.waitForTimeout(150);
       const d = await page.locator('.table.cards-sm td').first().evaluate((e) => getComputedStyle(e).display);
       ok(name === 'mobile' ? d === 'block' : d === 'table-cell', name === 'mobile' ? 'Handy: Tabellen ab drei Spalten als Karten' : 'Tabellen ab drei Spalten als Tabelle'); }
     await go('modul-m2');
@@ -238,6 +238,15 @@ const ok = (c, m) => { console.log((c ? 'OK   ' : 'FAIL ') + m); if (!c) process
     ok((await page.evaluate(() => location.hash)) === '#modul-m5' && (await page.locator('h1').first().textContent()).includes('Luft'), 'Modulseite: Auswahlliste wechselt das Modul');
     await page.locator('.mod-switch a[aria-label^="Nächstes Modul"]').click(); await page.waitForTimeout(200);
     ok((await page.evaluate(() => location.hash)) === '#modul-m6' && (await page.locator('.mod-pager a').count()) === 2, 'Modulseite: Pfeil wechselt zum nächsten Modul, unten Vor/Zurück');
+    // Orientierung: Teile der Lektion, Gründe für gesperrte Knöpfe, Schnellnavigation
+    await go('lektion-m2-l2');
+    ok((await page.locator('.phase-bar .ph').count()) >= 3 && (await page.locator('.lp-label').textContent()).includes('Teil 1 von 4'), 'Lektion: in Teile gegliedert (Verstehen, Vertiefen, Anwenden, Abschliessen)');
+    await page.locator('.phase-bar .ph', { hasText: 'Anwenden' }).click(); await page.waitForTimeout(150);
+    ok((await page.locator('.lp-label').textContent()).includes('Anwenden'), 'Lektion: Teil anwählen springt zum ersten Schritt dieses Teils');
+    ok((await page.locator('.tabbar').count()) === 0, 'Schnellnavigation in der Lektion ausgeblendet (Schrittnavigation hat Vorrang)');
+    { const st = page.locator('.question .q-actions .hint.need').first(); ok((await st.count()) === 1 && (await st.textContent()).includes('Wählen Sie zuerst'), 'Gesperrter Knopf: Grund wird angezeigt'); }
+    await go('wiederholung');
+    ok(name === 'desktop' ? !(await page.locator('.tabbar').isVisible()) : (await page.locator('.tabbar a.cur').textContent()).includes('Wiederholen'), name === 'desktop' ? 'Desktop: Seitennavigation statt Schnellleiste' : 'Handy/Tablet: Schnellleiste unten mit aktuellem Bereich');
     await go('dashboard');
     ok((await page.locator('#dash-layers .layer-mod').count()) === 3, 'Dashboard: Fachentwicklung zeigt nur drei relevante Module');
     await page.locator('.layers-toggle').click(); await page.waitForTimeout(100);

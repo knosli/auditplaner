@@ -107,8 +107,15 @@ function Shell() {
     return [{ label: NAV_LABEL[route] ?? 'Dashboard' }];
   })();
 
+  const tabbar = !/^(lektion-|szenario-)/.test(route);
+  const TABS = [
+    { id: 'dashboard', label: 'Start', icon: 'home' },
+    { id: 'module', label: 'Module', icon: 'book' },
+    { id: 'simulator', label: 'Fälle', icon: 'sim' },
+    { id: 'wiederholung', label: 'Wiederholen', icon: 'review' },
+  ];
   return (
-    <div className={'app' + (menu ? ' menu-open' : '') + (focus && route.startsWith('lektion-') ? ' focus' : '')}>
+    <div className={'app' + (menu ? ' menu-open' : '') + (focus && route.startsWith('lektion-') ? ' focus' : '') + (tabbar ? ' has-tabbar' : '')}>
       <a className="skip" href="#main">Zum Inhalt springen</a>
       <nav className={'sidenav' + (menu ? ' open' : '')} aria-label="Hauptnavigation" id="sidenav">
         <a href="#dashboard" className="brand">
@@ -162,6 +169,17 @@ function Shell() {
         </header>
         <main className="main" id="main" tabIndex={-1}>{view}</main>
       </div>
+      {tabbar && (
+        <nav className="tabbar" aria-label="Schnellnavigation">
+          {TABS.map((t) => (
+            <a key={t.id} href={'#' + t.id} className={cur === t.id ? 'cur' : ''} aria-current={cur === t.id ? 'page' : undefined}>
+              <Icon name={t.icon} size={20} /><span>{t.label}</span>
+              {t.id === 'wiederholung' && due > 0 && <span className="count" aria-label={`${due} fällig`}>{due}</span>}
+            </a>
+          ))}
+          <button type="button" onClick={() => setMenu(true)} aria-controls="sidenav" aria-expanded={menu}><Icon name="menu" size={20} /><span>Mehr</span></button>
+        </nav>
+      )}
       <GlossaryDrawer />
       <CoachPanel />
       {toastMsg && <div className="toast" role="status">{toastMsg}</div>}
@@ -177,7 +195,7 @@ function NextAction({ route }: { route: string }) {
   if (!r) return null;
   return (
     <a className="btn small next-action" href={r.href} title={r.why}>
-      <Icon name="arrow" size={16} /><span className="na-l">{r.title}</span>
+      <Icon name="arrow" size={16} /><span className="na-l">{r.title}</span><span className="na-s">Weiter</span>
     </a>
   );
 }
