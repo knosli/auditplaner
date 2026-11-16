@@ -241,7 +241,7 @@ export function ModulesView() {
       <header className="page-head">
         <span className="eyebrow">Wissen systematisch aufbauen</span>
         <h1>Ihre Fachmodule.</h1>
-        <p className="lead">Zwölf Module mit je vier Lernstufen – von den rechtlichen Grundlagen über die Baustellenpraxis bis zur fachlichen Führung. {avail === MODULES.length ? 'Alle Module sind verfügbar.' : `${avail} Module sind verfügbar, die übrigen in Entwicklung.`}</p>
+        <p className="lead">Zwölf Module mit je vier Lernstufen – von den rechtlichen Grundlagen über die Baustellenpraxis bis zur fachlichen Führung. {avail === MODULES.length ? 'Tippen Sie auf ein Modul, um es zu öffnen.' : `${avail} Module sind verfügbar, die übrigen in Entwicklung.`}</p>
       </header>
       <div className="toolbar" role="search">
         <div className="chips" role="group" aria-label="Nach Bereich filtern">
@@ -272,8 +272,11 @@ export function ModuleDetail({ id }: { id: string }) {
   const req = moduleRequirements(s, id);
   const tasks = TASKS.filter((t) => t.moduleId === id);
   const doneN = lessons.filter((l) => s.lessons[l.id]?.completedAt).length;
+  const nextL = lessons.find((l) => s.lessons[l.id] && !s.lessons[l.id].completedAt) ?? lessons.find((l) => !s.lessons[l.id]?.completedAt);
+  const nextStarted = !!(nextL && s.lessons[nextL.id]);
   return (
     <div className="page">
+      <ModSwitch id={id} />
       <section className={'mod-hero tone-' + meta.tone}>
         <span className="mod-ico big"><Icon name={meta.icon} size={34} /></span>
         <div className="mod-hero-text">
@@ -281,14 +284,18 @@ export function ModuleDetail({ id }: { id: string }) {
           <h1>{m.title}</h1>
           <p className="lead">{meta.promise}</p>
           <div className="mod-hero-meta"><span>{lessons.length} Lektionen</span><span>{doneN} abgeschlossen</span><span>{(() => { const n = SCENARIOS.filter((x) => x.moduleId === id && x.status === 'verfuegbar').length; return `${n} Baustellenf${n === 1 ? 'all' : 'älle'}`; })()}</span><span>{tasks.length} Praxisaufträge</span></div>
+          <div className="mod-hero-cta">
+            {nextL
+              ? <a className="btn primary" href={'#lektion-' + nextL.id}>{nextStarted ? 'Weiterlernen' : doneN ? 'Weiter' : 'Starten'} mit Lektion {nextL.order}: {nextL.title.length > 42 ? nextL.title.slice(0, 40) + '…' : nextL.title} <Icon name="arrow" size={16} /></a>
+              : <a className="btn primary" href="#pruefung">Alle Lektionen abgeschlossen – zur Modulprüfung <Icon name="arrow" size={16} /></a>}
+            <button type="button" className="btn quiet" onClick={() => document.getElementById('mod-lessons')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>Alle {lessons.length} Lektionen ansehen</button>
+          </div>
         </div>
       </section>
       <p className="trust"><Icon name="alert" size={16} /> <span><strong>Prüfstatus Entwurf.</strong> {['m1', 'm2', 'm3', 'm4', 'm8'].includes(id) ? 'Fachlich sorgfältig erstellt und nach einer externen KI-Fachprüfung korrigiert, aber nicht durch eine Fachperson am Originaltext freigegeben.' : 'Fachlich sorgfältig erstellt und extern KI-geprüft (14.11.2026); die Korrekturen werden schrittweise umgesetzt. Nicht durch eine Fachperson am Originaltext freigegeben.'} Kantone, Gemeinden und Bewilligungen können zusätzliche Anforderungen stellen.</span></p>
 
-      <LocalCheck moduleId={id} />
-
-      <section className="section">
-        <div className="section-head"><h2>Ihr Weg durch die vier Lernstufen</h2><span className="hint">{pct(moduleProgress(s, id))} des Modulabschlusses</span></div>
+      <section className="section" id="mod-lessons">
+        <div className="section-head"><h2>Lektionen – Ihr Weg durch die vier Lernstufen</h2><span className="hint">{pct(moduleProgress(s, id))} des Modulabschlusses</span></div>
         <ol className="level-path">
           {[1, 2, 3, 4].map((lvl) => {
             const st = levelStats(s, id, lvl);
@@ -326,6 +333,8 @@ export function ModuleDetail({ id }: { id: string }) {
         </ol>
       </section>
 
+      <LocalCheck moduleId={id} />
+
       <div className="grid-2">
         <section className="section">
           <h2>Baustellenfälle</h2>
@@ -342,6 +351,41 @@ export function ModuleDetail({ id }: { id: string }) {
         <ul className="reqs">{req.map((r) => <li key={r.label} className={r.done ? 'done' : ''}><span className="req-mark">{r.done ? <Icon name="check" size={15} /> : null}</span> {r.label} <span className="hint">({r.detail})</span></li>)}</ul>
         <div><a className="btn" href="#pruefung">Zum Prüfungstraining <Icon name="arrow" size={16} /></a></div>
       </section>
+      <ModPager id={id} />
     </div>
+  );
+}
+
+/** Zwischen Modulen wechseln: zurück zur Übersicht, Auswahlliste, vorheriges/nächstes Modul. */
+function ModSwitch({ id }: { id: string }) {
+  const mods = MODULES.filter((m) => m.status === 'verfuegbar');
+  const i = mods.findIndex((m) => m.id === id);
+  const prev = mods[i - 1];
+  const next = mods[i + 1];
+  return (
+    <nav className="mod-switch" aria-label="Modul wechseln">
+      <a href="#module" className="back-link"><Icon name="back" size={16} /> Alle Module</a>
+      <span className="mod-switch-ctl">
+        <a className={'btn quiet small' + (prev ? '' : ' disabled')} href={prev ? '#modul-' + prev.id : undefined} aria-disabled={!prev} aria-label={prev ? `Vorheriges Modul: ${prev.no} ${prev.short}` : 'Kein vorheriges Modul'}>‹</a>
+        <select id="mod-select" aria-label="Modul wählen" value={id} onChange={(e) => { location.hash = 'modul-' + e.target.value; }}>
+          {mods.map((m) => <option key={m.id} value={m.id}>Modul {m.no}: {m.short}</option>)}
+        </select>
+        <a className={'btn quiet small' + (next ? '' : ' disabled')} href={next ? '#modul-' + next.id : undefined} aria-disabled={!next} aria-label={next ? `Nächstes Modul: ${next.no} ${next.short}` : 'Kein nächstes Modul'}>›</a>
+      </span>
+    </nav>
+  );
+}
+
+/** Am Seitenende: vorheriges und nächstes Modul. */
+function ModPager({ id }: { id: string }) {
+  const mods = MODULES.filter((m) => m.status === 'verfuegbar');
+  const i = mods.findIndex((m) => m.id === id);
+  const prev = mods[i - 1];
+  const next = mods[i + 1];
+  return (
+    <nav className="mod-pager" aria-label="Weitere Module">
+      {prev ? <a href={'#modul-' + prev.id} className="mod-pg prev"><span className="hint">‹ Vorheriges Modul</span><strong>{prev.no}. {prev.short}</strong></a> : <span />}
+      {next ? <a href={'#modul-' + next.id} className="mod-pg next"><span className="hint">Nächstes Modul ›</span><strong>{next.no}. {next.short}</strong></a> : <a href="#module" className="mod-pg next"><span className="hint">Übersicht</span><strong>Alle Module</strong></a>}
+    </nav>
   );
 }

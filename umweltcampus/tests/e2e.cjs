@@ -232,6 +232,12 @@ const ok = (c, m) => { console.log((c ? 'OK   ' : 'FAIL ') + m); if (!c) process
     { const lbl = await page.locator('.stepper button').allTextContents(); await page.locator('.stepper button').nth(lbl.findIndex((l) => l.includes('Erklärung'))).click(); await page.waitForTimeout(150);
       const d = await page.locator('.table.cards-sm td').first().evaluate((e) => getComputedStyle(e).display);
       ok(name === 'mobile' ? d === 'block' : d === 'table-cell', name === 'mobile' ? 'Handy: Tabellen ab drei Spalten als Karten' : 'Tabellen ab drei Spalten als Tabelle'); }
+    await go('modul-m2');
+    { const cta = page.locator('.mod-hero-cta a.btn.primary'); ok(/^#lektion-m2-l\d$/.test((await cta.getAttribute('href')) || '') && /Weiterlernen|Weiter|Starten/.test(await cta.textContent()), 'Modulseite: Hauptknopf führt direkt in die passende Lektion des Moduls'); }
+    await page.selectOption('#mod-select', 'm5'); await page.waitForTimeout(200);
+    ok((await page.evaluate(() => location.hash)) === '#modul-m5' && (await page.locator('h1').first().textContent()).includes('Luft'), 'Modulseite: Auswahlliste wechselt das Modul');
+    await page.locator('.mod-switch a[aria-label^="Nächstes Modul"]').click(); await page.waitForTimeout(200);
+    ok((await page.evaluate(() => location.hash)) === '#modul-m6' && (await page.locator('.mod-pager a').count()) === 2, 'Modulseite: Pfeil wechselt zum nächsten Modul, unten Vor/Zurück');
     await go('dashboard');
     ok((await page.locator('#dash-layers .layer-mod').count()) === 3, 'Dashboard: Fachentwicklung zeigt nur drei relevante Module');
     await page.locator('.layers-toggle').click(); await page.waitForTimeout(100);
