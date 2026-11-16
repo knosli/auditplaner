@@ -1164,3 +1164,10 @@ details.trust-fold p { margin: 8px 0 0 26px; }
   .next-action { max-width: none; padding-inline: 12px; }
   .next-action .na-s { display: inline; }
 }
+
+/* Ganze Karte antippbar: die Klickfläche (.stretched::after) muss sich auf die Karte beziehen, nicht auf den Titel */
+.mod-card { isolation: isolate; }
+.mod-card::before { z-index: -1; }
+.mod-card h3, .sim-body, .sim-body h3 { position: static; }
+.stretched:focus-visible { outline: none; }
+.mod-card:has(.stretched:focus-visible), .sim-card:has(.stretched:focus-visible) { outline: 3px solid var(--accent); outline-offset: 2px; }

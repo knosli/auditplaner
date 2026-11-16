@@ -232,6 +232,13 @@ const ok = (c, m) => { console.log((c ? 'OK   ' : 'FAIL ') + m); if (!c) process
     { const lbl = await page.locator('.stepper button').evaluateAll((es) => es.map((e) => e.dataset.kind)); await page.locator('.stepper button').nth(lbl.findIndex((l) => l.includes('Erklärung'))).evaluate((e) => e.click()); await page.waitForTimeout(150);
       const d = await page.locator('.table.cards-sm td').first().evaluate((e) => getComputedStyle(e).display);
       ok(name === 'mobile' ? d === 'block' : d === 'table-cell', name === 'mobile' ? 'Handy: Tabellen ab drei Spalten als Karten' : 'Tabellen ab drei Spalten als Tabelle'); }
+    // Ganze Karte antippbar (nicht nur der Titel): Klick auf die Mitte bzw. den Beschreibungstext
+    await go('module');
+    { const c = page.locator('article.mod-card').nth(1); await c.scrollIntoViewIfNeeded(); { const b = await c.locator('p').first().boundingBox(); await page.mouse.click(b.x + b.width / 2, b.y + b.height / 2); } await page.waitForTimeout(200);
+      ok((await page.evaluate(() => location.hash)) === '#modul-m2', 'Fachmodule: Tippen irgendwo auf die Karte öffnet das Modul'); }
+    await go('simulator');
+    { const c = page.locator('.sim-card').first(); await c.scrollIntoViewIfNeeded(); { const b = await c.locator('.sim-body > p').first().boundingBox(); await page.mouse.click(b.x + b.width / 2, b.y + b.height / 2); } await page.waitForTimeout(200);
+      ok((await page.evaluate(() => location.hash)).startsWith('#szenario-'), 'Simulator: Tippen auf die Fallkarte öffnet den Fall'); }
     await go('modul-m2');
     { const cta = page.locator('.mod-hero-cta a.btn.primary'); ok(/^#lektion-m2-l\d$/.test((await cta.getAttribute('href')) || '') && /Weiterlernen|Weiter|Starten/.test(await cta.textContent()), 'Modulseite: Hauptknopf führt direkt in die passende Lektion des Moduls'); }
     await page.selectOption('#mod-select', 'm5'); await page.waitForTimeout(200);

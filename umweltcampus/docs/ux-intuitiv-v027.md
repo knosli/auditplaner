@@ -15,3 +15,7 @@ Auslöser: Rückmeldung der Nutzerin bzw. des Nutzers – die App soll intuitive
 
 - Unit-Tests: 268 bestanden.
 - Browser-Test (Desktop, Tablet, Smartphone): 360 Prüfungen bestanden, keine Konsolenfehler, kein seitliches Scrollen. Neu geprüft: Tabellen als Karten auf dem Handy, Modulwechsel (Auswahlliste, Pfeile, Vor/Zurück), Startknopf im Modul, Lektionsteile und Sprung zu einem Teil, Begründung bei gesperrtem Knopf, Schnellleiste auf Handy/Tablet und deren Ausblendung in Lektionen.
+
+## Korrektur 0.27.1: Karten liessen sich nicht antippen
+
+Rückmeldung: «Wenn ich auf Module gehe und auf z. B. Modul 2 klicke, passiert nichts.» Ursache: Die Modulkarten (Übersicht und Startseite) und die Fallkarten im Simulator sollten als Ganzes anklickbar sein (unsichtbare Klickfläche über der Karte). Wegen eines Stilfehlers war die Klickfläche nur so gross wie der Titel; ein Tippen auf Symbol, Beschreibung oder «Öffnen →» bewirkte nichts. Behoben (`.mod-card h3`/`.sim-body` nicht mehr als Bezugsrahmen der Klickfläche). Der Browser-Test prüft jetzt das Antippen der Karte selbst, nicht nur den Seitenaufruf. Ergebnis: 366 Browser-Prüfungen bestanden, keine Konsolenfehler.
