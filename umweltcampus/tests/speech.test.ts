@@ -5,6 +5,7 @@ import { chunks, lessonSegments, minutesOf, moduleSegments, speakable } from '..
 
 describe('Text für die Sprachausgabe', () => {
   test('Markup, Abkürzungen, Einheiten und Gesetze werden hörbar', () => {
+    expect(speakable('Titel. ### Der Weg\nText')).not.toContain('#');
     const t = speakable('**Wichtig:** Nach Art. 6 Abs. 1 GSchG z. B. 5 l/s = 18 m³/h; pH 6.5–9.0; [[ph|pH-Wert]] am 25.2.2025, +3 dB, 80 %.');
     expect(t).not.toMatch(/\*\*|\[\[|\]\]/);
     expect(t).toContain('Artikel 6 Absatz 1 Gewässerschutzgesetz');
