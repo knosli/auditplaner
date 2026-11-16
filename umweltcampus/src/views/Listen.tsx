@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { LESSONS, MODULES } from '../content';
 import { Icon } from '../components/Icons';
-import { chunks, lessonSegments, minutesOf, moduleSegments, type ListenMode, type Segment } from '../lib/speech';
+import { chunks, lessonSegments, minutesOf, moduleSegments, voiceScore, type ListenMode, type Segment } from '../lib/speech';
 
 const POS_KEY = 'umweltcampus.hoeren';
 const savePos = (key: string, idx: number) => { try { localStorage.setItem(POS_KEY, JSON.stringify({ key, idx })); } catch { /* egal */ } };
@@ -44,7 +44,7 @@ export function ListenView({ target }: { target?: string }) {
     if (!synth) return;
     const load = () => {
       const all = synth.getVoices().filter((v) => v.lang.toLowerCase().startsWith('de'));
-      all.sort((a, b) => Number(b.lang === 'de-CH') - Number(a.lang === 'de-CH') || Number(b.localService) - Number(a.localService));
+      all.sort((a, b) => voiceScore(b) - voiceScore(a) || a.name.localeCompare(b.name));
       setVoices(all);
       setVoiceUri((u) => u || all[0]?.voiceURI || '');
     };
@@ -91,6 +91,14 @@ export function ListenView({ target }: { target?: string }) {
     synth.cancel();
     say(0);
   };
+  const sample = () => {
+    if (!synth) return;
+    stop();
+    const v = voices.find((x) => x.voiceURI === voiceUri);
+    const u = new SpeechSynthesisUtterance('Grüezi. So klingt diese Stimme. Betonwaschwasser gehört nie in einen Meteorschacht.');
+    u.lang = v?.lang ?? 'de-CH'; if (v) u.voice = v; u.rate = rate;
+    synth.speak(u);
+  };
   const play = () => { if (!segs.length) return; setPlaying(true); void keepAwake(true); speakSeg(idx >= segs.length ? 0 : idx); };
   const stop = () => { gen.current++; synth?.cancel(); window.clearTimeout(timer.current); setPlaying(false); setPause(0); void keepAwake(false); };
   const jump = (d: number) => { const n = Math.max(0, Math.min(segs.length - 1, idx + d)); if (playing) speakSeg(n); else { setIdx(n); savePos(key, n); } };
@@ -134,14 +142,24 @@ export function ListenView({ target }: { target?: string }) {
                   {[0.85, 1, 1.15, 1.3].map((r) => <option key={r} value={r}>{r === 1 ? 'normal' : r < 1 ? 'langsamer' : r < 1.2 ? 'etwas schneller' : 'schnell'}</option>)}
                 </select>
               </label>
-              {voices.length > 1 && (
+              {voices.length > 0 && (
                 <label className="field inline"><span>Stimme</span>
                   <select id="ls-voice" value={voiceUri} onChange={(e) => setVoiceUri(e.target.value)}>
-                    {voices.map((v) => <option key={v.voiceURI} value={v.voiceURI}>{v.name} ({v.lang})</option>)}
+                    {voices.map((v) => <option key={v.voiceURI} value={v.voiceURI}>{v.name} ({v.lang}){voiceScore(v) >= 10 ? ' ★' : ''}</option>)}
                   </select>
                 </label>
               )}
+              <button type="button" className="btn small" id="ls-sample" onClick={sample}>Hörprobe</button>
             </div>
+            <details className="voice-help">
+              <summary>Stimme klingt roboterhaft? So wird sie natürlicher – gratis</summary>
+              <p>Die App nutzt die Vorlesestimmen Ihres Geräts. Fast alle Geräte haben bessere Stimmen, die man einmal kostenlos herunterlädt (einige hundert MB, am besten im WLAN). Danach wählt die App sie automatisch (mit ★ markiert).</p>
+              <ul className="plain">
+                <li><strong>iPhone / iPad:</strong> Einstellungen → Bedienungshilfen → Gesprochene Inhalte → Stimmen → Deutsch → eine Stimme mit «Verbessert» oder «Premium» laden (z. B. Anna oder Petra). App danach neu öffnen.</li>
+                <li><strong>Android:</strong> Einstellungen → Bedienungshilfen bzw. System → Sprachausgabe (Text-in-Sprache) → Google-Sprachausgabe → Sprachdaten installieren → Deutsch → eine Stimme in hoher Qualität wählen.</li>
+                <li><strong>Computer:</strong> In Microsoft Edge stehen sehr natürliche «Natural»-Stimmen bereit (z. B. Katja, Conrad), in Chrome die «Google Deutsch»-Stimme. Beide brauchen eine Internetverbindung.</li>
+              </ul>
+            </details>
             {voicesChecked && voices.length === 0 && <p className="hint">Keine deutsche Stimme gemeldet – vorgelesen wird mit der Standardstimme. Klingt sie nicht deutsch: auf dem Handy unter Einstellungen → Bedienungshilfen → Gesprochene Inhalte bzw. Sprachausgabe eine deutsche Stimme laden.</p>}
           </section>
 

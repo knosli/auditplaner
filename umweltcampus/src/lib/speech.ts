@@ -156,3 +156,18 @@ export function minutesOf(segs: Segment[], rate = 1): number {
   const pauses = segs.reduce((n, s) => n + (s.pauseAfter ?? 0) + 0.6, 0);
   return Math.max(1, Math.round(words / (150 * rate) + pauses / 60));
 }
+
+/**
+ * Qualität einer Gerätestimme schätzen (höher = natürlicher). Bevorzugt «Premium/Verbessert/Natural/Neural»-Stimmen
+ * (iOS, macOS, Edge, Android) und Google-Stimmen in Chrome; einfache Kompakt- oder eSpeak-Stimmen zuletzt.
+ */
+export function voiceScore(v: { name: string; lang: string; localService?: boolean }): number {
+  const n = v.name.toLowerCase();
+  let s = 0;
+  if (/premium|verbessert|erweitert|enhanced|natural|neural|online/.test(n)) s += 10;
+  if (/google/.test(n)) s += 6;
+  if (/compact|kompakt|espeak|robot|novelty/.test(n)) s -= 8;
+  if (v.lang === 'de-CH') s += 2;
+  else if (v.lang === 'de-DE') s += 1;
+  return s;
+}

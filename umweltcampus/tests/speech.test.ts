@@ -51,3 +51,19 @@ describe('Abschnitte', () => {
     expect(minutesOf(lessonSegments(l, 'inhalt'))).toBeGreaterThan(1);
   });
 });
+
+describe('Stimmenwahl', () => {
+  test('natürliche Stimmen vor einfachen', async () => {
+    const { voiceScore } = await import('../src/lib/speech');
+    const vs = [
+      { name: 'Anna', lang: 'de-DE' },
+      { name: 'Anna (Verbessert)', lang: 'de-DE' },
+      { name: 'Microsoft Katja Online (Natural) - German (Germany)', lang: 'de-DE' },
+      { name: 'eSpeak German', lang: 'de' },
+      { name: 'Google Deutsch', lang: 'de-DE' },
+    ].sort((a, b) => voiceScore(b) - voiceScore(a)).map((v) => v.name);
+    expect(vs[0]).toMatch(/Verbessert|Natural/);
+    expect(vs[vs.length - 1]).toMatch(/eSpeak/);
+    expect(vs.indexOf('Google Deutsch')).toBeLessThan(vs.indexOf('Anna'));
+  });
+});

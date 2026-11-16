@@ -28,3 +28,7 @@ Seite «Hörmodus» (Navigation unter «Mein Lernen», Knopf «Anhören» in jed
 
 ## Tests
 Unit-Tests: 291 bestanden (neu `tests/speech.test.ts`; Mischen in `tests/m0.test.ts`). Browser-Test: 405 Prüfungen bestanden (neu: Antwortreihenfolge stabil, Hörmodus starten, vorspringen, anhalten; «Anhören» in der Lektion), keine Konsolenfehler.
+
+## Ergänzung 0.31.1: natürlichere Stimme, weiterhin gratis
+- Die App bevorzugt automatisch die natürlichsten Gerätestimmen («Verbessert», «Premium», «Natural», «Neural», Google-Stimmen) und stellt einfache Kompakt- bzw. eSpeak-Stimmen nach hinten; gute Stimmen sind in der Auswahl mit ★ markiert.
+- Knopf «Hörprobe» und aufklappbare Anleitung, wie man auf iPhone, Android und Computer kostenlos eine bessere deutsche Stimme lädt.
