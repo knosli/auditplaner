@@ -146,6 +146,8 @@ export interface Lesson {
   objectives: string[];
   steps: Step[];
   review: ReviewStatus;
+  /** Kurzes Auffrischungsformat (Modul 0): ohne Vertiefung, Abwägung, Baustellen- und Praxisaufgabe */
+  format?: 'auffrischung';
 }
 
 /** Praktische Baustellenaufgabe innerhalb einer Lektion (fiktive Projektdaten). */

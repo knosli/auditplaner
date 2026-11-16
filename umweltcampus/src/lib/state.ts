@@ -142,6 +142,14 @@ export interface AppState {
   siteTasks: Record<string, SiteTaskRecord>;
   history: HistoryEvent[];
   studySec: Record<string, number>; // 'YYYY-MM-DD' -> Sekunden
+  /** Ergebnis des Einstufungstests (Modul 0): richtige Antworten je Lektion (0–2); fehlt bei älteren Lernständen */
+  placement?: PlacementResult;
+}
+
+export interface PlacementResult {
+  at: number;
+  /** richtige Antworten je Grundlagen-Lektion (von 2) */
+  res: Record<string, number>;
 }
 
 export function emptyState(now = Date.now()): AppState {
@@ -190,6 +198,7 @@ export function normalizeState(raw: unknown): AppState {
     siteTasks: isObj(src.siteTasks) ? (src.siteTasks as AppState['siteTasks']) : {},
     history: Array.isArray(src.history) ? (src.history as HistoryEvent[]) : [],
     studySec: isObj(src.studySec) ? (src.studySec as AppState['studySec']) : {},
+    ...(normPlacement(src.placement) ? { placement: normPlacement(src.placement) } : {}),
   };
   // Lektionsfortschritt: Version 1 (Positionen) → Version 2 (Schritt-IDs)
   for (const k of Object.keys(s.lessons)) {
@@ -260,3 +269,10 @@ function normSettings(st: Settings): Settings {
   return { ...st, sites: sites.length ? sites : undefined };
 }
 export const siteKey = (x?: SiteSettings) => (x?.canton ?? '') + '|' + (x?.municipality ?? '').trim().toLowerCase();
+
+function normPlacement(x: unknown): PlacementResult | undefined {
+  if (!isObj(x) || typeof x.at !== 'number' || !isObj(x.res)) return undefined;
+  const res: Record<string, number> = {};
+  for (const [k, v] of Object.entries(x.res)) if (/^m0-l\d+$/.test(k) && typeof v === 'number' && v >= 0 && v <= 2) res[k] = Math.round(v);
+  return { at: x.at, res };
+}

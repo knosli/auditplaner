@@ -1,3 +1,6 @@
+import { M0_QUESTIONS, PLACEMENT } from './m0/questions';
+import { M0_LESSONS } from './m0/lessons';
+import { M0_CARDS } from './m0/cards';
 import { M2_QUESTIONS } from './m2/questions';
 import { M2_CARDS } from './m2/cards';
 import { M2_LESSONS } from './m2/lessons';
@@ -50,11 +53,12 @@ export { LIBRARY, LIB_CATEGORY_LABEL } from './library';
 export { CRITERION_LABEL } from './m2/scenarios';
 
 // Neue Module: hier ihre Datensätze anhängen.
-export const QUESTIONS: Question[] = [...M1_QUESTIONS, ...M2_QUESTIONS, ...M2_DECISIONS, ...M2_L7_QUESTIONS, ...M3_QUESTIONS, ...M4_QUESTIONS, ...M8_QUESTIONS, ...M9_QUESTIONS, ...M10_QUESTIONS, ...M7_QUESTIONS, ...M5_QUESTIONS, ...M6_QUESTIONS, ...M11_QUESTIONS, ...M12_QUESTIONS];
-export const CARDS: Card[] = [...M1_CARDS, ...M2_CARDS, ...M2_L7_CARDS, ...M3_CARDS, ...M4_CARDS, ...M8_CARDS, ...M9_CARDS, ...M10_CARDS, ...M7_CARDS, ...M5_CARDS, ...M6_CARDS, ...M11_CARDS, ...M12_CARDS];
+export { PLACEMENT };
+export const QUESTIONS: Question[] = [...M0_QUESTIONS, ...M1_QUESTIONS, ...M2_QUESTIONS, ...M2_DECISIONS, ...M2_L7_QUESTIONS, ...M3_QUESTIONS, ...M4_QUESTIONS, ...M8_QUESTIONS, ...M9_QUESTIONS, ...M10_QUESTIONS, ...M7_QUESTIONS, ...M5_QUESTIONS, ...M6_QUESTIONS, ...M11_QUESTIONS, ...M12_QUESTIONS];
+export const CARDS: Card[] = [...M0_CARDS, ...M1_CARDS, ...M2_CARDS, ...M2_L7_CARDS, ...M3_CARDS, ...M4_CARDS, ...M8_CARDS, ...M9_CARDS, ...M10_CARDS, ...M7_CARDS, ...M5_CARDS, ...M6_CARDS, ...M11_CARDS, ...M12_CARDS];
 // Reihenfolge: nach Lernpfad (Modul) und innerhalb des Moduls nach Lektion
 const pathOrder = (moduleId: string) => MODULES.find((m) => m.id === moduleId)?.pathOrder ?? 99;
-export const LESSONS: Lesson[] = [...M1_LESSONS, ...M1_LESSONS_2, ...M2_LESSONS, M2_L7, ...M3_LESSONS, ...M4_LESSONS, ...M8_LESSONS, ...M9_LESSONS, ...M10_LESSONS, ...M7_LESSONS, ...M5_LESSONS, ...M6_LESSONS, ...M11_LESSONS, ...M12_LESSONS].sort((a, b) => pathOrder(a.moduleId) - pathOrder(b.moduleId) || a.order - b.order);
+export const LESSONS: Lesson[] = [...M0_LESSONS, ...M1_LESSONS, ...M1_LESSONS_2, ...M2_LESSONS, M2_L7, ...M3_LESSONS, ...M4_LESSONS, ...M8_LESSONS, ...M9_LESSONS, ...M10_LESSONS, ...M7_LESSONS, ...M5_LESSONS, ...M6_LESSONS, ...M11_LESSONS, ...M12_LESSONS].sort((a, b) => pathOrder(a.moduleId) - pathOrder(b.moduleId) || a.order - b.order);
 export const TASKS: PracticeTask[] = [...M1_TASKS, ...M2_TASKS, M2_P7, ...M3_TASKS, ...M4_TASKS, ...M8_TASKS, ...M9_TASKS, ...M10_TASKS, ...M7_TASKS, ...M5_TASKS, ...M6_TASKS, ...M11_TASKS, ...M12_TASKS];
 export const FEYNMAN: FeynmanTask[] = [...M1_FEYNMAN, ...M2_FEYNMAN, ...M3_FEYNMAN, ...M4_FEYNMAN, ...M8_FEYNMAN, ...M9_FEYNMAN, ...M10_FEYNMAN, ...M7_FEYNMAN, ...M5_FEYNMAN, ...M6_FEYNMAN, ...M11_FEYNMAN, ...M12_FEYNMAN];
 export const SITETASKS: SiteTask[] = [...M1_SITETASKS, ...M2_SITETASKS, M2_T7, ...M3_SITETASKS, ...M4_SITETASKS, ...M8_SITETASKS, ...M9_SITETASKS, ...M10_SITETASKS, ...M7_SITETASKS, ...M5_SITETASKS, ...M6_SITETASKS, ...M11_SITETASKS, ...M12_SITETASKS];

@@ -44,8 +44,13 @@ describe('Inhalte: Datenintegrität', () => {
     }
   });
 
-  test('jede Lektion enthält alle 13 Elemente einer Lerneinheit', () => {
-    for (const l of LESSONS) {
+  test('jede Lektion enthält alle 13 Elemente einer Lerneinheit (Auffrischungslektionen: eigenes Kurzformat)', () => {
+    for (const l of LESSONS.filter((x) => x.format === 'auffrischung')) {
+      const kinds = new Set(l.steps.map((s) => s.kind));
+      for (const k of ['situation', 'quiz', 'brief', 'explain', 'example', 'summary', 'review', 'sources'] as const) expect(kinds.has(k), `${l.id}: ${k}`).toBe(true);
+      expect(l.minutes, l.id).toBeLessThanOrEqual(15);
+    }
+    for (const l of LESSONS.filter((x) => x.format !== 'auffrischung')) {
       const kinds = new Set(l.steps.map((s) => s.kind));
       expect(l.objectives.length, l.id).toBeGreaterThan(0); // 1 Lernziele
       for (const k of ['situation', 'quiz', 'explain', 'example', 'deep', 'decision', 'review', 'practice', 'summary', 'sources'] as const) expect(kinds.has(k), `${l.id}: ${k}`).toBe(true);
@@ -110,7 +115,7 @@ describe('Version 2: Didaktische Pflichtelemente je Lektion', () => {
     for (const [lid, ids] of Object.entries(LEGACY_V1_STEPS)) for (const sid of ids) expect(L.get(lid)!.steps.some((st) => st.id === sid), sid).toBe(true);
   });
   test('jede Lektion: Kurz erklärt, ausführliche Vertiefung, Abwägung, Baustellenaufgabe, Hoch- und Tiefbau', () => {
-    for (const l of LESSONS) {
+    for (const l of LESSONS.filter((x) => x.format !== 'auffrischung')) {
       const k = (kind: string) => l.steps.filter((st) => st.kind === kind);
       expect(k('brief').length, l.id).toBe(1);
       const deep = k('deep')[0] as { text: string };

@@ -78,9 +78,9 @@ describe('Modulübergreifend', () => {
     expect(t).toContain('m1');
     expect(t).toContain('m2');
   });
-  test('Empfehlung für neuen Stand verweist auf die erste Lektion im Lernpfad', () => {
+  test('Empfehlung für neuen Stand verweist auf die erste Lektion im Lernpfad (Grundlagen, Modul 0)', () => {
     const recs = recommendations(emptyState());
-    expect(recs.find((r) => r.kind === 'lektion')!.href).toBe('#lektion-m2-l1');
+    expect(recs.find((r) => r.kind === 'lektion')!.href).toBe('#lektion-m0-l1');
   });
   test('bestehender Lernstand bleibt mit neuem Modul gültig', () => {
     const s = normalizeState({ version: 3, lessons: { 'm2-l1': { cur: 'm2-l1-deep', seen: ['m2-l1-deep'], startedAt: 1, answers: {}, open: {} } } });

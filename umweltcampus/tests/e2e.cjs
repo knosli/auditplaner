@@ -234,7 +234,7 @@ const ok = (c, m) => { console.log((c ? 'OK   ' : 'FAIL ') + m); if (!c) process
       ok(name === 'mobile' ? d === 'block' : d === 'table-cell', name === 'mobile' ? 'Handy: Tabellen ab drei Spalten als Karten' : 'Tabellen ab drei Spalten als Tabelle'); }
     // Ganze Karte antippbar (nicht nur der Titel): Klick auf die Mitte bzw. den Beschreibungstext
     await go('module');
-    { const c = page.locator('article.mod-card').nth(1); await c.scrollIntoViewIfNeeded(); { const b = await c.locator('p').first().boundingBox(); await page.mouse.click(b.x + b.width / 2, b.y + b.height / 2); } await page.waitForTimeout(200);
+    { const c = page.locator('article.mod-card').filter({ has: page.locator('a[href="#modul-m2"]') }); await c.scrollIntoViewIfNeeded(); { const b = await c.locator('p').first().boundingBox(); await page.mouse.click(b.x + b.width / 2, b.y + b.height / 2); } await page.waitForTimeout(200);
       ok((await page.evaluate(() => location.hash)) === '#modul-m2', 'Fachmodule: Tippen irgendwo auf die Karte öffnet das Modul'); }
     await go('simulator');
     { const c = page.locator('.sim-card').first(); await c.scrollIntoViewIfNeeded(); { const b = await c.locator('.sim-body > p').first().boundingBox(); await page.mouse.click(b.x + b.width / 2, b.y + b.height / 2); } await page.waitForTimeout(200);
@@ -254,10 +254,26 @@ const ok = (c, m) => { console.log((c ? 'OK   ' : 'FAIL ') + m); if (!c) process
     { const st = page.locator('.question .q-actions .hint.need').first(); ok((await st.count()) === 1 && (await st.textContent()).includes('Wählen Sie zuerst'), 'Gesperrter Knopf: Grund wird angezeigt'); }
     await go('wiederholung');
     ok(name === 'desktop' ? !(await page.locator('.tabbar').isVisible()) : (await page.locator('.tabbar a.cur').textContent()).includes('Wiederholen'), name === 'desktop' ? 'Desktop: Seitennavigation statt Schnellleiste' : 'Handy/Tablet: Schnellleiste unten mit aktuellem Bereich');
+    // Modul 0 und Einstufungstest
+    await go('modul-m0');
+    ok((await page.locator('#einstufung-box').count()) === 1 && (await page.locator('.lessonlist > li').count()) === 7, 'Modul 0: Einstufungstest-Kasten und 7 Grundlagen-Lektionen');
+    await go('einstufung');
+    await page.click('#pl-start'); await page.waitForTimeout(100);
+    ok(await page.locator('#pl-next').isDisabled() && (await page.locator('.placement .hint.need').count()) === 1, 'Einstufung: ohne Antwort gesperrt, Grund sichtbar');
+    for (let i = 0; i < 14; i++) {
+      const q = page.locator('.pl-q');
+      // Durchgehend «Weiss ich nicht»
+      await q.locator('.opt').last().click(); await page.click('#pl-next'); await page.waitForTimeout(40);
+    }
+    await page.waitForTimeout(150);
+    ok((await page.locator('.pl-row').count()) === 7 && (await page.locator('.pl-miss').count()) === 14, 'Einstufung: Ergebnis je Lektion und Erklärung zu jeder nicht gewussten Frage');
+    ok((await page.locator('.placement .btn.primary').getAttribute('href')) === '#lektion-m0-l1', 'Einstufung: Empfehlung führt zur ersten aufzufrischenden Lektion');
+    await go('lektion-m0-l5');
+    ok((await page.locator('.phase-bar .ph').count()) === 2 && (await page.locator('.lp-label').textContent()).includes('Teil 1 von 2'), 'Grundlagen-Lektion im Kurzformat (Verstehen, Abschliessen)');
     await go('dashboard');
     ok((await page.locator('#dash-layers .layer-mod').count()) === 3, 'Dashboard: Fachentwicklung zeigt nur drei relevante Module');
     await page.locator('.layers-toggle').click(); await page.waitForTimeout(100);
-    ok((await page.locator('#dash-layers .layer-mod').count()) === 12 && (await page.locator('.layers-toggle').getAttribute('aria-expanded')) === 'true', 'Dashboard: «Alle 12 anzeigen» klappt alle Module auf');
+    ok((await page.locator('#dash-layers .layer-mod').count()) === 13 && (await page.locator('.layers-toggle').getAttribute('aria-expanded')) === 'true', 'Dashboard: «Alle 13 anzeigen» klappt alle Module auf (Grundlagen + 12 Fachmodule)');
     // Kanton & Standort
     await go('modul-m2');
     ok((await page.locator('#vor-ort').count()) === 1 && (await page.locator('#vor-ort').textContent()).includes('Einstellungen'), 'Vor Ort prüfen: ohne Kanton Hinweis auf Einstellungen');
@@ -335,7 +351,7 @@ const ok = (c, m) => { console.log((c ? 'OK   ' : 'FAIL ') + m); if (!c) process
     ok((await page.locator('.hero-cta').count()) === 1, 'Hero hat genau eine primäre Aktion');
     { const n0 = await page.locator('.lb').count(); await page.locator('.layers-toggle').click(); await page.waitForTimeout(100);
       const n1 = await page.locator('.lb').count(); await page.locator('.layers-toggle').click(); await page.waitForTimeout(100);
-      ok(n0 === 4 * 3 && n1 === 4 * 12, 'Fortschrittsebenen getrennt (4 Ebenen × 3 relevante, aufklappbar auf 12 Module)'); }
+      ok(n0 === 4 * 3 && n1 === 4 * 13, 'Fortschrittsebenen getrennt (4 Ebenen × 3 relevante, aufklappbar auf alle 13 Module)'); }
     ok((await page.locator('.shelf .mod-card').count()) === 3, 'Drei Module als Einstieg');
     await page.locator('.hero-cta').click(); await page.waitForTimeout(200);
     ok((await page.evaluate(() => location.hash)) === heroHref, 'Weiterlernen öffnet die Lektion');
@@ -349,7 +365,7 @@ const ok = (c, m) => { console.log((c ? 'OK   ' : 'FAIL ') + m); if (!c) process
     ok((await page.locator('.srclist li').count()) > 20, 'Quellen über eigene Navigation erreichbar');
     ok((await page.locator('.src-group h3').count()) >= 3, 'Quellen nach Rechtsnatur gruppiert');
     await go('fortschritt');
-    ok((await page.locator('.prog-mod').count()) === 12 && (await page.locator('.stage-legend li').count()) === 5, 'Fortschritt je Modul mit fünf Kompetenzstufen');
+    ok((await page.locator('.prog-mod').count()) === 13 && (await page.locator('.stage-legend li').count()) === 5, 'Fortschritt je Modul mit fünf Kompetenzstufen');
     await go('werkzeuge');
     const allTasks = await page.locator('.practice').count();
     await page.getByRole('button', { name: 'Modul 3: Bauabfälle' }).click();

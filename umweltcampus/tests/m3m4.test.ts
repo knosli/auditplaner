@@ -417,8 +417,9 @@ describe('Modul 12: Führung und strategische Umweltverantwortung', () => {
     expect(QUESTIONS.find((q) => q.id === 'm12-q01')!.correct).toEqual(['b']);
     for (const id of ['m12-d04', 'm12-d05']) expect(scoreQuestion(QUESTIONS.find((q) => q.id === id)!, ['a'])).toBe(0);
   });
-  test('Alle zwölf Module verfügbar; Prüfstatus Entwurf', () => {
-    expect(MODULES.filter((m) => m.status === 'verfuegbar').length).toBe(12);
+  test('Alle zwölf Fachmodule und das Grundlagenmodul verfügbar; Prüfstatus Entwurf', () => {
+    expect(MODULES.filter((m) => m.status === 'verfuegbar').length).toBe(13);
+    expect(MODULES.filter((m) => m.status === 'verfuegbar' && m.id !== 'm0').length).toBe(12);
     for (const l of LESSONS.filter((x) => x.moduleId === 'm12')) expect(l.review).toBe('entwurf');
   });
 });

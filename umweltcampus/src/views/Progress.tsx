@@ -68,7 +68,7 @@ export function ProgressView() {
       })}
 
       <Section title="Wissenslandkarte">
-        <p className="hint">Alle zwölf Module. Farbige Felder: bewertete Fachgebiete (dunkler = höhere Stufe); graue Felder: noch nicht bearbeitet.</p>
+        <p className="hint">Grundlagenmodul und alle zwölf Fachmodule. Farbige Felder: bewertete Fachgebiete (dunkler = höhere Stufe); graue Felder: noch nicht bearbeitet.</p>
         <div className="kmap">
           {MODULES.map((m) => {
             const topics = TOPICS.filter((t) => t.moduleId === m.id);

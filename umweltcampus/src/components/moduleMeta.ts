@@ -9,6 +9,7 @@ export const MOD_GROUP_LABEL: Record<ModGroup, string> = {
 };
 
 export const MOD_META: Record<string, { icon: string; tone: string; promise: string; group: ModGroup }> = {
+  m0: { icon: 'path', tone: 'law', promise: 'Wasser, Boden, Luft, Lärm, Stoffe und Recht kurz auffrischen – mit Einstufungstest.', group: 'recht' },
   m1: { icon: 'law', tone: 'law', promise: 'Pflichten, Behörden und Auflagen sicher einordnen.', group: 'recht' },
   m2: { icon: 'water', tone: 'water', promise: 'Baustellenwasser richtig ableiten, behandeln und Havarien beherrschen.', group: 'praxis' },
   m3: { icon: 'recycle', tone: 'waste', promise: 'Bauabfälle trennen, Schadstoffe erkennen und Materialströme steuern.', group: 'praxis' },

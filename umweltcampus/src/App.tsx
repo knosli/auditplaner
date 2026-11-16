@@ -9,6 +9,7 @@ import { LibraryView, ToolsView } from './views/Library';
 import { ProgressView } from './views/Progress';
 import { SettingsView } from './views/Settings';
 import { CantonView } from './views/Canton';
+import { PlacementView } from './views/Placement';
 import { CoachPanel, GlossaryDrawer } from './components/Drawers';
 import { dueItems, recommendations } from './lib/learning';
 import { loadNavOpen, saveNavOpen, useFocus } from './lib/focus';
@@ -39,7 +40,7 @@ const NAV_GROUPS: { label: string; items: NavItem[]; fold?: boolean }[] = [
     { id: 'einstellungen', label: 'Einstellungen', icon: 'settings' },
   ] },
 ];
-const NAV_LABEL: Record<string, string> = Object.fromEntries(NAV_GROUPS.flatMap((g) => g.items.map((i) => [i.id, i.label])));
+const NAV_LABEL: Record<string, string> = { ...Object.fromEntries(NAV_GROUPS.flatMap((g) => g.items.map((i) => [i.id, i.label]))), einstufung: 'Einstufungstest' };
 
 function useHash() {
   const get = () => decodeURIComponent(location.hash.replace(/^#/, '')) || 'dashboard';
@@ -55,6 +56,7 @@ function useHash() {
 function navOf(route: string): string {
   if (route.startsWith('lektion-') || route.startsWith('modul-')) return 'module';
   if (route.startsWith('szenario-')) return 'simulator';
+  if (route === 'einstufung') return 'module';
   return route;
 }
 
@@ -94,6 +96,7 @@ function Shell() {
     case 'fortschritt': view = <ProgressView />; break;
     case 'einstellungen': view = <SettingsView />; break;
     case 'kanton': view = <CantonView />; break;
+    case 'einstufung': view = <PlacementView />; break;
     default: view = <Dashboard />;
   }
 
@@ -190,7 +193,7 @@ function Shell() {
 /** Wichtigste nächste Lernhandlung – immer in der Kopfzeile erreichbar (nicht in Lektion und Fall). */
 function NextAction({ route }: { route: string }) {
   const { s } = useStore();
-  if (/^(lektion-|szenario-|pruefung|dashboard$)/.test(route) || route === '' ) return null;
+  if (/^(lektion-|szenario-|pruefung|einstufung|dashboard$)/.test(route) || route === '' ) return null;
   const r = recommendations(s)[0];
   if (!r) return null;
   return (

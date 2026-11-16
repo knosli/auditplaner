@@ -2,6 +2,10 @@ import type { ModuleMeta, Topic } from './types';
 
 export const MODULES: ModuleMeta[] = [
   {
+    id: 'm0', no: 0, title: 'Grundlagen auffrischen', short: 'Grundlagen', pathOrder: 0, status: 'verfuegbar',
+    topics: ['Quelle – Weg – Schutzgut', 'Emission und Immission', 'Wasser und Grundwasser', 'Boden: Aufbau und Verdichtung', 'Staub, Feinstaub, Abgase', 'Dezibel', 'pH-Wert, Konzentrationen, Durchfluss', 'Gesetz, Verordnung, Vollzugshilfe, Norm, Auflage', 'Bund, Kanton, Gemeinde', 'CO₂-Äquivalente und graue Emissionen', 'Vermeiden, verwerten, entsorgen'],
+  },
+  {
     id: 'm1', no: 1, title: 'Umweltgrundlagen und Schweizer Umweltrecht', short: 'Umweltrecht', pathOrder: 4, status: 'verfuegbar',
     topics: ['Grundbegriffe des Umweltschutzes', 'Schweizer Umweltgesetzgebung', 'Umweltschutzgesetz (USG)', 'GSchG und Verordnungen', 'Abfallverordnung (VVEA)', 'Luftreinhalte-Verordnung (LRV)', 'Lärmschutz-Verordnung (LSV)', 'Natur- und Heimatschutz', 'Bund, Kanton, Gemeinde', 'Verantwortung der Beteiligten', 'Umweltauflagen und Bewilligungen', 'Vollzug und behördliche Kontrollen'],
   },
@@ -53,6 +57,13 @@ export const MODULES: ModuleMeta[] = [
 
 /** Bewertete Kompetenzfelder (für Fortschritt und Wissenslücken) */
 export const TOPICS: Topic[] = [
+  { id: 'm0-wirkung', moduleId: 'm0', title: 'Quelle, Weg, Schutzgut' },
+  { id: 'm0-wasser', moduleId: 'm0', title: 'Wasser und Grundwasser' },
+  { id: 'm0-boden', moduleId: 'm0', title: 'Boden' },
+  { id: 'm0-luftlaerm', moduleId: 'm0', title: 'Luft und Lärm' },
+  { id: 'm0-stoffe', moduleId: 'm0', title: 'Stoffe und Zahlen' },
+  { id: 'm0-recht', moduleId: 'm0', title: 'Recht kompakt' },
+  { id: 'm0-klima', moduleId: 'm0', title: 'Klima und Ressourcen' },
   { id: 'm1-grundlagen', moduleId: 'm1', title: 'Grundbegriffe und Prinzipien' },
   { id: 'm1-rechtsordnung', moduleId: 'm1', title: 'Rechtsordnung Bund – Kanton – Gemeinde' },
   { id: 'm1-verordnungen', moduleId: 'm1', title: 'Verordnungen für Baustellen' },

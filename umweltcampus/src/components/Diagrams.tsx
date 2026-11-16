@@ -15,6 +15,8 @@ export function Diagram({ id }: { id: string }) {
     case 'absetzrechner': return <AbsetzRechner />;
     case 'sia-stufen': return <SiaStufen />;
     case 'emission': return <Kette steps={EMISSION} />;
+    case 'db-regeln': return <Kette steps={DB_REGELN} />;
+    case 'einheiten': return <Kette steps={EINHEITEN} />;
     case 'bewilligungsweg': return <Kette steps={BEWILLIGUNG} />;
     case 'verordnungen': return <Verordnungen />;
     case 'deponietypen': return <Kette steps={DEPONIEN} />;
@@ -287,6 +289,18 @@ const FESTSTELLUNG = [
   { t: 'Vorbeugung', d: 'Standard, AVOR, Instruktion für andere Baustellen', who: 'Lernen im Unternehmen' },
 ];
 
+const DB_REGELN = [
+  { t: '+3 dB', d: 'Zweite, gleich laute Quelle', who: 'deutlich hörbar, aber nicht «doppelt so laut»' },
+  { t: '+10 dB', d: 'Etwa zehn gleich laute Quellen', who: 'wird etwa als doppelt so laut empfunden' },
+  { t: '–6 dB', d: 'Doppelter Abstand zu einer einzelnen Quelle im Freien', who: 'Hauswände und Gassen verringern den Gewinn' },
+];
+const EINHEITEN = [
+  { t: '1 l/s = 3,6 m³/h', d: '3600 Sekunden × 1 Liter = 3600 Liter', who: 'Pumpen, Absetzbecken' },
+  { t: '1 m³ = 1000 l', d: 'Volumen von Containern und Becken', who: 'Füllzeit = Volumen ÷ Zufluss' },
+  { t: 'mg/l (= g/m³)', d: 'Konzentration im Wasser', who: 'Einleitbedingungen, Messprotokolle' },
+  { t: 'mg/kg', d: 'Gehalt in Boden und Material', who: 'Aushub, Ausbauasphalt, Rückbaustoffe' },
+  { t: 'pH: Faktor 10 je Stufe', d: '7 neutral, darunter sauer, darüber alkalisch', who: 'Betonwaschwasser oft pH 11–13' },
+];
 const EMISSION = [
   { t: 'Quelle', d: 'Emission: Bagger, Abbauhammer, Abbruch, Waschplatz', who: 'hier zuerst begrenzen (vorsorglich, immer)' },
   { t: 'Ausbreitung', d: 'Luft, Schall, Boden, Wasser – Abschirmung, Distanz, Wind', who: 'Abschirmung, Lage der Installation' },

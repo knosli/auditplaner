@@ -3,7 +3,7 @@ import { StatusTrio } from '../components/LessonStatus';
 import { LESSONS, LEVEL_LABEL, LEVEL_SHORT, MODULES, SCENARIOS, TASKS } from '../content';
 import { useStore } from '../store';
 import { Bar, DevBadge, pct } from '../components/ui';
-import { continueLesson, lessonStatus, dueItems, knowledgeGaps, levelStats, moduleProgress, moduleRequirements, progressLayers, recommendedLevel, studyMinutes } from '../lib/learning';
+import { placementSkip, continueLesson, lessonStatus, dueItems, knowledgeGaps, levelStats, moduleProgress, moduleRequirements, progressLayers, recommendedLevel, studyMinutes } from '../lib/learning';
 import { Icon } from '../components/Icons';
 import { ModuleIllustration } from '../components/Illustrations';
 import { MOD_GROUP_LABEL, metaOf, type ModGroup } from '../components/moduleMeta';
@@ -52,6 +52,17 @@ export function Dashboard() {
       </header>
 
       <LegacyNotice />
+
+      {!s.placement && (
+        <section className="callout-card placement-cta" aria-labelledby="pl-cta">
+          <div>
+            <span className="eyebrow">Empfohlen vor dem Start · ca. 7 Minuten</span>
+            <h2 id="pl-cta">Einstufungstest Grundlagen</h2>
+            <p>Wasser, Boden, Luft, Lärm, Stoffe, Recht und Klima: 14 Fragen zeigen, was Sie auffrischen sollten – und was Sie überspringen können.</p>
+          </div>
+          <a className="btn primary" href="#einstufung">Test starten <Icon name="arrow" size={16} /></a>
+        </section>
+      )}
 
       {cont ? <ContinueHero lesson={cont.lesson} started={cont.started} /> : (
         <section className="hero">
@@ -109,7 +120,7 @@ export function Dashboard() {
       </div>
 
       <section className="shelf">
-        <div className="shelf-head"><div><h2>Ihre Fachmodule</h2><p className="hint">Strukturiertes Wissen für die Realität auf der Baustelle</p></div><a className="btn quiet" href="#module">Alle 12 Module <Icon name="arrow" size={16} /></a></div>
+        <div className="shelf-head"><div><h2>Ihre Fachmodule</h2><p className="hint">Strukturiertes Wissen für die Realität auf der Baustelle</p></div><a className="btn quiet" href="#module">Alle Module <Icon name="arrow" size={16} /></a></div>
         <div className="mod-grid">{shelf.map((m) => <ModuleCard key={m.id} m={m} />)}</div>
       </section>
     </div>
@@ -241,7 +252,7 @@ export function ModulesView() {
       <header className="page-head">
         <span className="eyebrow">Wissen systematisch aufbauen</span>
         <h1>Ihre Fachmodule.</h1>
-        <p className="lead">Zwölf Module mit je vier Lernstufen – von den rechtlichen Grundlagen über die Baustellenpraxis bis zur fachlichen Führung. {avail === MODULES.length ? 'Tippen Sie auf ein Modul, um es zu öffnen.' : `${avail} Module sind verfügbar, die übrigen in Entwicklung.`}</p>
+        <p className="lead">Ein Grundlagenmodul zum Auffrischen und zwölf Fachmodule mit je vier Lernstufen – von der Baustellenpraxis über das Recht bis zur fachlichen Führung. {avail === MODULES.length ? 'Tippen Sie auf ein Modul, um es zu öffnen.' : `${avail} Module sind verfügbar, die übrigen in Entwicklung.`}</p>
       </header>
       <div className="toolbar" role="search">
         <div className="chips" role="group" aria-label="Nach Bereich filtern">
@@ -272,7 +283,7 @@ export function ModuleDetail({ id }: { id: string }) {
   const req = moduleRequirements(s, id);
   const tasks = TASKS.filter((t) => t.moduleId === id);
   const doneN = lessons.filter((l) => s.lessons[l.id]?.completedAt).length;
-  const nextL = lessons.find((l) => s.lessons[l.id] && !s.lessons[l.id].completedAt) ?? lessons.find((l) => !s.lessons[l.id]?.completedAt);
+  const nextL = lessons.find((l) => s.lessons[l.id] && !s.lessons[l.id].completedAt) ?? lessons.find((l) => !s.lessons[l.id]?.completedAt && !placementSkip(s, l.id));
   const nextStarted = !!(nextL && s.lessons[nextL.id]);
   return (
     <div className="page">
@@ -294,8 +305,18 @@ export function ModuleDetail({ id }: { id: string }) {
       </section>
       <details className="trust trust-fold"><summary><Icon name="alert" size={16} /> <span><strong>Prüfstatus Entwurf</strong> – was heisst das?</span></summary><p>{['m1', 'm2', 'm3', 'm4', 'm8'].includes(id) ? 'Fachlich sorgfältig erstellt und nach einer externen KI-Fachprüfung korrigiert, aber nicht durch eine Fachperson am Originaltext freigegeben.' : 'Fachlich sorgfältig erstellt und extern KI-geprüft (14.11.2026); die Korrekturen werden schrittweise umgesetzt. Nicht durch eine Fachperson am Originaltext freigegeben.'} Kantone, Gemeinden und Bewilligungen können zusätzliche Anforderungen stellen.</p></details>
 
+      {id === 'm0' && (
+        <section className="section placement-box" id="einstufung-box">
+          <div className="section-head"><h2>Einstufungstest</h2><a className="hint" href="#einstufung">{s.placement ? 'Ergebnis ansehen →' : 'ca. 7 Minuten'}</a></div>
+          {s.placement
+            ? <p>Ergebnis vom {new Date(s.placement.at).toLocaleDateString('de-CH')}: {Object.values(s.placement.res).filter((n) => n >= 2).length} von {Object.keys(s.placement.res).length} Grundlagen sicher. Diese Lektionen sind unten markiert und können übersprungen werden.</p>
+            : <p>14 Fragen zeigen, welche Grundlagen Sie auffrischen sollten und welche Sie überspringen können. Am besten vor der ersten Lektion.</p>}
+          <a className={'btn' + (s.placement ? '' : ' primary')} href="#einstufung">{s.placement ? 'Ergebnis ansehen oder Test wiederholen' : 'Einstufungstest starten'} <Icon name="arrow" size={16} /></a>
+        </section>
+      )}
+
       <section className="section" id="mod-lessons">
-        <div className="section-head"><h2>Lektionen – Ihr Weg durch die vier Lernstufen</h2><span className="hint">{pct(moduleProgress(s, id))} des Modulabschlusses</span></div>
+        <div className="section-head"><h2>{id === 'm0' ? 'Lektionen – kurze Auffrischungen' : 'Lektionen – Ihr Weg durch die vier Lernstufen'}</h2><span className="hint">{pct(moduleProgress(s, id))} des Modulabschlusses</span></div>
         <ol className="level-path">
           {[1, 2, 3, 4].map((lvl) => {
             const st = levelStats(s, id, lvl);
@@ -312,7 +333,8 @@ export function ModuleDetail({ id }: { id: string }) {
                     {ls.map((l) => {
                       const p = s.lessons[l.id];
                       const pos = p ? Math.max(1, l.steps.findIndex((x) => x.id === p.cur) + 1) : 0;
-                      const state2 = p?.completedAt ? 'abgeschlossen' : p ? `Schritt ${pos}/${l.steps.length}` : 'offen';
+                      const skip = placementSkip(s, l.id);
+                      const state2 = p?.completedAt ? 'abgeschlossen' : p ? `Schritt ${pos}/${l.steps.length}` : skip ? 'laut Einstufung sicher – kann übersprungen werden' : 'offen';
                       return (
                         <li key={l.id} className={(p?.completedAt ? 'done ' : '') + (l.level > rec ? 'ahead' : '')}>
                           <span className="ll-no">{p?.completedAt ? <Icon name="check" size={16} /> : l.order}</span>

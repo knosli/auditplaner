@@ -158,6 +158,7 @@ export const FEDERAL_BY_THEME: Record<CantonTheme, string[]> = {
 
 /** Welche Themen in welchem Modul «Vor Ort» zu prüfen sind. */
 export const MODULE_THEMES: Record<string, CantonTheme[]> = {
+  m0: ['allgemein'],
   m1: ['allgemein', 'bewilligung'],
   m2: ['gewaesser', 'notfall'],
   m3: ['abfall'],

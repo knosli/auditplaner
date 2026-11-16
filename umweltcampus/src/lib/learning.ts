@@ -187,6 +187,17 @@ export interface ModuleRequirement { label: string; done: boolean; detail: strin
 
 export function moduleRequirements(s: AppState, moduleId: string): ModuleRequirement[] {
   const lessons = LESSONS.filter((l) => l.moduleId === moduleId);
+  if (moduleId === 'm0') {
+    // Grundlagen: Lektion abgeschlossen ODER laut Einstufungstest sicher; dazu der Abschlusstest
+    const ok = lessons.filter((l) => s.lessons[l.id]?.completedAt || (s.placement?.res[l.id] ?? 0) >= 2).length;
+    const ex = s.exams.filter((e) => e.moduleId === 'm0' && e.kind === 'modul' && !isLegacyExam(e));
+    const best = ex.reduce((m, e) => Math.max(m, e.score), 0);
+    return [
+      { label: 'Einstufungstest gemacht', done: !!s.placement, detail: s.placement ? 'erledigt' : 'noch offen' },
+      { label: 'Alle Grundlagen abgeschlossen oder laut Einstufung sicher', done: ok === lessons.length, detail: `${ok} von ${lessons.length}` },
+      { label: 'Abschlusstest Grundlagen bestanden (geschlossene Fragen ≥ 75 %, selbst bewertete offene Fragen ≥ 50 %)', done: ex.some((e) => e.passed), detail: ex.length ? `bestes Ergebnis ${Math.round(best * 100)} %` : 'noch nicht abgelegt' },
+    ];
+  }
   const ld = lessons.filter((l) => s.lessons[l.id]?.completedAt).length;
   const exam = s.exams.filter((e) => e.moduleId === moduleId && e.kind === 'modul' && !isLegacyExam(e));
   const bestExam = exam.reduce((m, e) => Math.max(m, e.score), 0);
@@ -208,21 +219,23 @@ export function moduleProgress(s: AppState, moduleId: string): number {
   if (!lessons.length) return 0;
   const lessonShare = lessons.reduce((x, l) => {
     const p = s.lessons[l.id];
+    if (moduleId === 'm0' && !p?.completedAt && (s.placement?.res[l.id] ?? 0) >= 2) return x + 1;
     if (!p) return x;
     if (p.completedAt) return x + 1;
     return x + Math.min(0.9, p.seen.filter((id) => l.steps.some((st) => st.id === id)).length / l.steps.length);
   }, 0) / lessons.length;
+  if (moduleId === 'm0') return lessonShare * 0.6 + (req[2].done ? 0.4 : 0);
   const other = req.slice(1).filter((r) => r.done).length / 3;
   return lessonShare * 0.55 + other * 0.45;
 }
 
 export function overallProgress(s: AppState): number {
   const avail = MODULES.filter((m) => m.status === 'verfuegbar');
-  // Gesamtfortschritt bezogen auf alle 12 Module (nicht nur verfügbare)
+  // Gesamtfortschritt bezogen auf alle Module (Grundlagen und 12 Fachmodule)
   return avail.reduce((x, m) => x + moduleProgress(s, m.id), 0) / MODULES.length;
 }
 
-export interface Recommendation { title: string; why: string; href: string; kind: 'wiederholung' | 'lektion' | 'szenario' | 'pruefung' | 'praxis' | 'luecke' }
+export interface Recommendation { title: string; why: string; href: string; kind: 'wiederholung' | 'lektion' | 'szenario' | 'pruefung' | 'praxis' | 'luecke' | 'einstufung' }
 
 export function recommendations(s: AppState, now = Date.now()): Recommendation[] {
   const recs: Recommendation[] = [];
@@ -233,7 +246,9 @@ export function recommendations(s: AppState, now = Date.now()): Recommendation[]
   if (danger.length) recs.push({ kind: 'luecke', title: `Fehlannahme klären: ${danger[0].title}`, why: 'Sie haben hier eine Frage falsch beantwortet, waren sich aber sicher. Solche Irrtümer sind auf der Baustelle am gefährlichsten.', href: '#wiederholung' });
   const started = LESSONS.find((l) => s.lessons[l.id] && !s.lessons[l.id].completedAt);
   if (started) recs.push({ kind: 'lektion', title: `Weiter: ${started.title}`, why: `Begonnen, bei Schritt ${Math.max(1, started.steps.findIndex((st) => st.id === s.lessons[started.id].cur) + 1)} von ${started.steps.length}.`, href: '#lektion-' + started.id });
-  const next = LESSONS.find((l) => !s.lessons[l.id]);
+  const next = LESSONS.find((l) => !s.lessons[l.id] && !placementSkip(s, l.id));
+  // Neuer Lernstand ohne Einstufung: zuerst der Einstufungstest (Grundlagen), danach die Lektionen
+  if (!s.placement && !Object.keys(s.lessons).length) recs.push({ kind: 'einstufung', title: 'Einstufungstest Grundlagen (ca. 7 Min.)', why: '14 Fragen zeigen, welche Grundlagen Sie auffrischen sollten und welche Sie überspringen können.', href: '#einstufung' });
   if (next && !started) {
     const rec = recommendedLevel(s, next.moduleId);
     if (next.level > rec && gaps.length) recs.push({ kind: 'luecke', title: `Erst Stufe ${rec} festigen: ${gaps[0].title}`, why: `Die nächste Lektion ist Stufe ${next.level}. Ihre Antworten auf Stufe ${rec} liegen noch unter 75 % – eine Wiederholung lohnt sich zuerst. Sie können trotzdem weitergehen.`, href: '#wiederholung' });
@@ -269,10 +284,13 @@ export function studyMinutes(s: AppState, days?: number): number {
 // ---------- Dashboard (Academy): Weiterlernen und getrennte Fortschrittsebenen ----------
 
 /** Lektion zum Weiterlernen: begonnene zuerst (Lernpfad-Reihenfolge), sonst die nächste offene. */
+/** Grundlagen-Lektion laut Einstufungstest sicher (2 von 2) und noch nicht begonnen → darf übersprungen werden. */
+export const placementSkip = (s: AppState, lessonId: string) => (s.placement?.res[lessonId] ?? 0) >= 2 && !s.lessons[lessonId];
+
 export function continueLesson(s: AppState) {
   const started = LESSONS.find((l) => s.lessons[l.id] && !s.lessons[l.id].completedAt);
   if (started) return { lesson: started, started: true as const };
-  const next = LESSONS.find((l) => !s.lessons[l.id]?.completedAt);
+  const next = LESSONS.find((l) => !s.lessons[l.id]?.completedAt && !placementSkip(s, l.id));
   return next ? { lesson: next, started: false as const } : null;
 }
 

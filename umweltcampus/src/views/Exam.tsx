@@ -94,7 +94,7 @@ export function ExamView() {
         </article>
         <article className="exam-card dev">
           <span className="ec-ico"><Icon name="iso" size={22} /></span>
-          <span className="eyebrow">Alle 12 Module</span>
+          <span className="eyebrow">Alle Module</span>
           <h3>Umfassende Abschlussprüfung</h3>
           <p>Folgt, sobald alle Module verfügbar sind.</p>
           <DevBadge />
