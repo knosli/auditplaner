@@ -46,7 +46,9 @@ export function ListenView({ target }: { target?: string }) {
       const all = synth.getVoices().filter((v) => v.lang.toLowerCase().startsWith('de'));
       all.sort((a, b) => voiceScore(b) - voiceScore(a) || a.name.localeCompare(b.name));
       setVoices(all);
-      setVoiceUri((u) => u || all[0]?.voiceURI || '');
+      let saved = '';
+      try { saved = localStorage.getItem('umweltcampus.stimme') ?? ''; } catch { /* egal */ }
+      setVoiceUri((u) => u || (all.some((v) => v.voiceURI === saved) ? saved : all[0]?.voiceURI) || '');
     };
     load();
     synth.addEventListener?.('voiceschanged', load);
@@ -65,12 +67,43 @@ export function ListenView({ target }: { target?: string }) {
     } catch { /* nicht unterstützt */ }
   };
 
+  const [voiceNote, setVoiceNote] = useState('');
+  const badVoices = useRef(new Set<string>());
+  /**
+   * Eine Äusserung robust sprechen: Safari (iPhone) ignoriert speak() direkt nach cancel(), darum nach einem
+   * Abbruch kurz warten. Beginnt eine gewählte Stimme nicht innerhalb von 2,5 s, gilt sie als defekt und es wird
+   * mit der Standardstimme weitergesprochen.
+   */
+  const speakOne = (text: string, my: number, afterCancel: boolean, onDone: () => void) => {
+    if (!synth) return;
+    const v = voices.find((x) => x.voiceURI === voiceUri && !badVoices.current.has(x.voiceURI));
+    const go = (useVoice: SpeechSynthesisVoice | undefined) => {
+      if (my !== gen.current) return;
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = useVoice?.lang ?? 'de-DE'; if (useVoice) u.voice = useVoice; u.rate = rate;
+      let started = false;
+      u.onstart = () => { started = true; };
+      u.onend = () => { if (my === gen.current) onDone(); };
+      u.onerror = (e) => { if (my !== gen.current || (e as SpeechSynthesisErrorEvent).error === 'interrupted' || (e as SpeechSynthesisErrorEvent).error === 'canceled') return; if (!started && useVoice) fallback(); else onDone(); };
+      const fallback = () => {
+        if (!useVoice || my !== gen.current) return;
+        badVoices.current.add(useVoice.voiceURI);
+        setVoiceNote(`Die Stimme «${useVoice.name}» gibt auf diesem Gerät keinen Ton aus – es wird mit der Standardstimme weitergelesen.`);
+        synth.cancel();
+        window.setTimeout(() => go(undefined), 250);
+      };
+      synth.resume();
+      synth.speak(u);
+      if (useVoice) window.setTimeout(() => { if (!started && my === gen.current && !synth.speaking) fallback(); }, 2500);
+    };
+    if (afterCancel) window.setTimeout(() => go(v), 250); else go(v);
+  };
+
   const speakSeg = (i: number) => {
     if (!synth || i >= segs.length) { setPlaying(false); void keepAwake(false); return; }
     const my = ++gen.current;
     setIdx(i); savePos(key, i); setPause(0);
     const parts = chunks(segs[i].text);
-    const voice = voices.find((v) => v.voiceURI === voiceUri);
     const say = (c: number) => {
       if (my !== gen.current) return;
       if (c >= parts.length) {
@@ -82,11 +115,7 @@ export function ListenView({ target }: { target?: string }) {
         } else timer.current = window.setTimeout(() => my === gen.current && speakSeg(i + 1), 500);
         return;
       }
-      const u = new SpeechSynthesisUtterance(parts[c]);
-      u.lang = voice?.lang ?? 'de-CH'; if (voice) u.voice = voice; u.rate = rate;
-      u.onend = () => say(c + 1);
-      u.onerror = () => say(c + 1);
-      synth.speak(u);
+      speakOne(parts[c], my, c === 0, () => say(c + 1));
     };
     synth.cancel();
     say(0);
@@ -94,10 +123,8 @@ export function ListenView({ target }: { target?: string }) {
   const sample = () => {
     if (!synth) return;
     stop();
-    const v = voices.find((x) => x.voiceURI === voiceUri);
-    const u = new SpeechSynthesisUtterance('Grüezi. So klingt diese Stimme. Betonwaschwasser gehört nie in einen Meteorschacht.');
-    u.lang = v?.lang ?? 'de-CH'; if (v) u.voice = v; u.rate = rate;
-    synth.speak(u);
+    const my = ++gen.current;
+    speakOne('Grüezi. So klingt diese Stimme. Betonwaschwasser gehört nie in einen Meteorschacht.', my, true, () => undefined);
   };
   const play = () => { if (!segs.length) return; setPlaying(true); void keepAwake(true); speakSeg(idx >= segs.length ? 0 : idx); };
   const stop = () => { gen.current++; synth?.cancel(); window.clearTimeout(timer.current); setPlaying(false); setPause(0); void keepAwake(false); };
@@ -144,13 +171,14 @@ export function ListenView({ target }: { target?: string }) {
               </label>
               {voices.length > 0 && (
                 <label className="field inline"><span>Stimme</span>
-                  <select id="ls-voice" value={voiceUri} onChange={(e) => setVoiceUri(e.target.value)}>
+                  <select id="ls-voice" value={voiceUri} onChange={(e) => { const v = e.target.value; badVoices.current.delete(v); setVoiceNote(''); setVoiceUri(v); try { localStorage.setItem('umweltcampus.stimme', v); } catch { /* egal */ } if (playing) stop(); }}>
                     {voices.map((v) => <option key={v.voiceURI} value={v.voiceURI}>{v.name} ({v.lang}){voiceScore(v) >= 10 ? ' ★' : ''}</option>)}
                   </select>
                 </label>
               )}
               <button type="button" className="btn small" id="ls-sample" onClick={sample}>Hörprobe</button>
             </div>
+            {voiceNote && <p className="hint need" role="status">{voiceNote}</p>}
             <details className="voice-help">
               <summary>Stimme klingt roboterhaft? So wird sie natürlicher – gratis</summary>
               <p>Die App nutzt die Vorlesestimmen Ihres Geräts. Fast alle Geräte haben bessere Stimmen, die man einmal kostenlos herunterlädt (einige hundert MB, am besten im WLAN). Danach wählt die App sie automatisch (mit ★ markiert).</p>

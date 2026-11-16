@@ -32,3 +32,6 @@ Unit-Tests: 291 bestanden (neu `tests/speech.test.ts`; Mischen in `tests/m0.test
 ## Ergänzung 0.31.1: natürlichere Stimme, weiterhin gratis
 - Die App bevorzugt automatisch die natürlichsten Gerätestimmen («Verbessert», «Premium», «Natural», «Neural», Google-Stimmen) und stellt einfache Kompakt- bzw. eSpeak-Stimmen nach hinten; gute Stimmen sind in der Auswahl mit ★ markiert.
 - Knopf «Hörprobe» und aufklappbare Anleitung, wie man auf iPhone, Android und Computer kostenlos eine bessere deutsche Stimme lädt.
+
+## Korrektur 0.31.2: kein Ton nach dem Umschalten der Stimme
+Rückmeldung: Nach dem Wechsel der Stimme kam kein Ton mehr. Ursachen: Safari auf dem iPhone ignoriert einen Sprachbefehl unmittelbar nach dem Abbrechen der vorherigen Ausgabe; zudem geben einzelne angebotene Stimmen auf dem Gerät keinen Ton aus. Behoben: nach einem Abbruch kurze Wartezeit vor dem Sprechen; beginnt eine gewählte Stimme nicht innerhalb von 2,5 s, schaltet die App auf die Standardstimme um und zeigt einen Hinweis. Die gewählte Stimme wird auf dem Gerät gemerkt; ein Stimmwechsel während der Wiedergabe hält an (erneut auf Abspielen tippen).
