@@ -968,7 +968,7 @@ function autoResumeExpired(){
 }
 // Nach dem Personal-Import: geplante Baustellen dieser KW ohne Personal (oder in Bauferien) melden
 async function checkPlansAfterImport(kwReal,yr){
-  const mon=isoMonday(kwReal,yr),ks=ferISO(mon),ke=ferISO(new Date(mon.getTime()+7*86400000));
+  const mon=isoMonday(kwReal,yr),ks=ferISO(mon),ke=ferISO(new Date(mon.getFullYear(),mon.getMonth(),mon.getDate()+7));
   const bad=[];
   plans.filter(p=>p.date>=ks&&p.date<ke).forEach(p=>{
     const e=data.find(x=>x.id===p.bsId);if(!e||e.type==='werkhof')return;
@@ -3609,7 +3609,7 @@ function toggleMobileView(){
     document.getElementById('mob-user').textContent=currentUser||'';
     document.getElementById('mob-audit-date').value=today();
     if(navigator.geolocation&&!_mobGPSPos){navigator.geolocation.getCurrentPosition(
-      pos=>{_mobGPSPos={lat:pos.coords.latitude,lng:pos.coords.longitude};renderMobPlan();const btn=document.getElementById('mob-gps-btn');if(btn){btn.textContent='📍 ✓';btn.style.background='#D1FAE5';}},
+      pos=>{_mobGPSPos={lat:pos.coords.latitude,lng:pos.coords.longitude};_mobGPSTime=Date.now();renderMobPlan();const btn=document.getElementById('mob-gps-btn');if(btn){btn.textContent='📍 ✓';btn.style.background='#D1FAE5';}},
       ()=>{},
       {timeout:8000,maximumAge:30000,enableHighAccuracy:true}
     );}
@@ -3920,11 +3920,13 @@ function mobConfirmPersonAudit(id){
 
 
 function mobOpenMaps(addr,name){
-  const start=localStorage.getItem('audit_start')||'';
-  const url=start?
-    `https://www.google.com/maps/dir/${encodeURIComponent(start)}/${encodeURIComponent(addr)}`:
-    `https://www.google.com/maps/search/${encodeURIComponent(addr)}`;
-  window.open(url,'_blank');
+  // Ziel möglichst als Koordinaten (genauer als Adresstext); Start = aktueller Standort der Karten-App
+  // (nicht die gespeicherte Startadresse)
+  const matches=mobCurrentDayStops().filter(s=>s.addr===addr&&mobGeo(s));
+  const destination=matches.length===1?Number(matches[0].lat)+','+Number(matches[0].lng):(addr||'').trim();
+  if(!destination){showToast('Keine Adresse für diesen Stopp vorhanden',3000);return;}
+  const qs=new URLSearchParams({api:'1',destination,travelmode:'driving',dir_action:'navigate'});
+  window.open('https://www.google.com/maps/dir/?'+qs.toString(),'_blank','noopener');
 }
 
 function mobPlanFor(id){
@@ -3967,24 +3969,38 @@ function mobSortByGPS(){
 // dieser Baustelle (dort steht man gerade); sonst ab aktuellem GPS-Standort (falls frisch) bzw. Startadresse.
 let _mobAutoTimer=null,_mobAutoTried='';
 function mobAutoRouteSoon(){clearTimeout(_mobAutoTimer);_mobAutoTimer=setTimeout(mobAutoRoute,60);}
+// Beleg, dass ein früherer Stopp der Tagesroute wirklich ERLEDIGT wurde (und nicht gelöscht, abgesagt oder verschoben):
+// Audit-/Beratungs-Eintrag vom Tag bzw. Personen-Audit als durchgeführt.
+function mobStopDone(key,c){
+  const mine=h=>h.date===_mobDate&&(!currentUser||h.auditor===currentUser);
+  if(key[0]==='P'){const e=data.find(x=>String(x.id)===key.slice(1));return!!e&&(e.auditHistory||[]).some(mine);}
+  if(key[0]==='B')return data.some(e=>Math.abs((+e.lat)-c.lat)<0.000001&&Math.abs((+e.lng)-c.lng)<0.000001&&(e.beratungen||[]).some(mine));
+  if(key[0]==='A'){const p=personAudits.find(x=>String(x.id)===key.slice(1));return!!p&&!p.planned&&p.date===_mobDate;}
+  return false;
+}
 function mobAutoRoute(){
   if(_mobRouteBusy||!document.getElementById('mob-plan-list'))return;
-  const stops=mobCurrentDayStops().filter(s=>s.lat&&s.lng);
-  if(stops.length<2)return;
-  const cur=stops.map(s=>s.key).sort().join('|');
+  const all=mobCurrentDayStops(),stops=all.filter(mobGeo);
+  if(!stops.length){_mobRoute=null;return;}
+  const freshGPS=!!(_mobGPSPos&&_mobGPSTime&&Date.now()-_mobGPSTime<15*60000);
+  if(!freshGPS)_mobGPSPos=null;                                // alter GPS-Standort -> Startadresse verwenden
   const old=_mobRoute&&_mobRoute.date===_mobDate?_mobRoute:null;
-  const oldSet=old?old.keys.filter(k=>old.coords&&old.coords[k]).slice().sort().join('|'):'';
-  if(old&&oldSet===cur)return;                                  // Route passt zu den offenen Stopps
-  const sig=_mobDate+'#'+cur;if(_mobAutoTried===sig)return;     // gleiche Lage schon versucht (z.B. keine Startadresse)
+  // Route passt zu den offenen Stopps – ausser sie wurde ab Startadresse gerechnet und es gibt inzwischen einen frischen GPS-Standort
+  if(old&&mobRouteValid(all)&&!(old.startKind==='home'&&freshGPS))return;
+  const locSig=freshGPS?'GPS:'+Number(_mobGPSPos.lat).toFixed(3)+','+Number(_mobGPSPos.lng).toFixed(3):'HOME:'+(localStorage.getItem('audit_start')||'');
+  const sig=_mobDate+'#'+all.map(s=>[s.key,s.lat,s.lng,s.time,s.dur].join(':')).sort().join('|')+'#'+(_mobFirstPin[_mobDate]||'')+'#'+locSig;
+  if(_mobAutoTried===sig)return;                               // gleiche Lage schon versucht (z.B. keine Startadresse)
   _mobAutoTried=sig;
-  let start=null,startName=null;
+  // Nach einem ERLEDIGTEN Stopp startet die Route ab dieser Baustelle. Ein entfernter Stopp, für den es keinen Beleg
+  // gibt (gelöscht, abgesagt, verschoben), wird nie als besuchter Standort unterstellt.
+  let start=null,startName=null,startKind=null;
   if(old&&old.coords){
-    const removed=old.keys.filter(k=>old.coords[k]&&!stops.some(s=>s.key===k));
-    if(removed.length){const last=removed.sort((a,b)=>old.keys.indexOf(b)-old.keys.indexOf(a))[0];start=old.coords[last];startName=(old.coords[last].name||'').replace(/^[^A-Za-zÀ-ÿ0-9]+/,'');}
+    const done=old.keys.filter(k=>old.coords[k]&&!all.some(s=>s.key===k)&&mobStopDone(k,old.coords[k]));
+    if(done.length){const last=done.sort((a,b)=>old.keys.indexOf(b)-old.keys.indexOf(a))[0];
+      start=old.coords[last];startName=(old.coords[last].name||'').replace(/^[^A-Za-zÀ-ÿ0-9]+/,'');startKind='stop';}
+    else if(old.startKind==='stop'&&old.start){start=old.start;startName=old.startName||null;startKind='stop';}   // früherer erledigter Stopp bleibt der Start
   }
-  if(!start&&_mobGPSPos&&_mobGPSTime&&Date.now()-_mobGPSTime<15*60000)start=null; // frischer GPS-Standort wird in computeMobRoute genutzt
-  else if(!start)_mobGPSPos=null;                                // alter GPS-Standort -> Startadresse verwenden
-  computeMobRoute({silent:true,start,startName});
+  computeMobRoute({silent:true,start,startName,startKind});
 }
 let _mobGPSTime=0;
 // ═══ ROUTEN-OPTIMIERUNG NACH FAHRZEIT ═══
@@ -3995,11 +4011,39 @@ let _mobGPSTime=0;
 let _mobRoute=null;            // {date,keys:[...],legs:[sec],back:sec,total:sec,src:'ors'|'air'}
 let _mobFirstPin={};           // date -> stopKey (fest gewählter erster Stopp)
 const _orsMatrixCache={};
+// ===== Hilfsfunktionen und Zustände =====
+// Gültiger Kartenpunkt (Zahlen, nicht 0/leer)
+function mobGeo(o){return!!o&&Number.isFinite(+o.lat)&&Number.isFinite(+o.lng)&&!!+o.lat&&!!+o.lng;}
+// Anzahl Baustellen pro Google-Maps-Link: max. drei Zwischenziele (Grenze der mobilen Karten-Links), siehe mobOpenTourMaps
+const MAPS_STOPS_PER_LINK=3;
+// Grenze der gehosteten ORS-Matrix: 3500 Quell-/Ziel-Paare (59×59)
+const ORS_MAX_PAIRS=3500;
+const _orsMatrixPending={};
+let _orsRetryAfter=0;
+function mobWhyText(why){
+  return why==='nokey'?'Sortiert nach Luftlinie – für echte Fahrzeiten Routen-Schlüssel im Admin-Menü hinterlegen'
+    :why==='limit'?'Routen-Dienst vorübergehend limitiert – Fahrzeiten nach Luftlinie geschätzt'
+    :why==='key'?'Routen-Schlüssel ungültig – Fahrzeiten nach Luftlinie geschätzt'
+    :why==='size'?'Zu viele Punkte für den Routen-Dienst – Fahrzeiten nach Luftlinie geschätzt'
+    :why==='invalid'?'Routen-Dienst lieferte keine vollständige Antwort – Fahrzeiten nach Luftlinie geschätzt'
+    :'Routen-Dienst nicht erreichbar – Fahrzeiten nach Luftlinie geschätzt';
+}
 function mobDayStopList(dayPlans,dayBeratPlans,dayPersonPlans){
   const out=[];
-  dayPlans.forEach(p=>{const e=data.find(x=>x.id===p.bsId);if(e)out.push({key:'P'+p.bsId,type:'P',ref:p,lat:e.lat,lng:e.lng,addr:e.addr||'',name:e.name});});
-  dayBeratPlans.forEach(p=>{const e=data.find(x=>x.id===p.bsId);if(e)out.push({key:'B'+p.id,type:'B',ref:p,lat:e.lat,lng:e.lng,addr:e.addr||'',name:'💬 '+e.name});});
-  dayPersonPlans.forEach(p=>out.push({key:'A'+p.id,type:'A',ref:p,lat:p.lat,lng:p.lng,addr:p.addr||'',name:'👤 '+p.person}));
+  // time = feste Uhrzeit in Minuten (oder null), dur = Aufenthaltsdauer in Minuten. Nur Hilfsfelder für die Berechnung,
+  // am gespeicherten Datenformat ändert sich nichts.
+  const timeOf=p=>{const t=planTimeMin(p);return t==null||!Number.isFinite(+t)?null:+t;};
+  dayPlans.forEach(p=>{
+    const e=data.find(x=>x.id===p.bsId);if(!e)return;
+    const pt=timeOf(p),ft=fvDayOK(e,p.date)?fvTime(e):null;   // einmaliger Termin geht dem festen Besuchstermin vor
+    const time=pt!=null?pt:(ft!=null&&Number.isFinite(+ft)?+ft:null);
+    out.push({key:'P'+p.bsId,type:'P',ref:p,lat:e.lat,lng:e.lng,addr:e.addr||'',name:e.name,time,dur:Math.max(0,+tgAuditMin(e)||0)});
+  });
+  dayBeratPlans.forEach(p=>{
+    const e=data.find(x=>x.id===p.bsId);if(!e)return;
+    out.push({key:'B'+p.id,type:'B',ref:p,lat:e.lat,lng:e.lng,addr:e.addr||'',name:'💬 '+e.name,time:timeOf(p),dur:S('tg_fixed_berat')});
+  });
+  dayPersonPlans.forEach(p=>out.push({key:'A'+p.id,type:'A',ref:p,lat:p.lat,lng:p.lng,addr:p.addr||'',name:'👤 '+p.person,time:timeOf(p),dur:S('tg_fixed_pa')}));
   return out;
 }
 function mobCurrentDayStops(){
@@ -4010,32 +4054,73 @@ function mobCurrentDayStops(){
 // sonst Standard-Gruppierung nach Typ.
 function mobOrderedStops(dayPlans,dayBeratPlans,dayPersonPlans){
   const stops=mobDayStopList(dayPlans,dayBeratPlans,dayPersonPlans);
-  if(!_mobRoute||_mobRoute.date!==_mobDate)return stops;
-  const pos={};_mobRoute.keys.forEach((k,i)=>pos[k]=i);
-  return stops.slice().sort((a,b)=>(a.key in pos?pos[a.key]:9999)-(b.key in pos?pos[b.key]:9999));
+  if(!mobRouteValid(stops))return stops;   // veraltete Route nicht mehr für die Anzeige verwenden
+  const pos=new Map(_mobRoute.keys.map((k,i)=>[k,i]));
+  return stops.slice().sort((a,b)=>(pos.get(a.key)??9999)-(pos.get(b.key)??9999));
 }
 function fmtDur(sec){const m=Math.round(sec/60);return m<60?m+' min':Math.floor(m/60)+' h '+String(m%60).padStart(2,'0')+' min';}
-function mobRouteValid(stops){return _mobRoute&&_mobRoute.date===_mobDate&&stops.length&&stops.every(s=>_mobRoute.keys.includes(s.key));}
+// Eine gespeicherte Route gilt nur, solange Stoppmenge, Kartenpunkte, Uhrzeiten und Aufenthaltsdauern unverändert sind
+function mobRouteValid(stops){
+  const r=_mobRoute;
+  if(!r||r.date!==_mobDate||!stops.length||!r.keys||r.keys.length!==stops.length||!r.coords||!r.times||!r.durations)return false;
+  const have=new Set(r.keys);
+  return stops.every(s=>{
+    if(!have.has(s.key))return false;
+    const c=r.coords[s.key],geo=mobGeo(s);
+    if(geo!==!!c)return false;
+    if(geo&&(Math.abs(+s.lat-c.lat)>0.000001||Math.abs(+s.lng-c.lng)>0.000001))return false;
+    return(s.time??null)===(r.times[s.key]??null)&&(+s.dur||0)===(r.durations[s.key]??0);
+  });
+}
 function mobRouteBannerHTML(stops){
-  const withCoords=stops.filter(s=>s.lat&&s.lng);
-  if(withCoords.length<2)return'';
+  const withCoords=stops.filter(mobGeo),noCoord=stops.filter(s=>!mobGeo(s));
+  if(withCoords.length<1)return'';
   const pin=_mobFirstPin[_mobDate]||'';
-  const opts=`<option value="">Automatisch (optimal)</option>`+withCoords.map(s=>`<option value="${s.key}"${s.key===pin?' selected':''}>${s.name.replace(/"/g,'&quot;')}</option>`).join('');
+  const opts='<option value="">Automatisch (nach Fahrzeit, Fixtermine berücksichtigt)</option>'+withCoords.map(s=>
+    '<option value="'+escH(s.key)+'"'+(s.key===pin?' selected':'')+'>'+escH(s.name)+'</option>').join('');
   let info='';
   if(mobRouteValid(stops)){
-    const r=_mobRoute;
-    info=`<div style="font-size:13px;font-weight:700;color:var(--tx)">🚗 ${fmtDur(r.total)} Fahrzeit${r.back?' <span style="font-weight:400;color:var(--tx2);font-size:11px">(inkl. Rückfahrt)</span>':''}</div>
-      <div style="font-size:10px;color:${r.src==='ors'?'#10B981':'#F59E0B'};margin-top:2px">${r.src==='ors'?'✓ Berechnet über Strassennetz':'⚠ Schätzung nach Luftlinie (kein Routen-Schlüssel oder offline)'}</div>`;
-  }else{
-    info=`<div style="font-size:12px;color:var(--tx2)">⏳ Reihenfolge wird automatisch berechnet… <span style="color:var(--tx3)">(📍 Sortieren = neu ab aktuellem Standort)</span></div>`;
-  }
-  return`<div style="padding:12px 14px;background:var(--sf);border:1px solid var(--bd);border-radius:12px;margin-bottom:10px">
-    ${info}
-    <div style="display:flex;align-items:center;gap:6px;margin-top:8px">
-      <label style="font-size:11px;color:var(--tx2);white-space:nowrap">Erster Stopp:</label>
-      <select onchange="mobSetFirstPin(this.value)" style="flex:1;min-width:0;padding:6px;border:1px solid var(--bd);border-radius:8px;background:var(--sf2);color:var(--tx);font-size:12px">${opts}</select>
-    </div>
-  </div>`;
+    const r=_mobRoute,chunks=mobMapsChunks(r);
+    const srcLabel=r.src==='ors'?'<span style="color:#10B981">✓ Fahrzeiten über Strassennetz</span>':'<span style="color:#F59E0B">⚠ '+escH(mobWhyText(r.why))+'</span>';
+    const note=r.late>0.5?'<div style="font-size:11px;color:#DC2626;margin-top:2px">⚠ Fixtermine voraussichtlich ca. '+Math.ceil(r.late)+' min verspätet – bitte prüfen</div>'
+      :r.timed?'<div style="font-size:10px;color:var(--tx3);margin-top:2px">Fixtermine berücksichtigt'+(r.exact?'':' (Näherung bei vielen Stopps)')+'</div>':'';
+    const label=i=>chunks.length>1?'Etappe '+(i+1)+'/'+chunks.length:'Route in Google Maps';
+    info='<div style="font-size:13px;font-weight:700;color:var(--tx)">🚗 '+fmtDur(r.total)+' Fahrzeit'+(r.back?' <span style="font-weight:400;color:var(--tx2);font-size:11px">(inkl. Rückfahrt)</span>':'')+'</div>'+
+      '<div style="font-size:10px;margin-top:2px">'+srcLabel+'</div>'+note+
+      '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">'+
+      chunks.map((c,i)=>'<button type="button" class="ui-btn" onclick="mobOpenTourMaps('+i+')">🗺️ '+label(i)+'</button>').join('')+'</div>'+
+      '<div style="font-size:10px;color:var(--tx3);margin-top:6px;line-height:1.4">'+
+      chunks.map((c,i)=>(chunks.length>1?'Etappe '+(i+1)+': ':'')+c.keys.map(k=>escH(r.coords[k].name)).join(' → ')+(c.last&&r.home?' → 🏠':'')).join('<br>')+
+      '<br>Google Maps berechnet die Strecke selbst – Reihenfolge und Fahrzeit können leicht abweichen.</div>';
+  }else info='<div style="font-size:12px;color:var(--tx2)">⏳ Reihenfolge wird berechnet… <span style="color:var(--tx3)">(📍 Sortieren = neu ab aktuellem Standort)</span></div>';
+  const warn=noCoord.length?'<div style="font-size:11px;color:#B45309;margin-top:8px">⚠ Ohne Kartenpunkt (nicht in der Navigation): '+noCoord.map(s=>escH(s.name)).join(', ')+'</div>':'';
+  return '<div style="padding:12px 14px;background:var(--sf);border:1px solid var(--bd);border-radius:12px;margin-bottom:10px">'+
+    info+warn+'<div style="display:flex;align-items:center;gap:6px;margin-top:8px">'+
+    '<label style="font-size:11px;color:var(--tx2);white-space:nowrap">Erster Stopp:</label>'+
+    '<select onchange="mobSetFirstPin(this.value)" style="flex:1;min-width:0;padding:6px;border:1px solid var(--bd);border-radius:8px;background:var(--sf2);color:var(--tx);font-size:12px">'+opts+'</select></div></div>';
+}
+// Aufteilung der berechneten Reihenfolge in Google-Maps-Links (je max. MAPS_STOPS_PER_LINK Baustellen); nur Stopps mit Kartenpunkt
+function mobMapsChunks(r){
+  const keys=r.keys.filter(k=>r.coords&&r.coords[k]),out=[];
+  for(let i=0;i<keys.length;i+=MAPS_STOPS_PER_LINK)out.push({from:i,keys:keys.slice(i,i+MAPS_STOPS_PER_LINK),last:i+MAPS_STOPS_PER_LINK>=keys.length});
+  return out;
+}
+// Mehrstopp-Navigation in der berechneten Reihenfolge. Jede Etappe: Zwischenziele (waypoints) + Ziel; die nächste Etappe
+// beginnt am letzten Ziel der vorherigen. Die letzte Etappe endet bei der Startadresse (Rückfahrt), falls vorhanden.
+function mobOpenTourMaps(chunk){
+  const r=_mobRoute,all=mobCurrentDayStops();
+  if(!mobRouteValid(all)){showToast('Route zuerst aktualisieren (📍 Sortieren)',3000);return;}
+  const chunks=mobMapsChunks(r);
+  if(!Number.isInteger(chunk)||chunk<0||chunk>=chunks.length)return;
+  const c=chunks[chunk],coord=k=>r.coords[k].lat+','+r.coords[k].lng;
+  const via=c.keys.map(coord);
+  const destination=c.last&&r.home?r.home.lat+','+r.home.lng:via.pop();
+  const qs=new URLSearchParams({api:'1',destination,travelmode:'driving'});
+  if(chunk>0)qs.set('origin',coord(chunks[chunk-1].keys[chunks[chunk-1].keys.length-1]));
+  else if(!r.fromGPS&&r.start)qs.set('origin',r.start.lat+','+r.start.lng);
+  else qs.set('dir_action','navigate');   // ab aktuellem Standort: Navigation direkt starten
+  if(via.length)qs.set('waypoints',via.join('|'));
+  window.open('https://www.google.com/maps/dir/?'+qs.toString(),'_blank','noopener');
 }
 function mobLegHTML(st){
   if(!_mobRoute||_mobRoute.date!==_mobDate)return'';
@@ -4067,22 +4152,37 @@ async function getHomeCoords(){
 }
 async function getDurationMatrix(pts){
   const key=window._orsKey;
-  const sig=pts.map(p=>p.lat.toFixed(5)+','+p.lng.toFixed(5)).join('|');
-  if(key){
-    if(_orsMatrixCache[sig])return{D:_orsMatrixCache[sig],src:'ors'};
+  const points=pts.map(p=>({lat:+p.lat,lng:+p.lng}));
+  if(points.some(p=>!Number.isFinite(p.lat)||!Number.isFinite(p.lng)))throw new Error('Ungültige Kartenkoordinaten');
+  const n=points.length;
+  // Rückfall: Luftlinie × Umwegfaktor 1.35 bei Ø 50 km/h – mit Grund (why), damit die Anzeige es erklären kann
+  const air=why=>({D:points.map(a=>points.map(b=>haversine(a.lat,a.lng,b.lat,b.lng)*1.35/50*3600)),src:'air',why});
+  if(!key)return air('nokey');
+  if(n*n>ORS_MAX_PAIRS)return air('size');                 // gehostete Vollmatrix: höchstens 3500 Paare
+  if(Date.now()<_orsRetryAfter)return air('limit');         // Rückfragepause nach 429/401/403
+  // Cache-Schlüssel: Startpunkt (GPS) auf 4 Stellen (≈ 10 m) gerundet, alle anderen Punkte auf 5 Stellen
+  const sig=points.map((p,i)=>p.lat.toFixed(i===0?4:5)+','+p.lng.toFixed(i===0?4:5)).join('|');
+  if(_orsMatrixCache[sig])return{D:_orsMatrixCache[sig],src:'ors'};
+  if(_orsMatrixPending[sig])return _orsMatrixPending[sig];  // gleichzeitige gleiche Anfrage: ein Netzaufruf für alle
+  const task=(async()=>{
+    let why='error';const ctl=typeof AbortController!=='undefined'?new AbortController():null;const to=ctl?setTimeout(()=>ctl.abort(),20000):0;
     try{
       const r=await fetch('https://api.openrouteservice.org/v2/matrix/driving-car',{method:'POST',
-        headers:{'Authorization':key,'Content-Type':'application/json'},
-        body:JSON.stringify({locations:pts.map(p=>[p.lng,p.lat]),metrics:['duration']})});
+        headers:{'Authorization':key,'Content-Type':'application/json'},signal:ctl?ctl.signal:undefined,
+        body:JSON.stringify({locations:points.map(p=>[p.lng,p.lat]),metrics:['duration']})});
+      if(r.status===429){why='limit';const ra=+r.headers.get('Retry-After');_orsRetryAfter=Date.now()+(ra>0?Math.min(ra,3600)*1000:10*60000);}
+      else if(r.status===401||r.status===403){why='key';_orsRetryAfter=Date.now()+60*60000;}
       if(!r.ok)throw new Error('ORS '+r.status);
-      const d=await r.json();
-      if(d.durations&&d.durations.every(row=>row.every(v=>v!==null))){_orsMatrixCache[sig]=d.durations;return{D:d.durations,src:'ors'};}
-      throw new Error('unvollständig');
-    }catch(ex){console.warn('Routen-Matrix fehlgeschlagen, Luftlinie:',ex);}
-  }
-  // Rückfall: Luftlinie × Umwegfaktor 1.35 bei Ø 50 km/h
-  const D=pts.map(a=>pts.map(b=>haversine(a.lat,a.lng,b.lat,b.lng)*1.35/50*3600));
-  return{D,src:'air'};
+      const d=await r.json(),v=d.durations;
+      // Die ganze n×n-Matrix muss aus endlichen, nicht negativen Zahlen bestehen (null = Ort nicht erreichbar)
+      if(!Array.isArray(v)||v.length!==n||!v.every(row=>Array.isArray(row)&&row.length===n&&row.every(x=>typeof x==='number'&&Number.isFinite(x)&&x>=0))){why='invalid';throw new Error('Unvollständige Matrix');}
+      _orsMatrixCache[sig]=v;
+      return{D:v,src:'ors'};
+    }catch(ex){console.warn('Routen-Matrix fehlgeschlagen, Luftlinie:',ex);return air(why);}
+    finally{if(to)clearTimeout(to);}
+  })();
+  _orsMatrixPending[sig]=task;
+  try{return await task;}finally{delete _orsMatrixPending[sig];}
 }
 // Optimale Reihenfolge der Knoten 'nodes' zwischen festem Start s und optionalem Ende e.
 function solveRoute(D,s,nodes,e){
@@ -4116,41 +4216,126 @@ function solveRoute(D,s,nodes,e){
   return seq;
 }
 let _mobRouteBusy=false;
+// Reihenfolge mit Fixterminen: minimiert zuerst die Verspätung gegenüber den festen Uhrzeiten, dann die Fahrzeit, dann das Ende.
+// Bis 8 freie Stopps werden ALLE Reihenfolgen durchgerechnet (im Modell optimal), darüber nur eine Einfüge-Heuristik.
+// Das Modell kennt Fahrzeit, Aufenthaltsdauer, Baustellen-Znüni/-Mittag – NICHT die eigene Pause und keinen Verkehr.
+// Es ist keine exakte Lösung des Tourenproblems mit Zeitfenstern.
+function solveMobTimedRoute(D,start,nodes,end,stops,date,first){
+  const firstNode=first!=null&&nodes.includes(first)?first:null;
+  const rest=nodes.filter(n=>n!==firstNode);
+  const time=n=>stops[n-1].time;
+  const duration=n=>Math.max(0,+stops[n-1].dur||0);
+  const ZS=S('tg_znueni_start')*60,ZE=ZS+S('tg_znueni_dur');
+  const LS=S('tg_lunch_start')*60,BE=LS+S('tg_lunch_dur'),AF=S('tg_audit_flex');
+  const d0=new Date(),localDay=d0.getFullYear()+'-'+String(d0.getMonth()+1).padStart(2,'0')+'-'+String(d0.getDate()).padStart(2,'0');
+  const nowMinute=date===localDay?d0.getHours()*60+d0.getMinutes():-Infinity;
+  const evaluate=seq=>{
+    if(!seq.length)return{late:0,drive:0,finish:0};
+    const firstDrive=D[start][seq[0]]/60;
+    // Erster Audit-Beginn am konfigurierten Tagesbeginn (Abfahrt allenfalls früher); heute nie vor «jetzt»
+    let t=Math.max(S('tg_day_start')*60-firstDrive,nowMinute),drive=0,late=0,cur=start;
+    for(const n of seq){
+      const tr=D[cur][n]/60;drive+=tr;const stp=stops[n-1],tm=time(n),du=duration(n);
+      let st=t+tr;
+      if(tm!=null)st=Math.max(st,tm);
+      if(stp.type==='P'){
+        if(S('tg_znueni_dur')>0&&st>=ZS&&st<ZE)st=ZE;
+        if(S('tg_lunch_dur')>0&&st<BE&&st+du>LS){
+          // kleine Kürzung wie im Tourguide möglich; sonst erst nach der Baustellenpause
+          if(st<LS&&st+du-LS<=AF){
+            t=LS;cur=n;
+            if(tm!=null)late+=Math.max(0,st-tm);
+            continue;
+          }
+          st=Math.max(st,BE);
+        }
+      }
+      if(tm!=null)late+=Math.max(0,st-tm);
+      t=st+du;cur=n;
+    }
+    if(end!=null)drive+=D[cur][end]/60;
+    return{late,drive,finish:t};
+  };
+  const better=(a,b)=>a.late<b.late-0.01||
+    (Math.abs(a.late-b.late)<0.01&&(a.drive<b.drive-0.01||(Math.abs(a.drive-b.drive)<0.01&&a.finish<b.finish-0.01)));
+  const head=firstNode!=null?[firstNode]:[];
+  if(rest.length<=8){
+    let best=null;
+    const rec=(seq,left)=>{
+      if(!left.length){const full=head.concat(seq),v=evaluate(full);if(!best||better(v,best.v))best={seq:full,v};return;}
+      for(let i=0;i<left.length;i++)rec(seq.concat(left[i]),left.slice(0,i).concat(left.slice(i+1)));
+    };
+    rec([],rest);
+    return{order:best.seq,late:best.v.late,exact:true};
+  }
+  // Heuristik für grosse Tage: Fixtermine zeitlich sortiert, freie Stopps an der besten Stelle einfügen, dann einzeln verbessern
+  const locked=rest.filter(n=>time(n)!=null).sort((a,b)=>time(a)-time(b)||String(stops[a-1].key).localeCompare(String(stops[b-1].key)));
+  const flex=rest.filter(n=>time(n)==null);
+  let seq=head.concat(locked);
+  for(const n of flex){
+    let chosen=null,score=null;
+    for(let p=head.length;p<=seq.length;p++){const s=seq.slice(0,p).concat(n,seq.slice(p)),v=evaluate(s);if(!score||better(v,score)){chosen=s;score=v;}}
+    seq=chosen;
+  }
+  for(let pass=0;pass<3;pass++){
+    let improvement=false,baseline=evaluate(seq);
+    for(const n of flex){
+      const r2=seq.filter(x=>x!==n);let chosen=null,score=baseline;
+      for(let p=head.length;p<=r2.length;p++){const s=r2.slice(0,p).concat(n,r2.slice(p)),v=evaluate(s);if(better(v,score)){chosen=s;score=v;}}
+      if(chosen){seq=chosen;baseline=score;improvement=true;}
+    }
+    if(!improvement)break;
+  }
+  return{order:seq,late:evaluate(seq).late,exact:false};
+}
 async function computeMobRoute(opts){
   opts=opts||{};
   if(_mobRouteBusy)return;
-  const stops=mobCurrentDayStops().filter(s=>s.lat&&s.lng);
-  const noCoord=mobCurrentDayStops().filter(s=>!s.lat||!s.lng);
-  if(stops.length<1){renderMobPlan();return;}
+  const date=_mobDate,all=mobCurrentDayStops();
+  const stops=all.filter(mobGeo),noCoord=all.filter(s=>!mobGeo(s));
+  if(!stops.length){_mobRoute=null;renderMobPlan();return;}
   _mobRouteBusy=true;
   try{
     const home=await getHomeCoords();
-    const startPt=opts.start||_mobGPSPos||home;
-    const fromLabel=opts.start?('ab '+(opts.startName||'letzter Baustelle')):_mobGPSPos?'ab Standort':'ab Startadresse';
-    if(!startPt){if(!opts.silent)showToast('Kein Standort und keine Startadresse – bitte GPS erlauben oder Startadresse setzen',4000);return;}
+    // GPS nur, wenn der Standort frisch ist (< 15 min); alter Standort wird nie als aktueller ausgegeben
+    const gpsFresh=!!(_mobGPSPos&&_mobGPSTime&&Date.now()-_mobGPSTime<15*60000);
+    const startPt=opts.start||(gpsFresh?_mobGPSPos:null)||home;
+    const startKind=opts.start?(opts.startKind||'stop'):gpsFresh?'gps':'home';
+    const fromLabel=opts.start?('ab '+(opts.startName||'letztem Stopp')):gpsFresh?'ab Standort':'ab Startadresse';
+    if(date!==_mobDate)return;
+    if(!startPt||!mobGeo(startPt)){_mobRoute=null;if(!opts.silent)showToast('Kein GPS und keine Startadresse – bitte Standort oder Startadresse setzen',4000);return;}
     // Punkte: [Start, Stopp1..n, (Heim)]
     const pts=[startPt,...stops,...(home?[home]:[])];
-    const{D,src}=await getDurationMatrix(pts);
-    const S=0,E=home?pts.length-1:null;
-    let idxs=stops.map((_,i)=>i+1);
-    const pinKey=_mobFirstPin[_mobDate];
-    const pinIdx=pinKey?stops.findIndex(s=>s.key===pinKey):-1;
-    let order;
-    if(pinIdx>=0){
-      const p=pinIdx+1;
-      order=[p,...solveRoute(D,p,idxs.filter(i=>i!==p),E)];
-    }else order=solveRoute(D,S,idxs,E);
-    const legs=[];let cur=S;
+    const{D,src,why}=await getDurationMatrix(pts);
+    if(date!==_mobDate)return;   // Tag wurde während der Abfrage gewechselt: Ergebnis gehört nicht mehr zur Anzeige
+    const end=home?pts.length-1:null,idxs=stops.map((_,i)=>i+1);
+    const pinKey=_mobFirstPin[date],pinIdx=pinKey?stops.findIndex(s=>s.key===pinKey):-1;
+    let order,late=0,timed=false,exact=true;
+    if(stops.some(s=>s.time!=null)){
+      // Fixtermine: zeitfensterbewusste Reihenfolge (siehe solveMobTimedRoute – im Modell optimal bis 8 freie Stopps, sonst Heuristik)
+      const result=solveMobTimedRoute(D,0,idxs,end,stops,date,pinIdx>=0?pinIdx+1:null);
+      order=result.order;late=result.late;timed=true;exact=result.exact;
+    }else if(pinIdx>=0){
+      const p=pinIdx+1;order=[p,...solveRoute(D,p,idxs.filter(i=>i!==p),end)];
+    }else order=solveRoute(D,0,idxs,end);
+    const legs=[];let cur=0;
     order.forEach(i=>{legs.push(D[cur][i]);cur=i;});
-    const back=E!=null?D[cur][E]:0;
-    _mobRoute={date:_mobDate,keys:[...order.map(i=>stops[i-1].key),...noCoord.map(s=>s.key)],
-      legs:[...legs,...noCoord.map(()=>null)],back,total:legs.reduce((a,b)=>a+b,0)+back,src,fromGPS:!!_mobGPSPos,fromLabel,
-      coords:Object.fromEntries(stops.map(s=>[s.key,{lat:s.lat,lng:s.lng,name:s.name}]))};
-    if(opts.silent){}
-    else if(src==='air'&&!window._orsKey)showToast('Sortiert nach Luftlinie – für echte Fahrzeiten Routen-Schlüssel im Admin-Menü hinterlegen',4000);
-    else if(src==='air')showToast('⚠ Routen-Dienst nicht erreichbar – Schätzung nach Luftlinie',3500);
-    else showToast('✓ Schnellste Route berechnet: '+fmtDur(_mobRoute.total),2500);
-    if(noCoord.length&&!opts.silent)showToast(`⚠ ${noCoord.length} Stopp(s) ohne Koordinaten – ans Ende gestellt`,3500);
+    const back=end!=null?D[cur][end]:0;
+    _mobRoute={date,keys:[...order.map(i=>stops[i-1].key),...noCoord.map(s=>s.key)],
+      legs:[...legs,...noCoord.map(()=>null)],back,total:legs.reduce((a,b)=>a+b,0)+back,
+      src,why:why||null,late,timed,exact,startKind,startName:opts.startName||null,fromGPS:startKind==='gps',fromLabel,
+      start:{lat:+startPt.lat,lng:+startPt.lng},home:home?{lat:+home.lat,lng:+home.lng}:null,
+      coords:Object.fromEntries(stops.map(s=>[s.key,{lat:+s.lat,lng:+s.lng,name:s.name}])),
+      times:Object.fromEntries(all.map(s=>[s.key,s.time??null])),
+      durations:Object.fromEntries(all.map(s=>[s.key,+s.dur||0]))};
+    if(!opts.silent){
+      if(late>0.5)showToast('Achtung: Fixtermine voraussichtlich verspätet (ca. '+Math.ceil(late)+' min) – Tagesplan prüfen',5000);
+      else if(src==='air')showToast(mobWhyText(why),4000);
+      else showToast('✓ Route berechnet: '+fmtDur(_mobRoute.total),2500);
+      if(noCoord.length)showToast('⚠ '+noCoord.length+' Stopp(s) ohne Kartenpunkt – ans Ende gestellt, nicht in der Navigation',4000);
+    }
+  }catch(ex){console.error('Route konnte nicht berechnet werden:',ex);_mobRoute=null;
+    if(!opts.silent)showToast('Route konnte nicht berechnet werden',4000);
   }finally{_mobRouteBusy=false;renderMobPlan();}
 }
 // Prüft einen openrouteservice-Schlüssel mit einer kleinen Fahrzeit-Abfrage (Luzern ↔ Zürich)
@@ -4981,7 +5166,14 @@ function tgUrgency(e,ds){const s=status(e,ds?parseDate(ds).getTime()+12*3600000:
 // «Personal vor Ort» für Tourguide: bekannter Wert grösser 0, und die Angabe ist nicht älter als eingestellt
 // (relativ zur geplanten KW). Ohne Angabe oder mit veraltetem Wert gilt das Personal als unbekannt -> nie vorschlagen.
 function tgYearForKW(kw){return pmYearFor(kw);}
-function isoMonday(kw,yr){const j=new Date(yr,0,4);const sw=new Date(j.getTime()-((j.getDay()||7)-1)*86400000);return new Date(sw.getTime()+(kw-1)*7*86400000);}
+function isoMonday(kw,yr){
+  // Kalendertage statt feste Millisekunden: stimmt auch über Sommer-/Winterzeit hinweg (immer 00:00 lokale Zeit)
+  const d=new Date(yr,0,4,12,0,0,0);
+  const weekday=(d.getDay()+6)%7;
+  d.setDate(d.getDate()-weekday+(kw-1)*7);
+  d.setHours(0,0,0,0);
+  return d;
+}
 function persYear(e){
   const h=(e.personalHistory||[]).find(x=>x.kw===e.lastPersonalKW&&(x.count===e.lastPersonalCount));
   if(h)return h.year;
@@ -5044,12 +5236,13 @@ function tgCandidates(aud,kw,noPers,dayDates,noGeo,bfList,provIds=new Set()){
 function tgHM(m){m=Math.round(m);const h=Math.floor(m/60),mm=((m%60)+60)%60;return String(h).padStart(2,'0')+':'+String(mm).padStart(2,'0');}
 function tgDayEvents(aud,ds){
   const ev=[];
+  // geo:true = der Termin hat einen ausdrücklichen Ort (Adresse / Baustelle) und braucht darum einen Kartenpunkt
   rapporte.filter(r=>r.date===ds&&r.auditor===aud).forEach(r=>{
     const tm=r.time&&/^\d{1,2}:\d{2}$/.test(r.time)?(+r.time.split(':')[0]*60+ +r.time.split(':')[1]):null;
-    ev.push({kind:'rp',icon:'📋',col:'#0EA5E9',label:r.type+(r.dept?' – '+r.dept:''),sub:r.addr||r.ort||'',time:tm,dur:+r.dur||60,lat:r.lat,lng:r.lng,addr:r.addr,ref:r});
+    ev.push({kind:'rp',icon:'📋',col:'#0EA5E9',label:r.type+(r.dept?' – '+r.dept:''),sub:r.addr||r.ort||'',time:tm,dur:+r.dur||60,lat:r.lat,lng:r.lng,addr:r.addr,ref:r,ds,geo:!!r.addr});
   });
-  personAudits.filter(p=>p.planned&&p.date===ds&&p.auditor===aud).forEach(p=>ev.push({kind:'pa',icon:'👤',col:'#F59E0B',label:'Personen-Audit '+p.person,sub:p.addr||p.bs||'',time:null,dur:S('tg_fixed_pa'),lat:p.lat,lng:p.lng}));
-  beratPlan.filter(p=>p.date===ds&&p.auditor===aud).forEach(p=>{const e=data.find(x=>x.id===p.bsId);ev.push({kind:'bp',icon:'💬',col:'#8B5CF6',label:'Beratung '+(e?e.name:''),sub:e?e.addr||'':'',time:planTimeMin(p),dur:S('tg_fixed_berat'),lat:e&&e.lat,lng:e&&e.lng});});
+  personAudits.filter(p=>p.planned&&p.date===ds&&p.auditor===aud).forEach(p=>ev.push({kind:'pa',icon:'👤',col:'#F59E0B',label:'Personen-Audit '+p.person,sub:p.addr||p.bs||'',time:null,dur:S('tg_fixed_pa'),lat:p.lat,lng:p.lng,ds,geo:!!p.addr}));
+  beratPlan.filter(p=>p.date===ds&&p.auditor===aud).forEach(p=>{const e=data.find(x=>x.id===p.bsId);ev.push({kind:'bp',icon:'💬',col:'#8B5CF6',label:'Beratung '+(e?e.name:''),sub:e?e.addr||'':'',time:planTimeMin(p),dur:S('tg_fixed_berat'),lat:e&&e.lat,lng:e&&e.lng,ds,geo:!!e});});
   return ev;
 }
 async function tgGeocodeEvents(evs){
@@ -5078,7 +5271,7 @@ function tgSim(items){
   // Baustellen-Audits dürfen um bis zu tg_audit_flex Minuten kürzer sein, wenn sie sonst in eine Pause liefen.
   const ZT=S('tg_znueni_through')>0,AF=S('tg_audit_flex');
   const run=start=>{
-    let t=start,pos=0,drive=0,wait=0,late=0,aud=0,evt=0,lunch=0,lunchAt=-1,lunchStart=null,lateStart=0;const sched=[];
+    let t=start,pos=0,drive=0,wait=0,late=0,aud=0,evt=0,lunch=0,lunchAt=-1,lunchStart=null,lateStart=0,lunchSkipped=false;const sched=[];
     // gemeinsamer Rundgang: folgt eine Einheit am gleichen Ort direkt auf die vorherige, dauert der Rundgang so lange
     // wie für die Personen ALLER Einheiten dort zusammen (nur die Differenz kommt dazu); Nachbearbeitung bleibt pro Einheit
     let gKey=null,gPers=0,gDur=0;
@@ -5094,29 +5287,44 @@ function tgSim(items){
        else if(k){gKey=k;gPers=R.persN.get(it.node);gDur=du0;}else gKey=null;}
       let du=du0;
       if(need()&&tr>0&&t<=W1){
-        const clash=tm==null&&blocked(t+tr,du-af);
-        // nächster Stopp fiele in den Baustellen-Mittag (oder wäre nicht bis Fensterende fertig) -> Pause jetzt
-        // (frühestens ab Fensterbeginn), dann losfahren
-        if(clash||(t>=W0&&(tm==null?t+tr+du-af>W1:t+tr>W1))){const ls=Math.max(t,W0);wait+=ls-t;takeLunch(ii,ls);t=ls+LD;}
-        // lange Fahrt über das ganze Fenster -> Pause unterwegs
-        else if(t<W0&&t+tr>W1){takeLunch(ii,W0);t+=LD;}
+        if(tm==null){
+          const clash=blocked(t+tr,du-af);
+          // nächster Stopp fiele in den Baustellen-Mittag (oder wäre nicht bis Fensterende fertig) -> Pause jetzt
+          // (frühestens ab Fensterbeginn), dann losfahren
+          if(clash||(t>=W0&&t+tr+du-af>W1)){const ls=Math.max(t,W0);wait+=ls-t;takeLunch(ii,ls);t=ls+LD;}
+          // lange Fahrt über das ganze Fenster -> Pause unterwegs
+          else if(t<W0&&t+tr>W1){takeLunch(ii,W0);t+=LD;}
+        }else{
+          // Fixtermin: die eigene Mittagspause nur davor einschieben, wenn der Termin dadurch nicht später beginnt.
+          // Sonst losfahren (pünktlich sein geht vor); fällt die Pause dadurch ganz aus, wird das gemeldet (lunchConflict).
+          if(t>=W0&&t+tr>W1){const ls=Math.max(t,W0);
+            if(ls+LD+tr<=tm+0.01){wait+=ls-t;takeLunch(ii,ls);t=ls+LD;}else lunchSkipped=true;}
+          else if(t<W0&&t+tr>W1){
+            if(t+tr+LD<=tm+0.01){takeLunch(ii,W0);t+=LD;}else lunchSkipped=true;}
+        }
       }
       let arr=t+tr,st=arr;
-      if(tm!=null){if(arr>tm){late+=arr-tm;st=arr;}else{wait+=tm-arr;st=tm;}}
+      if(tm!=null){if(arr>tm){st=arr;}else{wait+=tm-arr;st=tm;}}
+      // Baustellen-Pausen gelten für alle Baustellen-Audits – auch mit fester Uhrzeit. Termine mit Uhrzeit (Rapporte,
+      // Beratungen) dürfen in der Pause liegen.
+      const siteRules=tm==null||it.t==='bs';
       // Znüni: nie darin beginnen (-> ab Ende, Wartezeit); hineinlaufen nur, wenn erlaubt – sonst kürzen (bis af) oder danach
-      if(tm==null&&ZD>0){
+      if(siteRules&&ZD>0){
         if(st>=ZS&&st<ZE){wait+=ZE-st;st=ZE;}
         else if(!ZT&&st<ZS&&st+du>ZS){if(st+du-ZS<=af+0.01)du=ZS-st;else{wait+=ZE-st;st=ZE;}}
       }
       // Baustellen-Mittag: nur wenige Minuten hinein -> Audit entsprechend kürzer (bis af)
-      if(tm==null&&blocked(st,du)&&st<LS&&st+du-LS<=af+0.01)du=LS-st;
+      if(siteRules&&blocked(st,du)&&st<LS&&st+du-LS<=af+0.01)du=LS-st;
       // Stopp ohne Uhrzeit nie im Baustellen-Mittag: erst ab dessen Ende (vorher Pause, falls noch nicht gemacht)
-      if(tm==null&&blocked(st,du)){du=du0;
+      if(siteRules&&blocked(st,du)){du=du0;
         if(need()){const ls=Math.max(st,W0);wait+=ls-st;takeLunch(ii,ls);st=ls+LD;}
         if(st<BE){wait+=BE-st;st=BE;}
       }
+      // Verspätung gegenüber der Uhrzeit nach ALLEN Verschiebungen (Fahrzeit und Baustellen-Pausen)
+      const itemLate=tm!=null?Math.max(0,st-tm):0;
+      late+=itemLate;
       if(it.t==='bs'){aud+=du;if(st>LAST+0.5)lateStart+=st-LAST;}else evt+=du;
-      sched.push({arr,start:st,end:st+du,short:du0-du,joint,late:tm!=null&&arr>tm?arr-tm:0});
+      sched.push({arr,start:st,end:st+du,short:du0-du,joint,late:itemLate});
       t=st+du;if(node!=null)pos=node;
     });
     const back=items.length?D[pos][0]/60:0;drive+=back;
@@ -5126,7 +5334,7 @@ function tgSim(items){
     // Nachbearbeitung der Audits am Ende des Tages (pro Baustelle) – zählt zur Arbeitszeit
     // Wartezeiten (z.B. vor einem Termin) werden für die Nachbearbeitung genutzt – nur der Rest kommt am Ende dazu
     const post=items.filter(it=>it.t==='bs').length*S('tg_post_min'),postInWait=Math.min(post,Math.max(0,wait));
-    return{start,end:t,total:t-start-lunch+post-postInWait,post,postInWait,drive,wait:Math.max(0,wait),late,lateStart,aud,evt,lunch,lunchAt,lunchStart,sched};
+    return{start,end:t,total:t-start-lunch+post-postInWait,post,postInWait,drive,wait:Math.max(0,wait),late,lateStart,aud,evt,lunch,lunchAt,lunchStart,lunchConflict:lunchSkipped&&lunch===0,sched};
   };
   // Tagesbeginn = Beginn des ersten Audits/Stopps: so früh losfahren, dass man um diese Zeit beim ersten Stopp ist
   const firstNode=items.length?(items[0].t==='bs'?items[0].node:items[0].ev.node):null;
@@ -5171,17 +5379,38 @@ async function tgCompute(){
   const home=await tgHomeFor(aud);
   if(!home){box.innerHTML='<div style="padding:14px;color:#B45309;font-size:12px">⚠ Keine Startadresse für '+escH(aud)+'. Bitte in «Auditoren verwalten» hinterlegen.</div>';return;}
   const ks=kwToDate(kw);const dayDates=days.map(di=>rpAddDays(ks,di));
-  const fixedPlans=dayDates.map(ds=>plans.filter(p=>p.date===ds&&p.auditor===aud).map(p=>data.find(x=>x.id===p.bsId)).filter(e=>e&&e.lat&&e.lng));
+  const ownPlans=dayDates.map(ds=>plans.filter(p=>p.date===ds&&p.auditor===aud));
+  const geoOK=o=>!!o&&Number.isFinite(+o.lat)&&Number.isFinite(+o.lng)&&!!+o.lat&&!!+o.lng;
+  // Planungen, deren Baustelle gelöscht wurde, gibt es nicht mehr als Besuch: sie werden gemeldet, aber nicht gerechnet
+  const orphans=ownPlans.flat().filter(p=>!data.some(x=>x.id===p.bsId));
+  // Geplante Baustellen niemals stillschweigend aus der Zeitrechnung entfernen: ohne Kartenpunkt keine Berechnung
+  const missingFixed=ownPlans.flat().map(p=>({p,e:data.find(x=>x.id===p.bsId)})).filter(o=>o.e&&!geoOK(o.e));
+  if(missingFixed.length){
+    box.innerHTML='<div style="padding:14px;color:#B45309;font-size:12px">⚠ Tourguide nicht berechnet: Bereits geplante Baustellen ohne Kartenpunkt: '+
+      missingFixed.map(o=>escH(o.e.name)+' ('+fd(o.p.date)+')').join(', ')+'. Die Fahrzeit des Tages wäre sonst zu kurz gerechnet. Bitte beim Bearbeiten der Baustelle Adresse oder Marker setzen.</div>';
+    return;
+  }
+  const fixedPlans=ownPlans.map(list=>list.map(p=>data.find(x=>x.id===p.bsId)).filter(Boolean));
   const events=dayDates.map(ds=>tgDayEvents(aud,ds));
   await tgGeocodeEvents(events.flat());
+  // Termine mit ausdrücklichem Ort (Adresse, Baustelle) müssen einen Kartenpunkt haben; reine Zeit-Termine (ohne Ort) sind erlaubt
+  const missingEvents=events.flat().filter(ev=>ev.geo&&!geoOK(ev));
+  if(missingEvents.length){
+    box.innerHTML='<div style="padding:14px;color:#B45309;font-size:12px">⚠ Tourguide nicht berechnet: Termin(e) mit Ortsangabe, aber ohne Kartenpunkt: '+
+      missingEvents.map(ev=>escH(ev.label)+(ev.ds?' ('+fd(ev.ds)+')':'')).join(', ')+'. Bitte Adresse prüfen/ergänzen (oder bei Beratungen den Kartenpunkt der Baustelle setzen).</div>';
+    return;
+  }
   const noPers=[];
   const noGeo=[],bfList=[],provIds=new Set();
   const cands=tgCandidates(aud,kw,noPers,dayDates,noGeo,bfList,provIds);
   const fixedAll=[...new Set(fixedPlans.flat())];
   const evPts=events.flat().filter(ev=>ev.lat&&ev.lng);
-  const pool=cands.slice(0,Math.max(0,54-fixedAll.length-evPts.length));
+  // Die gehostete ORS-Vollmatrix ist auf 3500 Quell-/Ziel-Paare begrenzt (max. 59 Punkte).
+  const cap=Math.max(0,59-1-fixedAll.length-evPts.length);
+  const pool=cands.slice(0,cap),unprocessed=cands.slice(cap);
   const pts=[home,...fixedAll.map(e=>({lat:e.lat,lng:e.lng})),...pool.map(x=>({lat:x.e.lat,lng:x.e.lng})),...evPts.map(ev=>({lat:ev.lat,lng:ev.lng}))];
-  const{D,src}=await getDurationMatrix(pts);
+  let mx;try{mx=await getDurationMatrix(pts);}catch(ex){console.error(ex);box.innerHTML='<div style="padding:14px;color:#B45309;font-size:12px">⚠ Fahrzeiten konnten nicht berechnet werden: '+escH(ex.message||'Unbekannter Fehler')+'. Bitte Kartenpunkte der Baustellen prüfen.</div>';return;}
+  const{D,src,why}=mx;
   const idxFixed=new Map(fixedAll.map((e,i)=>[e.id,i+1]));
   const idxPool=pool.map((_,i)=>i+1+fixedAll.length);
   evPts.forEach((ev,i)=>{ev.node=1+fixedAll.length+pool.length+i;});
@@ -5222,9 +5451,19 @@ async function tgCompute(){
     return{i,d,x,score:p.sim.total-cur.total-x.min-S('tg_post_min')-sizeBonus(x)};};   // Umweg = zusätzliche Fahr-/Wartezeit ohne Audit- und Nachbearbeitungszeit
   // grosse Baustellen dürfen mehr Umweg haben: 20+ Personen = voller Bonus, 10–19 = 2/3, 4–9 = 1/3, 1–3 = 0
   const sizeBonus=x=>S('tg_size_bonus')*([1,2/3,1/3,0,0][x.pers]||0);
-  const better=(a,b)=>{if(!b)return true;
-    if(a.score<b.score-tie)return true;if(b.score<a.score-tie)return false;   // deutlich kürzerer Umweg gewinnt
-    return(a.x.pers-b.x.pers)||((a.x.isPref?0:1)-(b.x.isPref?0:1))||(dl(a.x.e)-dl(b.x.e))||(a.score-b.score)<0;};
+  const better=(a,b)=>{
+    if(!b)return true;
+    if(a.score<b.score-tie)return true;
+    if(b.score<a.score-tie)return false;
+    // Nicht die Differenz als Boolean zurückgeben: beide Vorzeichen sind truthy.
+    if(a.x.pers!==b.x.pers)return a.x.pers<b.x.pers;
+    if(!!a.x.isPref!==!!b.x.isPref)return !!a.x.isPref;
+    const da=dl(a.x.e),db=dl(b.x.e);
+    if(da!==db)return da<db;
+    if(Math.abs(a.score-b.score)>0.001)return a.score<b.score;
+    // Stabile Gleichstandsregel unabhängig von Iterations-/Datenreihenfolge.
+    return String(a.x.e.id)<String(b.x.e.id);
+  };
   const harvest=(d,yellow)=>{
     for(;;){let best=null;const nodes=dayNodes(d);if(!nodes.length)return;
       remaining.forEach(i=>{if(minDist(idxPool[i],nodes)>near)return;if(!yellow&&pool[i].urgDay[d]>1)return;const c=tryDay(i,d);if(c&&better(c,best))best=c;});
@@ -5233,6 +5472,7 @@ async function tgCompute(){
   // Neue Gegend nur anfangen, wenn ihre roten/orangen Baustellen an diesem Tag ganz Platz haben – ausser die
   // Gegend liegt beim Startort, ist ohnehin zu gross für einen Tag, oder die Baustelle ist schon lange
   // überfällig (tg_force_days, damit nichts ewig liegen bleibt). Sonst später/an einem anderen Tag.
+  const eligibleOn=(nodes,d)=>nodes.every(n=>{const k=idxPool.indexOf(n);return k>=0&&pool[k].urgDay[d]!=null&&pool[k].urgDay[d]<=1;});
   const mayOpen=(i,d)=>{
     const j=idxPool[i];if(minDist(j,[0,...dayNodes(d)])<=near)return true;
     if(sets.some((_,d2)=>d2!==d&&minDist(j,dayNodes(d2))<=near&&tryDay(i,d2)))return false; // Gegend wird an einem anderen Tag besucht und hat dort noch Platz – keine 2. Fahrt
@@ -5244,9 +5484,9 @@ async function tgCompute(){
     //  - ein anderer gewählter Tag ist noch leer und nimmt sie ganz auf -> dort (warten)
     //  - ein anderer gewählter Tag dieser Woche nimmt den Rest auf -> heute anfangen, Rest dort (statt Tage leer zu lassen)
     //  - sonst wie früher: nur anfangen, wenn sie ohnehin nicht an einen Tag passt (keine 2. Fahrt in der nächsten Woche)
-    if(sets.some((s2,d2)=>d2!==d&&!dayNodes(d2).length&&all.length<=maxN&&ok(d2,tgPlanDay(d2,all))))return false;
+    if(sets.some((s2,d2)=>d2!==d&&!dayNodes(d2).length&&all.length<=maxN&&eligibleOn(all,d2)&&ok(d2,tgPlanDay(d2,all))))return false;
     const rest=all.slice(1);
-    if(sets.some((s2,d2)=>d2!==d&&pool[i].urgDay[d2]!=null&&s2.length+rest.length<=maxN&&ok(d2,tgPlanDay(d2,s2.concat(rest)))))return true;
+    if(sets.some((s2,d2)=>d2!==d&&eligibleOn(rest,d2)&&s2.length+rest.length<=maxN&&ok(d2,tgPlanDay(d2,s2.concat(rest)))))return true;
     return!(all.length<=maxN&&ok(d,tgPlanDay(d,all)));
   };
   sets.forEach((_,d)=>harvest(d));
@@ -5275,17 +5515,21 @@ async function tgCompute(){
   const urgOfNode=new Map(pool.map((x,i)=>[idxPool[i],x.urgDay]));
   // nur auf Tage, an denen die Baustelle infrage kommt – und nicht auf einen Tag, an dem sie nur gelb ist (wenn sie anderswo rot/orange ist)
   const mayMove=(j,a,b)=>{const u=urgOfNode.get(j)||[];return u[b]!=null&&(u[b]<=1||u[a]>1)&&(!hasNb(j,sets[a],a)||hasNb(j,sets[b],b));};
-  let cur=cost(sets),t0=Date.now(),imp=true;
-  while(imp&&Date.now()-t0<5000){imp=false;
+  // Begrenzung über eine feste Zahl an Verbesserungsschritten und Bewertungen (nicht über die Uhr): gleiche Daten → gleiches
+  // Ergebnis auf jedem Gerät, und das Handy wird nicht blockiert.
+  let cur=cost(sets),imp=true,steps=0,evals=0;const MAX_STEPS=40,MAX_EVALS=3000;
+  const costE=ss=>{evals++;return cost(ss);};
+  while(imp&&steps++<MAX_STEPS&&evals<MAX_EVALS){imp=false;
     for(let a=0;a<sets.length&&!imp;a++)for(let b=0;b<sets.length&&!imp;b++){if(a===b)continue;
-      for(const j of sets[a]){if(fixedSet.has(j)||!mayMove(j,a,b))continue;const s2=sets.slice();s2[a]=sets[a].filter(x=>x!==j);s2[b]=sets[b].concat(j);const v=cost(s2);if(v<cur-1){sets=s2;cur=v;imp=true;break;}}
-      if(!imp)for(const j of sets[a]){if(fixedSet.has(j)||imp||!mayMove(j,a,b))continue;for(const k of sets[b]){if(fixedSet.has(k)||!mayMove(k,b,a))continue;
-        const s2=sets.slice();s2[a]=sets[a].map(x=>x===j?k:x);s2[b]=sets[b].map(x=>x===k?j:x);const v=cost(s2);if(v<cur-1){sets=s2;cur=v;imp=true;break;}}}}}
-  _tg={aud,kw,days,dayDates,src,sets,fixedIds:fixedSet,removed:new Set(),remaining:skipped,noPers,noGeo,bfList,provIds,home,
+      for(const j of sets[a]){if(evals>=MAX_EVALS)break;if(fixedSet.has(j)||!mayMove(j,a,b))continue;const s2=sets.slice();s2[a]=sets[a].filter(x=>x!==j);s2[b]=sets[b].concat(j);const v=costE(s2);if(v<cur-1){sets=s2;cur=v;imp=true;break;}}
+      if(!imp)for(const j of sets[a]){if(fixedSet.has(j)||imp||!mayMove(j,a,b))continue;for(const k of sets[b]){if(evals>=MAX_EVALS)break;if(fixedSet.has(k)||!mayMove(k,b,a))continue;
+        const s2=sets.slice();s2[a]=sets[a].map(x=>x===j?k:x);s2[b]=sets[b].map(x=>x===k?j:x);const v=costE(s2);if(v<cur-1){sets=s2;cur=v;imp=true;break;}}}}}
+  _tg={aud,kw,days,dayDates,src,why,sets,fixedIds:fixedSet,removed:new Set(),remaining:skipped,noPers,noGeo,bfList,provIds,home,
     leftPool:pool.map((x,i)=>({x,j:idxPool[i]})).filter(o=>remaining.has(pool.indexOf(o.x))),
-    urgOf:new Map(pool.map((x,i)=>[idxPool[i],x.urgDay])),
+    unprocessed,orphans,urgOf:new Map(pool.map((x,i)=>[idxPool[i],x.urgDay])),
     nodeEntry:new Map([...fixedAll.map(e=>[idxFixed.get(e.id),e]),...pool.map((x,i)=>[idxPool[i],x.e])]),prefOf:new Map(pool.map((x,i)=>[idxPool[i],x.isPref]))};
   tgRender();
+  if(unprocessed.length)showToast(unprocessed.length+' weitere Kandidaten wegen Routen-Matrix-Limit nicht geprüft – Hinweis unter der Planung',5500);
 }
 function tgRender(){
   const R=_tg,C=_tgCalc;const names=['Mo','Di','Mi','Do','Fr'];
@@ -5313,7 +5557,8 @@ function tgRender(){
       <div style="font-size:10px;color:var(--tx3);margin-bottom:6px">🚗 ${fmt(sim.drive)} · 🏗️ ${fmt(sim.aud)}${sim.evt?` · 📋 ${fmt(sim.evt)} Termine`:''}${sim.post?` · 📝 ${fmt(sim.post)} Nachbearbeitung (${bsN} × ${S('tg_post_min')} min${sim.postInWait>0.5?`, davon ${fmt(sim.postInWait)} in Wartezeiten`:''})`:''}${sim.wait>1?` · ⏳ ${fmt(sim.wait)} Wartezeit`:''}${sim.lunch?` · 🍽 ${fmt(sim.lunch)} Mittag (nicht in der Arbeitszeit)`:''}</div>
       ${econHtml}
       ${sim.lateStart>0.5?`<div style="font-size:11px;color:#B45309;margin-bottom:6px">⚠ Ein Audit beginnt nach ${tgHM(S('tg_last_start')*60)} – viele Baustellen haben dann schon Feierabend.</div>`:''}
-      ${sim.late>0.5?`<div style="font-size:11px;color:#DC2626;margin-bottom:6px">⚠ Ein Termin ist so nicht rechtzeitig erreichbar (${Math.round(sim.late)} min zu spät) – bitte Termin oder Tag prüfen.</div>`:''}
+      ${sim.late>0.5?`<div style="font-size:11px;color:#DC2626;margin-bottom:6px">⚠ Ein Termin ist so nicht rechtzeitig einzuhalten (${Math.round(sim.late)} min zu spät – Fahrzeit oder Baustellen-Pause) – bitte Termin oder Tag prüfen.</div>`:''}
+      ${sim.lunchConflict?`<div style="font-size:11px;color:#DC2626;margin-bottom:6px">⚠ Mittagspause (um ${tgHM(S('tg_lunch_start')*60)}) wegen eines Fixtermins nicht möglich – bitte Termin, Pause oder Tag prüfen.</div>`:''}
       ${P.items.map((it,ii)=>{const sc=sim.sched[ii];const lunchRow=sim.lunch>0&&sim.lunchAt===ii?tgLunchRow(sim.lunchStart):'';const time=`<span style="font-size:10px;color:var(--tx3);width:74px;flex-shrink:0;font-variant-numeric:tabular-nums">${tgHM(sc.start)}–${tgHM(sc.end)}</span>`;
         if(it.t==='ev'){const ev=it.ev;return lunchRow+`<div style="display:flex;align-items:center;gap:6px;padding:4px 0;font-size:12px;border-top:1px solid var(--bd)">${time}
           <span style="flex:1;min-width:0">${ev.icon} <b>${escH(ev.label)}</b>${ev.time!=null?` <span style="font-size:10px;color:${sc.late>0.5?'#DC2626':'#0369A1'}">(fix ${tgHM(ev.time)}${sc.late>0.5?', '+Math.round(sc.late)+' min zu spät':''})</span>`:''}${ev.sub?` <span style="font-size:10px;color:var(--tx3)">· ${escH(ev.sub)}</span>`:''}${ev.node==null&&ev.kind==='rp'?' <span style="font-size:10px;color:#B45309">(ohne Adresse – keine Fahrzeit)</span>':''}</span>
@@ -5335,6 +5580,8 @@ function tgRender(){
    if(ov>0.5)h+=`<div style="font-size:11px;color:${ov>S('tg_week_tol')+0.5?'#DC2626':'#B45309'};margin:2px 0 8px">⏱ Überzeit diese Woche: ${Math.round(ov)} min (erlaubt: bis ${S('tg_day_tol')} min pro Tag, ${S('tg_week_tol')} min pro Woche)</div>`;}
   if(R.remaining.length)h+=`<details style="margin-top:4px;font-size:11px;color:var(--tx2)"><summary style="cursor:pointer">Weitere rote/orange Baustellen, nicht eingeplant (${R.remaining.length}) – kein Platz mehr, oder ihre Gegend passt an keinem gewählten Tag ganz hinein</summary>
     ${R.remaining.slice(0,25).map(x=>`<div style="padding:3px 0;border-top:1px solid var(--bd)">${bsLabel(x.e)} · ${x.min} min · ${tgPersTag(x.e)}</div>`).join('')}</details>`;
+  if(R.unprocessed&&R.unprocessed.length)h+=`<div style="margin-top:8px;padding:8px 10px;background:#FFFBEB;border:1px solid #FCD34D;border-radius:8px;font-size:11px;color:#92400E">⚠ <b>Nicht vollständig geprüft:</b> ${R.unprocessed.length} weitere fällige Baustelle(n) wurden wegen der Grösse der Routen-Matrix (max. 59 Punkte) nicht berücksichtigt – die Auswahl oben ist nicht abschliessend. Woche auf weniger Tage oder einen kleineren Auditor-Bereich eingrenzen und nochmals rechnen.</div>`;
+  if(R.orphans&&R.orphans.length)h+=`<div style="margin-top:8px;font-size:11px;color:var(--tx3)">ℹ ${R.orphans.length} Planung(en) zeigen auf eine gelöschte Baustelle und wurden nicht gerechnet (in der KW-Planung bereinigen).</div>`;
   if(R.noPers&&R.noPers.length){
     const rows=R.noPers.sort((a,b)=>tgUrgency(a.e)-tgUrgency(b.e)||dl(a.e)-dl(b.e));
     h+=`<details style="margin-top:8px;padding:8px 10px;background:#FFFBEB;border:1px solid #FCD34D;border-radius:8px;font-size:11px;color:#92400E"><summary style="cursor:pointer;font-weight:600">⚠ ${rows.length} fällige Baustelle(n) nicht berücksichtigt – kein aktuelles Personal bekannt</summary>
@@ -6147,7 +6394,7 @@ function piRenderPreview(){
 }
 // ═══ Import-Übersicht: alle erkannten Baustellen mit Personal Vorwoche → Import-KW und was beim Übernehmen passiert ═══
 // Folgt den Häkchen (wird bei jeder Änderung neu berechnet). Ausklappbar (#pi-ov), Zustand bleibt beim Neuzeichnen.
-function piPrevKW(kw,yr){const d=new Date(isoMonday(kw,yr).getTime()-7*86400000);const ds=ferISO(d);return{kw:dateToKW(ds),year:isoYear(ds)};}
+function piPrevKW(kw,yr){const m=isoMonday(kw,yr),d=new Date(m.getFullYear(),m.getMonth(),m.getDate()-7);const ds=ferISO(d);return{kw:dateToKW(ds),year:isoYear(ds)};}
 function piOverviewRows(){
   if(!_piPending)return[];
   const{buckets,targetKW}=_piPending;const yr=_piPending.targetYear||new Date().getFullYear();

@@ -11,8 +11,8 @@ Beratungen, Rapporten und Ferien der Auditoren. Sprache der Oberfläche: Deutsch
 - Vor jedem PR: App im Browser laden (Desktop- und Mobile-Breite) und in der Konsole
   prüfen, dass keine JavaScript-Fehler auftreten.
 - Bei jeder Änderung an der App die Versionsnummer erhöhen, und zwar überall in
-  `index.html`: im Header (`<span ... title="Version">v3.44</span>`) und in den Links
-  `css/style.css?v=3.44`, `js/merge.js?v=3.44` und `js/app.js?v=3.44`. Der `?v=`-Zusatz
+  `index.html`: im Header (`<span ... title="Version">v3.45</span>`) und in den Links
+  `css/style.css?v=3.45`, `js/merge.js?v=3.45` und `js/app.js?v=3.45`. Der `?v=`-Zusatz
   sorgt dafür, dass Browser nach einem Update keine alte Datei aus dem Cache verwenden.
 - Tests für die Zusammenführung: `node tests/merge.test.js` (muss grün sein).
 - Keine Browser-Dialoge (`confirm`, `prompt`, `alert`): `askConfirm()`, `askText()`,
@@ -85,6 +85,12 @@ global; das HTML ruft sie direkt über `onclick="..."` auf.
   setzt `body.full-view` + `sessionStorage.ap_full` (gilt für die Sitzung), zurück über «📱 Handy» (`#mob-back`)
   Unter 1024 px darf nichts breiter als der Bildschirm sein (Tabs/Statistik scrollen seitlich), sonst zoomt
   das Handy heraus. `manifest.json`: `orientation: any` (Querformat erlaubt)
+  Handy-Route (`computeMobRoute`): ohne Fixzeiten `solveRoute` (reine Fahrzeit, bis 12 Stopps exakt); mit Fixzeiten (`p.time`, `fixVisit`, Beratungen)
+  `solveMobTimedRoute` (Verspätung → Fahrzeit → Ende; bis 8 freie Stopps alle Reihenfolgen, sonst Heuristik; kein exakter Zeitfenster-Solver).
+  Start: zuletzt ERLEDIGTER Stopp (Beleg `mobStopDone`, nie ein gelöschter) > frischer GPS (< 15 min, `_mobGPSTime`) > Startadresse; `mobRouteValid` prüft
+  Stoppmenge, Kartenpunkte, Uhrzeiten, Dauer. Fahrzeit-Matrix `getDurationMatrix` → `{D,src,why}` (Luftlinie mit Grund; 429-Pause `_orsRetryAfter`, gleiche
+  Anfragen zusammengefasst `_orsMatrixPending`, Matrix voll validiert). Google Maps: `mobOpenMaps` (Einzelziel, ab aktuellem Standort), `mobOpenTourMaps`
+  (Mehrstopp in Etappen à `MAPS_STOPS_PER_LINK`, letzte Etappe mit Heimfahrt). Details: `TOURGUIDE_AENDERUNGEN.md`
   Volle Ansicht < 768 px: KW-Wochenansicht Tage untereinander, Detail-Panel `#dp` fixed über der Liste (CSS am Anfang von style.css);
   Admin-Menü `toggleMore` prüft `getComputedStyle` (erster Klick öffnet) und scrollt bei wenig Höhe
 - ~4247 Login/Auth (Supabase Auth), Präsenz-Anzeige
@@ -109,6 +115,11 @@ global; das HTML ruft sie direkt über `onclick="..."` auf.
   → fixe Uhrzeit im Tourguide (`fixT`, geht `fixVisit` vor);
   Fester Besuchstermin pro Baustelle `e.fixVisit={days:[0..4],time:'HH:MM'}` (`fvTime`/`fvDayOK`/`fvLabel`): nur an diesen
   Tagen vorgeschlagen, im Tag als fixe Uhrzeit (`_tgCalc.fixT`, `tgTm`); KW-Planung übernimmt den Wochentag;
+  Baustellen-Znüni/-Mittag gelten auch für Baustellen-Audits MIT fixer Uhrzeit (`siteRules` in `tgSim`; Verschiebung zählt als «zu spät»);
+  Termine (Rapporte, Beratungen) dürfen in der Pause liegen. Die eigene Mittagspause wird vor einem Fixtermin nur eingeschoben, wenn der Termin
+  pünktlich bleibt, sonst entfällt sie und `sim.lunchConflict` zeigt es an. Geplante Baustellen und Termine mit Ort (`ev.geo`) OHNE Kartenpunkt
+  blockieren die Berechnung mit Meldung (verwaiste Planungen: nur Hinweis, `_tg.orphans`). Kandidaten: höchstens 59 Matrix-Punkte (`ORS_MAX_PAIRS`),
+  Rest sichtbar als `_tg.unprocessed`. Ausgleich zwischen Tagen: feste Grenzen `MAX_STEPS`/`MAX_EVALS` statt Uhr (gleiche Daten → gleiche Planung).
   Znüni der Baustellen `tg_znueni_start`+`tg_znueni_dur`: kein Audit-Beginn; laufendes darf durch (`tg_znueni_through`, bool);
   Audit-Dauer bis `tg_audit_flex` kürzer statt in eine Pause zu laufen (`sched[].short`); Einstellung mit `bool:1` = Häkchen;
   Baustellen-Mittag `tg_lunch_start`…+`tg_lunch_dur` = nie ein Audit (`blocked` in `tgSim`); eigene Pause flexibel
