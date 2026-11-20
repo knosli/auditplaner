@@ -4843,7 +4843,7 @@ function rulesHTML(){
     `Jeder übernommene Import speichert zusätzlich eine Wochen-Zusammenfassung pro Einheit (Personen laut Einsatzlisten, davon Kundendienst, Einsatzorte, Anzahl Temporäre – die Temporären stehen auf einer separaten Liste und werden fürs Total dazugezählt): Admin → Personal-Übersicht, mit Verlauf; ältere Wochen rückwirkend aus dem Personalverlauf der Baustellen. <b>Pausiert → inaktiv:</b> Eine Baustelle, die länger als ${v('pause_to_inactive')} Tage pausiert ist (ohne festes Ende «pausiert bis»), wird automatisch inaktiv gesetzt. Alle inaktiv gesetzten Baustellen (automatisch oder von Hand) stehen unter Admin → «Inaktiv gesetzt (Audit-App)» mit PSP-Nummer zum Nachtragen in der Audit-App und Abhaken. Werkhöfe sind vom Import komplett ausgenommen. Unbekannte Einträge: zuordnen (Alias wird gemerkt), neu anlegen oder in die Sammelbox. Beim Zuordnen oder Neu-Anlegen (aus Import, Sammelbox oder Kundendienst-Liste) wird die Personalzahl der Liste gleich übernommen; aus der Kundendienst-Liste der ganze Verlauf.`,
     `KW-Planung: Jede Baustellen-Karte zeigt 👷 das Personal der KW, in der sie geplant ist (Import oder manuell). Gibt es dafür keinen Wert, steht grau kursiv der zuletzt bekannte Wert mit seiner KW, ohne Angabe «–». Eine 0 ist rot. Werkhöfe zeigen nichts.`,
     `Temporäre Mitarbeitende: nur Personal-Nummern (keine Namen), pro Einheit bei jedem Import ersetzt.`,
-    `Manuelle Erfassung (für Einheiten ohne brauchbare Einsatzliste): im Detail-Panel ✏️ bei «Personal» oder Admin → «Personal manuell erfassen» (mehrere Baustellen einer Abteilung). Wirkt wie ein Import-Wert (Verlauf, Trend, Tourguide), ersetzt einen vorhandenen Wert derselben KW und ändert den Status der Baustelle nicht (kein Pausieren/Reaktivieren).`]) +
+    `Manuelle Erfassung (für Einheiten ohne brauchbare Einsatzliste): im Detail-Panel ✏️ bei «Personal» oder Admin → «Personal manuell erfassen» (mehrere Baustellen einer Abteilung). Wirkt wie ein Import-Wert (Verlauf, Trend, Tourguide), ersetzt einen vorhandenen Wert derselben KW und ändert den Status der Baustelle nicht (kein Pausieren/Reaktivieren). Mit «Auch inaktive (alte) Baustellen anzeigen» lassen sich auch inaktive Baustellen erfassen (Status bleibt). Baustellen, die noch nicht im Planer sind, unten im Fenster mit Name (PSP optional) und Personenzahl eintragen: sie kommen mit Abteilung und KW in die Sammelbox und werden dort angelegt oder zugeordnet – das Personal wird dabei übernommen.`]) +
   sec('compass','Tourguide',[
     `Vorschläge nur für <b>rote (überfällige) und orange (fällige)</b> Baustellen mit Koordinaten <b>und bekanntem Personal vor Ort (mehr als 0)</b>. Grüne Baustellen werden nie vorgeschlagen. ${S('tg_yellow_harvest')>0?'<b>Gelbe</b> (bald fällige) nur, wenn sie im Umkreis von '+v('tg_harvest_min')+' min einer ohnehin geplanten Baustelle liegen und der Tag nach allen roten und orangen noch Platz hat – das spart eine zweite Fahrt in dieselbe Gegend.':'Gelbe auch nicht – sonst lägen Audits zu nahe beieinander.'} Die Ampel gilt am geplanten Audit-Tag: Wer für in 2 Wochen plant, bekommt die Baustellen, die dann rot oder orange sind. ${S('tg_new_due')>0?'<b>Neue Baustellen</b> (noch nie auditiert, ★) werden wie orange vorgeschlagen, sobald sie Personal haben (oft mehrere Einheiten am gleichen Ort).':'Neue (noch nicht fällige) Baustellen werden nicht vorgeschlagen.'} Die Personalangabe (Einsatzliste oder manuell) soll für <b>genau die geplante KW</b> vorliegen. Fehlt sie noch, gilt die letzte Liste <b>vorläufig</b> – aber nur, wenn sie höchstens 2 Wochen zurückliegt und die Baustelle in ihr und in der Woche davor Personal hatte (sonst nicht). Nach dem Personal-Import prüft der Planer alle Planungen der importierten KW und meldet Baustellen ohne Personal oder in Bauferien. Solche Baustellen werden nie vorgeschlagen, aber unter dem Vorschlag aufgelistet.`,
     `Nie: Werkhöfe (nur manuell planen), pausiert, inaktiv, ausgeschlossene Abteilungen, diese KW bereits (von irgendwem) eingeplant, 0 Personal oder keine Einsatzliste für die geplante KW, ohne Kartenpunkt (wird aufgelistet).`,
@@ -5561,32 +5561,80 @@ function openPersonalBulk(){
   sel.innerHTML=getAllDepts().map(d=>`<option value="${escH(d)}">${escH(d)}</option>`).join('');
   if(cur)sel.value=cur;
   document.getElementById('pmb-kw').innerHTML=pmKwOptions();
+  document.getElementById('pmb-new').innerHTML='';pmbNewRow(false);
   renderPersonalBulk();
   document.getElementById('pmb-bg').style.display='flex';
 }
 function renderPersonalBulk(){
   const dept=document.getElementById('pmb-dept').value,kwc=+document.getElementById('pmb-kw').value,kw=kwNum(kwc),yr=kwYear(kwc);
-  const list=data.filter(e=>e.active&&e.type!=='werkhof'&&deptParts(e.dept).includes(dept)).sort((a,b)=>(a.psp||'~').localeCompare(b.psp||'~')||a.name.localeCompare(b.name));
-  document.getElementById('pmb-list').innerHTML=list.length?list.map(e=>{
+  const inact=!!(document.getElementById('pmb-inact')||{}).checked,srt=(a,b)=>(a.psp||'~').localeCompare(b.psp||'~')||a.name.localeCompare(b.name);
+  const inDept=e=>e.type!=='werkhof'&&deptParts(e.dept).includes(dept);
+  const act=data.filter(e=>e.active!==false&&inDept(e)).sort(srt),ina=inact?data.filter(e=>e.active===false&&inDept(e)).sort(srt):[];
+  const list=[...act,...ina];
+  document.getElementById('pmb-list').innerHTML=list.length?list.map((e,i)=>{
+    const sep=i===act.length&&ina.length?`<div style="padding:6px 10px;font-size:11px;font-weight:700;color:var(--tx3);background:var(--sf2);border-bottom:1px solid var(--bd)">Inaktive Baustellen (${ina.length}) – Personal eintragen ändert den Status nicht, aktivieren im Detail-Panel</div>`:'';
+    return sep+pmbRow(e,kw,yr);}).join(''):`<div style="padding:14px;font-size:12px;color:var(--tx3)">Keine ${inact?'':'aktiven '}Baustellen in dieser Abteilung.</div>`;
+}
+function pmbRow(e,kw,yr){
     const h=persForKW(e,kw,yr);
     const lastTxt=e.lastPersonalKW!==undefined?`zuletzt KW ${e.lastPersonalKW}: ${e.lastPersonalCount}`:'noch keine Angabe';
     return`<div style="display:flex;align-items:center;gap:10px;padding:6px 10px;border-bottom:1px solid var(--bd)">
       <span style="flex:1;min-width:0;font-size:12px">${bsLabel(e)}${e.paused?'':''}<div style="font-size:10px;color:var(--tx3)">${lastTxt}${h?` · KW ${kw}: <b>${h.count}</b>${h.manual?' (manuell)':''}`:''}</div></span>
       <input type="number" min="0" step="1" data-id="${e.id}" data-old="${h?h.count:''}" value="${h?h.count:''}" placeholder="–" style="width:80px;padding:6px 8px;border:1px solid var(--bd);border-radius:6px;background:var(--sf2);color:var(--tx);font-size:13px;text-align:right">
-    </div>`;}).join(''):'<div style="padding:14px;font-size:12px;color:var(--tx3)">Keine aktiven Baustellen in dieser Abteilung.</div>';
+    </div>`;
+}
+// Neue (noch nicht erfasste) Baustellen: Zeile mit Name, PSP (optional), Personen → beim Speichern in die Sammelbox
+function pmbNewRow(focus){
+  const box=document.getElementById('pmb-new');if(!box)return;
+  const inp='padding:6px 8px;border:1px solid var(--bd);border-radius:6px;background:var(--sf);color:var(--tx);font-size:12px;box-sizing:border-box';
+  const row=document.createElement('div');row.className='pmb-nrow';
+  row.style.cssText='display:flex;gap:6px;align-items:center;margin-bottom:6px;flex-wrap:wrap';
+  row.innerHTML=`<input class="pmb-nname" type="text" placeholder="Name / Ort der Baustelle" style="${inp};flex:1;min-width:150px">
+    <input class="pmb-npsp" type="text" placeholder="PSP (optional)" style="${inp};width:120px">
+    <input class="pmb-ncnt" type="number" min="0" step="1" placeholder="Pers." onkeydown="if(event.key==='Enter'){event.preventDefault();pmbNewRow(true);}" style="${inp};width:80px;text-align:right">
+    <button onclick="this.parentNode.remove()" title="Zeile entfernen" style="border:none;background:transparent;color:var(--tx3);cursor:pointer;font-size:14px;padding:2px 6px">✕</button>`;
+  box.appendChild(row);
+  if(focus){const n=row.querySelector('.pmb-nname');n.focus();n.scrollIntoView({block:'nearest'});}
+}
+// Liest die neuen Zeilen; null = Fehler (Name ohne Anzahl o.ä.), sonst Liste
+function pmbNewItems(dept,kw,yr){
+  const out=[];let bad=null;
+  document.querySelectorAll('#pmb-new .pmb-nrow').forEach(r=>{
+    const name=mgSafe(r.querySelector('.pmb-nname').value.trim()),psp=mgSafe(r.querySelector('.pmb-npsp').value.trim()),v=r.querySelector('.pmb-ncnt').value.trim();
+    if(!name&&!psp&&v==='')return;
+    if(!name&&!psp){bad=bad||'Bitte einen Namen (oder eine PSP) zur Personenzahl eintragen';return;}
+    if(v===''||isNaN(+v)||+v<0){bad=bad||`Bitte die Personenzahl für «${name||psp}» eintragen`;return;}
+    out.push({psp,name:name||psp,count:Math.round(+v),quelle:dept,dept,manual:true,kw,year:yr});
+  });
+  if(bad){showToast('⚠ '+bad,3500);return null;}
+  return out;
+}
+function pmbToSammelbox(items){
+  window._piCollectBox=window._piCollectBox||[];
+  items.forEach(it=>{
+    const dup=window._piCollectBox.find(x=>piPspKey(x.psp)===piPspKey(it.psp)&&piNormName(x.name)===piNormName(it.name));
+    if(dup)Object.assign(dup,it);else window._piCollectBox.push(it);
+  });
+  sammelboxClean();
 }
 function savePersonalBulk(){
-  const kwc=+document.getElementById('pmb-kw').value,kw=kwNum(kwc),yr=kwYear(kwc);let n=0,zeros=0;
+  const kwc=+document.getElementById('pmb-kw').value,kw=kwNum(kwc),yr=kwYear(kwc);let n=0,zeros=0,inaN=0;
+  const nItems=pmbNewItems(document.getElementById('pmb-dept').value,kw,yr);if(!nItems)return;
   document.querySelectorAll('#pmb-list input[data-id]').forEach(inp=>{
     const v=inp.value.trim();if(v===''||isNaN(+v)||+v<0)return;
     if(v===inp.dataset.old)return;                       // unverändert
     const e=data.find(x=>x.id===+inp.dataset.id);if(!e)return;
-    recordPersonalManual(e,kw,yr,Math.round(+v));n++;if(+v===0)zeros++;
+    recordPersonalManual(e,kw,yr,Math.round(+v));n++;if(+v===0)zeros++;if(e.active===false&&+v>0)inaN++;
   });
-  if(!n){showToast('Keine Änderungen eingegeben');return;}
+  if(!n&&!nItems.length){showToast('Keine Änderungen eingegeben');return;}
+  if(nItems.length)pmbToSammelbox(nItems);
   saveNow();renderAll();
   document.getElementById('pmb-bg').style.display='none';
-  showToast(`✓ Personal KW ${kw} für ${n} Baustelle(n) gespeichert${zeros?` (${zeros}× 0 Personen – nicht für Tourguide)`:''}`,3500);
+  const parts=[];
+  if(n)parts.push(`KW ${kw}: ${n} Baustelle(n)${zeros?` (${zeros}× 0 Personen – nicht für Tourguide)`:''}`);
+  if(nItems.length)parts.push(`${nItems.length} neu → Sammelbox`);
+  if(inaN)parts.push(`${inaN} inaktiv – ggf. aktivieren`);
+  showToast('✓ '+parts.join(' · '),4000);
 }
 // ═══ PERSONALVERLAUF (aus den wöchentlichen Personal-Importen) ═══
 function personalTrend(e){
@@ -6685,7 +6733,7 @@ function openSammelbox(){
   if(list){
     list.innerHTML=box.length?box.map((it,ci)=>`
       <div style="padding:8px 10px;background:var(--sf2);border-radius:8px;margin-bottom:6px;font-size:12px;color:var(--tx)">
-        <div style="margin-bottom:6px">📄 ${listLabel(it)} <span style="color:var(--tx3)">(${it.count} Pers.)</span></div>
+        <div style="margin-bottom:6px">${it.manual?'✍️':'📄'} ${listLabel(it)} <span style="color:var(--tx3)">(${it.count} Pers.${it.kw?` · KW ${it.kw}`:''})</span>${it.manual?' <span style="font-size:10px;padding:1px 6px;border-radius:4px;background:#DBEAFE;color:#1D4ED8">von Hand erfasst</span>':''}</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
           ${bsPickerHTML('sb-sel-'+ci,'width:320px;max-width:100%')}
           <button onclick="sbAssign(${ci})" style="padding:4px 10px;border-radius:6px;border:none;background:#3B82F6;color:#fff;font-size:11px;cursor:pointer">Zuordnen</button>
@@ -6717,8 +6765,9 @@ function sbAssign(ci){
     e.nameAliases=e.nameAliases||[];
     if(!e.nameAliases.includes(nn))e.nameAliases.push(nn);
   }
-  {const w=piItemWeek(it);if(w&&it.count!=null)recordPersonalManual(e,w.kw,w.year,+it.count||0,false);}
-  if(it.count===0){if(!e.paused){e.paused=true;e.pauseReason='Import (Sammelbox): kein Personal';e.pauseUntil=null;log('Pausiert ⏸ (Sammelbox)',e.name,'#94A3B8','');}}
+  {const w=piItemWeek(it);if(w&&it.count!=null)recordPersonalManual(e,w.kw,w.year,+it.count||0,!!it.manual);}
+  if(it.manual){}   // von Hand erfasst: wie «Personal manuell erfassen» – Status bleibt
+  else if(it.count===0){if(!e.paused){e.paused=true;e.pauseReason='Import (Sammelbox): kein Personal';e.pauseUntil=null;log('Pausiert ⏸ (Sammelbox)',e.name,'#94A3B8','');}}
   else if(it.count>S('pi_review_max')){if(e.paused){e.paused=false;e.pauseReason=null;e.pauseUntil=null;log('Reaktiviert ▶ (Sammelbox)',e.name,'#10B981','');}}
   window._piCollectBox.splice(ci,1);
   saveNow();renderAll();
@@ -6736,7 +6785,7 @@ function piItemWeek(it,kw,yr){
 // «+ Neue Baustelle» aus Sammelbox / Import / Kundendienst-Liste: Personal beim Speichern übernehmen
 function piNewSitePending(it,kw,yr,src){
   const w=piItemWeek(it,kw,yr);
-  window._newSitePersonal={src,psp:it.psp||'',name:it.name||'',count:it.count==null?null:+it.count||0,kw:w&&w.kw,year:w&&w.year,hist:src==='kd'?piKdHist(it):null};
+  window._newSitePersonal={src,psp:it.psp||'',name:it.name||'',count:it.count==null?null:+it.count||0,kw:w&&w.kw,year:w&&w.year,hist:src==='kd'?piKdHist(it):null,manual:!!it.manual};
 }
 function piApplyNewSite(e){
   const x=window._newSitePersonal;window._newSitePersonal=null;
@@ -6751,7 +6800,7 @@ function piApplyNewSite(e){
   else if(!x.psp&&x.name&&piNormName(x.name)!==piNormName(e.name)){e.nameAliases=e.nameAliases||[];if(!e.nameAliases.includes(piNormName(x.name)))e.nameAliases.push(piNormName(x.name));}
   if(x.count==null||!x.kw)return;
   (x.hist||[]).forEach(h=>recordPersonalManual(e,h.kw,h.year,+h.count||0,false));   // Kundendienst: ganzer Verlauf
-  recordPersonalManual(e,x.kw,x.year,x.count,false);
+  recordPersonalManual(e,x.kw,x.year,x.count,!!x.manual);
   setTimeout(()=>showToast(`👷 Personal übernommen: ${x.count} Pers. (KW ${x.kw}${x.year!==curIsoYear()?' / '+x.year:''})`,3500),400);
 }
 function sbCreate(ci){
@@ -6763,6 +6812,7 @@ function sbCreate(ci){
   const pspEl=document.getElementById('f-psp');
   if(nameEl)nameEl.value=it.name||'';
   if(pspEl&&it.psp)pspEl.value=it.psp;
+  if(it.dept&&getAllDepts().includes(it.dept))fillFDept(it.dept);
   // Personal und Entfernen aus der Sammelbox erst beim Speichern (Abbrechen → bleibt in der Sammelbox)
   piNewSitePending(it,it.kw,it.year,'box');
 }
